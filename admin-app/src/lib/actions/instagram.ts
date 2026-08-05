@@ -1,6 +1,6 @@
 'use server'
 
-import { fetchQuery, fetchMutation, fetchAction } from 'convex/nextjs'
+import { fetchQuery, fetchMutation, fetchAction } from '@/lib/actions/authedFetch'
 import { api } from '../../../../web/convex/_generated/api'
 import { revalidatePath } from 'next/cache'
 

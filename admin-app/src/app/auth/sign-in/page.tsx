@@ -12,7 +12,7 @@ import { Eye, EyeOff, Shield } from 'lucide-react'
 
 export default function SignIn() {
   const router = useRouter()
-  const { signIn } = useAuthActions()
+  const { signIn, signOut } = useAuthActions()
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -33,6 +33,7 @@ export default function SignIn() {
       formData.append('email', email)
       formData.append('password', password)
       formData.append('flow', step)
+      await signOut()
       await signIn('password', formData)
       router.push('/')
       router.refresh()

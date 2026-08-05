@@ -1,6 +1,6 @@
 'use server'
 
-import { fetchQuery } from 'convex/nextjs'
+import { fetchQuery } from '@/lib/actions/authedFetch'
 import { api } from '../../../../web/convex/_generated/api'
 
 export async function getCurrentAdminProfile() {
