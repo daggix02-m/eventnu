@@ -17,6 +17,7 @@ const schema = defineSchema({
   events: defineTable({
     title: v.string(),
     slug: v.optional(v.string()),
+    categoryIds: v.optional(v.array(v.id("categories"))),
     description: v.string(),
     subtitle: v.optional(v.string()),
     startDate: v.number(),
