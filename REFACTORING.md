@@ -45,15 +45,14 @@ Much is already known from `AUDIT.md` and exploration. Formalize it into a livin
 
 ### 1.2 Dead code — remove what's already known
 - [x] `company-design-system`: removed from `admin-app/next.config.ts` (`transpilePackages`) and `admin-app/eslint.config.mjs`; stale `package-lock.json` entry + broken `node_modules` symlink cleaned via `npm install`. No source imports remain.
-- [ ] 27 byte-identical `loading.tsx` stubs → one shared skeleton component.
-- [ ] Dead props / duplicates:
-  - `(app)/settings/page.tsx` passes `profile={null}`; `SettingsClient` shadows it and self-fetches `api.profiles.getMe`. Remove the dead server prop.
-  - `/auth/forgot-password` + `/auth/reset-password` hardcoded "not yet available" stubs.
-- [ ] Backend:
-  - Legacy `events.categoryIds` array (superseded by `eventCategories` join table; `web/convex/migrations.ts` still reads it).
-  - `hosts.getStats` unguarded while sibling `hosts.list`/`getById` require admin — likely a bug.
-- [x] Lint-drift cleanup in shared Convex: `instagram.ts` `createImportedEvent` computed a `slug` but never inserted it (latent bug — IG-imported events were unreachable via `/events/[slug]`); now wired into the insert. Removed unused `Doc` import in `follows.ts`; `auth.config.ts` default export made lint-clean.
-- [ ] Duplicated `fadeUp` framer-motion const in `HostDetailClient` / `OrganizerDetailClient` / `UserDetailClient`.
+- [x] 27 byte-identical `loading.tsx` stubs → one shared skeleton component. **Resolved in the baseline:** every route's `loading.tsx` is already a thin wrapper around the shared `src/components/skeletons.tsx` primitives (`ListSkeleton`/`DetailSkeleton`/`FormSkeleton`/`HeaderSkeleton`/`CardGridSkeleton`). These wrappers are intentional (Next.js requires a `loading.tsx` per route for streaming).
+- [x] Dead props / duplicates:
+  - `(app)/settings/page.tsx` passed `profile={null}`; `SettingsClient` shadowed it and self-fetched `api.profiles.getMe`. Prop removed from the page and the component; `AdminProfile` type now annotates the client-mapped profile.
+  - `/auth/forgot-password` + `/auth/reset-password` hardcoded "not yet available" stubs. **Deferred (C — conserve):** deliberate placeholders tied to the unimplemented SMTP/password-reset feature, not accidental dead code.
+- [x] Backend:
+  - `hosts.getStats` now calls `requireAdmin` (was unguarded while `hosts.list`/`getById` require admin).
+  - Legacy `events.categoryIds` array: **deferred to Phase 6** — the field is only *written* via the `events.create/update` join-table path (the `categoryIds` arg is the API contract, not the array field), but removing the schema field touches mappers, migrations, and the admin form contract, so it ships with the Phase 6 data-layer cleanup.
+- [ ] Duplicated `fadeUp` framer-motion const in `HostDetailClient` / `OrganizerDetailClient` / `UserDetailClient` (→ Phase 2.4 motion consolidation).
 
 ### 1.3 Debt register
 - [ ] Classify every finding **D** (delete) / **I** (improve) / **C** (conserve-as-is) with owner + effort in a `docs/tech-debt.md` register.

@@ -25,7 +25,6 @@ export default async function SettingsPage({
 
   return (
     <SettingsClient
-      profile={null}
       featuredSections={featuredSections}
       adminStats={adminStats}
       instagramStatus={instagramStatus}

@@ -75,7 +75,6 @@ interface AdminStats {
 }
 
 interface SettingsClientProps {
-  profile: AdminProfile | null
   featuredSections: FeaturedSection[]
   adminStats: AdminStats
   instagramStatus?: InstagramStatus | null
@@ -84,7 +83,6 @@ interface SettingsClientProps {
 }
 
 export function SettingsClient({
-  profile: _profile,
   featuredSections = [],
   adminStats,
   instagramStatus,
@@ -94,7 +92,7 @@ export function SettingsClient({
   const { theme, setTheme } = useTheme()
   const router = useRouter()
   const profileData = useQuery(api.profiles.getMe)
-  const profile = profileData
+  const profile: AdminProfile | null = profileData
     ? {
         id: profileData._id,
         email: profileData.email ?? '',
@@ -104,7 +102,7 @@ export function SettingsClient({
         role: profileData.role ?? 'admin',
         created_at: new Date(profileData._creationTime).toISOString(),
       }
-    : _profile
+    : null
   const [isLoading, setIsLoading] = useState(false)
   const [form, setForm] = useState({
     full_name: profile?.full_name || '',

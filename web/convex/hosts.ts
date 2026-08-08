@@ -33,6 +33,7 @@ export const getById = query({
 export const getStats = query({
   args: { hostId: v.id("hosts") },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx);
     const events = await ctx.db
       .query("events")
       .withIndex("by_host", (q) => q.eq("hostId", args.hostId))
