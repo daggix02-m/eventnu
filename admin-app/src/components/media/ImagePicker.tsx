@@ -22,7 +22,7 @@ export interface PickedImage {
   filter: string
 }
 
-export const IMAGE_FILTERS = [
+const IMAGE_FILTERS = [
   { id: 'original', label: 'Original', style: 'none' },
   {
     id: 'vivid',

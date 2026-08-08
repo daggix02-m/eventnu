@@ -50,8 +50,3 @@ export async function sendNotification(params: {
   }
   revalidatePath('/notifications')
 }
-
-export async function markAllRead(userId: string) {
-  await fetchMutation(api.notifications.markAllRead, { userId: userId as any })
-  revalidatePath('/notifications')
-}

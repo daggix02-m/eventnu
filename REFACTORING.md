@@ -37,10 +37,11 @@ Much is already known from `AUDIT.md` and exploration. Formalize it into a livin
 ### 1.1 Make the tooling surface the truth
 - [x] Run `npm run lint` in `admin-app` and `web`; flip `@typescript-eslint/no-explicit-any` to `error` once, capture the real failure count. Known baseline: 165 occurrences (`: any` = 94, `as any` = 71). Top files: `admin-app/src/lib/actions/events.ts` (19), `admin-app/src/lib/mappers.ts` (17), `admin-app/src/components/EventDetailClient.tsx` (12), `admin-app/src/components/ReportsClient.tsx` (11).
 - [x] Add `tsc --noEmit` typecheck scripts to both apps (none existed). Both apps now pass `typecheck` and lint (0 errors). `admin-app/eslint.config.mjs` ignore pattern fixed (`convex/_generated/` was `src/convex/_generated/`).
-- [ ] Add **knip** for dead-code / unused-dep detection. Known targets it should catch:
-  - `react-hook-form` + `@hookform/resolvers` installed but imported nowhere.
-  - `admin-app/src/lib/validations/auth.ts` unused (sign-in page validates inline).
-  - `mappers.mapModerationLog` unused (dashboard inlines the logic twice).
+- [x] Add **knip** for dead-code / unused-dep detection (`npm run knip`, configured in `admin-app/knip.jsonc` — design-system primitives + reserved form deps documented). Cleaned this pass:
+  - Deleted: `validations/auth.ts`, `publishEvent`, `rejectEvent`, `markAllRead`, `getAdminNotificationPrefs`.
+  - Re-purposed: `mapModerationLog` now used by `dashboard.ts` (was inlined twice).
+  - Made private: `iso`, `actionReport`, `IMAGE_FILTERS` (module-internal helpers that didn't need `export`).
+  - Reserved (C): `react-hook-form` + `@hookform/resolvers` + `zod` for the Phase 2.4 EventForm split.
 - [ ] Run `npx convex ai-files install` in `web/`; run `npx convex codegen`; verify `admin-app/convex/_generated` stubs match web's real codegen (admin currently type-checks against web's `_generated`).
 
 ### 1.2 Dead code — remove what's already known
@@ -55,7 +56,7 @@ Much is already known from `AUDIT.md` and exploration. Formalize it into a livin
 - [ ] Duplicated `fadeUp` framer-motion const in `HostDetailClient` / `OrganizerDetailClient` / `UserDetailClient` (→ Phase 2.4 motion consolidation).
 
 ### 1.3 Debt register
-- [ ] Classify every finding **D** (delete) / **I** (improve) / **C** (conserve-as-is) with owner + effort in a `docs/tech-debt.md` register.
+- [x] Classify every finding **D** (delete) / **I** (improve) / **C** (conserve-as-is) with owner + effort in a `docs/tech-debt.md` register.
 
 **Exit criteria:** zero known dead code; published debt register; real `any` count on record.
 

@@ -1,8 +1,8 @@
 'use server'
 
-import { fetchQuery, fetchMutation } from '@/lib/actions/authedFetch'
+import { fetchQuery } from '@/lib/actions/authedFetch'
 import { api } from '../../../../web/convex/_generated/api'
-import { revalidatePath } from 'next/cache'
+import { mapModerationLog } from '../mappers'
 
 export async function getDashboardStats() {
   try {
@@ -42,14 +42,7 @@ export async function getPendingReviewEvents() {
 export async function getRecentModerationLogs() {
   try {
     const logs = await fetchQuery(api.moderation.getRecent, { limit: 10 })
-    return logs.map((log: any) => ({
-      id: log._id,
-      profiles: { full_name: log.adminName || 'Admin' },
-      action: log.action,
-      target_type: log.targetType,
-      note: log.note,
-      created_at: log._creationTime,
-    }))
+    return logs.map((log: any) => mapModerationLog(log))
   } catch (err) {
     console.error('Failed to load moderation logs:', err)
     throw err
@@ -59,28 +52,9 @@ export async function getRecentModerationLogs() {
 export async function getModerationLogsByTarget(targetType: string, targetId: string) {
   try {
     const logs = await fetchQuery(api.moderation.getByTarget, { targetType, targetId })
-    return logs.map((log: any) => ({
-      id: log._id,
-      profiles: { full_name: log.adminName || 'Admin' },
-      action: log.action,
-      target_type: log.targetType,
-      note: log.note,
-      created_at: log._creationTime,
-    }))
+    return logs.map((log: any) => mapModerationLog(log))
   } catch (err) {
     console.error('Failed to load moderation logs:', err)
     return []
   }
-}
-
-export async function publishEvent(eventId: string, note?: string) {
-  await fetchMutation(api.events.updateStatus, { eventId: eventId as any, status: 'published', note })
-  revalidatePath('/events')
-  revalidatePath('/')
-}
-
-export async function rejectEvent(eventId: string, note?: string) {
-  await fetchMutation(api.events.updateStatus, { eventId: eventId as any, status: 'rejected', note })
-  revalidatePath('/events')
-  revalidatePath('/')
 }

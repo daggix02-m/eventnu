@@ -1,4 +1,4 @@
-export function iso(ts?: number | null): string {
+function iso(ts?: number | null): string {
   return ts ? new Date(ts).toISOString() : new Date(0).toISOString()
 }
 

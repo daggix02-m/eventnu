@@ -38,7 +38,7 @@ export async function dismissReport(reportId: string) {
   revalidatePath('/reports')
 }
 
-export async function actionReport(reportId: string, action: string, note?: string) {
+async function actionReport(reportId: string, action: string, note?: string) {
   await fetchMutation(api.reports.actionReport, {
     reportId: reportId as any,
     action,

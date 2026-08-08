@@ -48,20 +48,6 @@ export async function getAdminStats() {
   }
 }
 
-export async function getAdminNotificationPrefs(adminId: string) {
-  try {
-    const prefs = await fetchQuery(api.adminSettings.getByAdmin, { adminId: adminId as any })
-    return {
-      email_reports: prefs?.emailReports ?? true,
-      email_events: prefs?.emailEvents ?? true,
-      email_users: prefs?.emailUsers ?? true,
-    }
-  } catch (err) {
-    console.error('Failed to load admin notification prefs:', err)
-    throw err
-  }
-}
-
 export async function updateAdminNotificationPrefs(adminId: string, prefs: {
   email_reports: boolean
   email_events: boolean
