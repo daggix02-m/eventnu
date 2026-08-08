@@ -23,6 +23,7 @@ import {
   History,
   Save,
   Info,
+  type LucideIcon,
 } from 'lucide-react'
 import { Button } from '@/components/ui'
 import { Badge } from '@/components/ui'
@@ -40,6 +41,7 @@ import { PickedImage } from '@/components/media/ImagePicker'
 import { PublishToInstagramDialog } from '@/components/instagram/PublishToInstagramDialog'
 import { Instagram } from 'lucide-react'
 import { EventForm, Category, Host, Organizer, EventFormValues } from '@/components/event/EventForm'
+import type { MappedEvent, MappedModerationLog } from '@/lib/mappers'
 import Link from 'next/link'
 
 interface EventCategory {
@@ -72,7 +74,7 @@ const actionLabelMap: Record<string, string> = {
   delete_event: 'Deleted',
 }
 
-function SectionHeader({ icon: Icon, title }: { icon: any; title: string }) {
+function SectionHeader({ icon: Icon, title }: { icon: LucideIcon; title: string }) {
   return (
     <div className="flex items-baseline gap-2 border-b border-outline-variant pb-3 mb-5">
       <Icon size={14} className="text-primary self-center" />
@@ -99,12 +101,12 @@ export function EventDetailClient({
   moderationLogs,
   initialImages,
 }: {
-  event: any
+  event: MappedEvent
   eventCategories: EventCategory[]
   allCategories: Category[]
   hosts: Host[]
   organizers: Organizer[]
-  moderationLogs: any[]
+  moderationLogs: MappedModerationLog[]
   initialImages?: PickedImage[]
 }) {
   const router = useRouter()
@@ -118,8 +120,8 @@ export function EventDetailClient({
       title: event.title || '',
       slug: event.slug || '',
       description: event.description || '',
-      categoryId: eventCategories.find((c: any) => c.is_primary)?.category_id || '',
-      subcategoryIds: eventCategories.filter((c: any) => !c.is_primary).map((c: any) => c.category_id),
+      categoryId: eventCategories.find((c) => c.is_primary)?.category_id || '',
+      subcategoryIds: eventCategories.filter((c) => !c.is_primary).map((c) => c.category_id),
       start_date: event.start_date ? event.start_date.slice(0, 16) : '',
       end_date: event.end_date ? event.end_date.slice(0, 16) : '',
       timezone: event.timezone || 'Africa/Addis_Ababa',
@@ -166,7 +168,7 @@ export function EventDetailClient({
       await updateEventStatus(event.id, status)
       toast.success(`Event ${status.replace('_', ' ')} successfully`)
       router.refresh()
-    } catch (err: any) {
+    } catch (err) {
       toast.error(getErrorMessage(err, 'Action failed'))
     } finally {
       setLoading(false)
@@ -184,7 +186,7 @@ export function EventDetailClient({
         toast.success('Event featured')
       }
       router.refresh()
-    } catch (err: any) {
+    } catch (err) {
       toast.error(getErrorMessage(err, 'Action failed'))
     } finally {
       setLoading(false)
@@ -198,7 +200,7 @@ export function EventDetailClient({
       await deleteEvent(event.id)
       toast.success('Event deleted')
       router.push('/events')
-    } catch (err: any) {
+    } catch (err) {
       toast.error(getErrorMessage(err, 'Failed to delete event'))
     } finally {
       setLoading(false)
@@ -211,7 +213,7 @@ export function EventDetailClient({
       await updateEvent(event.id, { admin_note: adminNote })
       toast.success('Note saved')
       router.refresh()
-    } catch (err: any) {
+    } catch (err) {
       toast.error(getErrorMessage(err, 'Failed to save note'))
     } finally {
       setLoading(false)
@@ -331,7 +333,7 @@ export function EventDetailClient({
             <Card className="p-6">
               <SectionHeader icon={Tag} title="Categories" />
               <div className="flex flex-wrap gap-2">
-                {eventCategories.map((ec: any) => (
+                {eventCategories.map((ec) => (
                   <Badge key={ec.category_id} variant={ec.is_primary ? 'default' : 'outline'}>
                     {ec.name || ec.category_id}
                     {ec.is_primary && ' (Primary)'}
@@ -507,7 +509,7 @@ export function EventDetailClient({
               <p className="text-sm text-muted-foreground">No moderation actions recorded.</p>
             ) : (
               <div className="space-y-3">
-                {moderationLogs.map((log: any) => (
+                {moderationLogs.map((log) => (
                   <div key={log.id} className="flex items-start gap-3 p-3 rounded-xl bg-surface-container-high">
                     <div className="p-1.5 rounded-lg bg-surface-container-low">
                       <History size={14} className="text-muted-foreground" />

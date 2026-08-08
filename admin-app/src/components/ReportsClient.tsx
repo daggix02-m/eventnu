@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { getErrorMessage } from '@/lib/errors'
+import type { MappedReport } from '@/lib/mappers'
 import {
   Flag,
   MessageSquare,
@@ -16,6 +17,7 @@ import {
   EyeOff,
   Trash2,
   TriangleAlert,
+  type LucideIcon,
 } from 'lucide-react'
 import { Button } from '@/components/ui'
 import { Badge } from '@/components/ui'
@@ -46,7 +48,7 @@ const statusBadgeStyles: Record<string, string> = {
   dismissed: 'bg-success/10 text-success border-success/20',
 }
 
-const targetTypeIcons: Record<string, any> = {
+const targetTypeIcons: Record<string, LucideIcon> = {
   event: Calendar,
   host: Building2,
   user: User,
@@ -58,16 +60,16 @@ export function ReportsClient({
   initialCount,
   initialFilters,
 }: {
-  initialReports: any[]
+  initialReports: MappedReport[]
   initialCount: number
-  initialFilters: any
+  initialFilters: { status: string; targetType: string; page: number }
 }) {
   const [reports, setReports] = useState(initialReports)
   const [count, setCount] = useState(initialCount)
   const [filters, setFilters] = useState(initialFilters)
-  const [selectedReport, setSelectedReport] = useState<any>(null)
+  const [selectedReport, setSelectedReport] = useState<MappedReport | null>(null)
   const [loading, setLoading] = useState(false)
-  const [targetPreview, setTargetPreview] = useState<any>(null)
+  const [targetPreview, setTargetPreview] = useState<Awaited<ReturnType<typeof getReportTargetPreview>> | null>(null)
   const [noteDraft, setNoteDraft] = useState('')
   const router = useRouter()
 
@@ -77,7 +79,7 @@ export function ReportsClient({
     setFilters(initialFilters)
   }, [initialReports, initialCount, initialFilters])
 
-  const updateFilter = (key: string, value: any) => {
+  const updateFilter = (key: string, value: string) => {
     const newFilters = { ...filters, [key]: value, page: 1 }
     setFilters(newFilters)
     const params = new URLSearchParams()
@@ -88,7 +90,7 @@ export function ReportsClient({
     router.push(`/reports${qs ? `?${qs}` : ''}`)
   }
 
-  const handleSelectReport = async (report: any) => {
+  const handleSelectReport = async (report: MappedReport) => {
     setSelectedReport(report)
     setNoteDraft(report.admin_note || '')
     setTargetPreview(null)
@@ -103,7 +105,7 @@ export function ReportsClient({
       await saveReportNote(selectedReport.id, noteDraft)
       setSelectedReport({ ...selectedReport, admin_note: noteDraft })
       toast.success('Note saved')
-    } catch (err: any) {
+    } catch (err) {
       toast.error(getErrorMessage(err, 'Failed to save note'))
     } finally {
       setLoading(false)
@@ -117,7 +119,7 @@ export function ReportsClient({
       await dismissReport(selectedReport.id)
       toast.success('Report dismissed')
       setSelectedReport(null)
-    } catch (err: any) {
+    } catch (err) {
       toast.error(getErrorMessage(err, 'Failed to dismiss'))
     } finally {
       setLoading(false)
@@ -139,7 +141,7 @@ export function ReportsClient({
       }
       toast.success('Action taken successfully')
       setSelectedReport(null)
-    } catch (err: any) {
+    } catch (err) {
       toast.error(getErrorMessage(err, 'Action failed'))
     } finally {
       setLoading(false)
@@ -158,9 +160,9 @@ export function ReportsClient({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
           { label: 'Total Reports', value: count, icon: Flag },
-          { label: 'Pending', value: reports.filter((r: any) => r.status === 'pending').length, icon: AlertTriangle },
-          { label: 'Actioned', value: reports.filter((r: any) => r.status === 'actioned').length, icon: EyeOff },
-          { label: 'Dismissed', value: reports.filter((r: any) => r.status === 'dismissed').length, icon: X },
+          { label: 'Pending', value: reports.filter((r) => r.status === 'pending').length, icon: AlertTriangle },
+          { label: 'Actioned', value: reports.filter((r) => r.status === 'actioned').length, icon: EyeOff },
+          { label: 'Dismissed', value: reports.filter((r) => r.status === 'dismissed').length, icon: X },
         ].map((stat, i) => (
           <motion.div
             key={stat.label}
@@ -229,7 +231,7 @@ export function ReportsClient({
                   </td>
                 </tr>
               ) : (
-                reports.map((report: any) => {
+                reports.map((report) => {
                   const TargetIcon = targetTypeIcons[report.target_type] || Flag
                   return (
                     <tr
@@ -339,10 +341,10 @@ export function ReportsClient({
                   <div className="bg-surface-container-high/50 p-4 rounded-2xl border border-dashed border-outline">
                     <p className="text-[10px] uppercase font-bold text-muted-foreground mb-3 tracking-widest">Reported Content</p>
                     <div className="bg-card p-4 rounded-xl shadow-sm border border-outline-variant">
-                      {selectedReport.target_type === 'comment' && (
+                      {targetPreview.target_type === 'comment' && (
                         <p className="italic text-sm text-foreground">&ldquo;{targetPreview.content}&rdquo;</p>
                       )}
-                      {selectedReport.target_type === 'event' && (
+                      {targetPreview.target_type === 'event' && (
                         <div className="flex items-center gap-3">
                            <div className="w-12 h-12 rounded-lg bg-surface-container-high flex items-center justify-center overflow-hidden">
                             {targetPreview.poster_url ? (
@@ -357,7 +359,7 @@ export function ReportsClient({
                           </div>
                         </div>
                       )}
-                      {selectedReport.target_type === 'user' && (
+                      {targetPreview.target_type === 'user' && (
                         <div className="flex items-center gap-3">
                           <Avatar className="w-10 h-10">
                             {targetPreview.avatar_url ? (
@@ -374,7 +376,7 @@ export function ReportsClient({
                           </div>
                         </div>
                       )}
-                      {selectedReport.target_type === 'host' && (
+                      {targetPreview.target_type === 'host' && (
                         <div className="flex items-center gap-3">
                            <div className="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center overflow-hidden">
                             {targetPreview.logo_url ? (

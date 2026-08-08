@@ -1,7 +1,9 @@
 'use server'
 
 import { fetchQuery, fetchMutation } from '@/lib/actions/authedFetch'
+import type { Id } from '@eventnu/convex/_generated/dataModel'
 import { api } from '@eventnu/convex/_generated/api'
+import type { FunctionReference } from 'convex/server'
 import { revalidatePath } from 'next/cache'
 import { mapEvent, mapEventCategory, toDateTimeLocal } from '../mappers'
 
@@ -24,7 +26,7 @@ export async function getEvents(params: {
       search: params.search,
       page: params.page ?? 1,
     })
-    return { events: (result.page ?? []).map(mapEvent), count: (result as any).totalCount ?? 0 }
+    return { events: (result.page ?? []).map(mapEvent), count: result.totalCount ?? 0 }
   } catch (err) {
     console.error('Failed to load events:', err)
     throw err
@@ -37,7 +39,7 @@ export async function updateEventStatus(
   note?: string
 ) {
   await fetchMutation(api.events.updateStatus, {
-    eventId: eventId as any,
+    eventId: eventId as Id<'events'>,
     status,
     note,
   })
@@ -50,7 +52,7 @@ export async function bulkUpdateEventStatus(
   status: string
 ) {
   await fetchMutation(api.events.bulkUpdateStatus, {
-    eventIds: eventIds as any,
+    eventIds: eventIds as Id<'events'>[],
     status,
   })
   revalidatePath('/events')
@@ -63,7 +65,7 @@ export async function featureEvent(
   until: string | null
 ) {
   await fetchMutation(api.events.feature, {
-    eventId: eventId as any,
+    eventId: eventId as Id<'events'>,
     section,
     until: until ? new Date(until).getTime() : undefined,
   })
@@ -71,26 +73,26 @@ export async function featureEvent(
 }
 
 export async function unfeatureEvent(eventId: string) {
-  await fetchMutation(api.events.unfeature, { eventId: eventId as any })
+  await fetchMutation(api.events.unfeature, { eventId: eventId as Id<'events'> })
   revalidatePath('/events')
 }
 
 export async function deleteEvent(eventId: string) {
-  await fetchMutation(api.events.deleteEvent, { eventId: eventId as any })
+  await fetchMutation(api.events.deleteEvent, { eventId: eventId as Id<'events'> })
   revalidatePath('/events')
   revalidatePath('/')
 }
 
 export async function getEventById(eventId: string) {
   try {
-    const result = await fetchQuery(api.events.getById, { eventId: eventId as any })
+    const result = await fetchQuery(api.events.getById, { eventId: eventId as Id<'events'> })
     return {
       event: result.event ? mapEvent(result.event) : null,
-      categories: (result.categories ?? []).map((c: any, i: number) => mapEventCategory(c, i)),
-      images: (result.images ?? []).map((img: any) => ({
+      categories: (result.categories ?? []).map((c, i) => mapEventCategory(c, i)),
+      images: (result.images ?? []).map((img) => ({
         url: img.url,
         storageId: img.storageId ?? null,
-        filter: img.filter ?? null,
+        filter: img.filter ?? '',
       })),
     }
   } catch (err) {
@@ -100,13 +102,13 @@ export async function getEventById(eventId: string) {
 }
 
 async function getRecentEvents(
-  queryRef: any,
-  idKey: string,
+  queryRef: FunctionReference<'query', 'public'>,
+  idKey: 'hostId' | 'profileId',
   id: string,
   limit = 20
 ) {
-  const events = await fetchQuery(queryRef, { [idKey]: id as any, limit })
-  return (events ?? []).map((e: any) => ({
+  const events = await fetchQuery(queryRef, { [idKey]: id as Id<'hosts'>, limit })
+  return (events ?? []).map((e: { _id: string; title?: string | null; startDate?: number | null; status?: string | null }) => ({
     id: e._id,
     title: e.title ?? '',
     start_date: toDateTimeLocal(e.startDate),
@@ -192,8 +194,8 @@ export async function createEvent(
     externalLinkLabel: data.external_link_label ?? undefined,
     contactEmail: data.contact_email ?? undefined,
     status: data.status,
-    hostId: data.host_id as any ?? undefined,
-    organizerId: data.organizer_id as any ?? undefined,
+    hostId: data.host_id as Id<'hosts'> ?? undefined,
+    organizerId: data.organizer_id as Id<'profiles'> ?? undefined,
     isStandalone: data.is_standalone,
     frequencyType: data.frequency_type,
     isFeatured: data.is_featured,
@@ -202,7 +204,7 @@ export async function createEvent(
     venueMapLink: data.venue_map_link ?? undefined,
     timezone: data.timezone,
     slug: data.slug ?? undefined,
-    categoryIds: data.categoryIds as any ?? undefined,
+    categoryIds: data.categoryIds as Id<'categories'>[] ?? undefined,
     reservationLimit: data.reservation_limit ?? undefined,
     teaserVideoUrl: data.teaser_video_url ?? undefined,
     videoAspectRatio: data.video_aspect_ratio ?? undefined,
@@ -250,7 +252,7 @@ export async function updateEvent(
   }
 ) {
   await fetchMutation(api.events.update, {
-    eventId: eventId as any,
+    eventId: eventId as Id<'events'>,
     title: data.title,
     description: data.description,
     startDate: data.start_date ? new Date(data.start_date).getTime() : undefined,
@@ -271,8 +273,8 @@ export async function updateEvent(
     externalLinkLabel: data.external_link_label ?? undefined,
     contactEmail: data.contact_email ?? undefined,
     status: data.status,
-    hostId: data.host_id as any ?? undefined,
-    organizerId: data.organizer_id as any ?? undefined,
+    hostId: data.host_id as Id<'hosts'> ?? undefined,
+    organizerId: data.organizer_id as Id<'profiles'> ?? undefined,
     isStandalone: data.is_standalone,
     frequencyType: data.frequency_type,
     isFeatured: data.is_featured,
@@ -282,7 +284,7 @@ export async function updateEvent(
     venueMapLink: data.venue_map_link ?? undefined,
     timezone: data.timezone,
     slug: data.slug ?? undefined,
-    categoryIds: data.categoryIds as any ?? undefined,
+    categoryIds: data.categoryIds as Id<'categories'>[] ?? undefined,
     reservationLimit: data.reservation_limit ?? undefined,
     teaserVideoUrl: data.teaser_video_url ?? undefined,
     videoAspectRatio: data.video_aspect_ratio ?? undefined,

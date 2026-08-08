@@ -73,7 +73,7 @@ export function PublishToInstagramDialog({
       setPublishedLink(link ?? null)
       toast.success('Published to Instagram')
       router.refresh()
-    } catch (err: any) {
+    } catch (err) {
       toast.error(getErrorMessage(err, 'Failed to publish to Instagram'))
     } finally {
       setLoading(false)

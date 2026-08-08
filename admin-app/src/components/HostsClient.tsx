@@ -103,7 +103,7 @@ export function HostsClient({ initialHosts, initialCount, initialFilters }: Host
     const t = setTimeout(() => {
       const next = { ...filters, search: searchInput || undefined, page: 1 }
       setFilters(next)
-      router.push(`/hosts?${new URLSearchParams(next as any).toString()}`)
+      router.push(`/hosts?${new URLSearchParams(Object.entries(next).map(([k, v]) => [k, String(v)])).toString()}`)
     }, 400)
     return () => clearTimeout(t)
   }, [searchInput, filters, router])
@@ -111,13 +111,13 @@ export function HostsClient({ initialHosts, initialCount, initialFilters }: Host
   const handleFilterChange = (key: string, value: string) => {
     const newFilters = { ...filters, [key]: value, page: 1 }
     setFilters(newFilters)
-    router.push(`/hosts?${new URLSearchParams(newFilters as any).toString()}`)
+    router.push(`/hosts?${new URLSearchParams(Object.entries(newFilters).map(([k, v]) => [k, String(v)])).toString()}`)
   }
 
   const handlePageChange = (page: number) => {
     const newFilters = { ...filters, page }
     setFilters(newFilters)
-    router.push(`/hosts?${new URLSearchParams(newFilters as any).toString()}`)
+    router.push(`/hosts?${new URLSearchParams(Object.entries(newFilters).map(([k, v]) => [k, String(v)])).toString()}`)
   }
 
   const openCreateDialog = () => {

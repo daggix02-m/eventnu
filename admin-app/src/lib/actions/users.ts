@@ -1,6 +1,7 @@
 'use server'
 
 import { fetchQuery, fetchMutation } from '@/lib/actions/authedFetch'
+import type { Doc, Id } from '@eventnu/convex/_generated/dataModel'
 import { api } from '@eventnu/convex/_generated/api'
 import { revalidatePath } from 'next/cache'
 import { mapProfile } from '../mappers'
@@ -15,9 +16,9 @@ export async function getUsers(params: {
     const users = await fetchQuery(api.profiles.list, { search: params.search })
     let filtered = users.map(mapProfile)
     if (params.status === 'suspended') {
-      filtered = filtered.filter((u: any) => u.suspended)
+      filtered = filtered.filter((u) => u.suspended)
     } else if (params.status === 'active') {
-      filtered = filtered.filter((u: any) => !u.suspended)
+      filtered = filtered.filter((u) => !u.suspended)
     }
     return { users: filtered, count: filtered.length }
   } catch (err) {
@@ -27,17 +28,17 @@ export async function getUsers(params: {
 }
 
 export async function suspendUser(userId: string) {
-  await fetchMutation(api.profiles.suspend, { profileId: userId as any })
+  await fetchMutation(api.profiles.suspend, { profileId: userId as Id<'profiles'> })
   revalidatePath('/users')
 }
 
 export async function unsuspendUser(userId: string) {
-  await fetchMutation(api.profiles.unsuspend, { profileId: userId as any })
+  await fetchMutation(api.profiles.unsuspend, { profileId: userId as Id<'profiles'> })
   revalidatePath('/users')
 }
 
 export async function banUser(userId: string) {
-  await fetchMutation(api.profiles.suspend, { profileId: userId as any })
+  await fetchMutation(api.profiles.suspend, { profileId: userId as Id<'profiles'> })
   revalidatePath('/users')
 }
 
@@ -47,7 +48,7 @@ export async function updateProfile(userId: string, updates: {
   avatar_url?: string
 }) {
   await fetchMutation(api.profiles.updateProfile, {
-    profileId: userId as any,
+    profileId: userId as Id<'profiles'>,
     fullName: updates.full_name,
     email: updates.email,
     avatarUrl: updates.avatar_url,
@@ -57,19 +58,26 @@ export async function updateProfile(userId: string, updates: {
 
 export async function getUserById(userId: string) {
   try {
-    const profile = await fetchQuery(api.profiles.getById, { profileId: userId as any })
+    const profile = await fetchQuery(api.profiles.getById, { profileId: userId as Id<'profiles'> })
     if (!profile) return { profile: null, role: null, stats: null }
 
-    let userWithCounts: any = null
+    let userWithCounts:
+      | (Doc<'profiles'> & {
+          eventCount: number
+          likeCount: number
+          followCount: number
+          commentCount: number
+        })
+      | null = null
     try {
-      userWithCounts = await fetchQuery(api.profiles.getUserWithCounts, { profileId: userId as any })
+      userWithCounts = await fetchQuery(api.profiles.getUserWithCounts, { profileId: userId as Id<'profiles'> })
     } catch (err) {
       console.error('Failed to load user counts:', err)
     }
 
     return {
       profile: mapProfile(profile),
-      role: (profile as any).role || null,
+      role: profile.role || null,
       stats: {
         eventCount: userWithCounts?.eventCount ?? 0,
         likeCount: userWithCounts?.likeCount ?? 0,

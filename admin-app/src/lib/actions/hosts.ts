@@ -1,6 +1,7 @@
 'use server'
 
 import { fetchQuery, fetchMutation } from '@/lib/actions/authedFetch'
+import type { Id } from '@eventnu/convex/_generated/dataModel'
 import { api } from '@eventnu/convex/_generated/api'
 import { revalidatePath } from 'next/cache'
 import { mapHost } from '../mappers'
@@ -68,7 +69,7 @@ export async function updateHost(
   }
 ) {
   await fetchMutation(api.hosts.update, {
-    hostId: hostId as any,
+    hostId: hostId as Id<'hosts'>,
     name: updates.name,
     slug: updates.slug,
     hostType: updates.host_type,
@@ -88,22 +89,22 @@ export async function updateHostStatus(
   action: string
 ) {
   await fetchMutation(api.hosts.updateStatus, {
-    hostId: hostId as any,
+    hostId: hostId as Id<'hosts'>,
     status,
   })
   revalidatePath('/hosts')
 }
 
 export async function deleteHost(hostId: string) {
-  await fetchMutation(api.hosts.remove, { hostId: hostId as any })
+  await fetchMutation(api.hosts.remove, { hostId: hostId as Id<'hosts'> })
   revalidatePath('/hosts')
 }
 
 export async function getHostById(hostId: string) {
   try {
-    const host = await fetchQuery(api.hosts.getById, { hostId: hostId as any })
+    const host = await fetchQuery(api.hosts.getById, { hostId: hostId as Id<'hosts'> })
     if (!host) return { host: null, eventCount: 0 }
-    const stats = await fetchQuery(api.hosts.getStats, { hostId: hostId as any })
+    const stats = await fetchQuery(api.hosts.getStats, { hostId: hostId as Id<'hosts'> })
     return { host: mapHost(host), eventCount: stats.eventCount }
   } catch (err) {
     console.error('Failed to load host details:', err)

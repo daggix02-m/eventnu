@@ -114,7 +114,7 @@ export function AnalyticsClient({ data }: AnalyticsClientProps) {
         ].map((tab) => (
           <button
             key={tab.key}
-            onClick={() => setActiveTab(tab.key as any)}
+            onClick={() => setActiveTab(tab.key as 'overview' | 'events' | 'users')}
             className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors border-b-2 -mb-px ${
               activeTab === tab.key
                 ? 'text-primary border-primary'

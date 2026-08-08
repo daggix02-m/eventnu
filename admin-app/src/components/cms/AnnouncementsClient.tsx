@@ -45,7 +45,7 @@ export function AnnouncementsClient({ announcements }: { announcements: Announce
       toast.success('Announcement created')
       setForm({ title: '', message: '', link_url: '', link_text: '', is_active: true })
       router.refresh()
-    } catch (err: any) {
+    } catch (err) {
       toast.error(getErrorMessage(err, 'Failed to create announcement'))
     } finally {
       setLoading(false)
@@ -57,7 +57,7 @@ export function AnnouncementsClient({ announcements }: { announcements: Announce
       await updateAnnouncement(item.id, { is_active: !item.is_active })
       toast.success('Announcement updated')
       router.refresh()
-    } catch (err: any) {
+    } catch (err) {
       toast.error(getErrorMessage(err, 'Failed to update announcement'))
     }
   }
@@ -68,7 +68,7 @@ export function AnnouncementsClient({ announcements }: { announcements: Announce
       await deleteAnnouncement(id)
       toast.success('Announcement deleted')
       router.refresh()
-    } catch (err: any) {
+    } catch (err) {
       toast.error(getErrorMessage(err, 'Failed to delete announcement'))
     }
   }

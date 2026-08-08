@@ -1,6 +1,7 @@
 'use server'
 
 import { fetchQuery, fetchMutation } from '@/lib/actions/authedFetch'
+import type { Id } from '@eventnu/convex/_generated/dataModel'
 import { api } from '@eventnu/convex/_generated/api'
 import { revalidatePath } from 'next/cache'
 import { mapSupportTicket } from '../mappers'
@@ -30,6 +31,6 @@ export async function getSupportTickets() {
 }
 
 export async function closeSupportTicket(ticketId: string) {
-  await fetchMutation(api.support.close, { ticketId: ticketId as any })
+  await fetchMutation(api.support.close, { ticketId: ticketId as Id<'supportTickets'> })
   revalidatePath('/support')
 }

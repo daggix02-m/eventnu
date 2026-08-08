@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useQuery } from 'convex/react'
 import { api } from '@eventnu/convex/_generated/api'
+import type { Id } from '@eventnu/convex/_generated/dataModel'
 import { Button } from '@/components/ui'
 import { Card } from '@/components/ui'
 import { Avatar } from '@/components/ui'
@@ -16,13 +17,9 @@ import { getErrorMessage } from '@/lib/errors'
 import {
   User,
   Lock,
-  Palette,
   Bell,
   Mail,
   Save,
-  Sun,
-  Moon,
-  Monitor,
   CheckCircle,
   AlertTriangle,
   Globe,
@@ -40,7 +37,6 @@ import {
   ScrollText,
   Loader2,
 } from 'lucide-react'
-import { useTheme } from 'next-themes'
 import { updateProfile } from '@/lib/actions/users'
 import { usernameFromEmail } from '@/lib/mappers'
 import {
@@ -89,7 +85,6 @@ export function SettingsClient({
   instagramNotice,
   instagramErrorNotice,
 }: SettingsClientProps) {
-  const { theme, setTheme } = useTheme()
   const router = useRouter()
   const profileData = useQuery(api.profiles.getMe)
   const profile: AdminProfile | null = profileData
@@ -117,7 +112,7 @@ export function SettingsClient({
   })
   const notificationPrefs = useQuery(
     api.adminSettings.getByAdmin,
-    profile ? { adminId: profile.id as any } : 'skip'
+    profile ? { adminId: profile.id as Id<'profiles'> } : 'skip'
   )
   const [passwordForm, setPasswordForm] = useState({
     current: '',
@@ -190,7 +185,7 @@ export function SettingsClient({
         setForm((prev) => ({ ...prev, avatar_url: urls[0] as string }))
         toast.success('Avatar uploaded')
       }
-    } catch (err: any) {
+    } catch (err) {
       toast.error(getErrorMessage(err, 'Avatar upload failed'))
     } finally {
       setUploadingAvatar(false)
@@ -260,12 +255,6 @@ export function SettingsClient({
     router.refresh()
     toast.success('Cache cleared')
   }
-
-  const themeOptions = [
-    { value: 'light', label: 'Light', icon: Sun },
-    { value: 'dark', label: 'Dark', icon: Moon },
-    { value: 'system', label: 'System', icon: Monitor },
-  ]
 
   const statsItems = [
     { label: 'Total Events', value: adminStats.totalEvents, icon: Calendar },
@@ -566,41 +555,6 @@ export function SettingsClient({
 
         {/* Right Column - Preferences & Stats */}
         <div className="space-y-6">
-          {/* Theme Section */}
-          <Card className="p-6">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-xl bg-surface-container-high flex items-center justify-center text-muted-foreground">
-                <Palette size={20} />
-              </div>
-              <div>
-                <h2 className="text-lg font-bold text-foreground">Appearance</h2>
-                <p className="text-sm text-muted-foreground">Choose your theme</p>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              {themeOptions.map((option) => {
-                const Icon = option.icon
-                const isActive = theme === option.value
-                return (
-                  <button
-                    key={option.value}
-                    onClick={() => setTheme(option.value)}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-                      isActive
-                        ? 'bg-primary/10 text-primary border border-primary/20'
-                        : 'bg-surface-container-high text-muted-foreground hover:bg-surface-container-highest'
-                    }`}
-                  >
-                    <Icon size={18} />
-                    <span className="flex-1 text-sm font-medium text-left">{option.label}</span>
-                    {isActive && <CheckCircle size={16} />}
-                  </button>
-                )
-              })}
-            </div>
-          </Card>
-
           {/* Notifications Section */}
           <Card className="p-6">
             <div className="flex items-center gap-3 mb-6">

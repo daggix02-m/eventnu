@@ -1,23 +1,15 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { Bell, HelpCircle, Sun, Moon } from 'lucide-react'
-import { useTheme } from 'next-themes'
+import { Bell, HelpCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useSidebar } from './sidebar-context'
 
 export function TopHeader() {
-  const { setTheme, resolvedTheme } = useTheme()
   const { collapsed } = useSidebar()
   const router = useRouter()
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
 
   return (
     <header className={cn(
@@ -32,7 +24,8 @@ export function TopHeader() {
           width={40}
           height={34}
           priority
-          className="h-[34px] w-auto rounded-md transition-opacity group-hover:opacity-80"
+          style={{ height: '34px', width: 'auto' }}
+          className="rounded-md transition-opacity group-hover:opacity-80"
         />
         <span className="hidden sm:block">
           <span className="block font-headline text-base font-semibold text-foreground leading-tight">Event Nu</span>
@@ -43,17 +36,6 @@ export function TopHeader() {
       {/* Actions */}
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-1">
-          <button
-            onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
-            className="p-2 text-muted-foreground hover:text-primary hover:bg-surface-container-high transition-colors rounded-md"
-            aria-label="Toggle theme"
-          >
-            {mounted ? (
-              <>{resolvedTheme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}</>
-            ) : (
-              <Moon size={18} />
-            )}
-          </button>
           <button
             onClick={() => router.push('/notifications')}
             className="relative p-2 text-muted-foreground hover:text-primary hover:bg-surface-container-high transition-colors rounded-md"

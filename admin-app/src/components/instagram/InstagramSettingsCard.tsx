@@ -57,7 +57,7 @@ export function InstagramSettingsCard({
         return
       }
       window.location.href = url
-    } catch (err: any) {
+    } catch (err) {
       toast.error(getErrorMessage(err, 'Failed to start connection'))
     } finally {
       setBusy(null)
@@ -71,7 +71,7 @@ export function InstagramSettingsCard({
       await disconnectInstagram()
       await refresh()
       toast.success('Instagram disconnected')
-    } catch (err: any) {
+    } catch (err) {
       toast.error(getErrorMessage(err, 'Failed to disconnect'))
     } finally {
       setBusy(null)
@@ -84,7 +84,7 @@ export function InstagramSettingsCard({
       await setInstagramSync(enabled)
       await refresh()
       toast.success(enabled ? 'IG to site sync enabled' : 'IG to site sync disabled')
-    } catch (err: any) {
+    } catch (err) {
       toast.error(getErrorMessage(err, 'Failed to update'))
     } finally {
       setBusy(null)
@@ -97,7 +97,7 @@ export function InstagramSettingsCard({
       await setInstagramAutoPublish(enabled)
       await refresh()
       toast.success(enabled ? 'Publishing to Instagram enabled' : 'Publishing to Instagram disabled')
-    } catch (err: any) {
+    } catch (err) {
       toast.error(getErrorMessage(err, 'Failed to update'))
     } finally {
       setBusy(null)

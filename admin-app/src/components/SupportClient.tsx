@@ -120,7 +120,7 @@ export function SupportClient({ initialTickets = [] }: SupportClientProps) {
       toast.success('Support ticket submitted!')
       setContactForm({ subject: '', message: '', priority: 'medium' })
       router.refresh()
-    } catch (err: any) {
+    } catch (err) {
       toast.error(getErrorMessage(err, 'Failed to submit ticket'))
     } finally {
       setIsSubmitting(false)
@@ -136,7 +136,7 @@ export function SupportClient({ initialTickets = [] }: SupportClientProps) {
         prev.map((t) => (t.id === ticketId ? { ...t, status: 'closed' } : t))
       )
       router.refresh()
-    } catch (err: any) {
+    } catch (err) {
       toast.error(getErrorMessage(err, 'Failed to close ticket'))
     } finally {
       setIsClosingTicket(null)

@@ -17,6 +17,7 @@ import {
   ChevronRight,
   User,
   Users,
+  type LucideIcon,
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { sendNotification } from '@/lib/actions/notifications'
@@ -97,14 +98,14 @@ export function NotificationsClient({
         userId: '',
       })
       router.refresh()
-    } catch (err: any) {
+    } catch (err) {
       toast.error(getErrorMessage(err, 'Failed to send notification'))
     } finally {
       setIsLoading(false)
     }
   }
 
-  const typeIcons: Record<string, any> = {
+  const typeIcons: Record<string, LucideIcon> = {
     announcement: Megaphone,
     warning: AlertTriangle,
     info: Info,

@@ -33,7 +33,7 @@ export function PagesClient({ pages }: { pages: Page[] }) {
       await deletePage(id)
       toast.success('Page deleted')
       router.refresh()
-    } catch (err: any) {
+    } catch (err) {
       toast.error(getErrorMessage(err, 'Failed to delete page'))
     } finally {
       setDeleting(null)

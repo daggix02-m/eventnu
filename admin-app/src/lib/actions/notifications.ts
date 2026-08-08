@@ -1,6 +1,7 @@
 'use server'
 
 import { fetchQuery, fetchMutation } from '@/lib/actions/authedFetch'
+import type { Id } from '@eventnu/convex/_generated/dataModel'
 import { api } from '@eventnu/convex/_generated/api'
 import { revalidatePath } from 'next/cache'
 import { mapNotification } from '../mappers'
@@ -15,7 +16,7 @@ export async function getNotifications(params: {
     const to = from + (params.perPage ?? 20)
     const notifications = all
       .slice(from, to)
-      .map((n: any) => mapNotification(n, n.profile))
+      .map((n) => mapNotification(n, n.profile))
     return { notifications, count: all.length }
   } catch (err) {
     console.error('Failed to load notifications:', err)
@@ -28,11 +29,11 @@ export async function sendNotification(params: {
   type: string
   title: string
   body: string
-  data?: Record<string, any>
+  data?: Record<string, unknown>
 }) {
   if (params.userId) {
     await fetchMutation(api.notifications.send, {
-      userId: params.userId as any,
+      userId: params.userId as Id<'profiles'>,
       type: params.type,
       title: params.title,
       body: params.body,
@@ -41,7 +42,7 @@ export async function sendNotification(params: {
   } else {
     const profiles = await fetchQuery(api.profiles.list, {})
     await fetchMutation(api.notifications.sendBatch, {
-      userIds: profiles.map((p: any) => p._id),
+      userIds: profiles.map((p) => p._id),
       type: params.type,
       title: params.title,
       body: params.body,

@@ -1,6 +1,7 @@
 'use server'
 
 import { fetchQuery, fetchMutation } from '@/lib/actions/authedFetch'
+import type { Id } from '@eventnu/convex/_generated/dataModel'
 import { api } from '@eventnu/convex/_generated/api'
 import { revalidatePath } from 'next/cache'
 import { mapAnnouncement, mapContactSubmission, mapPage } from '../mappers'
@@ -17,7 +18,7 @@ export async function getPages() {
 
 export async function getPageById(id: string) {
   try {
-    const page = await fetchQuery(api.cms.getPageById, { pageId: id as any })
+    const page = await fetchQuery(api.cms.getPageById, { pageId: id as Id<'pages'> })
     return page ? mapPage(page) : null
   } catch (err) {
     console.error('Failed to load page:', err)
@@ -63,7 +64,7 @@ export async function updatePage(
   }
 ) {
   await fetchMutation(api.cms.updatePage, {
-    pageId: id as any,
+    pageId: id as Id<'pages'>,
     slug: data.slug,
     title: data.title,
     subtitle: data.subtitle ?? undefined,
@@ -78,7 +79,7 @@ export async function updatePage(
 }
 
 export async function deletePage(id: string) {
-  await fetchMutation(api.cms.deletePage, { pageId: id as any })
+  await fetchMutation(api.cms.deletePage, { pageId: id as Id<'pages'> })
   revalidatePath('/cms/pages')
   revalidatePath('/cms')
 }
@@ -129,7 +130,7 @@ export async function updateAnnouncement(
   }
 ) {
   await fetchMutation(api.cms.updateAnnouncement, {
-    announcementId: id as any,
+    announcementId: id as Id<'announcements'>,
     title: data.title,
     message: data.message ?? undefined,
     linkUrl: data.link_url ?? undefined,
@@ -144,7 +145,7 @@ export async function updateAnnouncement(
 }
 
 export async function deleteAnnouncement(id: string) {
-  await fetchMutation(api.cms.deleteAnnouncement, { announcementId: id as any })
+  await fetchMutation(api.cms.deleteAnnouncement, { announcementId: id as Id<'announcements'> })
   revalidatePath('/cms/announcements')
   revalidatePath('/cms')
   revalidatePath('/')
@@ -161,7 +162,7 @@ export async function getContactSubmissions() {
 }
 
 export async function markContactResolved(id: string, resolved: boolean) {
-  await fetchMutation(api.cms.markContactResolved, { submissionId: id as any })
+  await fetchMutation(api.cms.markContactResolved, { submissionId: id as Id<'contactSubmissions'> })
   revalidatePath('/cms/contact')
   revalidatePath('/cms')
 }

@@ -28,6 +28,7 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { PageHeader } from '@/components/Page'
 import { toast } from 'sonner'
 import { getEvents, updateEventStatus, bulkUpdateEventStatus, featureEvent, unfeatureEvent, deleteEvent } from '@/lib/actions/events'
+import type { MappedEvent } from '@/lib/mappers'
 import Link from 'next/link'
 
 const statusOptions = [
@@ -66,14 +67,23 @@ const statusVariantMap: Record<string, 'outline' | 'warning' | 'success' | 'dest
   archived: 'secondary',
 }
 
+interface EventListFilters {
+  search?: string
+  status?: string
+  source?: string
+  frequency?: string
+  featured?: boolean
+  page?: number
+}
+
 export function EventsClient({
   initialEvents,
   initialCount,
   initialFilters,
 }: {
-  initialEvents: any[]
+  initialEvents: MappedEvent[]
   initialCount: number
-  initialFilters: any
+  initialFilters: EventListFilters
 }) {
   const queryClient = useQueryClient()
   const [filters, setFilters] = useState(initialFilters)
@@ -91,7 +101,7 @@ export function EventsClient({
   useEffect(() => {
     if (searchInput === (filters.search || '')) return
     const t = setTimeout(() => {
-      setFilters((prev: any) => ({ ...prev, search: searchInput || undefined, page: 1 }))
+      setFilters((prev) => ({ ...prev, search: searchInput || undefined, page: 1 }))
     }, 400)
     return () => clearTimeout(t)
   }, [searchInput, filters.search])
@@ -120,8 +130,8 @@ export function EventsClient({
     return () => document.removeEventListener('click', handleOutsideClick)
   }, [actionMenuOpen])
 
-  const updateFilter = (key: string, value: any) => {
-    setFilters((prev: any) => ({ ...prev, [key]: value, ...(key === 'page' ? {} : { page: 1 }) }))
+  const updateFilter = (key: string, value: string | boolean | number | undefined) => {
+    setFilters((prev) => ({ ...prev, [key]: value, ...(key === 'page' ? {} : { page: 1 }) }))
   }
 
   const matchesInitial = JSON.stringify(filters) === JSON.stringify(initialFilters)
@@ -154,7 +164,7 @@ export function EventsClient({
       await updateEventStatus(eventId, status)
       toast.success(`Event ${status.replace('_', ' ')} successfully`)
       await refreshEvents()
-    } catch (err: any) {
+    } catch (err) {
       toast.error(getErrorMessage(err, 'Action failed'))
     } finally {
       setLoading(false)
@@ -172,7 +182,7 @@ export function EventsClient({
         toast.success('Event featured successfully')
       }
       await refreshEvents()
-    } catch (err: any) {
+    } catch (err) {
       toast.error(getErrorMessage(err, 'Action failed'))
     } finally {
       setLoading(false)
@@ -186,7 +196,7 @@ export function EventsClient({
       await deleteEvent(eventId)
       toast.success('Event deleted successfully')
       await refreshEvents()
-    } catch (err: any) {
+    } catch (err) {
       toast.error(getErrorMessage(err, 'Failed to delete event'))
     } finally {
       setLoading(false)
@@ -201,7 +211,7 @@ export function EventsClient({
       toast.success(`${selectedIds.length} events ${status.replace('_', ' ')}`)
       setSelectedIds([])
       await refreshEvents()
-    } catch (err: any) {
+    } catch (err) {
       toast.error(getErrorMessage(err, 'Bulk action failed'))
     } finally {
       setLoading(false)
@@ -323,7 +333,7 @@ export function EventsClient({
                   </td>
                 </tr>
               ) : (
-                events.map((event: any) => (
+                events.map((event) => (
                   <tr key={event.id} className="hover:bg-surface-container-low transition-colors group">
                     <td className="px-4 py-4">
                       <input
@@ -466,7 +476,7 @@ export function EventsClient({
               <Button
                 variant="outline"
                 size="sm"
-                disabled={filters.page <= 1}
+                disabled={(filters.page ?? 1) <= 1}
                 onClick={() => updateFilter('page', (filters.page || 1) - 1)}
               >
                 <ChevronLeft size={14} />
@@ -477,7 +487,7 @@ export function EventsClient({
               <Button
                 variant="outline"
                 size="sm"
-                disabled={filters.page >= totalPages}
+                disabled={(filters.page ?? 1) >= totalPages}
                 onClick={() => updateFilter('page', (filters.page || 1) + 1)}
               >
                 <ChevronRight size={14} />

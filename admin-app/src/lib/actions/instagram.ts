@@ -1,6 +1,7 @@
 'use server'
 
 import { fetchQuery, fetchMutation, fetchAction } from '@/lib/actions/authedFetch'
+import type { Id } from '@eventnu/convex/_generated/dataModel'
 import { api } from '@eventnu/convex/_generated/api'
 import { revalidatePath } from 'next/cache'
 
@@ -34,7 +35,7 @@ export async function disconnectInstagram() {
 
 export async function publishEventToInstagram(eventId: string, caption: string) {
   return await fetchAction(api.instagram.publishToInstagram, {
-    eventId: eventId as any,
+    eventId: eventId as Id<'events'>,
     caption,
   })
 }

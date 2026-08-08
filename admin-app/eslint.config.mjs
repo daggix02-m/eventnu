@@ -15,7 +15,7 @@ const eslintConfig = [
   ...nextTs,
   {
     rules: {
-      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-explicit-any": "error",
       "react-hooks/set-state-in-effect": "off",
       "react-hooks/static-components": "off",
       "@next/next/no-img-element": "off",

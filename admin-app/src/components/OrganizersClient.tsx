@@ -22,33 +22,11 @@ import {
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { verifyOrganizer, unverifyOrganizer, suspendOrganizer, unsuspendOrganizer } from '@/lib/actions/organizers'
+import type { MappedOrganizer } from '@/lib/mappers'
 import { useRouter } from 'next/navigation'
 
-interface Organizer {
-  profile_id: string
-  organizer_name: string
-  bio: string
-  logo_url?: string
-  website?: string
-  contact_email?: string
-  social_links?: any
-  follower_count: number
-  verified: boolean
-  created_at: string
-  updated_at: string
-  organizer_handle: string
-  profiles: {
-    id: string
-    username: string
-    full_name: string
-    email: string
-    avatar_url?: string
-    suspended: boolean
-  }[]
-}
-
 interface OrganizersClientProps {
-  initialOrganizers: Organizer[]
+  initialOrganizers: MappedOrganizer[]
   initialCount: number
   initialFilters: { verified?: string; search?: string; page?: number }
 }
@@ -59,7 +37,7 @@ export function OrganizersClient({ initialOrganizers, initialCount, initialFilte
   const [filters, setFilters] = useState(initialFilters)
   const [searchInput, setSearchInput] = useState(initialFilters.search || '')
   const [, setIsLoading] = useState(false)
-  const [selectedOrganizer, setSelectedOrganizer] = useState<Organizer | null>(null)
+  const [selectedOrganizer, setSelectedOrganizer] = useState<MappedOrganizer | null>(null)
   const [isDetailOpen, setIsDetailOpen] = useState(false)
   const router = useRouter()
 
@@ -78,7 +56,7 @@ export function OrganizersClient({ initialOrganizers, initialCount, initialFilte
     const t = setTimeout(() => {
       const next = { ...filters, search: searchInput || undefined, page: 1 }
       setFilters(next)
-      router.push(`/organizers?${new URLSearchParams(next as any).toString()}`)
+      router.push(`/organizers?${new URLSearchParams(Object.entries(next).map(([k, v]) => [k, String(v)])).toString()}`)
     }, 400)
     return () => clearTimeout(t)
   }, [searchInput, filters, router])
@@ -86,13 +64,13 @@ export function OrganizersClient({ initialOrganizers, initialCount, initialFilte
   const handleFilterChange = (key: string, value: string) => {
     const newFilters = { ...filters, [key]: value, page: 1 }
     setFilters(newFilters)
-    router.push(`/organizers?${new URLSearchParams(newFilters as any).toString()}`)
+    router.push(`/organizers?${new URLSearchParams(Object.entries(newFilters).map(([k, v]) => [k, String(v)])).toString()}`)
   }
 
   const handlePageChange = (page: number) => {
     const newFilters = { ...filters, page }
     setFilters(newFilters)
-    router.push(`/organizers?${new URLSearchParams(newFilters as any).toString()}`)
+    router.push(`/organizers?${new URLSearchParams(Object.entries(newFilters).map(([k, v]) => [k, String(v)])).toString()}`)
   }
 
   const handleVerify = async (profileId: string) => {
@@ -143,7 +121,7 @@ export function OrganizersClient({ initialOrganizers, initialCount, initialFilte
     }
   }
 
-  const openDetail = (organizer: Organizer) => {
+  const openDetail = (organizer: MappedOrganizer) => {
     setSelectedOrganizer(organizer)
     setIsDetailOpen(true)
   }

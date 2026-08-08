@@ -25,7 +25,7 @@ export async function getDashboardStats() {
 export async function getPendingReviewEvents() {
   try {
     const events = await fetchQuery(api.events.getPendingReview)
-    return events.map((e: any) => ({
+    return events.map((e) => ({
       id: e._id,
       title: e.title,
       poster_url: e.posterUrl,
@@ -42,7 +42,7 @@ export async function getPendingReviewEvents() {
 export async function getRecentModerationLogs() {
   try {
     const logs = await fetchQuery(api.moderation.getRecent, { limit: 10 })
-    return logs.map((log: any) => mapModerationLog(log))
+    return logs.map((log) => mapModerationLog(log))
   } catch (err) {
     console.error('Failed to load moderation logs:', err)
     throw err
@@ -52,7 +52,7 @@ export async function getRecentModerationLogs() {
 export async function getModerationLogsByTarget(targetType: string, targetId: string) {
   try {
     const logs = await fetchQuery(api.moderation.getByTarget, { targetType, targetId })
-    return logs.map((log: any) => mapModerationLog(log))
+    return logs.map((log) => mapModerationLog(log))
   } catch (err) {
     console.error('Failed to load moderation logs:', err)
     return []

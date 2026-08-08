@@ -24,6 +24,7 @@ import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import { verifyOrganizer, unverifyOrganizer, suspendOrganizer, unsuspendOrganizer } from '@/lib/actions/organizers'
 import { getOrganizerRecentEvents } from '@/lib/actions/events'
+import type { MappedOrganizer } from '@/lib/mappers'
 
 const fadeUp = {
   initial: { opacity: 0, y: 20 },
@@ -32,31 +33,8 @@ const fadeUp = {
 }
 
 
-interface Organizer {
-  profile_id: string
-  organizer_name: string
-  bio: string
-  logo_url?: string
-  website?: string
-  contact_email?: string
-  social_links?: any
-  follower_count: number
-  verified: boolean
-  created_at: string
-  updated_at: string
-  organizer_handle: string
-  profiles: {
-    id: string
-    username: string
-    full_name: string
-    email: string
-    avatar_url?: string
-    suspended: boolean
-  }[]
-}
-
 interface OrganizerDetailClientProps {
-  organizer: Organizer
+  organizer: MappedOrganizer
   eventCount: number
 }
 

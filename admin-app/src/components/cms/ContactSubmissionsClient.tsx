@@ -26,7 +26,7 @@ export function ContactSubmissionsClient({ submissions }: { submissions: Contact
       await markContactResolved(id, resolved)
       toast.success('Submission updated')
       router.refresh()
-    } catch (err: any) {
+    } catch (err) {
       toast.error(getErrorMessage(err, 'Failed to update submission'))
     }
   }

@@ -126,7 +126,7 @@ export function ImagePicker({
           )
           .filter((img): img is PickedImage => img !== null)
         if (uploaded.length > 0) onChange([...images, ...uploaded])
-      } catch (err: any) {
+      } catch (err) {
         toast.error(getErrorMessage(err, 'Upload failed'))
       } finally {
         setUploading(false)

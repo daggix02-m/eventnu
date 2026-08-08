@@ -1,6 +1,7 @@
 'use server'
 
 import { fetchQuery, fetchMutation } from '@/lib/actions/authedFetch'
+import type { Id } from '@eventnu/convex/_generated/dataModel'
 import { api } from '@eventnu/convex/_generated/api'
 import { revalidatePath } from 'next/cache'
 import { mapFeaturedSection } from '../mappers'
@@ -22,7 +23,7 @@ export async function updateFeaturedSection(id: string, updates: {
   sort_order?: number
 }) {
   await fetchMutation(api.features.update, {
-    sectionId: id as any,
+    sectionId: id as Id<'featuredSections'>,
     label: updates.label,
     description: updates.description,
     enabled: updates.enabled,
@@ -54,7 +55,7 @@ export async function updateAdminNotificationPrefs(adminId: string, prefs: {
   email_users: boolean
 }) {
   await fetchMutation(api.adminSettings.upsert, {
-    adminId: adminId as any,
+    adminId: adminId as Id<'profiles'>,
     emailReports: prefs.email_reports,
     emailEvents: prefs.email_events,
     emailUsers: prefs.email_users,

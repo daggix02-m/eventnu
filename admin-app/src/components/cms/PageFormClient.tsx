@@ -34,7 +34,7 @@ export function PageFormClient({ initialData }: PageFormClientProps) {
     sort_order: initialData?.sort_order ?? 0,
   })
 
-  const updateField = (field: string, value: any) => {
+  const updateField = (field: string, value: string | number | boolean) => {
     setForm((prev) => ({ ...prev, [field]: value }))
   }
 
@@ -56,7 +56,7 @@ export function PageFormClient({ initialData }: PageFormClientProps) {
       }
       router.push('/cms/pages')
       router.refresh()
-    } catch (err: any) {
+    } catch (err) {
       toast.error(getErrorMessage(err, 'Failed to save page'))
     } finally {
       setLoading(false)

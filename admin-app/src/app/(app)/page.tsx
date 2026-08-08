@@ -136,7 +136,7 @@ export default async function DashboardPage() {
                 </Link>
               </div>
               <div className="divide-y divide-outline-variant">
-                {pendingEvents.map((event: any) => (
+                {pendingEvents.map((event) => (
                   <div key={event.id} className="p-4 flex items-center gap-4 hover:bg-surface-container-low transition-colors">
                     <div className="w-12 h-12 rounded-lg bg-surface-container-high flex items-center justify-center overflow-hidden flex-shrink-0">
                       {event.poster_url ? (
@@ -172,7 +172,7 @@ export default async function DashboardPage() {
                   No moderation activity yet.
                 </div>
               ) : (
-                moderationLogs.map((log: any) => (
+                moderationLogs.map((log) => (
                   <div key={log.id} className="p-4 flex items-center gap-4 hover:bg-surface-container-low transition-colors">
                     <Avatar className="w-8 h-8">
                       <div className="w-full h-full bg-surface-container-high flex items-center justify-center text-muted-foreground font-bold text-xs">

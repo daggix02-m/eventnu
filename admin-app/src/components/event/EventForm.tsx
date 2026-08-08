@@ -202,7 +202,7 @@ export function EventForm({
     images: initial?.images ?? [],
   })
 
-  const updateField = (field: keyof EventFormValues, value: any) => {
+  const updateField = (field: keyof EventFormValues, value: string | boolean | string[] | PickedImage[]) => {
     setForm(prev => ({ ...prev, [field]: value }))
   }
 
@@ -265,7 +265,7 @@ export function EventForm({
       toast.success(status === 'published' ? 'Event published!' : 'Event saved as draft')
       router.push('/events')
       router.refresh()
-    } catch (err: any) {
+    } catch (err) {
       toast.error(getErrorMessage(err, 'Failed to create event'))
     } finally {
       setLoading(false)
@@ -281,7 +281,7 @@ export function EventForm({
       toast.success('Event updated successfully')
       onSaved?.()
       router.refresh()
-    } catch (err: any) {
+    } catch (err) {
       toast.error(getErrorMessage(err, 'Failed to update event'))
     } finally {
       setLoading(false)

@@ -64,7 +64,7 @@ export function UsersClient({ initialUsers, initialCount, initialFilters }: User
     const t = setTimeout(() => {
       const next = { ...filters, search: searchInput || undefined, page: 1 }
       setFilters(next)
-      router.push(`/users?${new URLSearchParams(next as any).toString()}`)
+      router.push(`/users?${new URLSearchParams(Object.entries(next).map(([k, v]) => [k, String(v)])).toString()}`)
     }, 400)
     return () => clearTimeout(t)
   }, [searchInput, filters, router])
@@ -72,13 +72,13 @@ export function UsersClient({ initialUsers, initialCount, initialFilters }: User
   const handleFilterChange = (key: string, value: string) => {
     const newFilters = { ...filters, [key]: value, page: 1 }
     setFilters(newFilters)
-    router.push(`/users?${new URLSearchParams(newFilters as any).toString()}`)
+    router.push(`/users?${new URLSearchParams(Object.entries(newFilters).map(([k, v]) => [k, String(v)])).toString()}`)
   }
 
   const handlePageChange = (page: number) => {
     const newFilters = { ...filters, page }
     setFilters(newFilters)
-    router.push(`/users?${new URLSearchParams(newFilters as any).toString()}`)
+    router.push(`/users?${new URLSearchParams(Object.entries(newFilters).map(([k, v]) => [k, String(v)])).toString()}`)
   }
 
   const handleSuspend = async (userId: string) => {

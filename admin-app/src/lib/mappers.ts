@@ -1,3 +1,5 @@
+import type { Doc } from '@eventnu/convex/_generated/dataModel'
+
 function iso(ts?: number | null): string {
   return ts ? new Date(ts).toISOString() : new Date(0).toISOString()
 }
@@ -15,7 +17,7 @@ export function usernameFromEmail(email?: string | null): string {
   return local.replace(/[^a-z0-9_.-]/gi, '') || 'user'
 }
 
-export function mapProfile(p: any) {
+export function mapProfile(p: Doc<'profiles'> | null | undefined) {
   return {
     id: p?._id ?? '',
     username: usernameFromEmail(p?.email),
@@ -28,7 +30,7 @@ export function mapProfile(p: any) {
   }
 }
 
-export function mapEvent(e: any) {
+export function mapEvent(e: Doc<'events'> | null | undefined) {
   return {
     id: e?._id ?? '',
     title: e?.title ?? '',
@@ -70,7 +72,7 @@ export function mapEvent(e: any) {
   }
 }
 
-export function mapHost(h: any) {
+export function mapHost(h: Doc<'hosts'> | null | undefined) {
   return {
     id: h?._id ?? '',
     name: h?.name ?? '',
@@ -90,7 +92,7 @@ export function mapHost(h: any) {
   }
 }
 
-export function mapCategory(c: any, eventCount = 0) {
+export function mapCategory(c: Doc<'categories'> | null | undefined, eventCount = 0) {
   return {
     id: c?._id ?? '',
     name: c?.name ?? '',
@@ -102,7 +104,7 @@ export function mapCategory(c: any, eventCount = 0) {
   }
 }
 
-export function mapEventCategory(c: any, index = 0) {
+export function mapEventCategory(c: Doc<'categories'> | null | undefined, index = 0) {
   return {
     category_id: c?._id ?? '',
     is_primary: index === 0,
@@ -112,7 +114,10 @@ export function mapEventCategory(c: any, index = 0) {
   }
 }
 
-export function mapOrganizer(o: any, profile?: any) {
+export function mapOrganizer(
+  o: Doc<'organizerProfiles'> | null | undefined,
+  profile?: Doc<'profiles'> | null | undefined
+) {
   return {
     profile_id: o?.profileId ?? '',
     organizer_name: o?.organizerName ?? '',
@@ -130,7 +135,7 @@ export function mapOrganizer(o: any, profile?: any) {
   }
 }
 
-export function mapPage(p: any) {
+export function mapPage(p: Doc<'pages'> | null | undefined) {
   return {
     id: p?._id ?? '',
     slug: p?.slug ?? '',
@@ -144,7 +149,7 @@ export function mapPage(p: any) {
   }
 }
 
-export function mapAnnouncement(a: any) {
+export function mapAnnouncement(a: Doc<'announcements'> | null | undefined) {
   return {
     id: a?._id ?? '',
     title: a?.title ?? '',
@@ -156,7 +161,7 @@ export function mapAnnouncement(a: any) {
   }
 }
 
-export function mapContactSubmission(s: any) {
+export function mapContactSubmission(s: Doc<'contactSubmissions'> | null | undefined) {
   return {
     id: s?._id ?? '',
     name: s?.name ?? '',
@@ -167,7 +172,9 @@ export function mapContactSubmission(s: any) {
   }
 }
 
-export function mapReport(r: any) {
+export function mapReport(
+  r: (Doc<'reports'> & { reporter?: Doc<'profiles'> | null }) | null | undefined
+) {
   const reporter = r?.reporter ? mapProfile(r.reporter) : null
   return {
     id: r?._id ?? '',
@@ -181,7 +188,10 @@ export function mapReport(r: any) {
   }
 }
 
-export function mapNotification(n: any, profile?: any) {
+export function mapNotification(
+  n: Doc<'notifications'> | null | undefined,
+  profile?: Doc<'profiles'> | null | undefined
+) {
   return {
     id: n?._id ?? '',
     user_id: n?.userId ?? '',
@@ -202,7 +212,7 @@ export function mapNotification(n: any, profile?: any) {
   }
 }
 
-export function mapFeaturedSection(s: any) {
+export function mapFeaturedSection(s: Doc<'featuredSections'> | null | undefined) {
   return {
     id: s?._id ?? '',
     label: s?.label ?? '',
@@ -212,7 +222,7 @@ export function mapFeaturedSection(s: any) {
   }
 }
 
-export function mapSupportTicket(t: any) {
+export function mapSupportTicket(t: Doc<'supportTickets'> | null | undefined) {
   return {
     id: t?._id ?? '',
     admin_id: t?.adminId ?? '',
@@ -225,7 +235,9 @@ export function mapSupportTicket(t: any) {
   }
 }
 
-export function mapModerationLog(l: any) {
+export function mapModerationLog(
+  l: (Doc<'moderationLogs'> & { adminName?: string }) | null | undefined
+) {
   return {
     id: l?._id ?? '',
     profiles: { full_name: l?.adminName || 'Admin' },
@@ -237,7 +249,7 @@ export function mapModerationLog(l: any) {
   }
 }
 
-export function mapTopEvent(e: any) {
+export function mapTopEvent(e: Doc<'events'> | null | undefined) {
   return {
     id: e?._id ?? '',
     title: e?.title ?? '',
@@ -245,3 +257,36 @@ export function mapTopEvent(e: any) {
     start_date: iso(e?.startDate),
   }
 }
+
+export function mapReportTargetPreview(
+  p:
+    | Doc<'eventComments'>
+    | Doc<'events'>
+    | Doc<'hosts'>
+    | Doc<'profiles'>
+    | null
+    | undefined
+):
+  | { target_type: 'comment'; content: string }
+  | { target_type: 'event'; poster_url?: string; title: string; status: string }
+  | { target_type: 'user'; avatar_url?: string; full_name: string; username: string }
+  | { target_type: 'host'; logo_url?: string; name: string; status: string }
+  | null {
+  if (!p) return null
+  if ('content' in p) return { target_type: 'comment', content: p.content ?? '' }
+  if ('title' in p) return { target_type: 'event', title: p.title ?? '', poster_url: p.posterUrl, status: p.status ?? '' }
+  if ('name' in p) return { target_type: 'host', name: p.name ?? '', logo_url: p.logoUrl, status: p.status ?? '' }
+  return { target_type: 'user', full_name: p.fullName ?? '', username: usernameFromEmail(p.email), avatar_url: p.avatarUrl }
+}
+
+export type MappedProfile = ReturnType<typeof mapProfile>
+export type MappedEvent = ReturnType<typeof mapEvent>
+export type MappedHost = ReturnType<typeof mapHost>
+export type MappedCategory = ReturnType<typeof mapCategory>
+export type MappedOrganizer = ReturnType<typeof mapOrganizer>
+export type MappedPage = ReturnType<typeof mapPage>
+export type MappedAnnouncement = ReturnType<typeof mapAnnouncement>
+export type MappedContactSubmission = ReturnType<typeof mapContactSubmission>
+export type MappedReport = ReturnType<typeof mapReport>
+export type MappedSupportTicket = ReturnType<typeof mapSupportTicket>
+export type MappedModerationLog = ReturnType<typeof mapModerationLog>
