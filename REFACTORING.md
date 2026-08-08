@@ -35,8 +35,8 @@ The working tree is large and uncommitted (103 modified / 24 deleted / 48 untrac
 Much is already known from `AUDIT.md` and exploration. Formalize it into a living register.
 
 ### 1.1 Make the tooling surface the truth
-- [ ] Run `npm run lint` in `admin-app` and `web`; flip `@typescript-eslint/no-explicit-any` to `error` once, capture the real failure count. Known baseline: 165 occurrences (`: any` = 94, `as any` = 71). Top files: `admin-app/src/lib/actions/events.ts` (19), `admin-app/src/lib/mappers.ts` (17), `admin-app/src/components/EventDetailClient.tsx` (12), `admin-app/src/components/ReportsClient.tsx` (11).
-- [ ] Add `tsc --noEmit` typecheck scripts to both apps (none exists today).
+- [x] Run `npm run lint` in `admin-app` and `web`; flip `@typescript-eslint/no-explicit-any` to `error` once, capture the real failure count. Known baseline: 165 occurrences (`: any` = 94, `as any` = 71). Top files: `admin-app/src/lib/actions/events.ts` (19), `admin-app/src/lib/mappers.ts` (17), `admin-app/src/components/EventDetailClient.tsx` (12), `admin-app/src/components/ReportsClient.tsx` (11).
+- [x] Add `tsc --noEmit` typecheck scripts to both apps (none existed). Both apps now pass `typecheck` and lint (0 errors). `admin-app/eslint.config.mjs` ignore pattern fixed (`convex/_generated/` was `src/convex/_generated/`).
 - [ ] Add **knip** for dead-code / unused-dep detection. Known targets it should catch:
   - `react-hook-form` + `@hookform/resolvers` installed but imported nowhere.
   - `admin-app/src/lib/validations/auth.ts` unused (sign-in page validates inline).
@@ -44,11 +44,7 @@ Much is already known from `AUDIT.md` and exploration. Formalize it into a livin
 - [ ] Run `npx convex ai-files install` in `web/`; run `npx convex codegen`; verify `admin-app/convex/_generated` stubs match web's real codegen (admin currently type-checks against web's `_generated`).
 
 ### 1.2 Dead code — remove what's already known
-- [ ] `company-design-system`: deleted from the tree but still wired — remove all four references:
-  - `admin-app/package.json` → `"company-design-system": "file:./company-design-system"`
-  - `admin-app/next.config.ts` → `transpilePackages: ["company-design-system"]`
-  - `admin-app/eslint.config.mjs` → `ignores: [..."company-design-system/"]`
-  - broken `node_modules/company-design-system` symlink
+- [x] `company-design-system`: removed from `admin-app/next.config.ts` (`transpilePackages`) and `admin-app/eslint.config.mjs`; stale `package-lock.json` entry + broken `node_modules` symlink cleaned via `npm install`. No source imports remain.
 - [ ] 27 byte-identical `loading.tsx` stubs → one shared skeleton component.
 - [ ] Dead props / duplicates:
   - `(app)/settings/page.tsx` passes `profile={null}`; `SettingsClient` shadows it and self-fetches `api.profiles.getMe`. Remove the dead server prop.
@@ -56,6 +52,7 @@ Much is already known from `AUDIT.md` and exploration. Formalize it into a livin
 - [ ] Backend:
   - Legacy `events.categoryIds` array (superseded by `eventCategories` join table; `web/convex/migrations.ts` still reads it).
   - `hosts.getStats` unguarded while sibling `hosts.list`/`getById` require admin — likely a bug.
+- [x] Lint-drift cleanup in shared Convex: `instagram.ts` `createImportedEvent` computed a `slug` but never inserted it (latent bug — IG-imported events were unreachable via `/events/[slug]`); now wired into the insert. Removed unused `Doc` import in `follows.ts`; `auth.config.ts` default export made lint-clean.
 - [ ] Duplicated `fadeUp` framer-motion const in `HostDetailClient` / `OrganizerDetailClient` / `UserDetailClient`.
 
 ### 1.3 Debt register

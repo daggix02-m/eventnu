@@ -712,6 +712,7 @@ export const createImportedEvent = internalMutation({
     const eventId = await ctx.db.insert("events", {
       title,
       description,
+      slug,
       startDate: args.timestamp,
       endDate: undefined,
       posterUrl: args.images[0]?.url,

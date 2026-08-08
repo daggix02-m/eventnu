@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { query, mutation, MutationCtx } from "./_generated/server";
-import { Doc, Id } from "./_generated/dataModel";
+import { Id } from "./_generated/dataModel";
 import { requireUser } from "./helpers";
 import { rateLimiter } from "./rateLimiter";
 
