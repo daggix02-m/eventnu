@@ -42,7 +42,9 @@ Much is already known from `AUDIT.md` and exploration. Formalize it into a livin
   - Re-purposed: `mapModerationLog` now used by `dashboard.ts` (was inlined twice).
   - Made private: `iso`, `actionReport`, `IMAGE_FILTERS` (module-internal helpers that didn't need `export`).
   - Reserved (C): `react-hook-form` + `@hookform/resolvers` + `zod` for the Phase 2.4 EventForm split.
-- [ ] Run `npx convex ai-files install` in `web/`; run `npx convex codegen`; verify `admin-app/convex/_generated` stubs match web's real codegen (admin currently type-checks against web's `_generated`).
+- [x] Run `npx convex ai-files install` in `web/`; run `npx convex codegen`; verify `admin-app/convex/_generated` stubs match web's real codegen (admin currently type-checks against web's `_generated`).
+  - `convex ai-files install` already run (guidelines live in `web/convex/_generated/ai/`); web's `_generated` is present, current, and **intentionally git-tracked** (admin type-checks against it in CI without a dev server).
+  - Finding: `admin-app/convex/_generated` was a **vestigial empty stub** (`fullApi: ApiFromModules<{}>`, `Doc = any`) imported by zero files — leftover from when admin-app was its own Convex project. Deleted it; admin-app has no Convex deployment, it is a pure consumer of web's codegen (sharpens ADR-0002).
 
 ### 1.2 Dead code — remove what's already known
 - [x] `company-design-system`: removed from `admin-app/next.config.ts` (`transpilePackages`) and `admin-app/eslint.config.mjs`; stale `package-lock.json` entry + broken `node_modules` symlink cleaned via `npm install`. No source imports remain.
