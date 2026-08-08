@@ -28,7 +28,7 @@ import { useState } from 'react'
 import { useAuthActions } from '@convex-dev/auth/react'
 import { useRouter } from 'next/navigation'
 import { useQuery } from 'convex/react'
-import { api } from '../../../web/convex/_generated/api'
+import { api } from '@eventnu/convex/_generated/api'
 import { useSidebar } from './sidebar-context'
 
 const navGroups = [

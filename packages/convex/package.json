@@ -1,0 +1,35 @@
+{
+  "name": "@eventnu/convex",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "convex dev",
+    "codegen": "convex codegen",
+    "deploy": "convex deploy",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@convex-dev/auth": "^0.0.94",
+    "@convex-dev/rate-limiter": "^0.3.2",
+    "convex": "^1.42.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "typescript": "^5"
+  },
+  "exports": {
+    "./_generated/*.js": {
+      "types": "./convex/_generated/*.d.ts",
+      "default": "./convex/_generated/*.js"
+    },
+    "./_generated/*": {
+      "types": "./convex/_generated/*.d.ts",
+      "default": "./convex/_generated/*.js"
+    },
+    "./convex/*": {
+      "types": "./convex/*.ts",
+      "default": "./convex/*.ts"
+    }
+  }
+}

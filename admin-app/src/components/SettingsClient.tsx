@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useQuery } from 'convex/react'
-import { api } from '../../../web/convex/_generated/api'
+import { api } from '@eventnu/convex/_generated/api'
 import { Button } from '@/components/ui'
 import { Card } from '@/components/ui'
 import { Avatar } from '@/components/ui'

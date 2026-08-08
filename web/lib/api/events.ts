@@ -1,5 +1,5 @@
 import { fetchQuery } from "convex/nextjs";
-import { api } from "../../convex/_generated/api";
+import { api } from "@eventnu/convex/_generated/api";
 import type { Event, Category, Page, Announcement } from "@/types";
 
 function mapEvent(raw: any): Event {

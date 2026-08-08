@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { fetchMutation } from "convex/nextjs";
-import { api } from "../../convex/_generated/api";
+import { api } from "@eventnu/convex/_generated/api";
 import { z } from "zod";
 
 const contactSchema = z.object({

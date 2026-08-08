@@ -8,7 +8,7 @@ const eslintConfig = [
       ".next/",
       "out/",
       "next-env.d.ts",
-      "convex/_generated/",
+      "packages/convex/**",
     ],
   },
   ...nextVitals,

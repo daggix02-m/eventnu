@@ -1,7 +1,7 @@
 'use server'
 
 import { fetchQuery, fetchMutation, fetchAction } from '@/lib/actions/authedFetch'
-import { api } from '../../../../web/convex/_generated/api'
+import { api } from '@eventnu/convex/_generated/api'
 import { revalidatePath } from 'next/cache'
 
 export async function getInstagramStatus() {

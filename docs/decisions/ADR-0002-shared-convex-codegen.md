@@ -1,6 +1,6 @@
 # ADR-0002: Decouple admin-app from the web app's Convex codegen
 
-**Status:** Proposed (to be confirmed when Phase 2.1 executes)
+**Status:** Accepted (executed 2026-08-08)
 **Date:** 2026-08-08
 
 ## Context
@@ -38,11 +38,16 @@ Keep `admin-app` → `web/convex/_generated/api` but export a single typed wrapp
 
 ## Decision
 
-**Pending.** Recommended: **Option A**, executed after Phase 1 assessment and before the
-type-hygiene work in Phase 2, protected by the CI added in Phase 3.
+**Accepted — Option A.** The backend lives at `packages/convex` (npm workspace
+`@eventnu/convex`), deployed from there; both apps import `@eventnu/convex/_generated/api`.
+Executed 2026-08-08.
 
 ## Consequences
 
 - Option A enables target "0 `any` in `src/lib` and `src/app`".
-- Either option must keep the `turbopack.root`-based cross-app imports working for
-  non-Convex shared code until fully resolved.
+- Convex CLI runs from `packages/convex` (`npm -w @eventnu/convex run dev|deploy|codegen`);
+  its `.env.local` must hold the deployment env (copied from `web/.env.local` on setup).
+- `@eventnu/convex/_generated/*` stays **git-tracked** so both apps type-check in CI without
+  a Convex server; `npx convex codegen` in the package regenerates it byte-identically.
+- The `turbopack.root`-based cross-app import is no longer needed for Convex; the shared
+  backend is a proper workspace dependency.

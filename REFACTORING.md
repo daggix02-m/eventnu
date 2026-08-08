@@ -69,7 +69,14 @@ Much is already known from `AUDIT.md` and exploration. Formalize it into a livin
 ### 2.1 Decouple admin-app from the web app's codegen
 Root cause of ~90% of the `any` casts: `admin-app` imports `../../../web/convex/_generated/api` from 17 action files + 2 client components, so admin type-checks against web's codegen and overrides types everywhere.
 
-- [ ] **Decision (ADR-0002):** lift `web/convex` into a shared location consumed by both apps (npm workspaces at repo root, single codegen, single source of truth) **OR** keep the cross-package import but type the boundary once in `admin-app/src/lib/convex.ts` and stop overriding with `as any`.
+- [x] **Decision (ADR-0002, accepted): Option A** — npm workspaces + shared package. The backend now lives at `packages/convex` (workspace `@eventnu/convex`):
+  - Root `package.json` declares `"workspaces": ["admin-app", "web", "packages/*"]`; per-app `package-lock.json` files replaced by the root lockfile.
+  - `web/convex/**` moved (git mv) to `packages/convex/convex/**`; `packages/convex/package.json` (+ `exports` mapping `@eventnu/convex/_generated/*`), `tsconfig.json`, own `typecheck`/`codegen`/`dev`/`deploy` scripts.
+  - `@eventnu/convex/_generated/*` stays **git-tracked** (CI type-checks without a Convex server); `npx convex codegen` in the package regenerates byte-identically and confirmed it talks to the same deployment via `packages/convex/.env.local` (copied from `web/.env.local`).
+  - Imports updated: 16 admin files + 3 web consumer files (`ReservationForm`, `lib/actions/contact.ts`, `lib/api/events.ts`) → `@eventnu/convex/_generated/api`.
+  - Configs: eslint ignores now `packages/convex/**`; `web/AGENTS.md`/`CLAUDE.md` guidelines path → `packages/convex/convex/_generated/ai/guidelines.md`.
+  - Convex CLI workflow: `npm -w @eventnu/convex run dev|deploy|codegen` (root convenience scripts `convex:dev`/`convex:deploy`/`convex:codegen`).
+  - Verified: admin + web + convex package all `typecheck` clean; admin lint 0, web lint 0 errors (4 pre-existing consumer warnings); knip clean; **both `next build`s succeed**.
 - [ ] Re-enable `@typescript-eslint/no-explicit-any` progressively (file-by-file, API boundary first); target **0 `any`** in `src/lib` and `src/app`.
 
 ### 2.2 One data-fetching pattern
