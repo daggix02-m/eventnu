@@ -4,11 +4,12 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuthActions } from '@convex-dev/auth/react'
-import { Button } from 'company-design-system'
-import { Input } from 'company-design-system'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from 'company-design-system'
+import { Button } from '@/components/ui'
+import { Input } from '@/components/ui'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui'
 import { toast } from 'sonner'
-import { Eye, EyeOff, Shield } from 'lucide-react'
+import { Eye, EyeOff } from 'lucide-react'
+import { getErrorMessage } from '@/lib/errors'
 
 export default function SignIn() {
   const router = useRouter()
@@ -19,26 +20,28 @@ export default function SignIn() {
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
-  const [step, setStep] = useState<'signIn' | 'signUp'>('signIn')
 
   const clearError = (field: string) =>
     setFieldErrors(prev => ({ ...prev, [field]: '' }))
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
+    setFieldErrors({})
     setLoading(true)
 
     try {
       const formData = new FormData()
       formData.append('email', email)
       formData.append('password', password)
-      formData.append('flow', step)
+      formData.append('flow', 'signIn')
       await signOut()
       await signIn('password', formData)
       router.push('/')
       router.refresh()
-    } catch (err: any) {
-      toast.error(err?.message ?? 'Authentication failed')
+    } catch (err: unknown) {
+      const msg = getErrorMessage(err, 'Authentication failed')
+      toast.error(msg)
+      setFieldErrors({ email: 'Invalid email or password', password: 'Invalid email or password' })
     } finally {
       setLoading(false)
     }
@@ -48,18 +51,18 @@ export default function SignIn() {
     <div className="min-h-screen flex items-center justify-center bg-surface-container-low p-4">
       <div className="w-full max-w-md">
         <div className="flex items-center justify-center gap-3 mb-8">
-          <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center text-primary-foreground">
-            <Shield size={24} />
+          <div className="w-12 h-12 rounded-md bg-primary text-primary-foreground flex items-center justify-center font-headline font-bold text-lg shadow-sm">
+            En
           </div>
-          <div>
-            <h1 className="text-xl font-bold text-primary tracking-tight">Event Nu Admin</h1>
-            <p className="text-xs text-muted-foreground uppercase tracking-widest">Enterprise Suite</p>
+          <div className="text-left">
+            <h1 className="font-headline text-xl font-semibold text-foreground tracking-tight">Event Nu</h1>
+            <p className="font-mono text-[10px] text-muted-foreground uppercase tracking-[0.2em]">Admin · Addissuite</p>
           </div>
         </div>
 
-        <Card className="border-0 shadow-xl rounded-2xl overflow-hidden bg-card">
+        <Card className="border-0 shadow-[0_2px_4px_rgba(30,20,10,0.04),0_8px_24px_rgba(30,20,10,0.08)] rounded-2xl overflow-hidden bg-card">
           <CardHeader className="space-y-1 pb-4 text-center">
-            <CardTitle className="text-2xl font-bold tracking-tight text-primary">Welcome back</CardTitle>
+            <CardTitle className="text-2xl font-semibold tracking-tight text-foreground">Welcome back</CardTitle>
             <CardDescription className="text-muted-foreground">Sign in with your admin credentials</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -102,20 +105,10 @@ export default function SignIn() {
                   </Link>
                 </div>
               </div>
-              <Button className="w-full h-11 bg-primary hover:bg-primary/90 text-primary-foreground" type="submit" disabled={loading}>
-                {loading ? 'Signing in...' : 'Sign in'}
+              <Button className="w-full h-11" type="submit" disabled={loading}>
+                {loading ? 'Signing in…' : 'Sign in'}
               </Button>
             </form>
-
-            <div className="text-center">
-              <button
-                type="button"
-                onClick={() => setStep(step === 'signIn' ? 'signUp' : 'signIn')}
-                className="text-xs text-primary hover:underline font-medium"
-              >
-                {step === 'signIn' ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
-              </button>
-            </div>
           </CardContent>
         </Card>
 

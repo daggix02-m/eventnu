@@ -2,7 +2,8 @@
 
 import { useCallback, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
-import { getUploadUrl } from '@/lib/actions/events'
+import { getUploadUrl, resolveStorageUrls } from '@/lib/actions/events'
+import { getErrorMessage } from '@/lib/errors'
 import { toast } from 'sonner'
 import {
   Plus,
@@ -67,7 +68,6 @@ export function ImagePicker({
 }) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
-  const [uploadProgress, setUploadProgress] = useState<{ done: number; total: number } | null>(null)
   const [dragOver, setDragOver] = useState(false)
   const [confirmClear, setConfirmClear] = useState(false)
   const confirmClearTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -83,39 +83,53 @@ export function ImagePicker({
       }
       const toUpload = list.slice(0, room)
       setUploading(true)
-      setUploadProgress({ done: 0, total: toUpload.length })
       try {
-        const uploadUrl = await getUploadUrl()
-        const uploaded: PickedImage[] = []
-        let done = 0
-        for (const file of toUpload) {
-          try {
-            const res = await fetch(uploadUrl, {
-              method: 'POST',
-              headers: { 'Content-Type': file.type },
-              body: file,
-            })
-            if (!res.ok) {
+        const storageIds = await Promise.all(
+          toUpload.map(async (file): Promise<string | null> => {
+            try {
+              const uploadUrl = await getUploadUrl()
+              let parsed: URL
+              try {
+                parsed = new URL(uploadUrl)
+              } catch {
+                toast.error(`Failed to upload ${file.name}`)
+                return null
+              }
+              if (!parsed.protocol.startsWith('https:') && parsed.protocol !== 'http:') {
+                toast.error(`Failed to upload ${file.name}`)
+                return null
+              }
+              const res = await fetch(uploadUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': file.type },
+                body: file,
+                credentials: 'omit',
+              })
+              if (!res.ok) {
+                toast.error(`Failed to upload ${file.name}`)
+                return null
+              }
+              const { storageId } = await res.json()
+              return storageId ?? null
+            } catch {
               toast.error(`Failed to upload ${file.name}`)
-              done += 1
-              setUploadProgress({ done, total: toUpload.length })
-              continue
+              return null
             }
-            const { storageId } = await res.json()
-            const url = `${process.env.NEXT_PUBLIC_CONVEX_URL}/api/storage/${storageId}`
-            uploaded.push({ url, storageId, filter: 'original' })
-          } catch {
-            toast.error(`Failed to upload ${file.name}`)
-          }
-          done += 1
-          setUploadProgress({ done, total: toUpload.length })
-        }
+          })
+        )
+        const ids = storageIds.filter(Boolean) as string[]
+        if (ids.length === 0) return
+        const urls = await resolveStorageUrls(ids)
+        const uploaded: PickedImage[] = ids
+          .map((storageId, i): PickedImage | null =>
+            urls[i] ? { url: urls[i], storageId, filter: 'original' } : null
+          )
+          .filter((img): img is PickedImage => img !== null)
         if (uploaded.length > 0) onChange([...images, ...uploaded])
       } catch (err: any) {
-        toast.error(err.message || 'Upload failed')
+        toast.error(getErrorMessage(err, 'Upload failed'))
       } finally {
         setUploading(false)
-        setUploadProgress(null)
         if (inputRef.current) inputRef.current.value = ''
       }
     },
@@ -221,6 +235,7 @@ export function ImagePicker({
                 <img
                   src={img.url}
                   alt={`Image ${i + 1}`}
+                  loading="lazy"
                   className="w-full h-full object-cover"
                   style={{ filter: filterStyle(img.filter) }}
                 />
@@ -307,20 +322,9 @@ export function ImagePicker({
         {uploading ? (
           <>
             <Loader2 size={20} className="animate-spin text-primary" />
-            <p className="text-xs text-muted-foreground">
-              {uploadProgress
-                ? `Uploading ${uploadProgress.done}/${uploadProgress.total}…`
-                : 'Uploading…'}
-            </p>
+            <p className="text-xs text-muted-foreground">Uploading images…</p>
             <div className="w-40 h-1.5 rounded-full bg-surface-container-high overflow-hidden">
-              <div
-                className="h-full bg-primary transition-all duration-200"
-                style={{
-                  width: uploadProgress
-                    ? `${(uploadProgress.done / uploadProgress.total) * 100}%`
-                    : '10%',
-                }}
-              />
+              <div className="h-full bg-primary animate-pulse" />
             </div>
           </>
         ) : (

@@ -11,8 +11,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { Button } from 'company-design-system'
+import { Button } from '@/components/ui'
 import { toast } from 'sonner'
+import { getErrorMessage } from '@/lib/errors'
 import {
   getInstagramStatus,
   publishEventToInstagram,
@@ -73,7 +74,7 @@ export function PublishToInstagramDialog({
       toast.success('Published to Instagram')
       router.refresh()
     } catch (err: any) {
-      toast.error(err.message || 'Failed to publish to Instagram')
+      toast.error(getErrorMessage(err, 'Failed to publish to Instagram'))
     } finally {
       setLoading(false)
     }

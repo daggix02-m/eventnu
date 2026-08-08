@@ -1,17 +1,31 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useEffect, useState } from "react";
 import { useGSAP } from "@gsap/react";
 import { gsap } from "@/lib/gsap";
-import { TrendingUp, Calendar, DollarSign } from "lucide-react";
+import { Users, Calendar, Star, Banknote, MapPin, Palette } from "lucide-react";
 import { Container } from "@/components/layout/Container";
-import { useEffect, useState } from "react";
 
-const STATS = [
-  { icon: Calendar, value: 30000, label: "Attenders", suffix: "+", prefix: "" },
-  { icon: TrendingUp, value: 500, label: "Events Hosted", suffix: "+", prefix: "" },
-  { icon: DollarSign, value: 98, label: "Payout Satisfaction", suffix: "%", prefix: "" },
-];
+export interface OrganizerStat {
+  value: number;
+  prefix?: string;
+  suffix?: string;
+  label: string;
+  description: string;
+  icon: "users" | "calendar" | "star" | "banknote" | "map-pin" | "palette";
+}
+
+const ICON_STYLES: Record<
+  OrganizerStat["icon"],
+  { icon: typeof Users; color: string; iconBg: string }
+> = {
+  users: { icon: Users, color: "text-primary", iconBg: "bg-primary/10 border-primary/20" },
+  calendar: { icon: Calendar, color: "text-secondary", iconBg: "bg-secondary/10 border-secondary/20" },
+  star: { icon: Star, color: "text-tertiary", iconBg: "bg-tertiary/10 border-tertiary/20" },
+  banknote: { icon: Banknote, color: "text-primary", iconBg: "bg-primary/10 border-primary/20" },
+  "map-pin": { icon: MapPin, color: "text-secondary", iconBg: "bg-secondary/10 border-secondary/20" },
+  palette: { icon: Palette, color: "text-tertiary", iconBg: "bg-tertiary/10 border-tertiary/20" },
+};
 
 function AnimatedCounter({ target, suffix, prefix }: { target: number; suffix: string; prefix: string }) {
   const [count, setCount] = useState(0);
@@ -47,40 +61,81 @@ function AnimatedCounter({ target, suffix, prefix }: { target: number; suffix: s
   );
 }
 
-export function OrganizersStatBand() {
+interface OrganizersStatBandProps {
+  stats: OrganizerStat[];
+}
+
+export function OrganizersStatBand({ stats }: OrganizersStatBandProps) {
   const sectionRef = useRef<HTMLElement>(null);
 
   useGSAP(() => {
     if (sectionRef.current) {
-      gsap.fromTo(
-        sectionRef.current.children,
-        { opacity: 0, y: 16 },
-        { opacity: 1, y: 0, duration: 0.5, stagger: 0.15, ease: "power2.out",
-          scrollTrigger: { trigger: sectionRef.current, start: "top 90%", toggleActions: "play none none reset" }
-        }
-      );
+      const statItems = sectionRef.current.querySelectorAll(".stat-item");
+      if (statItems.length) {
+        gsap.fromTo(
+          statItems,
+          { opacity: 0, y: 20 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.5,
+            stagger: 0.1,
+            ease: "power2.out",
+            scrollTrigger: {
+              trigger: sectionRef.current,
+              start: "top 88%",
+              toggleActions: "play none none none",
+            },
+          }
+        );
+      }
     }
   }, { scope: sectionRef });
 
   return (
-    <section ref={sectionRef} className="relative z-10 py-md border-y border-outline-variant/30 bg-gradient-to-r from-primary/5 via-surface-container-low/40 to-secondary/5">
+    <section
+      ref={sectionRef}
+      className="relative z-10 py-xl border-y border-outline-variant/30 overflow-hidden"
+      aria-label="Platform statistics"
+    >
+      {/* Radial background */}
+      <div
+        className="absolute inset-0 bg-gradient-to-b from-surface-container-lowest/60 via-surface/20 to-surface-container-lowest/60 pointer-events-none"
+        aria-hidden="true"
+      />
+      <div
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[300px] bg-primary/5 rounded-full blur-[100px] pointer-events-none"
+        aria-hidden="true"
+      />
+
       <Container>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-md py-sm">
-          {STATS.map((stat) => (
-            <div key={stat.label} className="flex items-center gap-md justify-center md:justify-start opacity-0">
-              <div className="p-sm rounded-2xl bg-surface-container-high/60 border border-outline-variant/30">
-                <stat.icon className="w-6 h-6 text-primary" />
-              </div>
-              <div>
-                <h3 className="font-display text-[32px] md:text-[40px] font-extrabold text-white leading-none">
-                  <AnimatedCounter target={stat.value} suffix={stat.suffix} prefix={stat.prefix} />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-sm md:gap-md">
+          {stats.map((stat) => {
+            const { icon: Icon, color, iconBg } = ICON_STYLES[stat.icon];
+            return (
+              <div
+                key={stat.label}
+                className="stat-item group relative flex flex-col items-center text-center p-md rounded-2xl bg-surface-container/20 border border-outline-variant/30 hover:border-primary/30 hover:bg-surface-container/40 transition-all duration-300 opacity-0"
+              >
+                <div
+                  className="absolute inset-0 rounded-2xl bg-primary/4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+                  aria-hidden="true"
+                />
+                <div className={`relative z-10 w-12 h-12 rounded-xl border flex items-center justify-center mb-md ${iconBg}`}>
+                  <Icon className={`w-6 h-6 ${color}`} aria-hidden="true" />
+                </div>
+                <h3 className={`relative z-10 font-display text-[36px] md:text-[44px] font-extrabold leading-none ${color}`}>
+                  <AnimatedCounter target={stat.value} suffix={stat.suffix ?? ""} prefix={stat.prefix ?? ""} />
                 </h3>
-                <p className="text-on-surface-variant font-mono text-label-sm uppercase tracking-wider pt-1">
+                <p className="relative z-10 font-display text-[13px] font-bold text-white mt-xs mb-xs">
                   {stat.label}
                 </p>
+                <p className="relative z-10 font-mono text-[11px] text-on-surface-variant leading-relaxed">
+                  {stat.description}
+                </p>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </Container>
     </section>

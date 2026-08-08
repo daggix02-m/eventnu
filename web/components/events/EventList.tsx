@@ -29,7 +29,7 @@ export function EventList({ events, className, emptyMessage = "No events found."
       {showViewAll && (
         <div className="flex justify-between items-end">
           <div />
-          <Link href="/discover" className="text-primary font-bold hover:underline text-body-md">
+          <Link href="/#event-grid" className="text-primary font-bold hover:underline text-body-md">
             View All
           </Link>
         </div>

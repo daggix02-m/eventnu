@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@source not "../stitch-screenshots";
+
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
@@ -69,6 +71,8 @@
   --spacing-md: 24px;
   --spacing-lg: 40px;
   --spacing-xl: 64px;
+  --spacing-2xl: 80px;
+  --spacing-3xl: 96px;
   --spacing-gutter: 24px;
   --spacing-container-max: 1280px;
 
@@ -83,6 +87,11 @@
   --font-sans: var(--font-inter), system-ui, sans-serif;
   --font-display: var(--font-space-grotesk), system-ui, sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+
+  --text-display-sm: 28px;
+  --text-display-sm--line-height: 36px;
+  --text-display-md: 40px;
+  --text-display-md--line-height: 48px;
 }
 
 @utility text-body-lg {
@@ -165,7 +174,7 @@
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   &:hover {
     transform: translateY(-4px);
-    box-shadow: 0 12px 40px rgba(208, 188, 255, 0.15);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
   }
 }
 
@@ -239,6 +248,35 @@ textarea:focus-visible {
   animation-timing-function: ease-in-out;
   animation-iteration-count: infinite;
   animation-fill-mode: both;
+}
+
+/* Announcement ticker slide-in */
+@keyframes announcement-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.announcement-in {
+  animation: announcement-in 0.4s ease-out both;
+}
+
+/* Featured carousel per-slide progress */
+@keyframes carousel-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+.carousel-progress-fill {
+  transform-origin: left;
+  animation: carousel-progress 6s linear forwards;
 }
 
 @media (prefers-reduced-motion: reduce) {

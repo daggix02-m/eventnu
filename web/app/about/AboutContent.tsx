@@ -20,32 +20,68 @@ const valueCards = [
   {
     icon: Shield,
     title: "Trust & Security",
-    description: "Enterprise-grade security for every single ticket issued.",
+    description: "Secure QR tickets, transparent listings, and clear info before you buy.",
     imageUrl: "/images/events/july-20-26/bloom-week.png",
   },
 ];
 
-export function AboutContent() {
+interface AboutContentProps {
+  eventCount: number;
+  categoryCount: number;
+}
+
+export function AboutContent({ eventCount, categoryCount }: AboutContentProps) {
   return (
     <div className="max-w-container-max mx-auto px-gutter py-xl space-y-xl">
       {/* Section 1: Mission Statement Hero */}
-      <section className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#3c0091] to-[#6d3bd7] p-lg text-center md:text-left flex flex-col md:flex-row items-center gap-lg">
+      <section className="relative overflow-hidden rounded-xl bg-gradient-to-br from-on-primary to-inverse-primary p-lg text-center md:text-left flex flex-col md:flex-row items-center gap-lg">
         <div className="relative z-10 flex-1">
           <h1 className="font-display text-display-lg-mobile md:text-display-lg text-white mb-sm">
             All Addis events,
             <br />
             one place.
           </h1>
-          <p className="font-body-lg text-body-lg text-[#e9ddff] max-w-2xl">
-            Event Nu is the rhythmic pulse of Addis Ababa&apos;s social scene. We curate the most vibrant experiences, from underground jazz sessions to high-energy festivals, ensuring you never miss a beat.
+          <p className="font-body-lg text-body-lg text-[#e9ddff] max-w-[42rem]">
+            Event Nu is where Addis Ababa finds what&apos;s on. Local organizers
+            list their events in one place — from underground jazz sessions to
+            high-energy festivals — so you never miss a beat.
           </p>
-          <div className="mt-md">
+          <div className="mt-md flex flex-wrap items-center gap-md">
             <Link
               href="/"
               className="bg-white text-on-primary-container font-bold px-lg py-sm rounded-full active:scale-95 transition-transform hover:shadow-lg"
             >
               Explore Now
             </Link>
+            <dl className="flex items-center gap-lg">
+              <div>
+                <dt className="sr-only">Events listed</dt>
+                <dd className="font-display text-[22px] font-extrabold text-white leading-none tabular-nums">
+                  {eventCount}
+                </dd>
+                <dd className="font-mono text-[11px] text-[#e9ddff]/80 uppercase tracking-wider mt-1">
+                  events listed
+                </dd>
+              </div>
+              <div>
+                <dt className="sr-only">Categories</dt>
+                <dd className="font-display text-[22px] font-extrabold text-white leading-none tabular-nums">
+                  {categoryCount}
+                </dd>
+                <dd className="font-mono text-[11px] text-[#e9ddff]/80 uppercase tracking-wider mt-1">
+                  categories
+                </dd>
+              </div>
+              <div>
+                <dt className="sr-only">Cost to list</dt>
+                <dd className="font-display text-[22px] font-extrabold text-white leading-none tabular-nums">
+                  0&nbsp;ETB
+                </dd>
+                <dd className="font-mono text-[11px] text-[#e9ddff]/80 uppercase tracking-wider mt-1">
+                  free to list
+                </dd>
+              </div>
+            </dl>
           </div>
         </div>
         <div className="relative z-10 hidden md:block w-64 h-64 rounded-xl rotate-3 overflow-hidden shadow-2xl border-4 border-white/20">
@@ -68,15 +104,16 @@ export function AboutContent() {
           </div>
           <h3 className="font-headline-md text-headline-md text-primary mb-xs">For Attendees</h3>
           <p className="font-body-md text-body-md text-on-surface-variant flex-grow mb-md">
-            Discover hand-picked events tailored to your vibe. Enjoy seamless ticket booking, instant
-            digital entry, and personalized reminders so the fun starts before you even arrive.
+            Discover events listed by Addis Ababa&apos;s organizers. Book tickets,
+            get instant digital entry, and receive reminders so the fun starts
+            before you even arrive.
           </p>
           <ul className="space-y-xs">
             <li className="flex items-center gap-xs font-label-sm text-label-sm text-tertiary">
               <Check className="w-4 h-4" /> Instant QR Tickets
             </li>
             <li className="flex items-center gap-xs font-label-sm text-label-sm text-tertiary">
-              <Check className="w-4 h-4" /> Curated Discovery
+              <Check className="w-4 h-4" /> Easy Discovery
             </li>
           </ul>
         </div>
@@ -135,7 +172,7 @@ export function AboutContent() {
           Ready to find your next move?
         </h2>
         <p className="font-body-md text-body-md text-on-surface-variant mb-md">
-          Join thousands of others discovering the best of Addis Ababa every day.
+          See what&apos;s on this week in Addis Ababa — and never miss your next move.
         </p>
         <div className="flex flex-wrap justify-center gap-sm">
           <Link

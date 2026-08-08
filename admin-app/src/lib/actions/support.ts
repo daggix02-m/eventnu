@@ -23,8 +23,9 @@ export async function getSupportTickets() {
   try {
     const tickets = await fetchQuery(api.support.list)
     return tickets.map(mapSupportTicket)
-  } catch {
-    return []
+  } catch (err) {
+    console.error('Failed to load support tickets:', err)
+    throw err
   }
 }
 

@@ -3,7 +3,7 @@
 import { fetchQuery, fetchMutation } from '@/lib/actions/authedFetch'
 import { api } from '../../../../web/convex/_generated/api'
 import { revalidatePath } from 'next/cache'
-import { mapEvent, mapEventCategory } from '../mappers'
+import { mapEvent, mapEventCategory, toDateTimeLocal } from '../mappers'
 
 export async function getEvents(params: {
   status?: string
@@ -25,8 +25,9 @@ export async function getEvents(params: {
       page: params.page ?? 1,
     })
     return { events: (result.page ?? []).map(mapEvent), count: (result as any).totalCount ?? 0 }
-  } catch {
-    return { events: [], count: 0 }
+  } catch (err) {
+    console.error('Failed to load events:', err)
+    throw err
   }
 }
 
@@ -92,13 +93,47 @@ export async function getEventById(eventId: string) {
         filter: img.filter ?? null,
       })),
     }
-  } catch {
-    return { event: null, categories: [], images: [] }
+  } catch (err) {
+    console.error('Failed to load event details:', err)
+    throw err
   }
+}
+
+async function getRecentEvents(
+  queryRef: any,
+  idKey: string,
+  id: string,
+  limit = 20
+) {
+  const events = await fetchQuery(queryRef, { [idKey]: id as any, limit })
+  return (events ?? []).map((e: any) => ({
+    id: e._id,
+    title: e.title ?? '',
+    start_date: toDateTimeLocal(e.startDate),
+    status: e.status ?? 'draft',
+  }))
+}
+
+export async function getHostRecentEvents(hostId: string) {
+  return getRecentEvents(api.events.listByHost, 'hostId', hostId)
+}
+
+export async function getOrganizerRecentEvents(profileId: string) {
+  return getRecentEvents(api.events.listByOrganizer, 'profileId', profileId)
+}
+
+export async function getUserRecentEvents(profileId: string) {
+  return getRecentEvents(api.events.listByOrganizer, 'profileId', profileId)
 }
 
 export async function getUploadUrl() {
   return await fetchMutation(api.events.generateUploadUrl)
+}
+
+export async function resolveStorageUrls(storageIds: string[]) {
+  return await fetchQuery(api.events.getStorageUrls, {
+    storageIds: storageIds.filter(Boolean),
+  })
 }
 
 export async function createEvent(
@@ -168,6 +203,9 @@ export async function createEvent(
     timezone: data.timezone,
     slug: data.slug ?? undefined,
     categoryIds: data.categoryIds as any ?? undefined,
+    reservationLimit: data.reservation_limit ?? undefined,
+    teaserVideoUrl: data.teaser_video_url ?? undefined,
+    videoAspectRatio: data.video_aspect_ratio ?? undefined,
   })
   revalidatePath('/events')
   revalidatePath('/')
@@ -245,6 +283,9 @@ export async function updateEvent(
     timezone: data.timezone,
     slug: data.slug ?? undefined,
     categoryIds: data.categoryIds as any ?? undefined,
+    reservationLimit: data.reservation_limit ?? undefined,
+    teaserVideoUrl: data.teaser_video_url ?? undefined,
+    videoAspectRatio: data.video_aspect_ratio ?? undefined,
   })
   revalidatePath('/events')
   revalidatePath(`/events/${eventId}`)

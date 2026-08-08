@@ -5,6 +5,7 @@ import { Check, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { markContactResolved } from '@/lib/actions/cms'
+import { getErrorMessage } from '@/lib/errors'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
 
@@ -26,7 +27,7 @@ export function ContactSubmissionsClient({ submissions }: { submissions: Contact
       toast.success('Submission updated')
       router.refresh()
     } catch (err: any) {
-      toast.error(err.message || 'Failed to update submission')
+      toast.error(getErrorMessage(err, 'Failed to update submission'))
     }
   }
 

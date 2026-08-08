@@ -17,16 +17,10 @@ export function EventCard({ event, className, size = "default" }: EventCardProps
   const images = [...(event.images ?? [])].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
   const cover = images[0];
   const coverUrl = cover?.url || event.poster_url;
+  const href = event.slug ? `/events/${event.slug}` : null;
 
-  return (
-    <Link
-      href={`/events/${event.slug ?? event.id}`}
-      className={cn(
-        "group bg-surface-container border border-outline-variant rounded-xl overflow-hidden hover:border-primary transition-all duration-300",
-        isLg && "lg:col-span-2",
-        className
-      )}
-    >
+  const cardContent = (
+    <>
       <div className={cn("relative overflow-hidden", isLg ? "h-56 md:h-64" : "h-48")}>
         {coverUrl ? (
           <Image
@@ -65,10 +59,26 @@ export function EventCard({ event, className, size = "default" }: EventCardProps
         {!ended && (
           <div className="flex justify-between items-center pt-sm border-t border-outline-variant/30">
             <span className="text-secondary font-bold text-body-lg">{formatPrice(event.price_display, event.is_free)}</span>
-            <ArrowUpRight className="w-5 h-5 text-primary group-hover:translate-x-1 transition-transform" />
+            {href && <ArrowUpRight className="w-5 h-5 text-primary group-hover:translate-x-1 transition-transform" />}
           </div>
         )}
       </div>
+    </>
+  );
+
+  const cardClass = cn(
+    "group bg-surface-container border border-outline-variant rounded-xl overflow-hidden hover:border-primary transition-all duration-300",
+    isLg && "lg:col-span-2",
+    className
+  );
+
+  if (!href) {
+    return <div className={cardClass}>{cardContent}</div>;
+  }
+
+  return (
+    <Link href={href} className={cardClass}>
+      {cardContent}
     </Link>
   );
 }

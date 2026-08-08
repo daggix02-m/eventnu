@@ -1,10 +1,12 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { Card } from 'company-design-system'
-import { Button } from 'company-design-system'
+import { Card } from '@/components/ui'
+import { Button } from '@/components/ui'
 import { Switch } from '@/components/ui/switch'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { toast } from 'sonner'
+import { getErrorMessage } from '@/lib/errors'
 import {
   getInstagramStatus,
   startInstagramConnect,
@@ -35,6 +37,7 @@ export function InstagramSettingsCard({
 }) {
   const [status, setStatus] = useState<InstagramStatus | null>(initialStatus)
   const [busy, setBusy] = useState<string | null>(null)
+  const [showDisconnectDialog, setShowDisconnectDialog] = useState(false)
 
   useEffect(() => {
     if (notice) toast.success(notice)
@@ -55,21 +58,21 @@ export function InstagramSettingsCard({
       }
       window.location.href = url
     } catch (err: any) {
-      toast.error(err.message || 'Failed to start connection')
+      toast.error(getErrorMessage(err, 'Failed to start connection'))
     } finally {
       setBusy(null)
     }
   }
 
   const handleDisconnect = async () => {
-    if (!confirm('Disconnect Instagram? Imported posts stay on the site.')) return
+    setShowDisconnectDialog(false)
     setBusy('disconnect')
     try {
       await disconnectInstagram()
       await refresh()
       toast.success('Instagram disconnected')
     } catch (err: any) {
-      toast.error(err.message || 'Failed to disconnect')
+      toast.error(getErrorMessage(err, 'Failed to disconnect'))
     } finally {
       setBusy(null)
     }
@@ -82,7 +85,7 @@ export function InstagramSettingsCard({
       await refresh()
       toast.success(enabled ? 'IG to site sync enabled' : 'IG to site sync disabled')
     } catch (err: any) {
-      toast.error(err.message || 'Failed to update')
+      toast.error(getErrorMessage(err, 'Failed to update'))
     } finally {
       setBusy(null)
     }
@@ -95,13 +98,17 @@ export function InstagramSettingsCard({
       await refresh()
       toast.success(enabled ? 'Publishing to Instagram enabled' : 'Publishing to Instagram disabled')
     } catch (err: any) {
-      toast.error(err.message || 'Failed to update')
+      toast.error(getErrorMessage(err, 'Failed to update'))
     } finally {
       setBusy(null)
     }
   }
 
-  const expired = status ? status.tokenExpiresAt < Date.now() : false
+  const [expired, setExpired] = useState(false)
+  useEffect(() => {
+    if (status) setExpired(status.tokenExpiresAt < Date.now())
+  }, [status])
+
   const expiresLabel = status
     ? new Date(status.tokenExpiresAt).toLocaleDateString()
     : ''
@@ -168,7 +175,7 @@ export function InstagramSettingsCard({
             <Button
               variant="outline"
               size="sm"
-              onClick={handleDisconnect}
+              onClick={() => setShowDisconnectDialog(true)}
               disabled={busy === 'disconnect'}
               className="gap-1.5 text-destructive border-destructive/40"
             >
@@ -227,6 +234,19 @@ export function InstagramSettingsCard({
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={showDisconnectDialog}
+        onOpenChange={(open) => {
+          if (!open) setShowDisconnectDialog(false)
+        }}
+        title="Disconnect Instagram?"
+        description="Imported posts stay on the site."
+        confirmLabel="Disconnect"
+        destructive
+        loading={busy === 'disconnect'}
+        onConfirm={handleDisconnect}
+      />
     </Card>
   )
 }

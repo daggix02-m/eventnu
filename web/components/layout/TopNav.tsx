@@ -55,29 +55,32 @@ export function TopNav() {
   }, [mobileOpen]);
 
   return (
-    <header
-      className={cn(
-        "w-full sticky top-0 z-50 border-b border-outline-variant bg-background/80 backdrop-blur-md transition-shadow duration-200",
-        scrolled && "sticky-nav-active"
-      )}
-    >
+    <>
+      <header
+        className={cn(
+          "w-full sticky top-0 z-50 border-b border-outline-variant bg-background/80 backdrop-blur-md transition-shadow duration-200",
+          scrolled && "sticky-nav-active"
+        )}
+      >
       <div className="flex justify-between items-center h-16 px-gutter max-w-container-max mx-auto">
         <div className="flex items-center gap-lg">
           <Link href="/" className="flex items-center">
             <Image
               src="/logo.png"
               alt="Event Nu"
-              width={52}
+              width={44}
               height={44}
-              className="h-11 w-auto transition-opacity duration-200 hover:opacity-80"
+              className="h-11 w-11 transition-opacity duration-200 hover:opacity-80"
               loading="eager"
-              style={{ width: "auto" }}
             />
             <span className="sr-only">Event Nu</span>
           </Link>
           <nav className="hidden md:flex items-center gap-md">
             {navItems.map((item) => {
-              const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+              const isActive =
+                item.href === "/"
+                  ? pathname === "/"
+                  : pathname === item.href || pathname.startsWith(`${item.href}/`);
               return (
                 <Link
                   key={item.href}
@@ -105,6 +108,7 @@ export function TopNav() {
           <Menu className="w-6 h-6" />
         </button>
       </div>
+      </header>
 
       {/* Mobile drawer */}
       <div
@@ -141,7 +145,10 @@ export function TopNav() {
           </div>
           <nav className="flex flex-col gap-sm">
             {navItems.map((item) => {
-              const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+              const isActive =
+                item.href === "/"
+                  ? pathname === "/"
+                  : pathname === item.href || pathname.startsWith(`${item.href}/`);
               return (
                 <Link
                   key={item.href}
@@ -160,6 +167,6 @@ export function TopNav() {
           </nav>
         </aside>
       </div>
-    </header>
+    </>
   );
 }

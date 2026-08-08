@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Button } from 'company-design-system'
-import { Card } from 'company-design-system'
-import { Badge } from 'company-design-system'
+import { Button } from '@/components/ui'
+import { Card } from '@/components/ui'
+import { Badge } from '@/components/ui'
 import { Input } from '@/components/ui/input'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import {
   ArrowLeft,
   Building2,
@@ -24,6 +25,13 @@ import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import { updateHost, updateHostStatus, deleteHost } from '@/lib/actions/hosts'
+import { getHostRecentEvents } from '@/lib/actions/events'
+
+const fadeUp = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.3 },
+}
 
 const hostTypeLabels: Record<string, string> = {
   registered_org: 'Registered Org',
@@ -66,6 +74,8 @@ export function HostDetailClient({ host, eventCount }: HostDetailClientProps) {
   const [events, setEvents] = useState<EventItem[]>([])
   const [eventsLoading, setEventsLoading] = useState(true)
   const [isEditing, setIsEditing] = useState(false)
+  const [showSuspendDialog, setShowSuspendDialog] = useState(false)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [form, setForm] = useState({
     name: host.name,
     slug: host.slug,
@@ -80,12 +90,24 @@ export function HostDetailClient({ host, eventCount }: HostDetailClientProps) {
   const router = useRouter()
 
   useEffect(() => {
+    let cancelled = false
     setEventsLoading(true)
     setEvents([])
-    setEventsLoading(false)
+    getHostRecentEvents(host.id)
+      .then((items) => {
+        if (!cancelled) setEvents(items)
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setEventsLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
   }, [host.id])
 
   const handleSuspend = async () => {
+    setShowSuspendDialog(false)
     setIsLoading(true)
     try {
       await updateHostStatus(host.id, 'suspended', 'suspend_host')
@@ -114,7 +136,7 @@ export function HostDetailClient({ host, eventCount }: HostDetailClientProps) {
   }
 
   const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this host? This cannot be undone.')) return
+    setShowDeleteDialog(false)
     setIsLoading(true)
     try {
       await deleteHost(host.id)
@@ -154,14 +176,9 @@ export function HostDetailClient({ host, eventCount }: HostDetailClientProps) {
     }
   }
 
-  const fadeUp = {
-    initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.3 },
-  }
-
   return (
-    <div className="space-y-6">
+    <>
+      <div className="space-y-6">
       {/* Header */}
       <div>
         <Link
@@ -174,13 +191,13 @@ export function HostDetailClient({ host, eventCount }: HostDetailClientProps) {
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 rounded-2xl bg-surface-container-high flex items-center justify-center overflow-hidden flex-shrink-0">
             {host.logo_url ? (
-              <img src={host.logo_url} alt="" className="w-full h-full object-cover" />
+              <img src={host.logo_url} alt="" width={64} height={64} loading="lazy" className="w-full h-full object-cover" />
             ) : (
               <Building2 size={28} className="text-muted-foreground" />
             )}
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-primary tracking-tight">{host.name}</h1>
+            <h1 className="font-headline text-3xl font-semibold text-foreground tracking-tight">{host.name}</h1>
             <p className="text-muted-foreground">{host.slug}</p>
           </div>
         </div>
@@ -344,7 +361,7 @@ export function HostDetailClient({ host, eventCount }: HostDetailClientProps) {
           <div className="flex flex-wrap items-center gap-3 mb-4">
             {host.status === 'active' ? (
               <Button
-                onClick={handleSuspend}
+                onClick={() => setShowSuspendDialog(true)}
                 disabled={isLoading}
                 variant="outline"
                 className="text-warning border-warning/30 hover:bg-warning/10"
@@ -370,7 +387,7 @@ export function HostDetailClient({ host, eventCount }: HostDetailClientProps) {
               {isEditing ? 'Cancel Edit' : 'Edit Host'}
             </Button>
             <Button
-              onClick={handleDelete}
+              onClick={() => setShowDeleteDialog(true)}
               disabled={isLoading}
               variant="outline"
               className="text-destructive border-destructive/30 hover:bg-destructive/10"
@@ -467,5 +484,30 @@ export function HostDetailClient({ host, eventCount }: HostDetailClientProps) {
         </Card>
       </motion.div>
     </div>
+    <ConfirmDialog
+      open={showSuspendDialog}
+      onOpenChange={(open) => {
+        if (!open) setShowSuspendDialog(false)
+      }}
+      title="Suspend host?"
+      description="Are you sure you want to suspend this host?"
+      confirmLabel="Suspend"
+      destructive
+      loading={isLoading}
+      onConfirm={handleSuspend}
+    />
+    <ConfirmDialog
+      open={showDeleteDialog}
+      onOpenChange={(open) => {
+        if (!open) setShowDeleteDialog(false)
+      }}
+      title="Delete host?"
+      description="Are you sure you want to delete this host? This cannot be undone."
+      confirmLabel="Delete"
+      destructive
+      loading={isLoading}
+      onConfirm={handleDelete}
+    />
+    </>
   )
 }

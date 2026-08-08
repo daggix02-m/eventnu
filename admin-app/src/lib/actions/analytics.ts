@@ -27,15 +27,8 @@ export async function getAnalytics() {
       totalOrganizers: stats.totalOrganizers,
       topEvents: (topEvents ?? []).map(mapTopEvent),
     }
-  } catch {
-    return {
-      eventsPerWeek: [],
-      usersPerWeek: [],
-      totalEvents: 0,
-      totalUsers: 0,
-      totalHosts: 0,
-      totalOrganizers: 0,
-      topEvents: [],
-    }
+  } catch (err) {
+    console.error('Failed to load analytics:', err)
+    throw err
   }
 }

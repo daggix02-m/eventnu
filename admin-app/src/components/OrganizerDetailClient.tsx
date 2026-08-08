@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
-import { Button } from 'company-design-system'
-import { Card } from 'company-design-system'
-import { Badge } from 'company-design-system'
-import { Avatar } from 'company-design-system'
+import { Button } from '@/components/ui'
+import { Card } from '@/components/ui'
+import { Badge } from '@/components/ui'
+import { Avatar } from '@/components/ui'
 import {
   ArrowLeft,
   Globe,
@@ -23,6 +23,14 @@ import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import { verifyOrganizer, unverifyOrganizer, suspendOrganizer, unsuspendOrganizer } from '@/lib/actions/organizers'
+import { getOrganizerRecentEvents } from '@/lib/actions/events'
+
+const fadeUp = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.3 },
+}
+
 
 interface Organizer {
   profile_id: string
@@ -67,9 +75,20 @@ export function OrganizerDetailClient({ organizer, eventCount }: OrganizerDetail
   const profile = organizer.profiles[0]
 
   useEffect(() => {
+    let cancelled = false
     setEventsLoading(true)
     setEvents([])
-    setEventsLoading(false)
+    getOrganizerRecentEvents(organizer.profile_id)
+      .then((items) => {
+        if (!cancelled) setEvents(items)
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setEventsLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
   }, [organizer.profile_id])
 
   const handleVerify = async () => {
@@ -128,15 +147,14 @@ export function OrganizerDetailClient({ organizer, eventCount }: OrganizerDetail
     }
   }
 
-  const socialLinks = typeof organizer.social_links === 'string'
-    ? JSON.parse(organizer.social_links)
-    : organizer.social_links
-
-  const fadeUp = {
-    initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.3 },
-  }
+  const socialLinks = useMemo(() => {
+    if (typeof organizer.social_links !== 'string') return organizer.social_links
+    try {
+      return JSON.parse(organizer.social_links)
+    } catch {
+      return {}
+    }
+  }, [organizer.social_links])
 
   return (
     <div className="space-y-6">
@@ -152,7 +170,7 @@ export function OrganizerDetailClient({ organizer, eventCount }: OrganizerDetail
         <div className="flex items-center gap-4">
           <Avatar className="w-16 h-16">
             {organizer.logo_url ? (
-              <img src={organizer.logo_url} alt="" className="w-full h-full object-cover" />
+              <img src={organizer.logo_url} alt="" width={64} height={64} loading="lazy" className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full bg-surface-container-high flex items-center justify-center text-muted-foreground font-bold text-2xl">
                 {(organizer.organizer_name || 'O').charAt(0)}
@@ -160,7 +178,7 @@ export function OrganizerDetailClient({ organizer, eventCount }: OrganizerDetail
             )}
           </Avatar>
           <div>
-            <h1 className="text-3xl font-bold text-primary tracking-tight">{organizer.organizer_name}</h1>
+            <h1 className="font-headline text-3xl font-semibold text-foreground tracking-tight">{organizer.organizer_name}</h1>
             <p className="text-muted-foreground">@{organizer.organizer_handle}</p>
           </div>
         </div>

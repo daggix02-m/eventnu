@@ -7,7 +7,8 @@ export async function getCurrentAdminProfile() {
   try {
     const profile = await fetchQuery(api.profiles.getMe)
     return profile as { role: string; suspended: boolean } | null
-  } catch {
-    return null
+  } catch (err) {
+    console.error('Failed to load admin profile:', err)
+    throw err
   }
 }

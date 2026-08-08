@@ -13,6 +13,10 @@ interface FeaturedCarouselProps {
   events: Event[];
 }
 
+const SLIDE_BASE_MS = 6000;
+const IMAGE_STEP_MS = 3000;
+const SWIPE_THRESHOLD = 60;
+
 function getPrimaryCategory(event: Event) {
   return (
     event.event_categories?.find((ec) => ec.is_primary)?.categories ??
@@ -24,8 +28,24 @@ export function FeaturedCarousel({ events }: FeaturedCarouselProps) {
   const [current, setCurrent] = useState(0);
   const [img, setImg] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [hovered, setHovered] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const sectionRef = useRef<HTMLElement | null>(null);
+  const swipeRef = useRef<{ startX: number; startY: number; active: boolean }>({
+    startX: 0,
+    startY: 0,
+    active: false,
+  });
+
+  const paused = isPaused || hovered;
+
+  const slideTicks = useCallback(
+    (index: number) => {
+      const count = Math.max(1, sortedImages(events[index]?.images).length);
+      return Math.max(2, count) * (IMAGE_STEP_MS / 1000);
+    },
+    [events]
+  );
 
   const next = useCallback(() => {
     setCurrent((prev) => (prev + 1) % events.length);
@@ -46,17 +66,25 @@ export function FeaturedCarousel({ events }: FeaturedCarouselProps) {
   }, []);
 
   useEffect(() => {
-    if (events.length <= 1 || isPaused || prefersReducedMotion) return;
-    const timer = setInterval(next, 6000);
-    return () => clearInterval(timer);
-  }, [events.length, next, isPaused, prefersReducedMotion]);
-
-  useEffect(() => {
+    if (events.length <= 1 || paused || prefersReducedMotion) return;
     const activeImages = sortedImages(events[current]?.images);
-    if (activeImages.length <= 1 || isPaused || prefersReducedMotion) return;
-    const timer = setInterval(() => setImg((i) => (i + 1) % activeImages.length), 3000);
+    const imageCount = Math.max(1, activeImages.length);
+    const rotateEvery = Math.round(IMAGE_STEP_MS / 1000);
+    const advanceEvery = Math.max(2, imageCount) * rotateEvery;
+
+    let tick = 0;
+    const timer = setInterval(() => {
+      tick += 1;
+      if (imageCount > 1 && tick % rotateEvery === 0) {
+        setImg((i) => (i + 1) % imageCount);
+      }
+      if (tick % advanceEvery === 0) {
+        setCurrent((prev) => (prev + 1) % events.length);
+        setImg(0);
+      }
+    }, 1000);
     return () => clearInterval(timer);
-  }, [events, current, isPaused, prefersReducedMotion]);
+  }, [events, current, paused, prefersReducedMotion]);
 
   useEffect(() => {
     const el = sectionRef.current;
@@ -73,6 +101,25 @@ export function FeaturedCarousel({ events }: FeaturedCarouselProps) {
     return () => el.removeEventListener("keydown", handleKeyDown);
   }, [next, prev]);
 
+  const handlePointerDown = (e: React.PointerEvent) => {
+    swipeRef.current = { startX: e.clientX, startY: e.clientY, active: true };
+  };
+
+  const handlePointerUp = (e: React.PointerEvent) => {
+    if (!swipeRef.current.active) return;
+    swipeRef.current.active = false;
+    const dx = e.clientX - swipeRef.current.startX;
+    const dy = e.clientY - swipeRef.current.startY;
+    if (Math.abs(dx) > SWIPE_THRESHOLD && Math.abs(dx) > Math.abs(dy)) {
+      if (dx < 0) next();
+      else prev();
+    }
+  };
+
+  const cancelSwipe = () => {
+    swipeRef.current.active = false;
+  };
+
   if (events.length === 0) return null;
 
   const currentEvent = events[current];
@@ -80,14 +127,20 @@ export function FeaturedCarousel({ events }: FeaturedCarouselProps) {
   const externalLabel = currentEvent?.external_link_label?.trim() || "RSVP Now";
   const currentImages = sortedImages(currentEvent?.images);
   const currentImageCount = currentImages.length > 1 ? currentImages.length : 1;
+  const currentSlideTicks = slideTicks(current);
 
   return (
     <section
       ref={sectionRef}
-      className="relative h-[614px] md:h-[768px] w-full overflow-hidden"
+      className="relative h-[614px] md:h-[768px] w-full overflow-hidden touch-pan-y select-none"
       aria-roledescription="carousel"
       aria-label="Featured events"
       tabIndex={0}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={cancelSwipe}
     >
       {events.map((event, index) => {
         const images = sortedImages(event.images);
@@ -117,6 +170,7 @@ export function FeaturedCarousel({ events }: FeaturedCarouselProps) {
                 alt={event.title}
                 fill
                 priority={index === 0}
+                draggable={false}
                 className={cn(
                   "object-cover transition-opacity duration-1000",
                   i === activeMedia ? "opacity-100" : "opacity-0"
@@ -133,7 +187,7 @@ export function FeaturedCarousel({ events }: FeaturedCarouselProps) {
       <div className="absolute bottom-0 left-0 w-full p-gutter pb-xl z-20">
         <div className="max-w-container-max mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-end gap-md">
-            <div className="space-y-sm max-w-3xl">
+            <div className="space-y-sm max-w-[48rem]">
               <div className="flex items-center gap-sm">
                 {category && (
                   <span className="inline-block px-sm py-1 bg-secondary-container text-on-secondary-container font-label-sm text-label-sm rounded-full tracking-wider">
@@ -212,7 +266,7 @@ export function FeaturedCarousel({ events }: FeaturedCarouselProps) {
           >
             <ChevronRight className="w-6 h-6" />
           </button>
-          <div className="absolute bottom-md left-1/2 -translate-x-1/2 z-20 flex items-center gap-sm">
+          <div className="absolute bottom-md left-1/2 -translate-x-1/2 z-20 flex items-center gap-md">
             <button
               type="button"
               onClick={() => setIsPaused((p) => !p)}
@@ -222,19 +276,40 @@ export function FeaturedCarousel({ events }: FeaturedCarouselProps) {
             >
               {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
             </button>
-            <div className="flex gap-xs">
+            <div
+              className="flex items-center gap-sm"
+              role="group"
+              aria-label="Featured event navigation"
+            >
               {events.map((_, index) => (
                 <button
                   key={index}
                   type="button"
-                  onClick={() => setCurrent(index)}
+                  onClick={() => {
+                    setCurrent(index);
+                    setImg(0);
+                  }}
                   aria-label={`Go to slide ${index + 1}`}
                   aria-current={index === current}
                   className={cn(
-                    "w-2 h-2 rounded-full transition-colors",
-                    index === current ? "bg-primary" : "bg-on-surface-variant/40"
+                    "group h-1.5 flex-1 overflow-hidden rounded-full transition-colors",
+                    index === current
+                      ? "bg-on-surface-variant/40"
+                      : "bg-on-surface-variant/20 hover:bg-on-surface-variant/40"
                   )}
-                />
+                  style={{ minWidth: 28, maxWidth: 40 }}
+                >
+                  {index === current && (
+                    <span
+                      key={`${current}-${index}`}
+                      className="carousel-progress-fill block h-full w-full bg-primary"
+                      style={{
+                        animationDuration: `${currentSlideTicks}s`,
+                        animationPlayState: paused ? "paused" : "running",
+                      }}
+                    />
+                  )}
+                </button>
               ))}
             </div>
           </div>

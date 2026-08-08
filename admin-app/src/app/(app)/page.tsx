@@ -1,8 +1,9 @@
 import { getDashboardStats, getPendingReviewEvents, getRecentModerationLogs } from '@/lib/actions/dashboard'
 import { StatCard } from '@/components/StatCard'
-import { Button } from 'company-design-system'
-import { Badge } from 'company-design-system'
-import { Avatar } from 'company-design-system'
+import { PageWrapper, PageHeader } from '@/components/Page'
+import { Button } from '@/components/ui'
+import { Badge } from '@/components/ui'
+import { Avatar } from '@/components/ui'
 import { format } from 'date-fns'
 import Link from 'next/link'
 import {
@@ -71,28 +72,27 @@ export default async function DashboardPage() {
   ]
 
   return (
-    <div className="space-y-8">
+    <PageWrapper>
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-primary tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground mt-1">Real-time overview of platform health.</p>
-      </div>
+      <PageHeader
+        title="Dashboard"
+        description="Real-time overview of platform health."
+        folio="Index · 01 / 2026"
+      />
 
       {isEmpty ? (
         <div className="bg-card rounded-2xl border border-outline-variant p-12 text-center shadow-sm">
           <div className="w-16 h-16 bg-surface-container-high rounded-2xl flex items-center justify-center mx-auto mb-4">
             <Activity size={28} className="text-muted-foreground" />
           </div>
-          <h2 className="text-xl font-bold text-foreground mb-2">Welcome to Event Nu Admin</h2>
+          <h2 className="font-headline text-xl font-semibold text-foreground mb-2">Welcome to Event Nu Admin</h2>
           <p className="text-sm text-muted-foreground max-w-md mx-auto mb-6">
             Your platform is brand new. Events, users, and reports will appear here as the platform grows.
           </p>
           <div className="flex justify-center gap-3">
             <Link href="/events/new">
-              <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                <div className="w-5 h-5 rounded-md bg-primary-foreground/20 flex items-center justify-center mr-2">
-                  <Calendar size={12} className="text-primary-foreground" />
-                </div>
+              <Button>
+                <Calendar size={16} className="mr-2" />
                 Create First Event
               </Button>
             </Link>
@@ -102,7 +102,7 @@ export default async function DashboardPage() {
             <div className="space-y-2">
               {['Create an event', 'Set up host profiles', 'Review submitted events', 'Configure featured sections'].map((item, i) => (
                 <div key={i} className="flex items-center gap-3 text-sm text-muted-foreground">
-                  <div className="w-5 h-5 rounded-full border border-outline-variant flex items-center justify-center text-xs">
+                  <div className="w-5 h-5 rounded-md border border-outline-variant flex items-center justify-center font-mono text-[10px]">
                     {i + 1}
                   </div>
                   {item}
@@ -116,7 +116,7 @@ export default async function DashboardPage() {
           {/* Stats Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {statCards.map((stat, i) => (
-              <StatCard key={stat.label} {...stat} delay={i * 0.05} />
+              <StatCard key={stat.label} {...stat} delay={i * 0.04} />
             ))}
           </div>
 
@@ -125,7 +125,7 @@ export default async function DashboardPage() {
             <div className="bg-card rounded-2xl border border-outline-variant overflow-hidden shadow-sm">
               <div className="p-6 border-b border-outline-variant flex items-center justify-between">
                 <div>
-                  <h2 className="text-lg font-bold text-primary">Pending Review Queue</h2>
+                  <h2 className="font-headline text-lg font-semibold text-foreground">Pending Review Queue</h2>
                   <p className="text-sm text-muted-foreground">Events awaiting moderation approval</p>
                 </div>
                 <Link href="/events?status=pending_review">
@@ -140,21 +140,19 @@ export default async function DashboardPage() {
                   <div key={event.id} className="p-4 flex items-center gap-4 hover:bg-surface-container-low transition-colors">
                     <div className="w-12 h-12 rounded-lg bg-surface-container-high flex items-center justify-center overflow-hidden flex-shrink-0">
                       {event.poster_url ? (
-                        <img src={event.poster_url} alt="" className="w-full h-full object-cover" />
+                        <img src={event.poster_url} alt="" width={48} height={48} loading="lazy" className="w-full h-full object-cover" />
                       ) : (
                         <Calendar size={18} className="text-muted-foreground" />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-sm text-foreground truncate">{event.title}</p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="font-mono text-xs text-muted-foreground">
                         by {event.organizer_id ? 'Organizer' : 'Unknown'} · {format(new Date(event.created_at), 'MMM d, yyyy')}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20">
-                        Pending
-                      </Badge>
+                      <Badge variant="warning">Pending</Badge>
                     </div>
                   </div>
                 ))}
@@ -165,7 +163,7 @@ export default async function DashboardPage() {
           {/* Moderation Activity Feed */}
           <div className="bg-card rounded-2xl border border-outline-variant overflow-hidden shadow-sm">
             <div className="p-6 border-b border-outline-variant">
-              <h2 className="text-lg font-bold text-primary">Recent Moderation Activity</h2>
+              <h2 className="font-headline text-lg font-semibold text-foreground">Recent Moderation Activity</h2>
               <p className="text-sm text-muted-foreground">Last 10 actions taken by the admin team</p>
             </div>
             <div className="divide-y divide-outline-variant">
@@ -193,7 +191,7 @@ export default async function DashboardPage() {
                         <p className="text-xs text-muted-foreground truncate mt-0.5">{log.note}</p>
                       )}
                     </div>
-                    <span className="text-xs text-muted-foreground whitespace-nowrap">
+                    <span className="font-mono text-xs text-muted-foreground whitespace-nowrap tabular-nums">
                       {format(new Date(log.created_at), 'MMM d, HH:mm')}
                     </span>
                   </div>
@@ -203,6 +201,6 @@ export default async function DashboardPage() {
           </div>
         </>
       )}
-    </div>
+    </PageWrapper>
   )
 }

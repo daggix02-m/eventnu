@@ -71,111 +71,184 @@ function mapEvent(raw: any): Event {
 }
 
 export async function getPublishedEvents(): Promise<Event[]> {
-  const events = await fetchQuery(api.events.getPublished);
-  return (events ?? []).map(mapEvent);
+  try {
+    const events = await fetchQuery(api.events.getPublished);
+    return (events ?? []).map(mapEvent);
+  } catch (err) {
+    console.error("Failed to fetch published events:", err);
+    return [];
+  }
 }
 
 export async function getFeaturedEvents(limit = 5): Promise<Event[]> {
-  const events = await fetchQuery(api.events.getFeatured, {
-    startDate: Date.now(),
-    limit,
-  });
-  return (events ?? []).map(mapEvent);
+  try {
+    const events = await fetchQuery(api.events.getFeatured, {
+      startDate: Date.now(),
+      limit,
+    });
+    return (events ?? []).map(mapEvent);
+  } catch (err) {
+    console.error("Failed to fetch featured events:", err);
+    return [];
+  }
 }
 
 export async function getEventBySlug(slug: string): Promise<Event | null> {
-  const event = await fetchQuery(api.events.getBySlug, { slug });
-  return event ? mapEvent(event) : null;
+  try {
+    const event = await fetchQuery(api.events.getBySlug, { slug });
+    return event ? mapEvent(event) : null;
+  } catch (err) {
+    console.error("Failed to fetch event by slug:", err);
+    return null;
+  }
 }
 
 export async function getSimilarEvents(event: Event, limit = 3): Promise<Event[]> {
-  const events = await fetchQuery(api.events.getSimilar, {
-    eventId: event.id as any,
-    limit,
-  });
-  return (events ?? []).map(mapEvent);
+  try {
+    const events = await fetchQuery(api.events.getSimilar, {
+      eventId: event.id as any,
+      limit,
+    });
+    return (events ?? []).map(mapEvent);
+  } catch (err) {
+    console.error("Failed to fetch similar events:", err);
+    return [];
+  }
 }
 
 export async function getCategories(): Promise<Category[]> {
-  const categories = await fetchQuery(api.categories.getRoot);
-  return (categories ?? []).map((raw: any) => ({
-    id: raw._id,
-    slug: raw.slug,
-    name: raw.name,
-    description: raw.description,
-    icon: raw.icon,
-    parent_id: raw.parentId,
-    sort_order: raw.sortOrder,
-  }));
+  try {
+    const categories = await fetchQuery(api.categories.getRoot);
+    return (categories ?? []).map((raw: any) => ({
+      id: raw._id,
+      slug: raw.slug,
+      name: raw.name,
+      description: raw.description,
+      icon: raw.icon,
+      parent_id: raw.parentId,
+      sort_order: raw.sortOrder,
+    }));
+  } catch (err) {
+    console.error("Failed to fetch categories:", err);
+    return [];
+  }
 }
 
 export async function getCategoryBySlug(slug: string): Promise<Category | null> {
-  const category = await fetchQuery(api.categories.getBySlug, { slug });
-  if (!category) return null;
-  return {
-    id: category._id,
-    slug: category.slug,
-    name: category.name,
-    description: category.description,
-    icon: category.icon,
-    parent_id: category.parentId,
-    sort_order: category.sortOrder,
-  };
+  try {
+    const category = await fetchQuery(api.categories.getBySlug, { slug });
+    if (!category) return null;
+    return {
+      id: category._id,
+      slug: category.slug,
+      name: category.name,
+      description: category.description,
+      icon: category.icon,
+      parent_id: category.parentId,
+      sort_order: category.sortOrder,
+    };
+  } catch (err) {
+    console.error("Failed to fetch category by slug:", err);
+    return null;
+  }
+}
+
+export interface CategoryWithCount extends Category {
+  eventCount: number;
+}
+
+export async function getCategoriesWithCounts(): Promise<CategoryWithCount[]> {
+  try {
+    const categories = await fetchQuery(api.categories.getWithEventCounts);
+    return (categories ?? []).map((raw: any) => ({
+      id: raw._id,
+      slug: raw.slug,
+      name: raw.name,
+      description: raw.description,
+      icon: raw.icon,
+      parent_id: raw.parentId,
+      sort_order: raw.sortOrder,
+      eventCount: raw.eventCount ?? 0,
+    }));
+  } catch (err) {
+    console.error("Failed to fetch categories with counts:", err);
+    return [];
+  }
 }
 
 export async function getEventsByCategory(categoryId: string): Promise<Event[]> {
-  const events = await fetchQuery(api.events.getByCategory, {
-    categoryId: categoryId as any,
-  });
-  return (events ?? []).map(mapEvent);
+  try {
+    const events = await fetchQuery(api.events.getByCategory, {
+      categoryId: categoryId as any,
+    });
+    return (events ?? []).map(mapEvent);
+  } catch (err) {
+    console.error("Failed to fetch events by category:", err);
+    return [];
+  }
 }
 
 export async function getPublishedPages(): Promise<Page[]> {
-  const pages = await fetchQuery(api.cms.getPublishedPages);
-  return (pages ?? []).map((raw: any) => ({
-    id: raw._id,
-    slug: raw.slug,
-    title: raw.title,
-    subtitle: raw.subtitle,
-    body: raw.body,
-    body_html: raw.bodyHtml,
-    hero_image_url: raw.heroImageUrl,
-    is_published: raw.isPublished,
-    sort_order: raw.sortOrder,
-    created_at: raw._creationTime ? new Date(raw._creationTime).toISOString() : undefined,
-  }));
+  try {
+    const pages = await fetchQuery(api.cms.getPublishedPages);
+    return (pages ?? []).map((raw: any) => ({
+      id: raw._id,
+      slug: raw.slug,
+      title: raw.title,
+      subtitle: raw.subtitle,
+      body: raw.body,
+      body_html: raw.bodyHtml,
+      hero_image_url: raw.heroImageUrl,
+      is_published: raw.isPublished,
+      sort_order: raw.sortOrder,
+      created_at: raw._creationTime ? new Date(raw._creationTime).toISOString() : undefined,
+    }));
+  } catch (err) {
+    console.error("Failed to fetch published pages:", err);
+    return [];
+  }
 }
 
 export async function getPageBySlug(slug: string): Promise<Page | null> {
-  const raw = await fetchQuery(api.cms.getPageBySlug, { slug });
-  if (!raw) return null;
-  return {
-    id: raw._id,
-    slug: raw.slug,
-    title: raw.title,
-    subtitle: raw.subtitle,
-    body: raw.body,
-    body_html: raw.bodyHtml,
-    hero_image_url: raw.heroImageUrl,
-    is_published: raw.isPublished,
-    sort_order: raw.sortOrder,
-    created_at: raw._creationTime ? new Date(raw._creationTime).toISOString() : undefined,
-  };
+  try {
+    const raw = await fetchQuery(api.cms.getPageBySlug, { slug });
+    if (!raw) return null;
+    return {
+      id: raw._id,
+      slug: raw.slug,
+      title: raw.title,
+      subtitle: raw.subtitle,
+      body: raw.body,
+      body_html: raw.bodyHtml,
+      hero_image_url: raw.heroImageUrl,
+      is_published: raw.isPublished,
+      sort_order: raw.sortOrder,
+      created_at: raw._creationTime ? new Date(raw._creationTime).toISOString() : undefined,
+    };
+  } catch (err) {
+    console.error("Failed to fetch page by slug:", err);
+    return null;
+  }
 }
 
 export async function getActiveAnnouncements(): Promise<Announcement[]> {
-  const announcements = await fetchQuery(api.cms.getActiveAnnouncements, {
-    now: Date.now(),
-  });
-  return (announcements ?? []).map((raw: any) => ({
-    id: raw._id,
-    title: raw.title,
-    message: raw.message,
-    link_url: raw.linkUrl,
-    link_text: raw.linkText,
-    is_active: raw.isActive,
-    starts_at: raw.startsAt,
-    ends_at: raw.endsAt,
-    created_at: raw._creationTime ? new Date(raw._creationTime).toISOString() : undefined,
-  }));
+  try {
+    const announcements = await fetchQuery(api.cms.getActiveAnnouncements, {
+      now: Date.now(),
+    });
+    return (announcements ?? []).map((raw: any) => ({
+      id: raw._id,
+      title: raw.title,
+      message: raw.message,
+      link_url: raw.linkUrl,
+      link_text: raw.linkText,
+      is_active: raw.isActive,
+      starts_at: raw.startsAt,
+      ends_at: raw.endsAt,
+      created_at: raw._creationTime ? new Date(raw._creationTime).toISOString() : undefined,
+    }));
+  } catch (err) {
+    console.error("Failed to fetch active announcements:", err);
+    return [];
+  }
 }

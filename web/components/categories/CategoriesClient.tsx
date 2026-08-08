@@ -1,24 +1,32 @@
 "use client";
 
 import { useRef } from "react";
-import Link from "next/link";
 import { useGSAP } from "@gsap/react";
 import { gsap } from "@/lib/gsap";
-import { Container } from "@/components/layout/Container";
 import { CategoryBentoCard } from "./CategoryBentoCard";
 import { InterestScroller } from "./InterestScroller";
-import type { Category } from "@/types";
+import type { CategoryWithCount } from "@/lib/api/events";
 
-const BENTO_ITEMS = [
-  { name: "Nightlife", slug: "nightlife" },
-  { name: "Music", slug: "music" },
-  { name: "Tech & Innovation", slug: "tech-innovation" },
-  { name: "Arts & Culture", slug: "arts-culture" },
-  { name: "Food & Drink", slug: "food-drink" },
+const BENTO_SPANS = [
+  "md:col-span-8 md:row-span-2",
+  "md:col-span-4 md:row-span-2",
+  "md:col-span-4",
+  "md:col-span-4",
+  "md:col-span-4",
+  "md:col-span-8",
 ];
 
+const CATEGORY_POSTERS: Record<string, string> = {
+  nightlife: "/images/events/july-20-26/night-shift.png",
+  music: "/images/events/june-22-28/hiphop.png",
+  "arts-culture": "/images/events/july-6-12/free-form.png",
+  "food-drink": "/images/events/july-13-19/feta-socity.png",
+  "sports-fitness": "/images/events/july-01-05/adventure.png",
+  "tech-innovation": "/images/events/july-01-05/solo-exibition.png",
+};
+
 interface CategoriesClientProps {
-  categories: Category[];
+  categories: CategoryWithCount[];
 }
 
 export function CategoriesClient({ categories }: CategoriesClientProps) {
@@ -48,17 +56,18 @@ export function CategoriesClient({ categories }: CategoriesClientProps) {
 
     if (scrollerSectionRef.current) {
       const h2 = scrollerSectionRef.current.querySelector("h2");
-      const viewAll = scrollerSectionRef.current.querySelector("a");
       const pills = scrollerSectionRef.current.querySelectorAll("a[href*='/categories/']");
       if (h2) gsap.set(h2, { opacity: 0, y: 12 });
-      if (viewAll) gsap.set(viewAll, { opacity: 0 });
       gsap.set(pills, { opacity: 0, y: 12 });
 
       if (h2) tl.to(h2, { opacity: 1, y: 0, duration: 0.4 }, "-=0.1");
-      if (viewAll) tl.to(viewAll, { opacity: 1, duration: 0.3 }, "-=0.2");
       tl.to(pills, { opacity: 1, y: 0, duration: 0.35, stagger: 0.04 }, "-=0.2");
     }
   }, { scope: sectionRef });
+
+  const sortedCategories = [...categories]
+    .filter((category) => !category.parent_id)
+    .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
 
   return (
     <main
@@ -69,7 +78,7 @@ export function CategoriesClient({ categories }: CategoriesClientProps) {
         <h1 className="font-display text-display-lg-mobile md:text-display-lg text-on-surface mb-xs">
           Pick Your Vibe
         </h1>
-        <p className="text-on-surface-variant text-body-lg max-w-2xl">
+        <p className="text-on-surface-variant text-body-lg max-w-[42rem]">
           From the neon pulse of nightlife to the curated silence of art
           galleries, find where you belong in the city tonight.
         </p>
@@ -79,28 +88,25 @@ export function CategoriesClient({ categories }: CategoriesClientProps) {
         ref={bentoGridRef}
         className="grid grid-cols-1 md:grid-cols-12 gap-md auto-rows-[280px]"
       >
-        {BENTO_ITEMS.map((item) => (
+        {sortedCategories.map((category, i) => (
           <CategoryBentoCard
-            key={item.slug}
-            name={item.name}
-            slug={item.slug}
+            key={category.id}
+            name={category.name}
+            slug={category.slug}
+            description={category.description}
+            icon={category.icon}
+            eventCount={category.eventCount}
+            imageUrl={CATEGORY_POSTERS[category.slug]}
+            span={BENTO_SPANS[i % BENTO_SPANS.length]}
           />
         ))}
       </div>
 
       <div ref={scrollerSectionRef} className="mt-xl">
-        <div className="flex items-center justify-between mb-md">
-          <h2 className="font-display text-headline-md text-on-surface">
-            Browse by Interest
-          </h2>
-          <Link
-            href="/categories"
-            className="text-primary font-body-md text-body-md hover:underline"
-          >
-            View All
-          </Link>
-        </div>
-        <InterestScroller categories={categories} />
+        <h2 className="font-display text-headline-md text-on-surface mb-md">
+          Browse by Interest
+        </h2>
+        <InterestScroller categories={sortedCategories} />
       </div>
     </main>
   );

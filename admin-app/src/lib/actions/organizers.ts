@@ -25,8 +25,9 @@ export async function getOrganizers(params: {
       filtered = filtered.filter((o: any) => o.verified === params.verified)
     }
     return { organizers: filtered, count: filtered.length }
-  } catch {
-    return { organizers: [], count: 0 }
+  } catch (err) {
+    console.error('Failed to load organizers:', err)
+    throw err
   }
 }
 
@@ -63,10 +64,13 @@ export async function getOrganizerById(profileId: string) {
         profile = withCounts
         eventCount = withCounts.eventCount ?? 0
       }
-    } catch {}
+    } catch (err) {
+      console.error('Failed to load organizer counts:', err)
+    }
 
     return { organizer: mapOrganizer(organizer, profile), eventCount }
-  } catch {
-    return { organizer: null, eventCount: 0 }
+  } catch (err) {
+    console.error('Failed to load organizer details:', err)
+    throw err
   }
 }

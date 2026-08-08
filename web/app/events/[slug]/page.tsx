@@ -9,11 +9,17 @@ import { OrganizerCard } from "@/components/events/OrganizerCard";
 import { SimilarEvents } from "@/components/events/SimilarEvents";
 import { Container } from "@/components/layout/Container";
 import { getEventBySlug, getSimilarEvents } from "@/lib/api/events";
+import { absoluteUrl } from "@/lib/site";
 
 export const revalidate = 60;
 
 interface EventPageProps {
   params: Promise<{ slug: string }>;
+}
+
+function toAbsolute(image?: string | null): string | undefined {
+  if (!image) return undefined;
+  return image.startsWith("/") ? absoluteUrl(image) : image;
 }
 
 export async function generateMetadata({ params }: EventPageProps): Promise<Metadata> {
@@ -24,13 +30,17 @@ export async function generateMetadata({ params }: EventPageProps): Promise<Meta
     return { title: "Event Not Found | Event Nu" };
   }
 
+  const description = event.subtitle ?? event.description.slice(0, 160);
+
   return {
     title: `${event.title} | Event Nu`,
-    description: event.subtitle ?? event.description.slice(0, 160),
+    description,
     openGraph: {
       title: event.title,
-      description: event.subtitle ?? event.description.slice(0, 160),
-      images: event.poster_url ? [event.poster_url] : [],
+      description,
+      images: toAbsolute(event.poster_url) ? [toAbsolute(event.poster_url)!] : [],
+      url: absoluteUrl(`/events/${event.slug}`),
+      type: "website",
     },
   };
 }
@@ -45,7 +55,7 @@ export default async function EventPage({ params }: EventPageProps) {
 
   const similarEvents = await getSimilarEvents(event, 3);
 
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const hasEnded = new Date(event.start_date).getTime() < Date.now();
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Event",
@@ -53,8 +63,8 @@ export default async function EventPage({ params }: EventPageProps) {
     description: event.subtitle ?? event.description.slice(0, 500),
     startDate: event.start_date,
     endDate: event.end_date ?? undefined,
-    url: `${baseUrl}/events/${event.slug}`,
-    image: event.poster_url ?? event.images?.[0]?.url,
+    url: absoluteUrl(`/events/${event.slug}`),
+    image: toAbsolute(event.poster_url ?? event.images?.[0]?.url),
     location: {
       "@type": "Place",
       name: event.venue_name,
@@ -63,7 +73,9 @@ export default async function EventPage({ params }: EventPageProps) {
     organizer: event.organizer
       ? { "@type": "Organization", name: event.organizer.full_name ?? "Event Organizer" }
       : undefined,
-    eventStatus: "https://schema.org/EventScheduled",
+    eventStatus: hasEnded
+      ? "https://schema.org/EventEnded"
+      : "https://schema.org/EventScheduled",
     eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
   };
 
@@ -80,9 +92,7 @@ export default async function EventPage({ params }: EventPageProps) {
             <EventDetails event={event} />
             {event.images && event.images.length > 1 && (
               <section className="space-y-md">
-                <h2 className="font-display text-headline-md border-l-4 border-primary pl-md">
-                  Photos
-                </h2>
+                <h2 className="font-display text-headline-md">Photos</h2>
                 <EventPhotoGrid images={event.images} eventTitle={event.title} />
               </section>
             )}

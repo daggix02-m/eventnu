@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { createPage, updatePage } from '@/lib/actions/cms'
+import { getErrorMessage } from '@/lib/errors'
 import { toast } from 'sonner'
 
 interface PageFormClientProps {
@@ -56,7 +57,7 @@ export function PageFormClient({ initialData }: PageFormClientProps) {
       router.push('/cms/pages')
       router.refresh()
     } catch (err: any) {
-      toast.error(err.message || 'Failed to save page')
+      toast.error(getErrorMessage(err, 'Failed to save page'))
     } finally {
       setLoading(false)
     }

@@ -140,7 +140,7 @@ export const seedEvents = mutation({
         source: "manual",
         isFeatured: e.featured ?? false,
         isStandalone: true,
-        frequencyType: "once",
+        frequencyType: "one_time",
         reservationEnabled: false,
         reservationCount: 0,
         likeCount: Math.floor(Math.random() * 50),

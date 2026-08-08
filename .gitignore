@@ -4,6 +4,7 @@ node_modules/
 .env.production
 .env*.local
 datas/
+.kilo/
 .DS_Store
 Thumbs.db
 *.log

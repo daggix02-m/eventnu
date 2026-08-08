@@ -22,7 +22,7 @@ export default function EventError({ error, reset }: ErrorPageProps) {
       <h1 className="font-display text-headline-md text-on-surface">
         Something went wrong
       </h1>
-      <p className="text-on-surface-variant text-body-md max-w-md">
+      <p className="text-on-surface-variant text-body-md max-w-[28rem]">
         We couldn&apos;t load this event. It may have been removed or
         temporarily unavailable.
       </p>

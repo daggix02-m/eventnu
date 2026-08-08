@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Button } from 'company-design-system'
-import { Card } from 'company-design-system'
-import { Badge } from 'company-design-system'
+import { Button } from '@/components/ui'
+import { Card } from '@/components/ui'
+import { Badge } from '@/components/ui'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import {
   Search,
   Plus,
@@ -69,9 +70,11 @@ export function HostsClient({ initialHosts, initialCount, initialFilters }: Host
   const [hosts, setHosts] = useState(initialHosts)
   const [count, setCount] = useState(initialCount)
   const [filters, setFilters] = useState(initialFilters)
+  const [searchInput, setSearchInput] = useState(initialFilters.search || '')
   const [isLoading, setIsLoading] = useState(false)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingHost, setEditingHost] = useState<Host | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
   const [form, setForm] = useState({
     name: '',
     slug: '',
@@ -89,10 +92,21 @@ export function HostsClient({ initialHosts, initialCount, initialFilters }: Host
     setHosts(initialHosts)
     setCount(initialCount)
     setFilters(initialFilters)
+    setSearchInput(initialFilters.search || '')
   }, [initialHosts, initialCount, initialFilters])
 
   const perPage = 20
   const totalPages = Math.ceil(count / perPage)
+
+  useEffect(() => {
+    if (searchInput === (filters.search || '')) return
+    const t = setTimeout(() => {
+      const next = { ...filters, search: searchInput || undefined, page: 1 }
+      setFilters(next)
+      router.push(`/hosts?${new URLSearchParams(next as any).toString()}`)
+    }, 400)
+    return () => clearTimeout(t)
+  }, [searchInput, filters, router])
 
   const handleFilterChange = (key: string, value: string) => {
     const newFilters = { ...filters, [key]: value, page: 1 }
@@ -167,7 +181,7 @@ export function HostsClient({ initialHosts, initialCount, initialFilters }: Host
   }
 
   const handleDelete = async (hostId: string) => {
-    if (!confirm('Are you sure you want to delete this host?')) return
+    setDeleteTarget(null)
     setIsLoading(true)
     try {
       await deleteHost(hostId)
@@ -192,11 +206,12 @@ export function HostsClient({ initialHosts, initialCount, initialFilters }: Host
   }
 
   return (
-    <div className="space-y-6">
+    <>
+      <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-primary tracking-tight">Hosts</h1>
+          <h1 className="font-headline text-3xl font-semibold text-foreground tracking-tight">Hosts</h1>
           <p className="text-muted-foreground mt-1">Manage admin-created host profiles.</p>
         </div>
         <Button onClick={openCreateDialog} className="bg-primary hover:bg-primary/90 text-primary-foreground">
@@ -211,8 +226,8 @@ export function HostsClient({ initialHosts, initialCount, initialFilters }: Host
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search hosts..."
-            value={filters.search || ''}
-            onChange={(e) => handleFilterChange('search', e.target.value)}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
             className="pl-9"
           />
         </div>
@@ -269,7 +284,7 @@ export function HostsClient({ initialHosts, initialCount, initialFilters }: Host
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center overflow-hidden flex-shrink-0">
                           {host.logo_url ? (
-                            <img src={host.logo_url} alt="" className="w-full h-full object-cover" />
+                            <img src={host.logo_url} alt="" width={40} height={40} loading="lazy" className="w-full h-full object-cover" />
                           ) : (
                             <Building2 size={18} className="text-muted-foreground" />
                           )}
@@ -354,7 +369,7 @@ export function HostsClient({ initialHosts, initialCount, initialFilters }: Host
                           <Edit size={14} />
                         </button>
                         <button
-                          onClick={() => handleDelete(host.id)}
+                          onClick={() => setDeleteTarget(host.id)}
                           className="p-1.5 text-muted-foreground hover:text-destructive transition-colors rounded"
                           title="Delete"
                         >
@@ -402,7 +417,7 @@ export function HostsClient({ initialHosts, initialCount, initialFilters }: Host
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-primary">
+            <DialogTitle className="font-headline text-xl font-semibold text-foreground">
               {editingHost ? 'Edit Host' : 'Create Host'}
             </DialogTitle>
           </DialogHeader>
@@ -520,5 +535,18 @@ export function HostsClient({ initialHosts, initialCount, initialFilters }: Host
         </DialogContent>
       </Dialog>
     </div>
+    <ConfirmDialog
+      open={deleteTarget !== null}
+      onOpenChange={(open) => {
+        if (!open) setDeleteTarget(null)
+      }}
+      title="Delete host?"
+      description="Are you sure you want to delete this host?"
+      confirmLabel="Delete"
+      destructive
+      loading={isLoading}
+      onConfirm={() => deleteTarget && handleDelete(deleteTarget)}
+    />
+    </>
   )
 }

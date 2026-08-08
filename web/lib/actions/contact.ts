@@ -36,9 +36,18 @@ export async function submitContactForm(prevState: ContactFormState, formData: F
     });
   } catch (error) {
     console.error("submitContactForm error:", error);
+    let message = "Something went wrong. Please try again later.";
+    if (error instanceof Error) {
+      const msg = error.message;
+      if (msg.includes("rate limit")) {
+        message = "Too many requests. Please wait a moment before trying again.";
+      } else if (msg.includes("network") || msg.includes("fetch")) {
+        message = "Unable to connect to the server. Please check your connection.";
+      }
+    }
     return {
       success: false,
-      errors: { root: ["Something went wrong. Please try again later."] },
+      errors: { root: [message] },
     };
   }
 

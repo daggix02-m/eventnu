@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Button } from 'company-design-system'
-import { Card } from 'company-design-system'
-import { Badge } from 'company-design-system'
+import { Button } from '@/components/ui'
+import { Card } from '@/components/ui'
+import { Badge } from '@/components/ui'
 import { Input } from '@/components/ui/input'
+import { getErrorMessage } from '@/lib/errors'
 import {
   Send,
   Bell,
@@ -97,7 +98,7 @@ export function NotificationsClient({
       })
       router.refresh()
     } catch (err: any) {
-      toast.error(err?.message || 'Failed to send notification')
+      toast.error(getErrorMessage(err, 'Failed to send notification'))
     } finally {
       setIsLoading(false)
     }
@@ -126,7 +127,7 @@ export function NotificationsClient({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-primary tracking-tight">Notifications</h1>
+          <h1 className="font-headline text-3xl font-semibold text-foreground tracking-tight">Notifications</h1>
           <p className="text-muted-foreground mt-1">Broadcast notifications to users.</p>
         </div>
         <Button

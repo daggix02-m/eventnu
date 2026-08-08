@@ -19,8 +19,9 @@ export async function getHosts(params: {
     })
     const count = hosts.length
     return { hosts: hosts.map(mapHost), count }
-  } catch {
-    return { hosts: [], count: 0 }
+  } catch (err) {
+    console.error('Failed to load hosts:', err)
+    throw err
   }
 }
 
@@ -104,7 +105,8 @@ export async function getHostById(hostId: string) {
     if (!host) return { host: null, eventCount: 0 }
     const stats = await fetchQuery(api.hosts.getStats, { hostId: hostId as any })
     return { host: mapHost(host), eventCount: stats.eventCount }
-  } catch {
-    return { host: null, eventCount: 0 }
+  } catch (err) {
+    console.error('Failed to load host details:', err)
+    throw err
   }
 }

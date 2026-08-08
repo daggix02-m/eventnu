@@ -23,7 +23,6 @@
     "@tanstack/react-query-devtools": "^5.100.10",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "company-design-system": "file:./company-design-system",
     "convex": "^1.42.3",
     "date-fns": "^4.3.0",
     "framer-motion": "^12.40.0",

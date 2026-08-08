@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import {
@@ -20,24 +21,37 @@ import {
   Menu,
   X,
   FileText,
+  ChevronsLeft,
+  ChevronsRight,
 } from 'lucide-react'
 import { useState } from 'react'
 import { useAuthActions } from '@convex-dev/auth/react'
 import { useRouter } from 'next/navigation'
 import { useQuery } from 'convex/react'
 import { api } from '../../../web/convex/_generated/api'
+import { useSidebar } from './sidebar-context'
 
-const navItems = [
-  { label: 'Dashboard', href: '/', icon: LayoutDashboard },
-  { label: 'Events', href: '/events', icon: CalendarDays, badge: 'pendingReview' },
-  { label: 'Hosts', href: '/hosts', icon: Building2 },
-  { label: 'Organizers', href: '/organizers', icon: UserCog },
-  { label: 'Users', href: '/users', icon: Users },
-  { label: 'Reports', href: '/reports', icon: Flag, badge: 'openReports' },
-  { label: 'Categories', href: '/categories', icon: Tags },
-  { label: 'Analytics', href: '/analytics', icon: BarChart3 },
-  { label: 'Notifications', href: '/notifications', icon: Bell },
-  { label: 'CMS', href: '/cms', icon: FileText },
+const navGroups = [
+  {
+    label: 'Manage',
+    items: [
+      { label: 'Dashboard', href: '/', icon: LayoutDashboard },
+      { label: 'Events', href: '/events', icon: CalendarDays, badge: 'pendingReview' },
+      { label: 'Hosts', href: '/hosts', icon: Building2 },
+      { label: 'Organizers', href: '/organizers', icon: UserCog },
+      { label: 'Users', href: '/users', icon: Users },
+      { label: 'Reports', href: '/reports', icon: Flag, badge: 'openReports' },
+    ],
+  },
+  {
+    label: 'Curate',
+    items: [
+      { label: 'Categories', href: '/categories', icon: Tags },
+      { label: 'Analytics', href: '/analytics', icon: BarChart3 },
+      { label: 'Notifications', href: '/notifications', icon: Bell },
+      { label: 'CMS', href: '/cms', icon: FileText },
+    ],
+  },
 ]
 
 const bottomNavItems = [
@@ -50,6 +64,7 @@ export function Sidebar() {
   const router = useRouter()
   const { signOut } = useAuthActions()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const { collapsed, toggleCollapsed } = useSidebar()
   const navCounts = useQuery(api.dashboard.getNavCounts)
 
   const handleSignOut = async () => {
@@ -68,7 +83,7 @@ export function Sidebar() {
       {/* Mobile hamburger */}
       <button
         onClick={() => setMobileOpen(!mobileOpen)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-card rounded-lg shadow-md border border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-card rounded-md shadow-md border border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         aria-label={mobileOpen ? "Close menu" : "Open menu"}
         aria-expanded={mobileOpen}
         aria-controls="sidebar-navigation"
@@ -76,90 +91,151 @@ export function Sidebar() {
         {mobileOpen ? <X size={20} /> : <Menu size={20} />}
       </button>
 
-      {/* Sidebar */}
+      {/* Sidebar — the margin gloss of the manuscript */}
       <aside
         className={cn(
-          'flex flex-col h-screen fixed left-0 top-0 z-40 bg-surface dark:bg-surface-container w-[260px] border-r border-outline-variant dark:border-outline shadow-sm transition-transform duration-300',
+          'w-[260px] flex flex-col h-screen fixed left-0 top-0 z-40 bg-surface dark:bg-surface-container border-r border-outline-variant dark:border-outline transition-[width,transform] duration-300',
+          collapsed && 'lg:w-[76px]',
           mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         )}
       >
-        {/* Logo */}
-        <div className="p-6 flex items-center gap-3">
-          <div className="w-10 h-10 bg-surface-container-high rounded-lg flex items-center justify-center text-muted-foreground">
-            <CalendarDays size={20} />
-          </div>
-          <div>
-            <h1 className="text-lg font-bold text-primary leading-tight">Event Nu Admin</h1>
-            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Enterprise Suite</p>
+        {/* Colophon */}
+        <div className={cn(
+          'px-4 pt-6 pb-5 flex items-center gap-3',
+          collapsed && 'lg:px-0 lg:justify-center'
+        )}>
+          <Image
+            src="/logo.png"
+            alt="Event Nu"
+            width={36}
+            height={31}
+            priority
+            className="h-[31px] w-auto rounded-md"
+          />
+          <div className={cn('min-w-0', collapsed && 'lg:hidden')}>
+            <h1 className="font-headline text-lg font-semibold text-foreground leading-tight truncate">Event Nu</h1>
+            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Admin · Addissuite</p>
           </div>
         </div>
 
         {/* Main Nav */}
-        <nav id="sidebar-navigation" aria-label="Main" className="flex-1 px-4 py-2 space-y-1 overflow-y-auto">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={() => setMobileOpen(false)}
-              className={cn(
-                'flex items-center gap-3 px-4 py-3 rounded-lg transition-colors font-medium text-sm',
-                isActive(item.href)
-                  ? 'bg-secondary-fixed text-on-secondary-fixed-variant border-l-4 border-secondary font-bold'
-                  : 'text-muted-foreground hover:bg-surface-container-high dark:hover:bg-surface-container-highest'
-              )}
-            >
-              <div className="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center text-muted-foreground">
-                <item.icon size={16} />
+        <nav id="sidebar-navigation" aria-label="Main" className="flex-1 px-3 py-1 overflow-y-auto">
+          {navGroups.map((group) => (
+            <div key={group.label} className="mb-4">
+              <p className={cn(
+                'px-3 pt-4 pb-2 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground',
+                collapsed && 'lg:hidden'
+              )}>
+                {group.label}
+              </p>
+              <div className="space-y-0.5">
+                {group.items.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMobileOpen(false)}
+                    title={collapsed ? item.label : undefined}
+                    className={cn(
+                      'flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sm',
+                      collapsed && 'lg:justify-center lg:px-0',
+                      isActive(item.href)
+                        ? 'bg-surface-container-high text-foreground font-semibold'
+                        : 'text-muted-foreground hover:bg-surface-container hover:text-foreground'
+                    )}
+                  >
+                    <div
+                      className={cn(
+                        'w-7 h-7 rounded-md flex items-center justify-center transition-colors',
+                        isActive(item.href)
+                          ? 'bg-primary/10 text-primary'
+                          : 'text-muted-foreground'
+                      )}
+                    >
+                      <item.icon size={15} />
+                    </div>
+                    <span className={cn('flex-1 truncate', collapsed && 'lg:hidden')}>{item.label}</span>
+                    {item.badge === 'pendingReview' && navCounts && navCounts.pendingReview > 0 && (
+                      <span className={cn(
+                        'font-mono text-[10px] font-semibold bg-primary text-primary-foreground px-1.5 py-0.5 rounded-md',
+                        collapsed && 'lg:hidden'
+                      )}>
+                        {navCounts.pendingReview}
+                      </span>
+                    )}
+                    {item.badge === 'openReports' && navCounts && navCounts.openReports > 0 && (
+                      <span className={cn(
+                        'font-mono text-[10px] font-semibold bg-destructive/10 text-destructive border border-destructive/30 px-1.5 py-0.5 rounded-md',
+                        collapsed && 'lg:hidden'
+                      )}>
+                        {navCounts.openReports}
+                      </span>
+                    )}
+                  </Link>
+                ))}
               </div>
-              <span className="flex-1">{item.label}</span>
-              {/* Badges */}
-              {item.badge === 'pendingReview' && navCounts && navCounts.pendingReview > 0 && (
-                <span className="bg-primary text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">{navCounts.pendingReview}</span>
-              )}
-              {item.badge === 'openReports' && navCounts && navCounts.openReports > 0 && (
-                <span className="bg-destructive text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">{navCounts.openReports}</span>
-              )}
-            </Link>
+            </div>
           ))}
         </nav>
 
         {/* Bottom section */}
-        <div className="p-4 border-t border-outline-variant">
+        <div className="p-3 border-t border-outline-variant">
           <Link
             href="/events/new"
-            className="w-full py-3 px-4 bg-primary text-primary-foreground rounded-xl font-semibold text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-opacity mb-4"
+            title={collapsed ? 'Create Event' : undefined}
+            className={cn(
+              'w-full mb-3 bg-primary text-primary-foreground rounded-md px-4 py-2.5 font-semibold text-sm flex items-center gap-2 hover:bg-primary/90 transition-colors shadow-sm',
+              collapsed && 'lg:justify-center lg:px-0'
+            )}
           >
-            <Plus size={18} />
-            Create Event
+            <Plus size={16} />
+            <span className={cn(collapsed && 'lg:hidden')}>Create Event</span>
           </Link>
-          <div className="space-y-1">
+          <div className="space-y-0.5">
             {bottomNavItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
+                title={collapsed ? item.label : undefined}
                 className={cn(
-                  'flex items-center gap-3 px-4 py-2 rounded-lg transition-colors text-sm',
+                  'flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sm',
+                  collapsed && 'lg:justify-center lg:px-0',
                   isActive(item.href)
                     ? 'bg-surface-container-high text-foreground font-medium'
-                    : 'text-muted-foreground hover:bg-surface-container-high'
+                    : 'text-muted-foreground hover:bg-surface-container hover:text-foreground'
                 )}
               >
-                <div className="w-7 h-7 rounded-lg bg-surface-container-high flex items-center justify-center text-muted-foreground">
+                <div className="w-7 h-7 rounded-md bg-surface-container-high flex items-center justify-center text-muted-foreground">
                   <item.icon size={14} />
                 </div>
-                {item.label}
+                <span className={cn(collapsed && 'lg:hidden')}>{item.label}</span>
               </Link>
             ))}
             <button
               onClick={handleSignOut}
-              className="w-full flex items-center gap-3 px-4 py-2 rounded-lg transition-colors text-sm text-muted-foreground hover:bg-surface-container-high hover:text-destructive"
+              title={collapsed ? 'Sign Out' : undefined}
+              className={cn(
+                'w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sm text-muted-foreground hover:bg-surface-container hover:text-destructive',
+                collapsed && 'lg:justify-center lg:px-0'
+              )}
             >
-                <div className="w-7 h-7 rounded-lg bg-surface-container-high flex items-center justify-center text-muted-foreground">
-                  <LogOut size={14} />
-                </div>
-              Sign Out
+              <div className="w-7 h-7 rounded-md bg-surface-container-high flex items-center justify-center text-muted-foreground">
+                <LogOut size={14} />
+              </div>
+              <span className={cn(collapsed && 'lg:hidden')}>Sign Out</span>
             </button>
           </div>
+          <button
+            onClick={toggleCollapsed}
+            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            className={cn(
+              'hidden lg:flex w-full mt-2 items-center gap-3 px-3 py-2 pt-3 rounded-md transition-colors text-sm text-muted-foreground hover:bg-surface-container hover:text-foreground border-t border-outline-variant',
+              collapsed && 'lg:justify-center lg:px-0'
+            )}
+          >
+            {collapsed ? <ChevronsRight size={16} /> : <ChevronsLeft size={16} />}
+            <span className={cn(collapsed && 'lg:hidden')}>Collapse</span>
+          </button>
         </div>
       </aside>
 

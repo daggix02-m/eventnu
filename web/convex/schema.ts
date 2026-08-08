@@ -269,6 +269,13 @@ const schema = defineSchema({
     priority: v.string(),
     status: v.string(),
   }).index("by_admin", ["adminId"]),
+
+  adminSettings: defineTable({
+    adminId: v.id("profiles"),
+    emailReports: v.boolean(),
+    emailEvents: v.boolean(),
+    emailUsers: v.boolean(),
+  }).index("by_admin", ["adminId"]),
 });
 
 export default schema;

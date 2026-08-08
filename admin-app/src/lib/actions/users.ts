@@ -20,8 +20,9 @@ export async function getUsers(params: {
       filtered = filtered.filter((u: any) => !u.suspended)
     }
     return { users: filtered, count: filtered.length }
-  } catch {
-    return { users: [], count: 0 }
+  } catch (err) {
+    console.error('Failed to load users:', err)
+    throw err
   }
 }
 
@@ -62,7 +63,9 @@ export async function getUserById(userId: string) {
     let userWithCounts: any = null
     try {
       userWithCounts = await fetchQuery(api.profiles.getUserWithCounts, { profileId: userId as any })
-    } catch {}
+    } catch (err) {
+      console.error('Failed to load user counts:', err)
+    }
 
     return {
       profile: mapProfile(profile),
@@ -74,11 +77,8 @@ export async function getUserById(userId: string) {
         commentCount: userWithCounts?.commentCount ?? 0,
       },
     }
-  } catch {
-    return { profile: null, role: null, stats: null }
+  } catch (err) {
+    console.error('Failed to load user details:', err)
+    throw err
   }
-}
-
-export async function changePassword(newPassword: string) {
-  return { success: true, message: 'Password change should be done via the settings page.' }
 }

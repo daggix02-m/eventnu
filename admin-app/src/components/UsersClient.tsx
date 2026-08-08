@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Card } from 'company-design-system'
-import { Badge } from 'company-design-system'
-import { Avatar } from 'company-design-system'
+import { Card } from '@/components/ui'
+import { Badge } from '@/components/ui'
+import { Avatar } from '@/components/ui'
 import { Input } from '@/components/ui/input'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import {
   Search,
   CheckCircle,
@@ -43,17 +44,30 @@ export function UsersClient({ initialUsers, initialCount, initialFilters }: User
   const [users, setUsers] = useState(initialUsers)
   const [count, setCount] = useState(initialCount)
   const [filters, setFilters] = useState(initialFilters)
+  const [searchInput, setSearchInput] = useState(initialFilters.search || '')
   const [, setIsLoading] = useState(false)
   const router = useRouter()
+  const [confirmTarget, setConfirmTarget] = useState<{ type: 'suspend' | 'ban'; id: string } | null>(null)
 
   useEffect(() => {
     setUsers(initialUsers)
     setCount(initialCount)
     setFilters(initialFilters)
+    setSearchInput(initialFilters.search || '')
   }, [initialUsers, initialCount, initialFilters])
 
   const perPage = 20
   const totalPages = Math.ceil(count / perPage)
+
+  useEffect(() => {
+    if (searchInput === (filters.search || '')) return
+    const t = setTimeout(() => {
+      const next = { ...filters, search: searchInput || undefined, page: 1 }
+      setFilters(next)
+      router.push(`/users?${new URLSearchParams(next as any).toString()}`)
+    }, 400)
+    return () => clearTimeout(t)
+  }, [searchInput, filters, router])
 
   const handleFilterChange = (key: string, value: string) => {
     const newFilters = { ...filters, [key]: value, page: 1 }
@@ -68,7 +82,6 @@ export function UsersClient({ initialUsers, initialCount, initialFilters }: User
   }
 
   const handleSuspend = async (userId: string) => {
-    if (!confirm('Are you sure you want to suspend this user?')) return
     setIsLoading(true)
     try {
       await suspendUser(userId)
@@ -93,7 +106,6 @@ export function UsersClient({ initialUsers, initialCount, initialFilters }: User
   }
 
   const handleBan = async (userId: string) => {
-    if (!confirm('Are you sure you want to ban this user? This will suspend their account.')) return
     setIsLoading(true)
     try {
       await banUser(userId)
@@ -106,10 +118,11 @@ export function UsersClient({ initialUsers, initialCount, initialFilters }: User
   }
 
   return (
-    <div className="space-y-6">
+    <>
+      <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-primary tracking-tight">Users</h1>
+        <h1 className="font-headline text-3xl font-semibold text-foreground tracking-tight">Users</h1>
         <p className="text-muted-foreground mt-1">Manage platform users.</p>
       </div>
 
@@ -154,8 +167,8 @@ export function UsersClient({ initialUsers, initialCount, initialFilters }: User
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search users by name..."
-            value={filters.search || ''}
-            onChange={(e) => handleFilterChange('search', e.target.value)}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
             className="pl-9"
           />
         </div>
@@ -200,7 +213,7 @@ export function UsersClient({ initialUsers, initialCount, initialFilters }: User
                       <div className="flex items-center gap-3">
                         <Avatar className="w-10 h-10">
                           {user.avatar_url ? (
-                            <img src={user.avatar_url} alt="" className="w-full h-full object-cover" />
+                            <img src={user.avatar_url} alt="" width={40} height={40} loading="lazy" className="w-full h-full object-cover" />
                           ) : (
                             <div className="w-full h-full bg-surface-container-high flex items-center justify-center text-muted-foreground font-bold text-sm">
                               {(user.full_name || user.username || 'U').charAt(0)}
@@ -252,14 +265,14 @@ export function UsersClient({ initialUsers, initialCount, initialFilters }: User
                         ) : (
                           <>
                             <button
-                              onClick={() => handleSuspend(user.id)}
+                              onClick={() => setConfirmTarget({ type: 'suspend', id: user.id })}
                               className="p-1.5 text-muted-foreground hover:text-warning transition-colors rounded"
                               title="Suspend"
                             >
                               <Shield size={14} />
                             </button>
                             <button
-                              onClick={() => handleBan(user.id)}
+                              onClick={() => setConfirmTarget({ type: 'ban', id: user.id })}
                               className="p-1.5 text-muted-foreground hover:text-destructive transition-colors rounded"
                               title="Ban"
                             >
@@ -305,5 +318,24 @@ export function UsersClient({ initialUsers, initialCount, initialFilters }: User
         )}
       </Card>
     </div>
+    <ConfirmDialog
+      open={confirmTarget !== null}
+      onOpenChange={(open) => {
+        if (!open) setConfirmTarget(null)
+      }}
+      title={confirmTarget?.type === 'ban' ? 'Ban user?' : 'Suspend user?'}
+      description={
+        confirmTarget?.type === 'ban'
+          ? 'Are you sure you want to ban this user? This will suspend their account.'
+          : 'Are you sure you want to suspend this user?'
+      }
+      confirmLabel={confirmTarget?.type === 'ban' ? 'Ban' : 'Suspend'}
+      destructive
+      onConfirm={() => {
+        if (confirmTarget?.type === 'ban') handleBan(confirmTarget.id)
+        else if (confirmTarget?.type === 'suspend') handleSuspend(confirmTarget.id)
+      }}
+    />
+    </>
   )
 }

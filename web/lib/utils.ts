@@ -7,7 +7,7 @@ export function cn(...inputs: ClassValue[]) {
 
 export function formatPrice(priceDisplay?: string | null, isFree = false): string {
   if (isFree) return "Free";
-  if (!priceDisplay || priceDisplay.trim() === "") return "Paid";
+  if (!priceDisplay || priceDisplay.trim() === "") return "See details";
   return priceDisplay;
 }
 

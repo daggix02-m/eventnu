@@ -46,7 +46,20 @@ export function ReservationForm({ event }: ReservationFormProps) {
       setStatus("done");
     } catch (err) {
       setStatus("error");
-      setError(err instanceof Error ? err.message : "Could not submit your reservation.");
+      if (err instanceof Error) {
+        const msg = err.message;
+        if (msg.includes("Reservation limit reached")) {
+          setError("This event has reached its reservation limit. No more spots are available.");
+        } else if (msg.includes("Event not found")) {
+          setError("This event is no longer available.");
+        } else if (msg.includes("rate limit")) {
+          setError("Too many requests. Please wait a moment and try again.");
+        } else {
+          setError(msg || "Could not submit your reservation. Please try again.");
+        }
+      } else {
+        setError("Could not submit your reservation. Please try again.");
+      }
     }
   };
 
@@ -71,7 +84,7 @@ export function ReservationForm({ event }: ReservationFormProps) {
         <div>
           <p className="font-display text-headline-md">Reserve a spot</p>
           {remaining != null && (
-            <p className="text-label-sm text-on-surface-variant">Capacity: {remaining} spots</p>
+            <p className="text-label-sm text-on-surface-variant">Reservation spots: {remaining}</p>
           )}
         </div>
       </div>

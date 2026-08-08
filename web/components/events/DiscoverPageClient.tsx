@@ -69,21 +69,31 @@ export function DiscoverPageClient({
 
   const filteredEvents = useMemo(() => {
     const term = search.toLowerCase().trim();
-    return events.filter((event) => {
-      const matchesSearch =
-        !term ||
-        event.title.toLowerCase().includes(term) ||
-        event.venue_name?.toLowerCase().includes(term) ||
-        event.venue_address?.toLowerCase().includes(term) ||
-        event.description?.toLowerCase().includes(term);
+    const now = Date.now();
+    return events
+      .filter((event) => {
+        const matchesSearch =
+          !term ||
+          event.title.toLowerCase().includes(term) ||
+          event.venue_name?.toLowerCase().includes(term) ||
+          event.venue_address?.toLowerCase().includes(term) ||
+          event.description?.toLowerCase().includes(term);
 
-      const primaryCategory = event.event_categories?.find((ec) => ec.is_primary)?.categories ?? event.event_categories?.[0]?.categories;
-      const matchesCategory = !activeCategory || primaryCategory?.slug === activeCategory;
+        const primaryCategory = event.event_categories?.find((ec) => ec.is_primary)?.categories ?? event.event_categories?.[0]?.categories;
+        const matchesCategory = !activeCategory || primaryCategory?.slug === activeCategory;
 
-      const matchesDate = matchesDateFilter(new Date(event.start_date), dateFilter);
+        const matchesDate = matchesDateFilter(new Date(event.start_date), dateFilter);
 
-      return matchesSearch && matchesCategory && matchesDate;
-    });
+        return matchesSearch && matchesCategory && matchesDate;
+      })
+      .sort((a, b) => {
+        const aTime = new Date(a.start_date).getTime();
+        const bTime = new Date(b.start_date).getTime();
+        const aUpcoming = aTime >= now;
+        const bUpcoming = bTime >= now;
+        if (aUpcoming !== bUpcoming) return aUpcoming ? -1 : 1;
+        return aUpcoming ? aTime - bTime : bTime - aTime;
+      });
   }, [events, search, activeCategory, dateFilter]);
 
   return (

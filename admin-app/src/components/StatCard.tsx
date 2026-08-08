@@ -14,14 +14,14 @@ export function StatCard({ label, value, icon: Icon, highlight, trend, delay = 0
   return (
     <div
       className={cn(
-        'bg-card p-6 rounded-2xl shadow-sm border border-outline-variant hover:shadow-md transition-all group animate-fade-in',
+        'bg-card p-6 rounded-2xl shadow-sm border border-outline-variant hover:shadow-md transition-shadow animate-ink-in',
         highlight && 'border-warning/50 ring-1 ring-warning/20'
       )}
       style={{ animationDelay: `${delay}s`, animationFillMode: 'both' }}
     >
       <div className="flex justify-between items-start mb-4">
-        <div className="p-3 rounded-xl bg-surface-container-high text-muted-foreground transition-colors">
-          <Icon size={20} />
+        <div className="p-2.5 rounded-lg bg-surface-container-high text-muted-foreground transition-colors">
+          <Icon size={18} />
         </div>
         {trend && (
           <span className="text-destructive font-bold text-xs flex items-center gap-1">
@@ -35,8 +35,10 @@ export function StatCard({ label, value, icon: Icon, highlight, trend, delay = 0
           </span>
         )}
       </div>
-      <p className="text-muted-foreground text-xs font-semibold uppercase tracking-wider mb-1">{label}</p>
-      <p className="text-3xl font-bold tracking-tight text-foreground">{value.toLocaleString()}</p>
+      <p className="text-muted-foreground text-xs font-semibold uppercase tracking-wider mb-1.5">{label}</p>
+      <p className="font-headline text-3xl font-semibold tracking-tight text-foreground tabular-nums">
+        {value.toLocaleString()}
+      </p>
     </div>
   )
 }

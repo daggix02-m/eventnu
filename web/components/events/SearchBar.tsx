@@ -82,7 +82,7 @@ const dateFilters: DateFilterOption[] = [
   { value: "today", label: "Today" },
   { value: "tomorrow", label: "Tomorrow" },
   { value: "weekend", label: "This Weekend" },
-  { value: "week", label: "This Week" },
+  { value: "week", label: "Next 7 Days" },
   { value: "month", label: "This Month" },
 ];
 

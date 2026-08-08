@@ -1,26 +1,26 @@
 'use client'
 
 import Link from 'next/link'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from 'company-design-system'
-import { ArrowLeft, Shield, Mail } from 'lucide-react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui'
+import { ArrowLeft, Mail } from 'lucide-react'
 
 export default function ForgotPassword() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-surface-container-low p-4">
       <div className="w-full max-w-md">
         <div className="flex items-center justify-center gap-3 mb-8">
-          <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center text-primary-foreground">
-            <Shield size={24} />
+          <div className="w-12 h-12 rounded-md bg-primary text-primary-foreground flex items-center justify-center font-headline font-bold text-lg shadow-sm">
+            En
           </div>
-          <div>
-            <h1 className="text-xl font-bold text-primary tracking-tight">Event Nu Admin</h1>
-            <p className="text-xs text-muted-foreground uppercase tracking-widest">Enterprise Suite</p>
+          <div className="text-left">
+            <h1 className="font-headline text-xl font-semibold text-foreground tracking-tight">Event Nu</h1>
+            <p className="font-mono text-[10px] text-muted-foreground uppercase tracking-[0.2em]">Admin · Addissuite</p>
           </div>
         </div>
 
-        <Card className="border-0 shadow-xl rounded-2xl overflow-hidden bg-card">
+        <Card className="border-0 shadow-[0_2px_4px_rgba(30,20,10,0.04),0_8px_24px_rgba(30,20,10,0.08)] rounded-2xl overflow-hidden bg-card">
           <CardHeader className="space-y-1 pb-4 text-center">
-            <CardTitle className="text-2xl font-bold tracking-tight text-primary">Reset Password</CardTitle>
+            <CardTitle className="text-2xl font-semibold tracking-tight text-foreground">Reset Password</CardTitle>
             <CardDescription className="text-muted-foreground">
               Password reset via email is not yet available. Contact your administrator to reset your password.
             </CardDescription>

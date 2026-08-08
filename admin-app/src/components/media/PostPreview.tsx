@@ -53,6 +53,7 @@ export function PostPreview({
           <img
             src={cover.url}
             alt=""
+            loading="lazy"
             className="w-full h-full object-cover"
             style={{ filter: filterStyle(cover.filter) }}
           />
@@ -105,6 +106,9 @@ export function PostPreview({
               <img
                 src={img.url}
                 alt=""
+                width={36}
+                height={36}
+                loading="lazy"
                 className="w-full h-full object-cover"
                 style={{ filter: filterStyle(img.filter) }}
               />

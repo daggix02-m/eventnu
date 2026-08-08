@@ -113,3 +113,13 @@ export const deleteCommentFromReport = mutation({
     await ctx.db.patch("eventComments", args.commentId, { isDeleted: true });
   },
 });
+
+export const updateNote = mutation({
+  args: { reportId: v.id("reports"), note: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx);
+    if (args.note !== undefined) {
+      await ctx.db.patch("reports", args.reportId, { adminNote: args.note });
+    }
+  },
+});

@@ -16,8 +16,9 @@ export async function getDashboardStats() {
       totalUsers: analytics.totalUsers,
       openReports: analytics.totalReports,
     }
-  } catch {
-    return { totalPublished: 0, upcomingCount: 0, pendingReview: 0, activeHosts: 0, totalUsers: 0, openReports: 0 }
+  } catch (err) {
+    console.error('Failed to load dashboard stats:', err)
+    throw err
   }
 }
 
@@ -32,8 +33,9 @@ export async function getPendingReviewEvents() {
       organizer_id: e.organizerId,
       created_at: e._creationTime,
     }))
-  } catch {
-    return []
+  } catch (err) {
+    console.error('Failed to load pending review events:', err)
+    throw err
   }
 }
 
@@ -48,7 +50,25 @@ export async function getRecentModerationLogs() {
       note: log.note,
       created_at: log._creationTime,
     }))
-  } catch {
+  } catch (err) {
+    console.error('Failed to load moderation logs:', err)
+    throw err
+  }
+}
+
+export async function getModerationLogsByTarget(targetType: string, targetId: string) {
+  try {
+    const logs = await fetchQuery(api.moderation.getByTarget, { targetType, targetId })
+    return logs.map((log: any) => ({
+      id: log._id,
+      profiles: { full_name: log.adminName || 'Admin' },
+      action: log.action,
+      target_type: log.targetType,
+      note: log.note,
+      created_at: log._creationTime,
+    }))
+  } catch (err) {
+    console.error('Failed to load moderation logs:', err)
     return []
   }
 }

@@ -1,13 +1,14 @@
 'use client'
 
-import { useState } from 'react'
-import { Button } from 'company-design-system'
-import { Card } from 'company-design-system'
+import { useState, Fragment } from 'react'
+import { Button } from '@/components/ui'
+import { Card } from '@/components/ui'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
 import { useRouter } from 'next/navigation'
+import { getErrorMessage } from '@/lib/errors'
 import {
   HelpCircle,
   MessageSquare,
@@ -120,7 +121,7 @@ export function SupportClient({ initialTickets = [] }: SupportClientProps) {
       setContactForm({ subject: '', message: '', priority: 'medium' })
       router.refresh()
     } catch (err: any) {
-      toast.error(err?.message || 'Failed to submit ticket')
+      toast.error(getErrorMessage(err, 'Failed to submit ticket'))
     } finally {
       setIsSubmitting(false)
     }
@@ -136,7 +137,7 @@ export function SupportClient({ initialTickets = [] }: SupportClientProps) {
       )
       router.refresh()
     } catch (err: any) {
-      toast.error(err?.message || 'Failed to close ticket')
+      toast.error(getErrorMessage(err, 'Failed to close ticket'))
     } finally {
       setIsClosingTicket(null)
     }
@@ -153,7 +154,7 @@ export function SupportClient({ initialTickets = [] }: SupportClientProps) {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-primary tracking-tight">Support</h1>
+        <h1 className="font-headline text-3xl font-semibold text-foreground tracking-tight">Support</h1>
         <p className="text-muted-foreground mt-1">Help center, FAQ, and contact support.</p>
       </div>
 
@@ -259,9 +260,9 @@ export function SupportClient({ initialTickets = [] }: SupportClientProps) {
                     {tickets.map((ticket) => {
                       const isExpanded = expandedTicket === ticket.id
                       return (
-                        <>
+                        <Fragment key={ticket.id}>
                           <tr
-                            key={ticket.id}
+                            key={`${ticket.id}-row`}
                             className="border-b border-outline-variant/50 hover:bg-surface-container-low cursor-pointer"
                             onClick={() => setExpandedTicket(isExpanded ? null : ticket.id)}
                           >
@@ -310,7 +311,7 @@ export function SupportClient({ initialTickets = [] }: SupportClientProps) {
                               </td>
                             </tr>
                           )}
-                        </>
+                        </Fragment>
                       )
                     })}
                   </tbody>

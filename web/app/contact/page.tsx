@@ -2,6 +2,7 @@ import { Container } from "@/components/layout/Container";
 import { ContactForm } from "@/components/contact/ContactForm";
 import { Mail, MapPin, Phone, MessageCircle, Send } from "lucide-react";
 import Link from "next/link";
+import { SITE } from "@/lib/site";
 
 export const metadata = {
   title: "Contact | Event Nu",
@@ -17,6 +18,7 @@ export default function ContactPage() {
             <h1 className="font-display text-display-lg-mobile md:text-display-lg">Contact Us</h1>
             <p className="text-on-surface-variant text-body-lg">
               Have a question, partnership idea, or feedback? We would love to hear from you.
+              We usually reply within 1–2 business days.
             </p>
           </div>
 
@@ -27,8 +29,8 @@ export default function ContactPage() {
               </div>
               <div>
                 <p className="font-mono text-label-sm text-on-surface-variant uppercase">Email</p>
-                <Link href="mailto:event.nua@gmail.com" className="text-on-surface text-body-md hover:text-primary transition-colors">
-                  event.nua@gmail.com
+                <Link href={`mailto:${SITE.email}`} className="text-on-surface text-body-md hover:text-primary transition-colors">
+                  {SITE.email}
                 </Link>
               </div>
             </div>
@@ -39,28 +41,19 @@ export default function ContactPage() {
               <div className="space-y-sm">
                 <p className="font-mono text-label-sm text-on-surface-variant uppercase">Phone</p>
                 <div className="flex flex-col gap-xs">
-                  <div className="flex items-center gap-sm">
-                    <Link href="tel:+251947471516" className="text-on-surface text-body-md hover:text-primary transition-colors">
-                      +251-947-471-516
-                    </Link>
-                    <Link href="https://wa.me/251947471516" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" className="text-on-surface-variant hover:text-secondary transition-colors">
-                      <MessageCircle className="w-4 h-4" />
-                    </Link>
-                    <Link href="https://t.me/251947471516" target="_blank" rel="noopener noreferrer" aria-label="Telegram" className="text-on-surface-variant hover:text-secondary transition-colors">
-                      <Send className="w-4 h-4" />
-                    </Link>
-                  </div>
-                  <div className="flex items-center gap-sm">
-                    <Link href="tel:+251967288810" className="text-on-surface text-body-md hover:text-primary transition-colors">
-                      +251-967-288-810
-                    </Link>
-                    <Link href="https://wa.me/251967288810" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" className="text-on-surface-variant hover:text-secondary transition-colors">
-                      <MessageCircle className="w-4 h-4" />
-                    </Link>
-                    <Link href="https://t.me/251967288810" target="_blank" rel="noopener noreferrer" aria-label="Telegram" className="text-on-surface-variant hover:text-secondary transition-colors">
-                      <Send className="w-4 h-4" />
-                    </Link>
-                  </div>
+                  {SITE.phones.map((phone) => (
+                    <div key={phone.tel} className="flex items-center gap-sm">
+                      <Link href={`tel:${phone.tel}`} className="text-on-surface text-body-md hover:text-primary transition-colors">
+                        {phone.label}
+                      </Link>
+                      <Link href={`https://wa.me/${phone.whatsapp}`} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" className="text-on-surface-variant hover:text-secondary transition-colors">
+                        <MessageCircle className="w-4 h-4" />
+                      </Link>
+                      <Link href={`https://t.me/+${phone.tel.replace(/^\+/, "")}`} target="_blank" rel="noopener noreferrer" aria-label="Telegram" className="text-on-surface-variant hover:text-secondary transition-colors">
+                        <Send className="w-4 h-4" />
+                      </Link>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -70,7 +63,7 @@ export default function ContactPage() {
               </div>
               <div>
                 <p className="font-mono text-label-sm text-on-surface-variant uppercase">Address</p>
-                <p className="text-on-surface text-body-md">Addis Ababa, Ethiopia</p>
+                <p className="text-on-surface text-body-md">{SITE.location}</p>
               </div>
             </div>
           </div>

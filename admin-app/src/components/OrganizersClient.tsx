@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Card } from 'company-design-system'
-import { Badge } from 'company-design-system'
-import { Avatar } from 'company-design-system'
+import { Card } from '@/components/ui'
+import { Badge } from '@/components/ui'
+import { Avatar } from '@/components/ui'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import {
@@ -57,6 +57,7 @@ export function OrganizersClient({ initialOrganizers, initialCount, initialFilte
   const [organizers, setOrganizers] = useState(initialOrganizers)
   const [count, setCount] = useState(initialCount)
   const [filters, setFilters] = useState(initialFilters)
+  const [searchInput, setSearchInput] = useState(initialFilters.search || '')
   const [, setIsLoading] = useState(false)
   const [selectedOrganizer, setSelectedOrganizer] = useState<Organizer | null>(null)
   const [isDetailOpen, setIsDetailOpen] = useState(false)
@@ -66,10 +67,21 @@ export function OrganizersClient({ initialOrganizers, initialCount, initialFilte
     setOrganizers(initialOrganizers)
     setCount(initialCount)
     setFilters(initialFilters)
+    setSearchInput(initialFilters.search || '')
   }, [initialOrganizers, initialCount, initialFilters])
 
   const perPage = 20
   const totalPages = Math.ceil(count / perPage)
+
+  useEffect(() => {
+    if (searchInput === (filters.search || '')) return
+    const t = setTimeout(() => {
+      const next = { ...filters, search: searchInput || undefined, page: 1 }
+      setFilters(next)
+      router.push(`/organizers?${new URLSearchParams(next as any).toString()}`)
+    }, 400)
+    return () => clearTimeout(t)
+  }, [searchInput, filters, router])
 
   const handleFilterChange = (key: string, value: string) => {
     const newFilters = { ...filters, [key]: value, page: 1 }
@@ -140,7 +152,7 @@ export function OrganizersClient({ initialOrganizers, initialCount, initialFilte
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-primary tracking-tight">Organizers</h1>
+        <h1 className="font-headline text-3xl font-semibold text-foreground tracking-tight">Organizers</h1>
         <p className="text-muted-foreground mt-1">Manage self-signup organizer accounts.</p>
       </div>
 
@@ -150,8 +162,8 @@ export function OrganizersClient({ initialOrganizers, initialCount, initialFilte
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search organizers..."
-            value={filters.search || ''}
-            onChange={(e) => handleFilterChange('search', e.target.value)}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
             className="pl-9"
           />
         </div>
@@ -197,7 +209,7 @@ export function OrganizersClient({ initialOrganizers, initialCount, initialFilte
                       <div className="flex items-center gap-3">
                         <Avatar className="w-10 h-10">
                           {org.logo_url ? (
-                            <img src={org.logo_url} alt="" className="w-full h-full object-cover" />
+                            <img src={org.logo_url} alt="" width={40} height={40} loading="lazy" className="w-full h-full object-cover" />
                           ) : (
                             <div className="w-full h-full bg-surface-container-high flex items-center justify-center text-muted-foreground font-bold text-sm">
                               {(org.organizer_name || 'O').charAt(0)}
@@ -325,14 +337,14 @@ export function OrganizersClient({ initialOrganizers, initialCount, initialFilte
       <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-primary">Organizer Details</DialogTitle>
+            <DialogTitle className="font-headline text-xl font-semibold text-foreground">Organizer Details</DialogTitle>
           </DialogHeader>
           {selectedOrganizer && (
             <div className="space-y-4 mt-4">
               <div className="flex items-center gap-3">
                 <Avatar className="w-14 h-14">
                   {selectedOrganizer.logo_url ? (
-                    <img src={selectedOrganizer.logo_url} alt="" className="w-full h-full object-cover" />
+                    <img src={selectedOrganizer.logo_url} alt="" width={56} height={56} loading="lazy" className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full bg-surface-container-high flex items-center justify-center text-muted-foreground font-bold text-lg">
                       {(selectedOrganizer.organizer_name || 'O').charAt(0)}

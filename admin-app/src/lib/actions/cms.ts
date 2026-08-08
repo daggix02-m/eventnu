@@ -9,8 +9,9 @@ export async function getPages() {
   try {
     const pages = await fetchQuery(api.cms.getPages)
     return pages.map(mapPage)
-  } catch {
-    return []
+  } catch (err) {
+    console.error('Failed to load pages:', err)
+    throw err
   }
 }
 
@@ -18,8 +19,9 @@ export async function getPageById(id: string) {
   try {
     const page = await fetchQuery(api.cms.getPageById, { pageId: id as any })
     return page ? mapPage(page) : null
-  } catch {
-    return null
+  } catch (err) {
+    console.error('Failed to load page:', err)
+    throw err
   }
 }
 
@@ -85,8 +87,9 @@ export async function getAnnouncements() {
   try {
     const announcements = await fetchQuery(api.cms.getAnnouncements)
     return announcements.map(mapAnnouncement)
-  } catch {
-    return []
+  } catch (err) {
+    console.error('Failed to load announcements:', err)
+    throw err
   }
 }
 
@@ -151,8 +154,9 @@ export async function getContactSubmissions() {
   try {
     const submissions = await fetchQuery(api.cms.getContactSubmissions)
     return submissions.map(mapContactSubmission)
-  } catch {
-    return []
+  } catch (err) {
+    console.error('Failed to load contact submissions:', err)
+    throw err
   }
 }
 

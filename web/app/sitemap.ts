@@ -1,9 +1,10 @@
 import type { MetadataRoute } from "next";
 import { getPublishedEvents, getCategories, getPublishedPages } from "@/lib/api/events";
+import { getSiteUrl } from "@/lib/site";
 
 export const revalidate = 60;
 
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+const baseUrl = getSiteUrl();
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [events, categories, pages] = await Promise.all([
@@ -17,7 +18,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/about",
     "/categories",
     "/contact",
-    "/discover",
     "/organizers",
   ].map((route) => ({ url: `${baseUrl}${route}`, changeFrequency: "weekly", priority: 0.8 }));
 

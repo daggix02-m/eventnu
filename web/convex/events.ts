@@ -23,6 +23,21 @@ async function getEventImages(
     .take(MAX_EVENT_IMAGES);
 }
 
+async function resolveImageUrls(
+  ctx: QueryCtx | MutationCtx,
+  images: Array<Doc<"eventImages">>,
+) {
+  return Promise.all(
+    images.map(async (img) => {
+      if (img.storageId) {
+        const url = await ctx.storage.getUrl(img.storageId as Id<"_storage">);
+        if (url) return { ...img, url };
+      }
+      return img;
+    }),
+  );
+}
+
 async function getEventCategoryLinks(
   ctx: QueryCtx | MutationCtx,
   eventId: Id<"events">,
@@ -50,11 +65,20 @@ async function enrichEvent(
   const categories = await Promise.all(
     links.map((link) => ctx.db.get("categories", link.categoryId)),
   );
-  const images = await getEventImages(ctx, event._id);
+  const images = await resolveImageUrls(
+    ctx,
+    await getEventImages(ctx, event._id),
+  );
   const organizer = includeOrganizer && event.organizerId
     ? await ctx.db.get("profiles", event.organizerId)
     : null;
-  return { ...event, categories: categories.filter(Boolean), images, organizer };
+  return {
+    ...event,
+    categories: categories.filter(Boolean),
+    images,
+    organizer,
+    posterUrl: images[0]?.url ?? event.posterUrl,
+  };
 }
 
 export const getPublished = query({
@@ -220,8 +244,53 @@ export const getById = query({
     const categories = await Promise.all(
       links.map((link) => ctx.db.get("categories", link.categoryId)),
     );
-    const images = await getEventImages(ctx, args.eventId);
-    return { event, categories: categories.filter(Boolean), images };
+    const images = await resolveImageUrls(
+      ctx,
+      await getEventImages(ctx, args.eventId),
+    );
+    return {
+      event: { ...event, posterUrl: images[0]?.url ?? event.posterUrl },
+      categories: categories.filter(Boolean),
+      images,
+    };
+  },
+});
+
+export const listByHost = query({
+  args: { hostId: v.id("hosts"), limit: v.optional(v.number()) },
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx);
+    const limit = Math.min(Math.max(1, args.limit ?? 20), 100);
+    return await ctx.db
+      .query("events")
+      .withIndex("by_host", (q) => q.eq("hostId", args.hostId))
+      .order("desc")
+      .take(limit);
+  },
+});
+
+export const listByOrganizer = query({
+  args: { profileId: v.id("profiles"), limit: v.optional(v.number()) },
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx);
+    const limit = Math.min(Math.max(1, args.limit ?? 20), 100);
+    return await ctx.db
+      .query("events")
+      .withIndex("by_organizer", (q) => q.eq("organizerId", args.profileId))
+      .order("desc")
+      .take(limit);
+  },
+});
+
+export const getStorageUrls = query({
+  args: { storageIds: v.array(v.string()) },
+  handler: async (ctx, args) => {
+    await requireUser(ctx);
+    return Promise.all(
+      args.storageIds.map((storageId) =>
+        storageId ? ctx.storage.getUrl(storageId as Id<"_storage">) : null,
+      ),
+    );
   },
 });
 
@@ -288,6 +357,9 @@ export const create = mutation({
     timezone: v.optional(v.string()),
     slug: v.optional(v.string()),
     categoryIds: v.optional(v.array(v.id("categories"))),
+    teaserVideoUrl: v.optional(v.string()),
+    videoAspectRatio: v.optional(v.string()),
+    reservationLimit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const admin = await requireAdmin(ctx);
@@ -330,12 +402,12 @@ export const create = mutation({
       timezone: args.timezone ?? "Africa/Addis_Ababa",
       slug,
       reservationCount: 0,
-      teaserVideoUrl: undefined,
-      videoAspectRatio: undefined,
+      teaserVideoUrl: args.teaserVideoUrl ?? undefined,
+      videoAspectRatio: args.videoAspectRatio ?? undefined,
       subtitle: undefined,
       featuredUntil: undefined,
-      reservationEnabled: false,
-      reservationLimit: undefined,
+      reservationEnabled: args.actionType === "reservation",
+      reservationLimit: args.reservationLimit ?? undefined,
       likeCount: 0,
       source: "admin",
       venueLat: undefined,
@@ -403,6 +475,9 @@ export const update = mutation({
     timezone: v.optional(v.string()),
     slug: v.optional(v.string()),
     categoryIds: v.optional(v.array(v.id("categories"))),
+    teaserVideoUrl: v.optional(v.string()),
+    videoAspectRatio: v.optional(v.string()),
+    reservationLimit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     await requireAdmin(ctx);
@@ -411,6 +486,9 @@ export const update = mutation({
     const updates: Record<string, any> = {};
     for (const [key, value] of Object.entries(fields)) {
       if (value !== undefined) updates[key] = value;
+    }
+    if (fields.actionType !== undefined) {
+      updates.reservationEnabled = fields.actionType === "reservation";
     }
     if (images) {
       if (images.length > MAX_EVENT_IMAGES) {

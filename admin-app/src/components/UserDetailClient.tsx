@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Button } from 'company-design-system'
-import { Card } from 'company-design-system'
-import { Badge } from 'company-design-system'
-import { Avatar } from 'company-design-system'
+import { Button } from '@/components/ui'
+import { Card } from '@/components/ui'
+import { Badge } from '@/components/ui'
+import { Avatar } from '@/components/ui'
 import { Input } from '@/components/ui/input'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import {
   ArrowLeft,
   Mail,
@@ -26,6 +27,14 @@ import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import { suspendUser, unsuspendUser, banUser } from '@/lib/actions/users'
 import { sendNotification } from '@/lib/actions/notifications'
+import { getUserRecentEvents } from '@/lib/actions/events'
+
+const fadeUp = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.3 },
+}
+
 
 interface Profile {
   id: string
@@ -63,15 +72,27 @@ export function UserDetailClient({ profile, role, stats }: UserDetailClientProps
   const [recentEvents, setRecentEvents] = useState<EventItem[]>([])
   const [eventsLoading, setEventsLoading] = useState(true)
   const [showSuspendDialog, setShowSuspendDialog] = useState(false)
+  const [showBanDialog, setShowBanDialog] = useState(false)
   const [showNotificationForm, setShowNotificationForm] = useState(false)
   const [notificationTitle, setNotificationTitle] = useState('')
   const [notificationBody, setNotificationBody] = useState('')
   const router = useRouter()
 
   useEffect(() => {
+    let cancelled = false
     setEventsLoading(true)
     setRecentEvents([])
-    setEventsLoading(false)
+    getUserRecentEvents(profile.id)
+      .then((items) => {
+        if (!cancelled) setRecentEvents(items)
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setEventsLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
   }, [profile.id])
 
   const handleSuspend = async () => {
@@ -104,7 +125,6 @@ export function UserDetailClient({ profile, role, stats }: UserDetailClientProps
   }
 
   const handleBan = async () => {
-    if (!confirm('Are you sure you want to ban this user? This will suspend their account permanently.')) return
     setIsLoading(true)
     try {
       await banUser(profile.id)
@@ -143,12 +163,6 @@ export function UserDetailClient({ profile, role, stats }: UserDetailClientProps
     }
   }
 
-  const fadeUp = {
-    initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.3 },
-  }
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -163,7 +177,7 @@ export function UserDetailClient({ profile, role, stats }: UserDetailClientProps
         <div className="flex items-center gap-4">
           <Avatar className="w-16 h-16">
             {profile.avatar_url ? (
-              <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
+              <img src={profile.avatar_url} alt="" width={64} height={64} loading="lazy" className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full bg-surface-container-high flex items-center justify-center text-muted-foreground font-bold text-2xl">
                 {(profile.full_name || profile.username || 'U').charAt(0)}
@@ -171,7 +185,7 @@ export function UserDetailClient({ profile, role, stats }: UserDetailClientProps
             )}
           </Avatar>
           <div>
-            <h1 className="text-3xl font-bold text-primary tracking-tight">{profile.full_name}</h1>
+            <h1 className="font-headline text-3xl font-semibold text-foreground tracking-tight">{profile.full_name}</h1>
             <p className="text-muted-foreground">@{profile.username}</p>
             <div className="flex items-center gap-2 mt-1">
               <Mail size={14} className="text-muted-foreground" />
@@ -327,7 +341,7 @@ export function UserDetailClient({ profile, role, stats }: UserDetailClientProps
                   Suspend User
                 </Button>
                 <Button
-                  onClick={handleBan}
+                  onClick={() => setShowBanDialog(true)}
                   disabled={isLoading}
                   variant="outline"
                   className="text-destructive border-destructive/30 hover:bg-destructive/10"
@@ -443,6 +457,19 @@ export function UserDetailClient({ profile, role, stats }: UserDetailClientProps
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={showBanDialog}
+        onOpenChange={(open) => {
+          if (!open) setShowBanDialog(false)
+        }}
+        title="Ban user?"
+        description="Are you sure you want to ban this user? This will suspend their account permanently."
+        confirmLabel="Ban"
+        destructive
+        loading={isLoading}
+        onConfirm={handleBan}
+      />
     </div>
   )
 }

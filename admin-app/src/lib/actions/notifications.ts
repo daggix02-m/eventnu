@@ -17,8 +17,9 @@ export async function getNotifications(params: {
       .slice(from, to)
       .map((n: any) => mapNotification(n, n.profile))
     return { notifications, count: all.length }
-  } catch {
-    return { notifications: [], count: 0 }
+  } catch (err) {
+    console.error('Failed to load notifications:', err)
+    throw err
   }
 }
 
@@ -29,32 +30,28 @@ export async function sendNotification(params: {
   body: string
   data?: Record<string, any>
 }) {
-  try {
-    if (params.userId) {
-      await fetchMutation(api.notifications.send, {
-        userId: params.userId as any,
-        type: params.type,
-        title: params.title,
-        body: params.body,
-        data: params.data,
-      })
-    } else {
-      const profiles = await fetchQuery(api.profiles.list, {})
-      await fetchMutation(api.notifications.sendBatch, {
-        userIds: profiles.map((p: any) => p._id),
-        type: params.type,
-        title: params.title,
-        body: params.body,
-        data: params.data,
-      })
-    }
-  } catch {}
+  if (params.userId) {
+    await fetchMutation(api.notifications.send, {
+      userId: params.userId as any,
+      type: params.type,
+      title: params.title,
+      body: params.body,
+      data: params.data,
+    })
+  } else {
+    const profiles = await fetchQuery(api.profiles.list, {})
+    await fetchMutation(api.notifications.sendBatch, {
+      userIds: profiles.map((p: any) => p._id),
+      type: params.type,
+      title: params.title,
+      body: params.body,
+      data: params.data,
+    })
+  }
   revalidatePath('/notifications')
 }
 
 export async function markAllRead(userId: string) {
-  try {
-    await fetchMutation(api.notifications.markAllRead, { userId: userId as any })
-  } catch {}
+  await fetchMutation(api.notifications.markAllRead, { userId: userId as any })
   revalidatePath('/notifications')
 }

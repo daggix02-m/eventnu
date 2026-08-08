@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { cn } from '@/lib/utils'
+import { getErrorMessage } from '@/lib/errors'
 import {
   Search,
   ChevronLeft,
@@ -20,8 +21,11 @@ import {
   Instagram,
   Plus,
 } from 'lucide-react'
-import { Button } from 'company-design-system'
-import { Badge } from 'company-design-system'
+import { Button } from '@/components/ui'
+import { Badge } from '@/components/ui'
+import { Select } from '@/components/ui'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { PageHeader } from '@/components/Page'
 import { toast } from 'sonner'
 import { getEvents, updateEventStatus, bulkUpdateEventStatus, featureEvent, unfeatureEvent, deleteEvent } from '@/lib/actions/events'
 import Link from 'next/link'
@@ -53,13 +57,13 @@ const frequencyOptions = [
   { value: 'seasonal', label: 'Seasonal' },
 ]
 
-const statusBadgeStyles: Record<string, string> = {
-  draft: 'bg-muted text-muted-foreground',
-  pending_review: 'bg-warning/10 text-warning border-warning/20',
-  published: 'bg-success/10 text-success border-success/20',
-  rejected: 'bg-destructive/10 text-destructive border-destructive/20',
-  cancelled: 'bg-muted text-muted-foreground',
-  archived: 'bg-muted text-muted-foreground',
+const statusVariantMap: Record<string, 'outline' | 'warning' | 'success' | 'destructive' | 'secondary'> = {
+  draft: 'outline',
+  pending_review: 'warning',
+  published: 'success',
+  rejected: 'destructive',
+  cancelled: 'secondary',
+  archived: 'secondary',
 }
 
 export function EventsClient({
@@ -77,6 +81,7 @@ export function EventsClient({
   const [loading, setLoading] = useState(false)
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [actionMenuOpen, setActionMenuOpen] = useState<string | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
 
   useEffect(() => {
     setFilters(initialFilters)
@@ -102,6 +107,18 @@ export function EventsClient({
     if (filters.page && filters.page > 1) params.set('page', String(filters.page))
     window.history.replaceState(null, '', `/events${params.size ? `?${params.toString()}` : ''}`)
   }, [filters])
+
+  useEffect(() => {
+    if (!actionMenuOpen) return
+    const handleOutsideClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement
+      if (!target.closest('.action-menu-container')) {
+        setActionMenuOpen(null)
+      }
+    }
+    document.addEventListener('click', handleOutsideClick)
+    return () => document.removeEventListener('click', handleOutsideClick)
+  }, [actionMenuOpen])
 
   const updateFilter = (key: string, value: any) => {
     setFilters((prev: any) => ({ ...prev, [key]: value, ...(key === 'page' ? {} : { page: 1 }) }))
@@ -138,7 +155,39 @@ export function EventsClient({
       toast.success(`Event ${status.replace('_', ' ')} successfully`)
       await refreshEvents()
     } catch (err: any) {
-      toast.error(err.message || 'Action failed')
+      toast.error(getErrorMessage(err, 'Action failed'))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleFeatureToggle = async (eventId: string, isFeatured: boolean) => {
+    try {
+      setLoading(true)
+      if (isFeatured) {
+        await unfeatureEvent(eventId)
+        toast.success('Event unfeatured successfully')
+      } else {
+        await featureEvent(eventId, 'editors_choice', null)
+        toast.success('Event featured successfully')
+      }
+      await refreshEvents()
+    } catch (err: any) {
+      toast.error(getErrorMessage(err, 'Action failed'))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleDeleteEvent = async (eventId: string) => {
+    setDeleteTarget(null)
+    try {
+      setLoading(true)
+      await deleteEvent(eventId)
+      toast.success('Event deleted successfully')
+      await refreshEvents()
+    } catch (err: any) {
+      toast.error(getErrorMessage(err, 'Failed to delete event'))
     } finally {
       setLoading(false)
     }
@@ -153,7 +202,7 @@ export function EventsClient({
       setSelectedIds([])
       await refreshEvents()
     } catch (err: any) {
-      toast.error(err.message || 'Bulk action failed')
+      toast.error(getErrorMessage(err, 'Bulk action failed'))
     } finally {
       setLoading(false)
     }
@@ -162,89 +211,79 @@ export function EventsClient({
   const totalPages = Math.ceil(count / 20)
 
   return (
-    <div className="space-y-6">
+    <>
+      <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-primary tracking-tight">Events</h1>
-          <p className="text-muted-foreground mt-1">Manage all events across the platform.</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Link href="/events/new?composer=instagram">
-            <Button variant="outline" className="gap-2 border-outline-variant">
-              <Plus size={16} />
-              New Post
-            </Button>
-          </Link>
+      <PageHeader
+        title="Events"
+        description="Manage all events across the platform."
+        folio={`Fol. 02 · ${count} entries`}
+        actions={
           <Link href="/events/new">
-            <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
-              <Calendar size={16} className="mr-2" />
+            <Button className="gap-2">
+              <Plus size={16} />
               Create Event
             </Button>
           </Link>
-        </div>
-      </div>
+        }
+      />
 
       {/* Filters */}
-      <div className="bg-card rounded-xl border border-outline-variant p-4 shadow-sm space-y-4">
+      <div className="bg-card rounded-2xl border border-outline-variant p-4 shadow-sm space-y-4">
         <div className="flex flex-wrap gap-3">
           {/* Search */}
-          <div className="flex items-center bg-surface-container-high rounded-lg px-3 py-2 flex-1 min-w-[200px]">
+          <div className="flex items-center bg-surface-container-high rounded-md border border-outline-variant px-3 py-2 flex-1 min-w-[200px] focus-within:border-ring focus-within:ring-1 focus-within:ring-ring">
             <Search size={16} className="text-muted-foreground mr-2" />
             <input
               type="text"
-              placeholder="Search events..."
+              placeholder="Search events…"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               className="bg-transparent border-none focus:ring-0 text-sm w-full placeholder:text-muted-foreground outline-none"
             />
           </div>
 
-          {/* Status filter */}
-          <select
+          <Select
             value={filters.status || 'all'}
             onChange={(e) => updateFilter('status', e.target.value)}
-            className="bg-surface-container-high border-none rounded-lg px-3 py-2 text-sm focus:ring-0 outline-none"
+            className="w-auto min-w-[150px]"
           >
             {statusOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-          </select>
+          </Select>
 
-          {/* Source filter */}
-          <select
+          <Select
             value={filters.source || 'all'}
             onChange={(e) => updateFilter('source', e.target.value)}
-            className="bg-surface-container-high border-none rounded-lg px-3 py-2 text-sm focus:ring-0 outline-none"
+            className="w-auto min-w-[150px]"
           >
             {sourceOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-          </select>
+          </Select>
 
-          {/* Frequency filter */}
-          <select
+          <Select
             value={filters.frequency || 'all'}
             onChange={(e) => updateFilter('frequency', e.target.value)}
-            className="bg-surface-container-high border-none rounded-lg px-3 py-2 text-sm focus:ring-0 outline-none"
+            className="w-auto min-w-[140px]"
           >
             {frequencyOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-          </select>
+          </Select>
 
-          {/* Featured toggle */}
-          <select
+          <Select
             value={filters.featured === true ? 'true' : filters.featured === false ? 'false' : 'all'}
             onChange={(e) => updateFilter('featured', e.target.value === 'true' ? true : e.target.value === 'false' ? false : undefined)}
-            className="bg-surface-container-high border-none rounded-lg px-3 py-2 text-sm focus:ring-0 outline-none"
+            className="w-auto min-w-[140px]"
           >
             <option value="all">All Featured</option>
             <option value="true">Featured Only</option>
             <option value="false">Not Featured</option>
-          </select>
+          </Select>
         </div>
 
         {/* Bulk actions bar */}
         {selectedIds.length > 0 && (
           <div className="flex items-center gap-3 pt-3 border-t border-outline-variant">
-            <span className="text-sm font-semibold text-foreground">{selectedIds.length} selected</span>
+            <span className="font-mono text-sm font-semibold text-foreground">{selectedIds.length} selected</span>
             <Button size="sm" variant="outline" onClick={() => setSelectedIds([])}>Deselect</Button>
-            <Button size="sm" className="bg-primary text-primary-foreground" disabled={loading} onClick={() => handleBulkAction('published')}>Bulk Publish</Button>
+            <Button size="sm" disabled={loading} onClick={() => handleBulkAction('published')}>Bulk Publish</Button>
             <Button size="sm" variant="outline" className="text-destructive border-destructive" disabled={loading} onClick={() => handleBulkAction('rejected')}>Bulk Reject</Button>
           </div>
         )}
@@ -259,7 +298,7 @@ export function EventsClient({
                 <th className="px-4 py-3 w-10">
                   <input
                     type="checkbox"
-                    className="rounded border-outline-variant"
+                    className="rounded border-outline-variant accent-primary"
                     onChange={(e) => {
                       if (e.target.checked) setSelectedIds(events.map(e => e.id))
                       else setSelectedIds([])
@@ -289,7 +328,7 @@ export function EventsClient({
                     <td className="px-4 py-4">
                       <input
                         type="checkbox"
-                        className="rounded border-outline-variant"
+                        className="rounded border-outline-variant accent-primary"
                         checked={selectedIds.includes(event.id)}
                         onChange={(e) => {
                           if (e.target.checked) setSelectedIds(prev => [...prev, event.id])
@@ -299,9 +338,9 @@ export function EventsClient({
                     </td>
                     <td className="px-4 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center overflow-hidden flex-shrink-0">
+                        <div className="w-10 h-10 rounded-md bg-surface-container-high flex items-center justify-center overflow-hidden flex-shrink-0">
                           {event.poster_url ? (
-                            <img src={event.poster_url} alt="" className="w-full h-full object-cover" />
+                            <img src={event.poster_url} alt="" width={40} height={40} loading="lazy" className="w-full h-full object-cover" />
                           ) : (
                             <Calendar size={16} className="text-muted-foreground" />
                           )}
@@ -310,12 +349,14 @@ export function EventsClient({
                           <Link href={`/events/${event.id}`} className="font-semibold text-sm text-foreground truncate hover:text-primary transition-colors block">
                             {event.title}
                           </Link>
-                          <p className="text-xs text-muted-foreground">{event.id.slice(0, 8)}</p>
+                          <p className="font-mono text-[11px] text-muted-foreground">{event.id.slice(0, 8)}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-4 text-sm text-muted-foreground">
-                      {event.start_date ? new Date(event.start_date).toLocaleDateString() : '—'}
+                    <td className="px-4 py-4">
+                      <p className="font-mono text-xs text-muted-foreground tabular-nums">
+                        {event.start_date ? new Date(event.start_date).toLocaleDateString() : '—'}
+                      </p>
                     </td>
                     <td className="px-4 py-4">
                       {event.source === 'instagram' ? (
@@ -330,7 +371,7 @@ export function EventsClient({
                       )}
                     </td>
                     <td className="px-4 py-4">
-                      <Badge variant="outline" className={cn('text-xs capitalize', statusBadgeStyles[event.status] || 'bg-muted')}>{event.status.replace('_', ' ')}</Badge>
+                      <Badge variant={statusVariantMap[event.status] || 'outline'} className="text-xs capitalize">{event.status.replace('_', ' ')}</Badge>
                     </td>
                     <td className="px-4 py-4">
                       {event.is_featured ? (
@@ -343,24 +384,27 @@ export function EventsClient({
                       )}
                     </td>
                     <td className="px-4 py-4 text-sm text-muted-foreground">
-                      <span className="tabular-nums">{event.like_count ?? 0}</span> likes
+                      <span className="font-mono text-xs tabular-nums">{event.like_count ?? 0}</span>
+                      <span className="text-xs"> likes</span>
                     </td>
                     <td className="px-4 py-4 text-right">
-                      <div className="relative flex items-center justify-end gap-1">
+                      <div className="relative flex items-center justify-end gap-1 action-menu-container">
                         <Link
                           href={`/events/${event.id}`}
-                          className="p-2 rounded-lg hover:bg-surface-container-high transition-colors text-muted-foreground hover:text-foreground"
+                          className="p-2 rounded-md hover:bg-surface-container-high transition-colors text-muted-foreground hover:text-foreground"
+                          aria-label="Edit event"
                         >
                           <Edit size={16} />
                         </Link>
                         <button
                           onClick={() => setActionMenuOpen(actionMenuOpen === event.id ? null : event.id)}
-                          className="p-2 rounded-lg hover:bg-surface-container-high transition-colors"
+                          className="p-2 rounded-md hover:bg-surface-container-high transition-colors"
+                          aria-label="More actions"
                         >
                           <MoreHorizontal size={16} />
                         </button>
                         {actionMenuOpen === event.id && (
-                          <div className="absolute right-0 top-full mt-1 w-48 bg-card rounded-xl border border-outline-variant shadow-lg z-50 py-1">
+                          <div className="absolute right-0 top-full mt-1 w-48 bg-card rounded-md border border-outline-variant shadow-lg z-50 py-1">
                             {event.status === 'pending_review' && (
                               <>
                                 <button onClick={() => { handleStatusAction(event.id, 'published'); setActionMenuOpen(null) }} className="w-full px-4 py-2 text-sm text-left hover:bg-surface-container-low flex items-center gap-2">
@@ -386,11 +430,11 @@ export function EventsClient({
                             </button>
                             <div className="border-t border-outline-variant my-1" />
                             {event.is_featured ? (
-                              <button onClick={() => { unfeatureEvent(event.id); setActionMenuOpen(null) }} className="w-full px-4 py-2 text-sm text-left hover:bg-surface-container-low flex items-center gap-2">
+                              <button onClick={() => { handleFeatureToggle(event.id, true); setActionMenuOpen(null) }} className="w-full px-4 py-2 text-sm text-left hover:bg-surface-container-low flex items-center gap-2">
                                 <Star size={14} /> Unfeature
                               </button>
                             ) : (
-                              <button onClick={() => { featureEvent(event.id, 'editors_choice', null); setActionMenuOpen(null) }} className="w-full px-4 py-2 text-sm text-left hover:bg-surface-container-low flex items-center gap-2">
+                              <button onClick={() => { handleFeatureToggle(event.id, false); setActionMenuOpen(null) }} className="w-full px-4 py-2 text-sm text-left hover:bg-surface-container-low flex items-center gap-2">
                                 <Star size={14} className="text-primary" /> Feature
                               </button>
                             )}
@@ -398,7 +442,7 @@ export function EventsClient({
                             <Link href={`/events/${event.id}`} onClick={() => setActionMenuOpen(null)} className="w-full px-4 py-2 text-sm text-left hover:bg-surface-container-low flex items-center gap-2">
                               <Eye size={14} /> View
                             </Link>
-                            <button onClick={() => { deleteEvent(event.id); setActionMenuOpen(null) }} className="w-full px-4 py-2 text-sm text-left hover:bg-destructive/10 text-destructive flex items-center gap-2">
+                            <button onClick={() => { setDeleteTarget(event.id); setActionMenuOpen(null) }} className="w-full px-4 py-2 text-sm text-left hover:bg-destructive/10 text-destructive flex items-center gap-2">
                               <Trash2 size={14} /> Delete
                             </button>
                           </div>
@@ -415,8 +459,8 @@ export function EventsClient({
         {/* Pagination */}
         {totalPages > 1 && (
           <div className="flex items-center justify-between px-4 py-3 border-t border-outline-variant">
-            <p className="text-sm text-muted-foreground">
-              Showing {((filters.page || 1) - 1) * 20 + 1} - {Math.min((filters.page || 1) * 20, count)} of {count} events
+            <p className="font-mono text-sm text-muted-foreground tabular-nums">
+              {((filters.page || 1) - 1) * 20 + 1}–{Math.min((filters.page || 1) * 20, count)} of {count}
             </p>
             <div className="flex items-center gap-2">
               <Button
@@ -427,8 +471,8 @@ export function EventsClient({
               >
                 <ChevronLeft size={14} />
               </Button>
-              <span className="text-sm text-muted-foreground">
-                Page {filters.page || 1} of {totalPages}
+              <span className="font-mono text-sm text-muted-foreground tabular-nums">
+                {filters.page || 1} / {totalPages}
               </span>
               <Button
                 variant="outline"
@@ -443,5 +487,18 @@ export function EventsClient({
         )}
       </div>
     </div>
+    <ConfirmDialog
+      open={deleteTarget !== null}
+      onOpenChange={(open) => {
+        if (!open) setDeleteTarget(null)
+      }}
+      title="Delete event?"
+      description="Are you sure you want to delete this event? This cannot be undone."
+      confirmLabel="Delete"
+      destructive
+      loading={loading}
+      onConfirm={() => deleteTarget && handleDeleteEvent(deleteTarget)}
+    />
+    </>
   )
 }

@@ -1,40 +1,51 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { Search, Bell, HelpCircle, Sun, Moon } from 'lucide-react'
+import { Bell, HelpCircle, Sun, Moon } from 'lucide-react'
 import { useTheme } from 'next-themes'
+import { cn } from '@/lib/utils'
+import { useSidebar } from './sidebar-context'
 
 export function TopHeader() {
   const { setTheme, resolvedTheme } = useTheme()
+  const { collapsed } = useSidebar()
   const router = useRouter()
   const [mounted, setMounted] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
     setMounted(true)
   }, [])
 
   return (
-    <header className="h-16 fixed top-0 right-0 w-full lg:w-[calc(100%-260px)] z-30 bg-surface-container-lowest dark:bg-surface-container-low border-b border-outline-variant dark:border-outline flex justify-between items-center px-6">
-      {/* Search */}
-      <div className="flex items-center bg-surface-container-high rounded-full px-4 py-1.5 w-96 max-w-full ml-12 lg:ml-0">
-        <Search size={16} className="text-muted-foreground mr-2" />
-        <input
-          type="text"
-          placeholder="Search reports, users, or event IDs..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="bg-transparent border-none focus:ring-0 text-sm w-full placeholder:text-muted-foreground outline-none"
+    <header className={cn(
+      'w-full h-16 fixed top-0 right-0 z-30 bg-surface-container-lowest dark:bg-surface-container-low border-b border-outline-variant dark:border-outline flex justify-between items-center pl-16 lg:pl-6 pr-6 transition-[width] duration-300',
+      collapsed ? 'lg:w-[calc(100%-76px)]' : 'lg:w-[calc(100%-260px)]'
+    )}>
+      {/* Brand */}
+      <Link href="/" className="flex items-center gap-3 group">
+        <Image
+          src="/logo.png"
+          alt="Event Nu"
+          width={40}
+          height={34}
+          priority
+          className="h-[34px] w-auto rounded-md transition-opacity group-hover:opacity-80"
         />
-      </div>
+        <span className="hidden sm:block">
+          <span className="block font-headline text-base font-semibold text-foreground leading-tight">Event Nu</span>
+          <span className="block font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Admin</span>
+        </span>
+      </Link>
 
       {/* Actions */}
       <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <button
             onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
-            className="p-2 text-muted-foreground hover:text-primary transition-colors rounded-lg hover:bg-surface-container-high"
+            className="p-2 text-muted-foreground hover:text-primary hover:bg-surface-container-high transition-colors rounded-md"
             aria-label="Toggle theme"
           >
             {mounted ? (
@@ -45,13 +56,17 @@ export function TopHeader() {
           </button>
           <button
             onClick={() => router.push('/notifications')}
-            className="relative p-2 text-muted-foreground hover:text-primary transition-colors rounded-lg hover:bg-surface-container-high">
+            className="relative p-2 text-muted-foreground hover:text-primary hover:bg-surface-container-high transition-colors rounded-md"
+            aria-label="Notifications"
+          >
             <Bell size={18} />
             <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full ring-2 ring-surface-container-lowest" />
           </button>
           <button
             onClick={() => router.push('/support')}
-            className="p-2 text-muted-foreground hover:text-primary transition-colors rounded-lg hover:bg-surface-container-high">
+            className="p-2 text-muted-foreground hover:text-primary hover:bg-surface-container-high transition-colors rounded-md"
+            aria-label="Support"
+          >
             <HelpCircle size={18} />
           </button>
         </div>
@@ -59,9 +74,9 @@ export function TopHeader() {
         <div className="flex items-center gap-3">
           <div className="text-right hidden sm:block">
             <p className="text-xs font-semibold text-foreground leading-none">Admin</p>
-            <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tight">Super Admin</p>
+            <p className="font-mono text-[10px] text-muted-foreground uppercase tracking-widest mt-0.5">Super Admin</p>
           </div>
-          <div className="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-primary font-bold text-sm border-2 border-primary">
+          <div className="w-10 h-10 rounded-md bg-surface-container-high flex items-center justify-center text-primary font-headline font-bold text-sm border border-primary/40">
             A
           </div>
         </div>

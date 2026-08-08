@@ -6,7 +6,9 @@ import { Plus, Trash2, Check, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { createAnnouncement, updateAnnouncement, deleteAnnouncement } from '@/lib/actions/cms'
+import { getErrorMessage } from '@/lib/errors'
 import { toast } from 'sonner'
 
 interface Announcement {
@@ -29,6 +31,7 @@ export function AnnouncementsClient({ announcements }: { announcements: Announce
     is_active: true,
   })
   const [loading, setLoading] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -43,7 +46,7 @@ export function AnnouncementsClient({ announcements }: { announcements: Announce
       setForm({ title: '', message: '', link_url: '', link_text: '', is_active: true })
       router.refresh()
     } catch (err: any) {
-      toast.error(err.message || 'Failed to create announcement')
+      toast.error(getErrorMessage(err, 'Failed to create announcement'))
     } finally {
       setLoading(false)
     }
@@ -55,18 +58,18 @@ export function AnnouncementsClient({ announcements }: { announcements: Announce
       toast.success('Announcement updated')
       router.refresh()
     } catch (err: any) {
-      toast.error(err.message || 'Failed to update announcement')
+      toast.error(getErrorMessage(err, 'Failed to update announcement'))
     }
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this announcement?')) return
+    setDeleteTarget(null)
     try {
       await deleteAnnouncement(id)
       toast.success('Announcement deleted')
       router.refresh()
     } catch (err: any) {
-      toast.error(err.message || 'Failed to delete announcement')
+      toast.error(getErrorMessage(err, 'Failed to delete announcement'))
     }
   }
 
@@ -144,7 +147,7 @@ export function AnnouncementsClient({ announcements }: { announcements: Announce
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => handleDelete(item.id)}
+                      onClick={() => setDeleteTarget(item.id)}
                       aria-label={`Delete ${item.title}`}
                       className="text-destructive hover:text-destructive"
                     >
@@ -157,6 +160,18 @@ export function AnnouncementsClient({ announcements }: { announcements: Announce
           </tbody>
         </table>
       </div>
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null)
+        }}
+        title="Delete announcement?"
+        description="Delete this announcement? This cannot be undone."
+        confirmLabel="Delete"
+        destructive
+        onConfirm={() => deleteTarget && handleDelete(deleteTarget)}
+      />
     </div>
   )
 }

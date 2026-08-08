@@ -1,15 +1,18 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useQuery } from 'convex/react'
 import { api } from '../../../web/convex/_generated/api'
-import { Button } from 'company-design-system'
-import { Card } from 'company-design-system'
-import { Avatar } from 'company-design-system'
+import { Button } from '@/components/ui'
+import { Card } from '@/components/ui'
+import { Avatar } from '@/components/ui'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
+import { getUploadUrl, resolveStorageUrls } from '@/lib/actions/events'
+import { updateFeaturedSection, updateAdminNotificationPrefs } from '@/lib/actions/settings'
+import { getErrorMessage } from '@/lib/errors'
 import {
   User,
   Lock,
@@ -35,10 +38,10 @@ import {
   UserCheck,
   Flag,
   ScrollText,
+  Loader2,
 } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { updateProfile } from '@/lib/actions/users'
-import { updateFeaturedSection } from '@/lib/actions/settings'
 import { usernameFromEmail } from '@/lib/mappers'
 import {
   InstagramSettingsCard,
@@ -103,7 +106,6 @@ export function SettingsClient({
       }
     : _profile
   const [isLoading, setIsLoading] = useState(false)
-  const [isChangingPassword] = useState(false)
   const [form, setForm] = useState({
     full_name: profile?.full_name || '',
     email: profile?.email || '',
@@ -112,9 +114,13 @@ export function SettingsClient({
   const [notifications, setNotifications] = useState({
     emailReports: true,
     emailEvents: true,
-    emailUsers: false,
+    emailUsers: true,
     pushEnabled: false,
   })
+  const notificationPrefs = useQuery(
+    api.adminSettings.getByAdmin,
+    profile ? { adminId: profile.id as any } : 'skip'
+  )
   const [passwordForm, setPasswordForm] = useState({
     current: '',
     new: '',
@@ -123,6 +129,76 @@ export function SettingsClient({
   const [editingSection, setEditingSection] = useState<string | null>(null)
   const [sectionEditForm, setSectionEditForm] = useState({ label: '', description: '' })
   const [isUpdatingSection, setIsUpdatingSection] = useState(false)
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const avatarInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (notificationPrefs) {
+      setNotifications({
+        emailReports: notificationPrefs.emailReports,
+        emailEvents: notificationPrefs.emailEvents,
+        emailUsers: notificationPrefs.emailUsers,
+        pushEnabled: false,
+      })
+    }
+  }, [notificationPrefs])
+
+  const handleToggleNotification = async (
+    key: 'emailReports' | 'emailEvents' | 'emailUsers',
+    checked: boolean
+  ) => {
+    if (!profile) return
+    const next = { ...notifications, [key]: checked }
+    setNotifications(next)
+    try {
+      await updateAdminNotificationPrefs(profile.id, {
+        email_reports: next.emailReports,
+        email_events: next.emailEvents,
+        email_users: next.emailUsers,
+      })
+      toast.success('Notification preference saved')
+    } catch {
+      toast.error('Failed to save notification preference')
+      setNotifications({ ...notifications, [key]: !checked })
+    }
+  }
+
+  const handleAvatarFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingAvatar(true)
+    try {
+      const uploadUrl = await getUploadUrl()
+      let parsed: URL
+      try {
+        parsed = new URL(uploadUrl)
+      } catch {
+        throw new Error('Invalid upload URL')
+      }
+      if (!parsed.protocol.startsWith('https:') && parsed.protocol !== 'http:') {
+        throw new Error('Invalid upload URL')
+      }
+      const res = await fetch(uploadUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': file.type },
+        body: file,
+        credentials: 'omit',
+      })
+      if (!res.ok) throw new Error('Upload failed')
+      const { storageId } = await res.json()
+      if (!storageId) throw new Error('Upload failed')
+      const urls = await resolveStorageUrls([storageId])
+      if (urls[0]) {
+        setForm((prev) => ({ ...prev, avatar_url: urls[0] as string }))
+        toast.success('Avatar uploaded')
+      }
+    } catch (err: any) {
+      toast.error(getErrorMessage(err, 'Avatar upload failed'))
+    } finally {
+      setUploadingAvatar(false)
+      if (avatarInputRef.current) avatarInputRef.current.value = ''
+    }
+  }
 
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -206,7 +282,7 @@ export function SettingsClient({
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-primary tracking-tight">Settings</h1>
+          <h1 className="font-headline text-3xl font-semibold text-foreground tracking-tight">Settings</h1>
           <p className="text-muted-foreground mt-1">Admin preferences and configuration.</p>
         </div>
         <Card className="p-12 text-center">
@@ -223,7 +299,7 @@ export function SettingsClient({
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-primary tracking-tight">Settings</h1>
+        <h1 className="font-headline text-3xl font-semibold text-foreground tracking-tight">Settings</h1>
         <p className="text-muted-foreground mt-1">Manage your admin profile, preferences, and security.</p>
       </div>
 
@@ -247,23 +323,28 @@ export function SettingsClient({
                 <div className="relative">
                   <Avatar className="w-20 h-20">
                     {form.avatar_url ? (
-                      <img src={form.avatar_url} alt="" className="w-full h-full object-cover" />
+                      <img src={form.avatar_url} alt="" width={80} height={80} loading="lazy" className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full bg-surface-container-high flex items-center justify-center text-muted-foreground font-bold text-2xl">
                         {(form.full_name || 'A').charAt(0)}
                       </div>
                     )}
                   </Avatar>
+                  <input
+                    ref={avatarInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleAvatarFile}
+                  />
                   <button
                     type="button"
                     className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-sm"
-                    onClick={() => {
-                      const url = prompt('Enter avatar URL:', form.avatar_url)
-                      if (url !== null) setForm({ ...form, avatar_url: url })
-                    }}
+                    onClick={() => avatarInputRef.current?.click()}
+                    disabled={uploadingAvatar}
                     title="Change avatar"
                   >
-                    <Camera size={14} />
+                    {uploadingAvatar ? <Loader2 size={14} className="animate-spin" /> : <Camera size={14} />}
                   </button>
                 </div>
                 <div className="flex-1">
@@ -331,6 +412,7 @@ export function SettingsClient({
                   value={passwordForm.current}
                   onChange={(e) => setPasswordForm({ ...passwordForm, current: e.target.value })}
                   placeholder="Enter current password"
+                  disabled
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -341,6 +423,7 @@ export function SettingsClient({
                     value={passwordForm.new}
                     onChange={(e) => setPasswordForm({ ...passwordForm, new: e.target.value })}
                     placeholder="Min 8 characters"
+                    disabled
                   />
                 </div>
                 <div className="space-y-2">
@@ -350,14 +433,18 @@ export function SettingsClient({
                     value={passwordForm.confirm}
                     onChange={(e) => setPasswordForm({ ...passwordForm, confirm: e.target.value })}
                     placeholder="Confirm new password"
+                    disabled
                   />
                 </div>
               </div>
               <div className="pt-2">
-                <Button type="submit" variant="outline" disabled={isChangingPassword}>
+                <Button type="submit" variant="outline" disabled>
                   <Lock size={16} className="mr-2" />
-                  {isChangingPassword ? 'Changing...' : 'Change Password'}
+                  Change Password
                 </Button>
+                <p className="text-xs text-muted-foreground mt-3">
+                  Password changes are not available yet. Configure SMTP to enable this.
+                </p>
               </div>
             </form>
           </Card>
@@ -539,7 +626,7 @@ export function SettingsClient({
                 </div>
                 <Switch
                   checked={notifications.emailReports}
-                  onCheckedChange={(checked) => setNotifications({ ...notifications, emailReports: checked })}
+                  onCheckedChange={(checked) => handleToggleNotification('emailReports', checked)}
                 />
               </div>
 
@@ -553,7 +640,7 @@ export function SettingsClient({
                 </div>
                 <Switch
                   checked={notifications.emailEvents}
-                  onCheckedChange={(checked) => setNotifications({ ...notifications, emailEvents: checked })}
+                  onCheckedChange={(checked) => handleToggleNotification('emailEvents', checked)}
                 />
               </div>
 
@@ -567,7 +654,7 @@ export function SettingsClient({
                 </div>
                 <Switch
                   checked={notifications.emailUsers}
-                  onCheckedChange={(checked) => setNotifications({ ...notifications, emailUsers: checked })}
+                  onCheckedChange={(checked) => handleToggleNotification('emailUsers', checked)}
                 />
               </div>
             </div>

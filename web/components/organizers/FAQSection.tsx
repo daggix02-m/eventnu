@@ -3,8 +3,11 @@
 import { useRef, useState } from "react";
 import { useGSAP } from "@gsap/react";
 import { gsap } from "@/lib/gsap";
-import { ChevronDown, HelpCircle, DollarSign, Shield, CreditCard, Eye } from "lucide-react";
+import { ChevronDown, HelpCircle, DollarSign, Shield, CreditCard, Eye, ArrowRight } from "lucide-react";
 import { Container } from "@/components/layout/Container";
+import Link from "next/link";
+
+const CATEGORIES = ["All", "Pricing", "Payments", "Check-in", "Visibility"] as const;
 
 const FAQS = [
   {
@@ -17,8 +20,7 @@ const FAQS = [
   {
     category: "Payments",
     icon: CreditCard,
-    question:
-      "Which local payment options are supported for ticket buyers in Ethiopia?",
+    question: "Which local payment options are supported for ticket buyers in Ethiopia?",
     answer:
       "We support direct checkouts via Telebirr, CBE Birr, Chapa, mobile wallets, and international credit/debit cards, giving your attendees in Addis and abroad a friction-free purchasing experience.",
   },
@@ -27,13 +29,12 @@ const FAQS = [
     icon: CreditCard,
     question: "How quickly do I get payouts for sold tickets?",
     answer:
-      "We offer some of the fastest payouts in the market. You can request settlements during your ticket sales cycle. Revenue is deposited directly into your designated Ethiopian bank account or mobile wallet within 24 to 48 hours.",
+      "You can request settlements during your ticket sales cycle. Revenue is deposited directly into your designated Ethiopian bank account or mobile wallet within 24 to 48 hours.",
   },
   {
     category: "Check-in",
     icon: Shield,
-    question:
-      "Do I need to buy special QR scanners to manage the door check-in?",
+    question: "Do I need to buy special QR scanners to manage the door check-in?",
     answer:
       "No specialized hardware is required. You and your team can download the official Event Nu Organizer App on any standard iOS or Android smartphone to turn its built-in camera into a high-speed QR code ticket scanner.",
   },
@@ -48,8 +49,8 @@ const FAQS = [
 
 export function OrganizersFAQ() {
   const sectionRef = useRef<HTMLElement>(null);
+  const [activeCategory, setActiveCategory] = useState<typeof CATEGORIES[number]>("All");
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
-  const answerRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   useGSAP(() => {
     const faqItems = sectionRef.current?.querySelectorAll(".faq-item");
@@ -57,17 +58,20 @@ export function OrganizersFAQ() {
       gsap.fromTo(
         faqItems,
         { opacity: 0, y: 12 },
-        { opacity: 1, y: 0, duration: 0.3, stagger: 0.06, ease: "power2.out",
-          scrollTrigger: { trigger: sectionRef.current, start: "top 85%", toggleActions: "play none none reset" }
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.3,
+          stagger: 0.05,
+          ease: "power2.out",
+          scrollTrigger: { trigger: sectionRef.current, start: "top 85%", toggleActions: "play none none none" },
         }
       );
     }
   }, { scope: sectionRef });
 
   const toggleFaq = (index: number) => {
-    const isOpen = openFaqIndex === index;
-    const targetIdx = isOpen ? -1 : index;
-    setOpenFaqIndex(targetIdx);
+    setOpenFaqIndex(openFaqIndex === index ? null : index);
   };
 
   const categoryColors: Record<string, string> = {
@@ -84,10 +88,15 @@ export function OrganizersFAQ() {
     Visibility: Eye,
   };
 
+  const filteredFaqs = FAQS.filter(
+    (faq) => activeCategory === "All" || faq.category === activeCategory
+  );
+
   return (
     <section ref={sectionRef} className="relative z-10 py-2xl border-t border-outline-variant/30">
       <Container>
-        <div className="max-w-3xl mx-auto space-y-lg">
+        <div className="max-w-[48rem] mx-auto space-y-lg">
+          {/* Header */}
           <div className="text-center space-y-sm">
             <div className="inline-flex items-center gap-xs text-tertiary font-mono text-label-sm uppercase tracking-wider">
               <HelpCircle className="w-4 h-4" /> Help Center
@@ -97,35 +106,66 @@ export function OrganizersFAQ() {
             </h2>
           </div>
 
-          <div className="space-y-sm">
-            {FAQS.map((item, idx) => {
-              const isOpen = openFaqIndex === idx;
+          {/* Category Tabs */}
+          <div className="flex items-center justify-center gap-xs flex-wrap border-b border-outline-variant/20 pb-sm">
+            {CATEGORIES.map((cat) => {
+              const count = cat === "All" ? FAQS.length : FAQS.filter((f) => f.category === cat).length;
+              const isActive = activeCategory === cat;
+              return (
+                <button
+                  key={cat}
+                  onClick={() => {
+                    setActiveCategory(cat);
+                    setOpenFaqIndex(null); // Reset open states on tab change
+                  }}
+                  className={`px-sm py-1.5 rounded-full font-mono text-label-sm font-semibold transition-all flex items-center gap-xs cursor-pointer ${
+                    isActive
+                      ? "bg-primary text-on-primary shadow-md shadow-primary/20"
+                      : "bg-surface-container/30 border border-outline-variant/35 text-on-surface-variant hover:text-white"
+                  }`}
+                >
+                  {cat}
+                  <span className={`inline-block px-1.5 py-0.5 rounded-full text-[9px] font-bold ${isActive ? "bg-on-primary/20 text-on-primary" : "bg-surface-container text-on-surface-variant"}`}>
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* FAQS List */}
+          <div className="space-y-sm min-h-[250px]">
+            {filteredFaqs.map((item) => {
+              // We need a stable index key since we filter lists
+              const originalIndex = FAQS.findIndex((f) => f.question === item.question);
+              const isOpen = openFaqIndex === originalIndex;
               const CatIcon = categoryIcons[item.category];
               const catColor = categoryColors[item.category];
 
               return (
                 <div
-                  key={idx}
-                  className={`faq-item border rounded-xl overflow-hidden bg-surface-container/20 transition-all duration-300 opacity-0 ${
+                  key={item.question}
+                  className={`faq-item border rounded-xl overflow-hidden bg-surface-container/20 transition-all duration-300 ${
                     isOpen
-                      ? "border-primary/40 shadow-[0_0_20px_rgba(192,132,252,0.1)]"
-                      : "border-outline-variant/40 hover:border-primary/20"
+                      ? "border-primary/50 shadow-md shadow-black/30 bg-surface-container/30"
+                      : "border-outline-variant/40 hover:border-primary/25"
                   }`}
                 >
                   <button
                     type="button"
-                    onClick={() => toggleFaq(idx)}
-                    className="w-full flex items-center justify-between p-md text-left hover:bg-surface-container/40 transition-colors duration-200 cursor-pointer"
+                    onClick={() => toggleFaq(originalIndex)}
+                    className="w-full flex items-center justify-between p-md text-left hover:bg-surface-container/45 transition-colors duration-200 cursor-pointer"
+                    aria-expanded={isOpen}
                   >
                     <span className="flex items-center gap-sm">
-                      <span className={`p-1.5 rounded-lg text-[10px] font-mono border ${catColor}`}>
+                      <span className={`p-2 rounded-lg border ${catColor}`}>
                         <CatIcon className="w-4 h-4" />
                       </span>
                       <div>
-                        <span className="font-mono text-[10px] text-on-surface-variant uppercase tracking-wider block leading-none mb-1">
+                        <span className="font-mono text-[9px] text-on-surface-variant uppercase tracking-wider block leading-none mb-1">
                           {item.category}
                         </span>
-                        <span className="font-display text-body-md font-bold text-white pr-md">
+                        <span className="font-display text-[15px] md:text-[16px] font-bold text-white pr-md">
                           {item.question}
                         </span>
                       </div>
@@ -137,17 +177,27 @@ export function OrganizersFAQ() {
                     />
                   </button>
                   <div
-                    ref={(el) => { answerRefs.current[idx] = el; }}
-                    className="overflow-hidden"
-                    style={{ height: isOpen ? "auto" : "0px" }}
+                    className={`transition-all duration-300 ease-in-out overflow-hidden ${
+                      isOpen ? "max-h-[300px] opacity-100 border-t border-outline-variant/15" : "max-h-0 opacity-0"
+                    }`}
                   >
-                    <div className="p-md pt-0 border-t border-outline-variant/20 text-on-surface-variant text-body-md leading-relaxed">
+                    <div className="p-md text-on-surface-variant text-body-md leading-relaxed">
                       {item.answer}
                     </div>
                   </div>
                 </div>
               );
             })}
+          </div>
+
+          {/* Footer help link */}
+          <div className="text-center pt-md">
+            <p className="text-on-surface-variant text-body-md">
+              Have another question not answered here?{" "}
+              <Link href="/contact" className="inline-flex items-center gap-1 text-primary hover:text-primary/80 font-bold transition-colors">
+                Contact our support team <ArrowRight className="w-4 h-4" />
+              </Link>
+            </p>
           </div>
         </div>
       </Container>

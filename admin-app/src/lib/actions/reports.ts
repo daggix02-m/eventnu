@@ -18,15 +18,17 @@ export async function getReports(params: {
       filtered = filtered.filter((r: any) => r.target_type === params.targetType)
     }
     return { reports: filtered, count: filtered.length }
-  } catch {
-    return { reports: [], count: 0 }
+  } catch (err) {
+    console.error('Failed to load reports:', err)
+    throw err
   }
 }
 
 export async function getReportTargetPreview(targetType: string, targetId: string) {
   try {
     return await fetchQuery(api.reports.getTargetPreview, { targetType, targetId })
-  } catch {
+  } catch (err) {
+    console.error('Failed to load report target preview:', err)
     return null
   }
 }
@@ -63,4 +65,12 @@ export async function hideEventFromReport(eventId: string, reportId: string) {
 export async function deleteCommentFromReport(commentId: string, reportId: string) {
   await fetchMutation(api.reports.deleteCommentFromReport, { commentId: commentId as any })
   await actionReport(reportId, 'delete_comment')
+}
+
+export async function saveReportNote(reportId: string, note?: string) {
+  await fetchMutation(api.reports.updateNote, {
+    reportId: reportId as any,
+    note: note || undefined,
+  })
+  revalidatePath('/reports')
 }

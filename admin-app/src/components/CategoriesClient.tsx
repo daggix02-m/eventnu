@@ -1,9 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { Button } from 'company-design-system'
+import { Button } from '@/components/ui'
 import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import {
   Plus,
   Edit,
@@ -70,6 +71,7 @@ export function CategoriesClient({ initialCategories }: CategoriesClientProps) {
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
   const [draggingId, setDraggingId] = useState<string | null>(null)
   const [dragOverId, setDragOverId] = useState<string | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
   const [form, setForm] = useState({
     name: '',
     slug: '',
@@ -240,7 +242,7 @@ export function CategoriesClient({ initialCategories }: CategoriesClientProps) {
   }
 
   const handleDelete = async (categoryId: string) => {
-    if (!confirm('Delete this category?')) return
+    setDeleteTarget(null)
     setIsLoading(true)
     try {
       await deleteCategory(categoryId)
@@ -253,11 +255,12 @@ export function CategoriesClient({ initialCategories }: CategoriesClientProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <>
+      <div className="space-y-6">
       {/* Header Section */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-primary tracking-tight">Category Management</h1>
+          <h1 className="font-headline text-3xl font-semibold text-foreground tracking-tight">Category Management</h1>
           <p className="text-muted-foreground mt-1 text-sm">
             Organize and manage the event classification hierarchy for your enterprise suite.
           </p>
@@ -284,11 +287,6 @@ export function CategoriesClient({ initialCategories }: CategoriesClientProps) {
             />
           </div>
           <div className="flex items-center gap-2">
-            <select className="h-10 px-3 bg-surface border border-outline-variant rounded-xl text-sm text-muted-foreground focus:ring-2 focus:ring-primary/20 outline-none cursor-pointer">
-              <option>All Statuses</option>
-              <option>Active</option>
-              <option>Archived</option>
-            </select>
             <div className="flex items-center bg-surface border border-outline-variant rounded-xl overflow-hidden">
               <button
                 onClick={() => setViewMode('list')}
@@ -405,7 +403,7 @@ export function CategoriesClient({ initialCategories }: CategoriesClientProps) {
                             <Edit size={14} />
                           </button>
                           <button
-                            onClick={() => handleDelete(parent.id)}
+                            onClick={() => setDeleteTarget(parent.id)}
                             className="p-2 text-muted-foreground rounded-lg hover:bg-surface-container-high transition-colors"
                             title="Delete"
                           >
@@ -458,7 +456,7 @@ export function CategoriesClient({ initialCategories }: CategoriesClientProps) {
                                     <Edit size={14} />
                                   </button>
                                   <button
-                                    onClick={() => handleDelete(child.id)}
+                                      onClick={() => setDeleteTarget(child.id)}
                                     className="p-2 text-muted-foreground rounded-lg hover:bg-surface-container-high transition-colors"
                                     title="Delete"
                                   >
@@ -538,7 +536,7 @@ export function CategoriesClient({ initialCategories }: CategoriesClientProps) {
                           <Edit size={14} />
                         </button>
                         <button
-                          onClick={() => handleDelete(parent.id)}
+                          onClick={() => setDeleteTarget(parent.id)}
                           className="p-2 text-muted-foreground rounded-lg hover:bg-surface-container-high transition-colors"
                           title="Delete"
                         >
@@ -604,7 +602,7 @@ export function CategoriesClient({ initialCategories }: CategoriesClientProps) {
                                         <Edit size={12} />
                                       </button>
                                       <button
-                                        onClick={() => handleDelete(child.id)}
+                                        onClick={() => setDeleteTarget(child.id)}
                                         className="p-1.5 text-muted-foreground rounded hover:bg-surface-container-high transition-colors"
                                         title="Delete"
                                       >
@@ -646,7 +644,7 @@ export function CategoriesClient({ initialCategories }: CategoriesClientProps) {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-md rounded-2xl border border-outline-variant shadow-xl">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-primary">
+            <DialogTitle className="font-headline text-xl font-semibold text-foreground">
               {editingCategory ? 'Edit Category' : 'Create Category'}
             </DialogTitle>
           </DialogHeader>
@@ -736,5 +734,18 @@ export function CategoriesClient({ initialCategories }: CategoriesClientProps) {
         </DialogContent>
       </Dialog>
     </div>
+    <ConfirmDialog
+      open={deleteTarget !== null}
+      onOpenChange={(open) => {
+        if (!open) setDeleteTarget(null)
+      }}
+      title="Delete category?"
+      description="Delete this category? This cannot be undone."
+      confirmLabel="Delete"
+      destructive
+      loading={isLoading}
+      onConfirm={() => deleteTarget && handleDelete(deleteTarget)}
+    />
+    </>
   )
 }

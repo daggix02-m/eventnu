@@ -9,8 +9,9 @@ export async function getFeaturedSections() {
   try {
     const sections = await fetchQuery(api.features.list)
     return sections.map(mapFeaturedSection)
-  } catch {
-    return []
+  } catch (err) {
+    console.error('Failed to load featured sections:', err)
+    throw err
   }
 }
 
@@ -20,15 +21,13 @@ export async function updateFeaturedSection(id: string, updates: {
   enabled?: boolean
   sort_order?: number
 }) {
-  try {
-    await fetchMutation(api.features.update, {
-      sectionId: id as any,
-      label: updates.label,
-      description: updates.description,
-      enabled: updates.enabled,
-      sortOrder: updates.sort_order,
-    })
-  } catch {}
+  await fetchMutation(api.features.update, {
+    sectionId: id as any,
+    label: updates.label,
+    description: updates.description,
+    enabled: updates.enabled,
+    sortOrder: updates.sort_order,
+  })
   revalidatePath('/settings')
 }
 
@@ -43,7 +42,36 @@ export async function getAdminStats() {
       openReports: stats.totalReports,
       moderationCount: stats.totalModerationLogs,
     }
-  } catch {
-    return { totalEvents: 0, totalUsers: 0, totalHosts: 0, totalOrganizers: 0, openReports: 0, moderationCount: 0 }
+  } catch (err) {
+    console.error('Failed to load admin stats:', err)
+    throw err
   }
+}
+
+export async function getAdminNotificationPrefs(adminId: string) {
+  try {
+    const prefs = await fetchQuery(api.adminSettings.getByAdmin, { adminId: adminId as any })
+    return {
+      email_reports: prefs?.emailReports ?? true,
+      email_events: prefs?.emailEvents ?? true,
+      email_users: prefs?.emailUsers ?? true,
+    }
+  } catch (err) {
+    console.error('Failed to load admin notification prefs:', err)
+    throw err
+  }
+}
+
+export async function updateAdminNotificationPrefs(adminId: string, prefs: {
+  email_reports: boolean
+  email_events: boolean
+  email_users: boolean
+}) {
+  await fetchMutation(api.adminSettings.upsert, {
+    adminId: adminId as any,
+    emailReports: prefs.email_reports,
+    emailEvents: prefs.email_events,
+    emailUsers: prefs.email_users,
+  })
+  revalidatePath('/settings')
 }

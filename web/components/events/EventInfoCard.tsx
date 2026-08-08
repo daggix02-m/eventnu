@@ -41,7 +41,8 @@ function buildIcs(event: Event): string {
 }
 
 export function EventInfoCard({ event }: EventInfoCardProps) {
-  const externalLabel = event.external_link_label?.trim() || "Get Tickets";
+  const externalLabel =
+    event.external_link_label?.trim() || (event.is_free ? "More Info" : "Get Tickets");
   const ended = isEventPast(event.start_date);
 
   const mapQuery =

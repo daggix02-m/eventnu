@@ -21,12 +21,12 @@ const config = {
     extend: {
       colors: {
         primary: {
-          DEFAULT: '#441f7f',
-          foreground: '#ffffff',
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
         },
         secondary: {
-          DEFAULT: '#a569bd',
-          foreground: '#ffffff',
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
         },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -53,9 +53,30 @@ const config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        surface: "hsl(var(--surface))",
+        "surface-container": "hsl(var(--surface-container))",
+        "surface-container-high": "hsl(var(--surface-container-high))",
+        "surface-container-highest": "hsl(var(--surface-container-highest))",
+        "surface-container-low": "hsl(var(--surface-container-low))",
+        "surface-container-lowest": "hsl(var(--surface-container-lowest))",
+        "surface-dim": "hsl(var(--surface-dim))",
+        "surface-bright": "hsl(var(--surface-bright))",
+        "surface-variant": "hsl(var(--surface-variant))",
+        "on-surface": "hsl(var(--on-surface))",
+        "on-surface-variant": "hsl(var(--on-surface-variant))",
+        success: {
+          DEFAULT: "hsl(var(--success))",
+          foreground: "hsl(var(--success-foreground))",
+        },
+        warning: {
+          DEFAULT: "hsl(var(--warning))",
+          foreground: "hsl(var(--warning-foreground))",
+        },
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['var(--font-body)', 'Inter', 'system-ui', 'sans-serif'],
+        headline: ['var(--font-display)', 'Space Grotesk', 'system-ui', 'sans-serif'],
+        mono: ['var(--font-code)', 'JetBrains Mono', 'ui-monospace', 'monospace'],
       },
       borderRadius: {
         lg: "var(--radius)",

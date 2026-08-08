@@ -9,8 +9,9 @@ export async function getCategories() {
   try {
     const categories = await fetchQuery(api.categories.getWithEventCounts)
     return categories.map((c: any) => mapCategory(c, c.eventCount))
-  } catch {
-    return []
+  } catch (err) {
+    console.error('Failed to load categories:', err)
+    throw err
   }
 }
 

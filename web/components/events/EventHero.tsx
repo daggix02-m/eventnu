@@ -17,7 +17,8 @@ function getPrimaryCategory(event: Event) {
 
 export function EventHero({ event }: EventHeroProps) {
   const category = getPrimaryCategory(event);
-  const externalLabel = event.external_link_label?.trim() || "Get Tickets";
+  const externalLabel =
+    event.external_link_label?.trim() || (event.is_free ? "More Info" : "Get Tickets");
   const ended = isEventPast(event.start_date);
   const showGallery = hasGallery(event.images);
 
@@ -55,7 +56,7 @@ export function EventHero({ event }: EventHeroProps) {
       <div className="absolute bottom-0 left-0 w-full p-gutter pb-xl">
         <div className="max-w-container-max mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-end gap-md">
-            <div className="space-y-sm max-w-3xl">
+            <div className="space-y-sm max-w-[48rem]">
               {category && <Badge variant="default">{category.name.toUpperCase()}</Badge>}
               <h1 className="font-display text-display-lg-mobile md:text-display-lg leading-tight text-on-surface">
                 {event.title}

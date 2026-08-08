@@ -6,7 +6,9 @@ import { useRouter } from 'next/navigation'
 import { Plus, Pencil, Trash2, Eye, EyeOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { deletePage } from '@/lib/actions/cms'
+import { getErrorMessage } from '@/lib/errors'
 import { toast } from 'sonner'
 
 interface Page {
@@ -22,16 +24,17 @@ interface Page {
 export function PagesClient({ pages }: { pages: Page[] }) {
   const router = useRouter()
   const [deleting, setDeleting] = useState<string | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this page?')) return
+    setDeleteTarget(null)
     setDeleting(id)
     try {
       await deletePage(id)
       toast.success('Page deleted')
       router.refresh()
     } catch (err: any) {
-      toast.error(err.message || 'Failed to delete page')
+      toast.error(getErrorMessage(err, 'Failed to delete page'))
     } finally {
       setDeleting(null)
     }
@@ -97,7 +100,7 @@ export function PagesClient({ pages }: { pages: Page[] }) {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => handleDelete(page.id)}
+                      onClick={() => setDeleteTarget(page.id)}
                       disabled={deleting === page.id}
                       aria-label={`Delete ${page.title}`}
                       className="text-destructive hover:text-destructive"
@@ -111,6 +114,19 @@ export function PagesClient({ pages }: { pages: Page[] }) {
           </tbody>
         </table>
       </div>
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null)
+        }}
+        title="Delete page?"
+        description="Are you sure you want to delete this page?"
+        confirmLabel="Delete"
+        destructive
+        loading={deleting === deleteTarget}
+        onConfirm={() => deleteTarget && handleDelete(deleteTarget)}
+      />
     </div>
   )
 }

@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { Card } from 'company-design-system'
+import { useMemo, useState } from 'react'
+import { Card } from '@/components/ui'
 import {
   BarChart,
   Bar,
@@ -39,15 +39,23 @@ interface AnalyticsClientProps {
 export function AnalyticsClient({ data }: AnalyticsClientProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'events' | 'users'>('overview')
 
-  const eventsChartData = data.eventsPerWeek.map((item) => ({
-    week: new Date(item.week_start).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-    count: Number(item.event_count),
-  }))
+  const eventsChartData = useMemo(
+    () =>
+      data.eventsPerWeek.map((item) => ({
+        week: new Date(item.week_start).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        count: Number(item.event_count),
+      })),
+    [data.eventsPerWeek]
+  )
 
-  const usersChartData = data.usersPerWeek.map((item) => ({
-    week: new Date(item.week_start).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-    count: Number(item.user_count),
-  }))
+  const usersChartData = useMemo(
+    () =>
+      data.usersPerWeek.map((item) => ({
+        week: new Date(item.week_start).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        count: Number(item.user_count),
+      })),
+    [data.usersPerWeek]
+  )
 
   const stats = [
     {
@@ -76,7 +84,7 @@ export function AnalyticsClient({ data }: AnalyticsClientProps) {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-primary tracking-tight">Analytics</h1>
+        <h1 className="font-headline text-3xl font-semibold text-foreground tracking-tight">Analytics</h1>
         <p className="text-muted-foreground mt-1">Platform analytics and insights.</p>
       </div>
 

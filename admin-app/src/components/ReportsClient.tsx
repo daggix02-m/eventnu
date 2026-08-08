@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
+import { getErrorMessage } from '@/lib/errors'
 import {
   Flag,
   MessageSquare,
@@ -16,11 +17,11 @@ import {
   Trash2,
   TriangleAlert,
 } from 'lucide-react'
-import { Button } from 'company-design-system'
-import { Badge } from 'company-design-system'
-import { Avatar } from 'company-design-system'
+import { Button } from '@/components/ui'
+import { Badge } from '@/components/ui'
+import { Avatar } from '@/components/ui'
 import { toast } from 'sonner'
-import { dismissReport, warnUserFromReport, suspendUserFromReport, hideEventFromReport, deleteCommentFromReport, getReportTargetPreview } from '@/lib/actions/reports'
+import { dismissReport, warnUserFromReport, suspendUserFromReport, hideEventFromReport, deleteCommentFromReport, saveReportNote, getReportTargetPreview } from '@/lib/actions/reports'
 
 const statusOptions = [
   { value: 'all', label: 'All Statuses' },
@@ -67,6 +68,7 @@ export function ReportsClient({
   const [selectedReport, setSelectedReport] = useState<any>(null)
   const [loading, setLoading] = useState(false)
   const [targetPreview, setTargetPreview] = useState<any>(null)
+  const [noteDraft, setNoteDraft] = useState('')
   const router = useRouter()
 
   useEffect(() => {
@@ -88,9 +90,24 @@ export function ReportsClient({
 
   const handleSelectReport = async (report: any) => {
     setSelectedReport(report)
+    setNoteDraft(report.admin_note || '')
     setTargetPreview(null)
     const preview = await getReportTargetPreview(report.target_type, report.target_id)
     setTargetPreview(preview)
+  }
+
+  const handleSaveNote = async () => {
+    if (!selectedReport) return
+    try {
+      setLoading(true)
+      await saveReportNote(selectedReport.id, noteDraft)
+      setSelectedReport({ ...selectedReport, admin_note: noteDraft })
+      toast.success('Note saved')
+    } catch (err: any) {
+      toast.error(getErrorMessage(err, 'Failed to save note'))
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleDismiss = async () => {
@@ -101,7 +118,7 @@ export function ReportsClient({
       toast.success('Report dismissed')
       setSelectedReport(null)
     } catch (err: any) {
-      toast.error(err.message || 'Failed to dismiss')
+      toast.error(getErrorMessage(err, 'Failed to dismiss'))
     } finally {
       setLoading(false)
     }
@@ -123,7 +140,7 @@ export function ReportsClient({
       toast.success('Action taken successfully')
       setSelectedReport(null)
     } catch (err: any) {
-      toast.error(err.message || 'Action failed')
+      toast.error(getErrorMessage(err, 'Action failed'))
     } finally {
       setLoading(false)
     }
@@ -133,7 +150,7 @@ export function ReportsClient({
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-primary tracking-tight">Reports & Moderation</h1>
+        <h1 className="font-headline text-3xl font-semibold text-foreground tracking-tight">Reports & Moderation</h1>
         <p className="text-muted-foreground mt-1">Manage user-submitted flags and maintain community guidelines.</p>
       </div>
 
@@ -156,7 +173,7 @@ export function ReportsClient({
               <stat.icon size={20} />
             </div>
             <p className="text-muted-foreground text-xs font-semibold uppercase tracking-wider mb-1">{stat.label}</p>
-            <p className="text-3xl font-bold tracking-tight text-primary">{stat.value}</p>
+            <p className="font-headline text-3xl font-semibold tracking-tight text-foreground">{stat.value}</p>
           </motion.div>
         ))}
       </div>
@@ -227,7 +244,7 @@ export function ReportsClient({
                         <div className="flex items-center gap-3">
                           <Avatar className="w-8 h-8">
                             {report.profiles?.avatar_url ? (
-                              <img src={report.profiles.avatar_url} alt="" className="w-full h-full object-cover" />
+                              <img src={report.profiles.avatar_url} alt="" width={32} height={32} loading="lazy" className="w-full h-full object-cover" />
                             ) : (
                                <div className="w-full h-full bg-surface-container-high flex items-center justify-center text-muted-foreground font-bold text-xs">
                                 {(report.profiles?.full_name || report.profiles?.username || 'U').charAt(0)}
@@ -272,7 +289,7 @@ export function ReportsClient({
           {selectedReport ? (
             <>
               <div className="p-6 border-b border-outline-variant flex justify-between items-center bg-card">
-                <h3 className="text-lg font-bold text-primary">Report Details</h3>
+                <h3 className="font-headline text-lg font-semibold text-foreground">Report Details</h3>
                 <button onClick={() => setSelectedReport(null)} className="lg:hidden text-muted-foreground">
                   <X size={20} />
                 </button>
@@ -284,7 +301,7 @@ export function ReportsClient({
                   <div className="flex items-center gap-4">
                     <Avatar className="w-12 h-12">
                       {selectedReport.profiles?.avatar_url ? (
-                        <img src={selectedReport.profiles.avatar_url} alt="" className="w-full h-full object-cover" />
+                        <img src={selectedReport.profiles.avatar_url} alt="" width={48} height={48} loading="lazy" className="w-full h-full object-cover" />
                       ) : (
                                <div className="w-full h-full bg-surface-container-high flex items-center justify-center text-muted-foreground font-bold text-lg">
                           {(selectedReport.profiles?.full_name || 'U').charAt(0)}
@@ -329,7 +346,7 @@ export function ReportsClient({
                         <div className="flex items-center gap-3">
                            <div className="w-12 h-12 rounded-lg bg-surface-container-high flex items-center justify-center overflow-hidden">
                             {targetPreview.poster_url ? (
-                              <img src={targetPreview.poster_url} alt="" className="w-full h-full object-cover" />
+                              <img src={targetPreview.poster_url} alt="" width={48} height={48} loading="lazy" className="w-full h-full object-cover" />
                             ) : (
                               <Calendar size={18} className="text-muted-foreground" />
                             )}
@@ -344,7 +361,7 @@ export function ReportsClient({
                         <div className="flex items-center gap-3">
                           <Avatar className="w-10 h-10">
                             {targetPreview.avatar_url ? (
-                              <img src={targetPreview.avatar_url} alt="" className="w-full h-full object-cover" />
+                              <img src={targetPreview.avatar_url} alt="" width={40} height={40} loading="lazy" className="w-full h-full object-cover" />
                             ) : (
                                <div className="w-full h-full bg-surface-container-high flex items-center justify-center text-muted-foreground font-bold text-sm">
                                 {(targetPreview.full_name || targetPreview.username || 'U').charAt(0)}
@@ -361,7 +378,7 @@ export function ReportsClient({
                         <div className="flex items-center gap-3">
                            <div className="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center overflow-hidden">
                             {targetPreview.logo_url ? (
-                              <img src={targetPreview.logo_url} alt="" className="w-full h-full object-cover" />
+                              <img src={targetPreview.logo_url} alt="" width={40} height={40} loading="lazy" className="w-full h-full object-cover" />
                             ) : (
                               <Building2 size={18} className="text-muted-foreground" />
                             )}
@@ -382,8 +399,17 @@ export function ReportsClient({
                   <textarea
                     className="w-full bg-background border border-outline-variant rounded-xl p-3 text-sm focus:ring-primary focus:border-primary min-h-[80px] outline-none"
                     placeholder="Add a note about this decision..."
-                    defaultValue={selectedReport.admin_note || ''}
+                    value={noteDraft}
+                    onChange={(e) => setNoteDraft(e.target.value)}
                   />
+                  <Button
+                    variant="outline"
+                    className="mt-2 h-8 text-xs"
+                    onClick={handleSaveNote}
+                    disabled={loading}
+                  >
+                    Save Note
+                  </Button>
                 </div>
               </div>
 
@@ -402,7 +428,7 @@ export function ReportsClient({
                   variant="outline"
                   className="h-10 border-warning text-warning hover:bg-warning/10"
                   onClick={() => handleAction('warn_user')}
-                  disabled={loading}
+                  disabled={loading || selectedReport.target_type !== 'user'}
                 >
                   <TriangleAlert size={16} className="mr-1" />
                   Warn User
@@ -414,21 +440,25 @@ export function ReportsClient({
                   disabled={loading || selectedReport.target_type !== 'event'}
                 >
                   <EyeOff size={16} className="mr-1" />
-                  Hide
+                  Hide Event
                 </Button>
                 <Button
                   className="h-10 bg-destructive text-white hover:bg-destructive/90"
                   onClick={() => {
                     if (selectedReport.target_type === 'comment') handleAction('delete_comment')
                     else if (selectedReport.target_type === 'user') handleAction('suspend_user')
-                    else handleAction('hide_event')
                   }}
-                  disabled={loading}
+                  disabled={loading || (selectedReport.target_type !== 'comment' && selectedReport.target_type !== 'user')}
                 >
                   <Trash2 size={16} className="mr-1" />
-                  {selectedReport.target_type === 'comment' ? 'Delete' : selectedReport.target_type === 'user' ? 'Suspend' : 'Remove'}
+                  {selectedReport.target_type === 'comment' ? 'Delete' : 'Suspend'}
                 </Button>
               </div>
+              {selectedReport.target_type === 'host' && (
+                <p className="px-6 pb-4 text-xs text-muted-foreground">
+                  Host moderation is not supported yet — dismiss this report instead.
+                </p>
+              )}
             </>
           ) : (
             <div className="flex-1 flex items-center justify-center text-muted-foreground">
