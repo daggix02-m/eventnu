@@ -55,6 +55,12 @@ Living register for the phased refactor (see `REFACTORING.md` for the roadmap an
 | [ ] | C | `react-hook-form`, `@hookform/resolvers`, `zod` | Installed, currently unused; **reserved** for the Phase 2.4 EventForm split. If EventForm is NOT rebuilt on them by end of Phase 2, remove. knip ignores them |
 | [ ] | I | Unused-dep scan for `web/` | Out of scope (consumer app); revisit if scope widens |
 
+## Asset mirroring (event posters)
+
+| Status | Class | Item | Where | Note |
+|---|---|---|---|---|
+| [ ] | I | Event poster images are duplicated between `web/public/images` and `admin-app/public/images` | both apps' `public/` | Mirror of 73 PNGs (~285 MB) so the admin origin can serve `/images/events/*` without a cross-app proxy (the `NEXT_PUBLIC_WEB_URL` rewrite was removed 2026-08-09). **When adding poster images to `web/public/images/events/**`, mirror them into `admin-app/public/images/events/**` or the admin's events list 404s.** |
+
 ## Known performance debt (→ Phase 6)
 
 | Class | Item | Where |
