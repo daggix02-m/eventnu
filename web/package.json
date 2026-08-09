@@ -13,6 +13,7 @@
     "@auth/core": "^0.41.1",
     "@convex-dev/auth": "^0.0.94",
     "@convex-dev/rate-limiter": "^0.3.2",
+    "@eventnu/convex": "*",
     "@gsap/react": "^2.1.2",
     "@radix-ui/react-slot": "^1.2.4",
     "clsx": "^2.1.1",
