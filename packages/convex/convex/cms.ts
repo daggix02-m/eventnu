@@ -200,11 +200,11 @@ export const submitContact = mutation({
 });
 
 export const markContactResolved = mutation({
-  args: { submissionId: v.id("contactSubmissions") },
+  args: { submissionId: v.id("contactSubmissions"), resolved: v.boolean() },
   handler: async (ctx, args) => {
     await requireAdmin(ctx);
     await ctx.db.patch("contactSubmissions", args.submissionId, {
-      isResolved: true,
+      isResolved: args.resolved,
     });
   },
 });

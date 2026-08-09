@@ -36,8 +36,9 @@ Living register for the phased refactor (see `REFACTORING.md` for the roadmap an
 | [x] | D | Latent bug: `instagram.createImportedEvent` computed slug, never inserted | `web/convex/instagram.ts` | Slug now written; events reachable via `/events/[slug]` |
 | [x] | I | `hosts.getStats` unguarded | `web/convex/hosts.ts` | Now `requireAdmin`, matching `list`/`getById` |
 | [ ] | C | `/auth/forgot-password`, `/auth/reset-password` stubs | `admin-app/src/app/auth/` | Deliberate placeholders for unimplemented SMTP/password reset, not accidental dead code |
-| [ ] | D | 27 `loading.tsx` stubs | `admin-app/src/app/(app)/**/` | **Resolved in baseline** — each is a thin wrapper around `src/components/skeletons.tsx`; required per route by Next.js streaming |
-| [ ] | D | `fadeUp` framer-motion const ×3 | `HostDetailClient`, `OrganizerDetailClient`, `UserDetailClient` | Phase 2.4 motion consolidation |
+| [x] | D | 27 `loading.tsx` stubs | `admin-app/src/app/(app)/**/` | **Resolved in baseline** — each is a thin wrapper around `src/components/skeletons.tsx`; required per route by Next.js streaming |
+| [x] | D | `fadeUp` framer-motion const ×3 | `HostDetailClient`, `OrganizerDetailClient`, `UserDetailClient` | Consolidated into `src/lib/motion.ts` (Phase 2.4) |
+| [x] | I | List clients on the shared stack | `Hosts/Users/Organizers/Notifications/Reports/Events` | Hosts, Users, Organizers, Notifications, Reports migrated to `useXList` hooks + `components/list` primitives + `lib/format`; Events kept its own TanStack query (refit deferred) |
 | [ ] | D | Legacy `events.categoryIds` array field | `web/convex/schema.ts`, `migrations.ts`, `mappers.ts` | Deferred to Phase 6 — spans admin form contract + migrations |
 
 ## Design system

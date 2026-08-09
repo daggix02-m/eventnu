@@ -4,8 +4,12 @@ import { internal } from "./_generated/api";
 import { createAccount } from "@convex-dev/auth/server";
 
 export const createAdminUser = action({
-  args: { email: v.string(), password: v.string(), name: v.string() },
+  args: { email: v.string(), password: v.string(), name: v.string(), key: v.string() },
   handler: async (ctx, args) => {
+    if (!process.env.ADMIN_BOOTSTRAP_KEY || args.key !== process.env.ADMIN_BOOTSTRAP_KEY) {
+      throw new Error("Invalid bootstrap key");
+    }
+
     const admins = await ctx.runQuery(internal.instagram.listAdmins);
     if (admins.length > 0) {
       throw new Error("An admin already exists. Admin creation is bootstrap-only.");

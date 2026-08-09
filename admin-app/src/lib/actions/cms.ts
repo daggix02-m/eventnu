@@ -162,7 +162,10 @@ export async function getContactSubmissions() {
 }
 
 export async function markContactResolved(id: string, resolved: boolean) {
-  await fetchMutation(api.cms.markContactResolved, { submissionId: id as Id<'contactSubmissions'> })
+  await fetchMutation(api.cms.markContactResolved, {
+    submissionId: id as Id<'contactSubmissions'>,
+    resolved,
+  })
   revalidatePath('/cms/contact')
   revalidatePath('/cms')
 }

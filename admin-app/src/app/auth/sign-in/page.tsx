@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useAction } from 'convex/react'
+import { api } from '@eventnu/convex/_generated/api'
 import { useAuthActions } from '@convex-dev/auth/react'
 import { Button } from '@/components/ui'
 import { Input } from '@/components/ui'
@@ -11,12 +13,39 @@ import { toast } from 'sonner'
 import { Eye, EyeOff } from 'lucide-react'
 import { getErrorMessage } from '@/lib/errors'
 
+const INVALID_CREDENTIALS = 'Invalid email or password'
+const RATE_LIMITED = 'Too many failed sign-in attempts. Try again in about an hour.'
+const UNAVAILABLE = 'Unable to sign in right now. Please try again.'
+
+function describeSignInError(err: unknown, fallback: string): string {
+  if (err instanceof Error) {
+    const msg = err.message
+    if (msg.includes('Invalid credentials') || msg.includes('InvalidAccountId')) {
+      return INVALID_CREDENTIALS
+    }
+    if (msg.includes('TooManyFailedAttempts')) return RATE_LIMITED
+    if (isNetworkError(err)) return UNAVAILABLE
+  }
+  return fallback
+}
+
+function isNetworkError(err: unknown): boolean {
+  if (!(err instanceof Error)) return false
+  const msg = err.message
+  return (
+    msg.includes('Failed to fetch') ||
+    msg.includes('Network request failed') ||
+    msg.includes('fetch failed') ||
+    msg.includes('ECONNRESET') ||
+    msg.includes('Could not connect to the Convex deployment')
+  )
+}
+
 export default function SignIn() {
   const router = useRouter()
-  const { signIn, signOut } = useAuthActions()
+  const { signIn } = useAuthActions()
+  const verify = useAction(api.verifyPassword.verifyPassword)
 
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
@@ -24,24 +53,58 @@ export default function SignIn() {
   const clearError = (field: string) =>
     setFieldErrors(prev => ({ ...prev, [field]: '' }))
 
-  const handleSignIn = async (e: React.FormEvent) => {
+  const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setFieldErrors({})
     setLoading(true)
 
+    const readForm = () => {
+      const formData = new FormData(e.currentTarget)
+      formData.set('flow', 'signIn')
+      return formData
+    }
+    const readCredentials = (formData: FormData) => ({
+      email: String(formData.get('email') ?? '').trim(),
+      password: String(formData.get('password') ?? ''),
+    })
+
+    let verifyError: string | null = null
+
     try {
-      const formData = new FormData()
-      formData.append('email', email)
-      formData.append('password', password)
-      formData.append('flow', 'signIn')
-      await signOut()
-      await signIn('password', formData)
+      const preflight = readCredentials(readForm())
+      if (preflight.email && preflight.password) {
+        try {
+          await verify({ email: preflight.email, password: preflight.password })
+        } catch (err: unknown) {
+          verifyError = describeSignInError(err, getErrorMessage(err, 'Authentication failed'))
+        }
+      }
+
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          const formData = readForm()
+          const { email, password } = readCredentials(formData)
+          if (!email || !password) {
+            throw new Error('Please enter your email and password.')
+          }
+          await signIn('password', formData)
+          break
+        } catch (err: unknown) {
+          if (attempt === 0 && isNetworkError(err)) continue
+          throw err
+        }
+      }
       router.push('/')
       router.refresh()
     } catch (err: unknown) {
-      const msg = getErrorMessage(err, 'Authentication failed')
+      const msg =
+        err instanceof Error && err.message === 'Please enter your email and password.'
+          ? err.message
+          : describeSignInError(err, verifyError ?? getErrorMessage(err, 'Authentication failed'))
       toast.error(msg)
-      setFieldErrors({ email: 'Invalid email or password', password: 'Invalid email or password' })
+      if (msg === INVALID_CREDENTIALS) {
+        setFieldErrors({ email: msg, password: msg })
+      }
     } finally {
       setLoading(false)
     }
@@ -70,10 +133,11 @@ export default function SignIn() {
               <div className="space-y-1">
                 <Input
                   id="email"
+                  name="email"
                   type="email"
+                  autoComplete="email"
                   placeholder="admin@example.com"
-                  value={email}
-                  onChange={(e) => { setEmail(e.target.value); clearError('email') }}
+                  onChange={() => clearError('email')}
                   aria-invalid={!!fieldErrors.email}
                   className="h-11"
                 />
@@ -83,10 +147,11 @@ export default function SignIn() {
                 <div className="relative">
                   <Input
                     id="password"
+                    name="password"
                     type={showPassword ? 'text' : 'password'}
+                    autoComplete="current-password"
                     placeholder="Password"
-                    value={password}
-                    onChange={(e) => { setPassword(e.target.value); clearError('password') }}
+                    onChange={() => clearError('password')}
                     aria-invalid={!!fieldErrors.password}
                     className="h-11 pr-10"
                   />

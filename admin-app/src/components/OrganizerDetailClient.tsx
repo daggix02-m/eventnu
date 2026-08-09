@@ -22,16 +22,10 @@ import { format } from 'date-fns'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
+import { fadeUp } from '@/lib/motion'
 import { verifyOrganizer, unverifyOrganizer, suspendOrganizer, unsuspendOrganizer } from '@/lib/actions/organizers'
 import { getOrganizerRecentEvents } from '@/lib/actions/events'
 import type { MappedOrganizer } from '@/lib/mappers'
-
-const fadeUp = {
-  initial: { opacity: 0, y: 20 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.3 },
-}
-
 
 interface OrganizerDetailClientProps {
   organizer: MappedOrganizer

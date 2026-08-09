@@ -36,6 +36,7 @@ import type * as reports from "../reports.js";
 import type * as reservations from "../reservations.js";
 import type * as seed from "../seed.js";
 import type * as support from "../support.js";
+import type * as verifyPassword from "../verifyPassword.js";
 
 import type {
   ApiFromModules,
@@ -72,6 +73,7 @@ declare const fullApi: ApiFromModules<{
   reservations: typeof reservations;
   seed: typeof seed;
   support: typeof support;
+  verifyPassword: typeof verifyPassword;
 }>;
 
 /**

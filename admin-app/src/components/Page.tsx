@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils'
+import type { LucideIcon } from 'lucide-react'
 
 export function PageWrapper({
   children,
@@ -35,6 +36,28 @@ export function PageHeader({
         )}
       </div>
       {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
+    </div>
+  )
+}
+
+export function StatsCard({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: LucideIcon
+  label: string
+  value: number | string
+}) {
+  return (
+    <div className="bg-card p-4 rounded-2xl shadow-sm border border-outline-variant flex items-center gap-3">
+      <div className="w-10 h-10 rounded-xl bg-surface-container-high flex items-center justify-center text-muted-foreground">
+        <Icon size={20} />
+      </div>
+      <div>
+        <p className="text-2xl font-bold text-foreground">{value}</p>
+        <p className="text-xs text-muted-foreground uppercase tracking-tight">{label}</p>
+      </div>
     </div>
   )
 }

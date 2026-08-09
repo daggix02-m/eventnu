@@ -25,16 +25,10 @@ import { format } from 'date-fns'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
+import { fadeUp } from '@/lib/motion'
 import { suspendUser, unsuspendUser, banUser } from '@/lib/actions/users'
 import { sendNotification } from '@/lib/actions/notifications'
-import { getUserRecentEvents } from '@/lib/actions/events'
-
-const fadeUp = {
-  initial: { opacity: 0, y: 20 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.3 },
-}
-
+import { getOrganizerRecentEvents } from '@/lib/actions/events'
 
 interface Profile {
   id: string
@@ -82,7 +76,7 @@ export function UserDetailClient({ profile, role, stats }: UserDetailClientProps
     let cancelled = false
     setEventsLoading(true)
     setRecentEvents([])
-    getUserRecentEvents(profile.id)
+    getOrganizerRecentEvents(profile.id)
       .then((items) => {
         if (!cancelled) setRecentEvents(items)
       })
@@ -400,7 +394,7 @@ export function UserDetailClient({ profile, role, stats }: UserDetailClientProps
         transition={{ duration: 0.3, delay: 0.25 }}
       >
         <Card className="p-6">
-          <h2 className="text-lg font-bold text-foreground mb-4">Recent Events</h2>
+          <h2 className="text-lg font-bold text-foreground mb-4">Organized Events</h2>
           {eventsLoading ? (
             <p className="text-sm text-muted-foreground">Loading...</p>
           ) : recentEvents.length === 0 ? (

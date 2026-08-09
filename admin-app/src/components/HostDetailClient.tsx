@@ -24,14 +24,9 @@ import { format } from 'date-fns'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
+import { fadeUp } from '@/lib/motion'
 import { updateHost, updateHostStatus, deleteHost } from '@/lib/actions/hosts'
 import { getHostRecentEvents } from '@/lib/actions/events'
-
-const fadeUp = {
-  initial: { opacity: 0, y: 20 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.3 },
-}
 
 const hostTypeLabels: Record<string, string> = {
   registered_org: 'Registered Org',

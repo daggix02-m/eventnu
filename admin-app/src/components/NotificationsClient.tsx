@@ -1,11 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Button } from '@/components/ui'
-import { Card } from '@/components/ui'
-import { Badge } from '@/components/ui'
-import { Input } from '@/components/ui/input'
-import { getErrorMessage } from '@/lib/errors'
+import { useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import {
   Send,
   Bell,
@@ -13,34 +9,23 @@ import {
   AlertTriangle,
   Info,
   Megaphone,
-  ChevronLeft,
-  ChevronRight,
   User,
   Users,
   type LucideIcon,
 } from 'lucide-react'
-import { format } from 'date-fns'
+import { Button, Card, Badge, Input } from '@/components/ui'
+import { PageHeader } from '@/components/Page'
+import { Pagination, EmptyState, useListFilters } from '@/components/list'
+import { formatDateTime } from '@/lib/format'
+import { getErrorMessage } from '@/lib/errors'
+import { useNotifications, notificationsKeys } from '@/lib/api/notifications'
+import type { NotificationListFilters } from '@/lib/api/notifications'
 import { sendNotification } from '@/lib/actions/notifications'
-import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-
-interface Notification {
-  id: string
-  user_id: string
-  type: string
-  title: string
-  body: string
-  read: boolean
-  created_at: string
-  profiles?: {
-    id: string
-    username: string
-    full_name: string
-  }[]
-}
+import type { MappedNotification } from '@/lib/mappers'
 
 interface NotificationsClientProps {
-  initialNotifications: Notification[]
+  initialNotifications: MappedNotification[]
   initialCount: number
   initialPage: number
 }
@@ -50,9 +35,18 @@ export function NotificationsClient({
   initialCount,
   initialPage,
 }: NotificationsClientProps) {
-  const [notifications, setNotifications] = useState(initialNotifications)
-  const [count, setCount] = useState(initialCount)
-  const [page, setPage] = useState(initialPage)
+  const queryClient = useQueryClient()
+  const { filters, setPage } = useListFilters<NotificationListFilters>({
+    basePath: '/notifications',
+    initial: { page: initialPage },
+    defaults: { page: 1 },
+  })
+
+  const { data, isFetching } = useNotifications(filters, { notifications: initialNotifications, count: initialCount })
+  const notifications = data?.items ?? []
+  const count = data?.total ?? 0
+  const totalPages = Math.ceil(count / 20)
+
   const [isLoading, setIsLoading] = useState(false)
   const [composeMode, setComposeMode] = useState(false)
   const [form, setForm] = useState({
@@ -62,21 +56,8 @@ export function NotificationsClient({
     broadcast: true,
     userId: '',
   })
-  const router = useRouter()
 
-  useEffect(() => {
-    setNotifications(initialNotifications)
-    setCount(initialCount)
-    setPage(initialPage)
-  }, [initialNotifications, initialCount, initialPage])
-
-  const perPage = 20
-  const totalPages = Math.ceil(count / perPage)
-
-  const handlePageChange = (newPage: number) => {
-    setPage(newPage)
-    router.push(`/notifications?page=${newPage}`)
-  }
+  const refresh = () => queryClient.invalidateQueries({ queryKey: notificationsKeys })
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -97,7 +78,7 @@ export function NotificationsClient({
         broadcast: true,
         userId: '',
       })
-      router.refresh()
+      await refresh()
     } catch (err) {
       toast.error(getErrorMessage(err, 'Failed to send notification'))
     } finally {
@@ -114,33 +95,19 @@ export function NotificationsClient({
     event_rejected: Bell,
   }
 
-  const typeColors: Record<string, string> = {
-    announcement: 'bg-surface-container-high text-muted-foreground',
-    warning: 'bg-surface-container-high text-muted-foreground',
-    info: 'bg-surface-container-high text-muted-foreground',
-    friend_request: 'bg-surface-container-high text-muted-foreground',
-    event_cancelled: 'bg-surface-container-high text-muted-foreground',
-    event_rejected: 'bg-surface-container-high text-muted-foreground',
-  }
-
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-headline text-3xl font-semibold text-foreground tracking-tight">Notifications</h1>
-          <p className="text-muted-foreground mt-1">Broadcast notifications to users.</p>
-        </div>
-        <Button
-          onClick={() => setComposeMode(!composeMode)}
-          className="bg-primary hover:bg-primary/90 text-primary-foreground"
-        >
-          <Send size={16} className="mr-2" />
-          {composeMode ? 'Cancel' : 'Compose'}
-        </Button>
-      </div>
+      <PageHeader
+        title="Notifications"
+        description="Broadcast notifications to users."
+        actions={
+          <Button onClick={() => setComposeMode(!composeMode)}>
+            <Send size={16} className="mr-2" />
+            {composeMode ? 'Cancel' : 'Compose'}
+          </Button>
+        }
+      />
 
-      {/* Compose Form */}
       {composeMode && (
         <Card className="p-6">
           <h3 className="text-lg font-bold text-foreground mb-4">Compose Notification</h3>
@@ -215,11 +182,7 @@ export function NotificationsClient({
             </div>
 
             <div className="flex items-center gap-3">
-              <Button
-                type="submit"
-                disabled={isLoading}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground"
-              >
+              <Button type="submit" disabled={isLoading}>
                 <Send size={16} className="mr-2" />
                 {isLoading ? 'Sending...' : 'Send Notification'}
               </Button>
@@ -231,96 +194,65 @@ export function NotificationsClient({
         </Card>
       )}
 
-      {/* Notification History */}
       <Card className="overflow-hidden">
         <div className="p-6 border-b border-outline-variant">
           <h3 className="text-lg font-bold text-foreground">Notification History</h3>
           <p className="text-sm text-muted-foreground">All sent notifications</p>
         </div>
-        <div className="divide-y divide-outline-variant">
-          {notifications.length === 0 ? (
-          <div className="px-4 py-12 text-center text-muted-foreground">
-            <div className="w-12 h-12 rounded-xl bg-surface-container-high flex items-center justify-center mx-auto mb-3">
-              <Bell size={20} className="text-muted-foreground" />
-            </div>
-            <p>No notifications sent yet.</p>
+        <div className={isFetching ? 'opacity-60 transition-opacity' : 'transition-opacity'}>
+          <div className="divide-y divide-outline-variant">
+            {notifications.length === 0 ? (
+              <EmptyState icon={Bell} title="No notifications sent yet." />
+            ) : (
+              notifications.map((notification) => {
+                const TypeIcon = typeIcons[notification.type] || Info
+                return (
+                  <div
+                    key={notification.id}
+                    className="p-4 flex items-start gap-4 hover:bg-surface-container-low transition-colors"
+                  >
+                    <div className="w-10 h-10 rounded-lg bg-surface-container-high text-muted-foreground flex items-center justify-center flex-shrink-0">
+                      <TypeIcon size={18} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="font-semibold text-sm text-foreground">{notification.title}</p>
+                        <Badge variant="outline" className="text-[10px] uppercase">
+                          {notification.type}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-0.5">{notification.body}</p>
+                      <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+                        <span>{formatDateTime(notification.created_at)}</span>
+                        {notification.profiles && notification.profiles.length > 0 ? (
+                          <span>To: {notification.profiles[0].full_name || notification.profiles[0].username}</span>
+                        ) : (
+                          <span className="flex items-center gap-1">
+                            <Users size={10} />
+                            Broadcast
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex-shrink-0">
+                      {notification.read ? (
+                        <Badge className="text-xs bg-success/10 text-success border-success/20">
+                          <Check size={10} className="mr-1" />
+                          Read
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-xs">
+                          Unread
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                )
+              })
+            )}
           </div>
-          ) : (
-            notifications.map((notification) => {
-              const TypeIcon = typeIcons[notification.type] || Info
-              return (
-                <div
-                  key={notification.id}
-                  className="p-4 flex items-start gap-4 hover:bg-surface-container-low transition-colors"
-                >
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${typeColors[notification.type] || 'bg-muted text-muted-foreground'}`}>
-                    <TypeIcon size={18} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="font-semibold text-sm text-foreground">{notification.title}</p>
-                      <Badge variant="outline" className="text-[10px] uppercase">
-                        {notification.type}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-0.5">{notification.body}</p>
-                    <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
-                      <span>{format(new Date(notification.created_at), 'MMM d, yyyy HH:mm')}</span>
-                    {notification.profiles && notification.profiles.length > 0 ? (
-                      <span>To: {notification.profiles[0].full_name || notification.profiles[0].username}</span>
-                    ) : (
-                      <span className="flex items-center gap-1">
-                        <Users size={10} />
-                        Broadcast
-                      </span>
-                    )}
-                    </div>
-                  </div>
-                  <div className="flex-shrink-0">
-                    {notification.read ? (
-                      <Badge className="text-xs bg-success/10 text-success border-success/20">
-                        <Check size={10} className="mr-1" />
-                        Read
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline" className="text-xs">
-                        Unread
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-              )
-            })
-          )}
         </div>
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-outline-variant">
-            <p className="text-sm text-muted-foreground">
-              Showing {((page || 1) - 1) * perPage + 1} - {Math.min((page || 1) * perPage, count)} of {count}
-            </p>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => handlePageChange((page || 1) - 1)}
-                disabled={(page || 1) <= 1}
-                className="p-2 rounded-lg hover:bg-surface-container-high disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-              >
-                <ChevronLeft size={16} />
-              </button>
-              <span className="text-sm font-medium">
-                {page || 1} / {totalPages}
-              </span>
-              <button
-                onClick={() => handlePageChange((page || 1) + 1)}
-                disabled={(page || 1) >= totalPages}
-                className="p-2 rounded-lg hover:bg-surface-container-high disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-              >
-                <ChevronRight size={16} />
-              </button>
-            </div>
-          </div>
-        )}
+        <Pagination page={filters.page ?? 1} totalPages={totalPages} count={count} onPageChange={setPage} />
       </Card>
     </div>
   )

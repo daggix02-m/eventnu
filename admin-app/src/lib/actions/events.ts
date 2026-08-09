@@ -5,7 +5,8 @@ import type { Id } from '@eventnu/convex/_generated/dataModel'
 import { api } from '@eventnu/convex/_generated/api'
 import type { FunctionReference } from 'convex/server'
 import { revalidatePath } from 'next/cache'
-import { mapEvent, mapEventCategory, toDateTimeLocal } from '../mappers'
+import { mapEvent, mapEventCategory } from '../mappers'
+import { toDateTimeLocal } from '@/lib/format'
 
 export async function getEvents(params: {
   status?: string
@@ -121,10 +122,6 @@ export async function getHostRecentEvents(hostId: string) {
 }
 
 export async function getOrganizerRecentEvents(profileId: string) {
-  return getRecentEvents(api.events.listByOrganizer, 'profileId', profileId)
-}
-
-export async function getUserRecentEvents(profileId: string) {
   return getRecentEvents(api.events.listByOrganizer, 'profileId', profileId)
 }
 

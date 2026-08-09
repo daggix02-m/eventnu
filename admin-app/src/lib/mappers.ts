@@ -1,14 +1,8 @@
 import type { Doc } from '@eventnu/convex/_generated/dataModel'
+import { toDateTimeLocal } from './format'
 
 function iso(ts?: number | null): string {
   return ts ? new Date(ts).toISOString() : new Date(0).toISOString()
-}
-
-export function toDateTimeLocal(ts?: number | null): string {
-  if (!ts) return ''
-  const d = new Date(ts)
-  const pad = (n: number) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
 export function usernameFromEmail(email?: string | null): string {
@@ -282,11 +276,7 @@ export function mapReportTargetPreview(
 export type MappedProfile = ReturnType<typeof mapProfile>
 export type MappedEvent = ReturnType<typeof mapEvent>
 export type MappedHost = ReturnType<typeof mapHost>
-export type MappedCategory = ReturnType<typeof mapCategory>
 export type MappedOrganizer = ReturnType<typeof mapOrganizer>
-export type MappedPage = ReturnType<typeof mapPage>
-export type MappedAnnouncement = ReturnType<typeof mapAnnouncement>
-export type MappedContactSubmission = ReturnType<typeof mapContactSubmission>
 export type MappedReport = ReturnType<typeof mapReport>
-export type MappedSupportTicket = ReturnType<typeof mapSupportTicket>
+export type MappedNotification = ReturnType<typeof mapNotification>
 export type MappedModerationLog = ReturnType<typeof mapModerationLog>
