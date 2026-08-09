@@ -41,6 +41,16 @@ function isNetworkError(err: unknown): boolean {
   )
 }
 
+const VERIFY_RESULT_MESSAGES = {
+  invalid_account: 'No admin account found for this email.',
+  invalid_secret: 'Incorrect password.',
+  rate_limited: RATE_LIMITED,
+} as const
+
+function verifyResultMessage(reason: keyof typeof VERIFY_RESULT_MESSAGES): string {
+  return VERIFY_RESULT_MESSAGES[reason]
+}
+
 export default function SignIn() {
   const router = useRouter()
   const { signIn } = useAuthActions()
@@ -58,8 +68,10 @@ export default function SignIn() {
     setFieldErrors({})
     setLoading(true)
 
+    const form = e.currentTarget
+
     const readForm = () => {
-      const formData = new FormData(e.currentTarget)
+      const formData = new FormData(form)
       formData.set('flow', 'signIn')
       return formData
     }
@@ -74,7 +86,12 @@ export default function SignIn() {
       const preflight = readCredentials(readForm())
       if (preflight.email && preflight.password) {
         try {
-          await verify({ email: preflight.email, password: preflight.password })
+          const result = await verify({ email: preflight.email, password: preflight.password })
+          if (!result.ok) {
+            const msg = verifyResultMessage(result.reason)
+            toast.error(msg)
+            return
+          }
         } catch (err: unknown) {
           verifyError = describeSignInError(err, getErrorMessage(err, 'Authentication failed'))
         }
