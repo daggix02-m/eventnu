@@ -2,11 +2,11 @@
 
 import { fetchQuery } from '@/lib/actions/authedFetch'
 import { api } from '@eventnu/convex/_generated/api'
+import type { Doc } from '@eventnu/convex/_generated/dataModel'
 
-export async function getCurrentAdminProfile() {
+export async function getCurrentAdminProfile(): Promise<Doc<'profiles'> | null> {
   try {
-    const profile = await fetchQuery(api.profiles.getMe)
-    return profile as { role: string; suspended: boolean } | null
+    return await fetchQuery(api.profiles.getMe)
   } catch (err) {
     console.error('Failed to load admin profile:', err)
     throw err

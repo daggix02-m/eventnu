@@ -71,7 +71,10 @@ export const updateProfile = mutation({
 export const suspend = mutation({
   args: { profileId: v.id("profiles") },
   handler: async (ctx, args) => {
-    await requireAdmin(ctx);
+    const admin = await requireAdmin(ctx);
+    if (admin._id === args.profileId) {
+      throw new Error("You cannot suspend your own account");
+    }
     await ctx.db.patch("profiles", args.profileId, { suspended: true });
   },
 });

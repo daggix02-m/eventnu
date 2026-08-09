@@ -1,6 +1,7 @@
-import { notFound } from "next/navigation";
+import { redirect } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { IdleTimeout } from "@/components/IdleTimeout";
+import { AccountRestrictedScreen } from "@/components/AccountRestrictedScreen";
 import { getCurrentAdminProfile } from "@/lib/actions/session";
 
 export default async function AppLayout({
@@ -9,7 +10,9 @@ export default async function AppLayout({
   children: React.ReactNode;
 }>) {
   const profile = await getCurrentAdminProfile();
-  if (!profile || profile.role !== "admin" || profile.suspended) notFound();
+  if (!profile) redirect("/auth/sign-in");
+  if (profile.suspended) return <AccountRestrictedScreen reason="suspended" />;
+  if (profile.role !== "admin") return <AccountRestrictedScreen reason="not-admin" />;
 
   return (
     <AppShell>

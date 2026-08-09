@@ -47,9 +47,10 @@ interface UsersClientProps {
   initialUsers: MappedProfile[]
   initialCount: number
   initialFilters: UserListFilters
+  currentAdminId: string | null
 }
 
-export function UsersClient({ initialUsers, initialCount, initialFilters }: UsersClientProps) {
+export function UsersClient({ initialUsers, initialCount, initialFilters, currentAdminId }: UsersClientProps) {
   const queryClient = useQueryClient()
   const { filters, update, setPage, searchInput, setSearchInput } = useListFilters({
     basePath: '/users',
@@ -190,7 +191,11 @@ export function UsersClient({ initialUsers, initialCount, initialFilters }: User
                   >
                     <Eye size={14} />
                   </Link>
-                  {user.suspended ? (
+                  {user.id === currentAdminId ? (
+                    <span className="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary bg-primary/10 border border-primary/20 rounded">
+                      You
+                    </span>
+                  ) : user.suspended ? (
                     <button
                       onClick={() => runAction('unsuspend', user.id)}
                       className="p-1.5 text-muted-foreground hover:text-success transition-colors rounded"

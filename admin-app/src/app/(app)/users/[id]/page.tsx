@@ -1,4 +1,5 @@
 import { getUserById } from '@/lib/actions/users'
+import { getCurrentAdminProfile } from '@/lib/actions/session'
 import { UserDetailClient } from '@/components/UserDetailClient'
 
 export default async function UserDetailPage({
@@ -8,6 +9,7 @@ export default async function UserDetailPage({
 }) {
   const { id } = await params
   const { profile, role, stats } = await getUserById(id)
+  const currentAdmin = await getCurrentAdminProfile()
 
   if (!profile) {
     return (
@@ -22,6 +24,7 @@ export default async function UserDetailPage({
       profile={profile}
       role={role}
       stats={stats}
+      currentAdminId={currentAdmin?._id ?? null}
     />
   )
 }

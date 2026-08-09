@@ -52,6 +52,7 @@ interface UserDetailClientProps {
   profile: Profile
   role: string | null
   stats: Stats | null
+  currentAdminId: string | null
 }
 
 interface EventItem {
@@ -61,7 +62,7 @@ interface EventItem {
   status: string
 }
 
-export function UserDetailClient({ profile, role, stats }: UserDetailClientProps) {
+export function UserDetailClient({ profile, role, stats, currentAdminId }: UserDetailClientProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [recentEvents, setRecentEvents] = useState<EventItem[]>([])
   const [eventsLoading, setEventsLoading] = useState(true)
@@ -71,6 +72,7 @@ export function UserDetailClient({ profile, role, stats }: UserDetailClientProps
   const [notificationTitle, setNotificationTitle] = useState('')
   const [notificationBody, setNotificationBody] = useState('')
   const router = useRouter()
+  const isCurrentAdmin = profile.id === currentAdminId
 
   useEffect(() => {
     let cancelled = false
@@ -314,7 +316,11 @@ export function UserDetailClient({ profile, role, stats }: UserDetailClientProps
         <Card className="p-6">
           <h2 className="text-lg font-bold text-foreground mb-4">Actions</h2>
           <div className="flex flex-wrap items-center gap-3">
-            {profile.suspended ? (
+            {isCurrentAdmin ? (
+              <p className="text-sm text-muted-foreground">
+                This is your account. You cannot suspend or ban yourself.
+              </p>
+            ) : profile.suspended ? (
               <Button
                 onClick={handleUnsuspend}
                 disabled={isLoading}
