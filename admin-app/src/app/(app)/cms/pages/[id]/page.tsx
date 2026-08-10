@@ -4,7 +4,14 @@ import { PageFormClient } from '@/components/cms/PageFormClient'
 
 export default async function EditPagePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const page = await getPageById(id)
+
+  let page: Awaited<ReturnType<typeof getPageById>> = null
+  try {
+    page = await getPageById(id)
+  } catch (err) {
+    console.error('Failed to load page:', err)
+  }
+
   if (!page) notFound()
   return <PageFormClient initialData={page} />
 }

@@ -11,7 +11,13 @@ export default async function ReportsPage({
   const targetType = typeof params.targetType === 'string' ? params.targetType : 'all'
   const page = typeof params.page === 'string' ? parseInt(params.page) : 1
 
-  const { reports, count } = await getReports({ status, targetType, page, perPage: 20 })
+  let reports: Awaited<ReturnType<typeof getReports>>['reports'] = []
+  let count = 0
+  try {
+    ;({ reports, count } = await getReports({ status, targetType, page, perPage: 20 }))
+  } catch (err) {
+    console.error('Failed to load reports:', err)
+  }
 
   return (
     <ReportsClient

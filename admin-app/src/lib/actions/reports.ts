@@ -13,7 +13,9 @@ export async function getReports(params: {
   perPage?: number
 }) {
   try {
-    const reports = await fetchQuery(api.reports.list, { status: params.status })
+    const reports = await fetchQuery(api.reports.list, {
+      status: params.status !== 'all' ? params.status : undefined,
+    })
     let filtered = reports.map(mapReport)
     if (params.targetType && params.targetType !== 'all') {
       filtered = filtered.filter((r) => r.target_type === params.targetType)

@@ -7,7 +7,14 @@ export default async function HostDetailPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const { host, eventCount } = await getHostById(id)
+
+  let host: Awaited<ReturnType<typeof getHostById>>['host'] = null
+  let eventCount = 0
+  try {
+    ;({ host, eventCount } = await getHostById(id))
+  } catch (err) {
+    console.error('Failed to load host:', err)
+  }
 
   if (!host) {
     return (

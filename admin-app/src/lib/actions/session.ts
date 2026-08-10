@@ -9,6 +9,6 @@ export async function getCurrentAdminProfile(): Promise<Doc<'profiles'> | null> 
     return await fetchQuery(api.profiles.getMe)
   } catch (err) {
     console.error('Failed to load admin profile:', err)
-    throw err
+    return null
   }
 }

@@ -9,6 +9,9 @@ export const notificationsKeys = ['notifications'] as const
 
 export interface NotificationListFilters {
   page?: number
+  search?: string
+  type?: string
+  read?: string
 }
 
 export function useNotifications(
@@ -20,7 +23,13 @@ export function useNotifications(
   return useQuery<PageData<MappedNotification>>({
     queryKey: [...notificationsKeys, filters],
     queryFn: async () => {
-      const { notifications, count } = await getNotifications({ page, perPage: 20 })
+      const { notifications, count } = await getNotifications({
+        page,
+        perPage: 20,
+        search: filters.search || undefined,
+        type: filters.type !== 'all' ? filters.type : undefined,
+        read: filters.read !== 'all' ? filters.read === 'true' : undefined,
+      })
       return { items: notifications, total: count, all: notifications }
     },
     initialData: initial ? { items: initial.notifications, total: initial.count, all: initial.notifications } : undefined,

@@ -17,6 +17,7 @@ export async function getHosts(params: {
     const hosts = await fetchQuery(api.hosts.list, {
       search: params.search,
       status: params.status,
+      hostType: params.type,
     })
     const count = hosts.length
     return { hosts: hosts.map(mapHost), count }

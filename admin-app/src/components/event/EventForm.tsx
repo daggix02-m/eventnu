@@ -100,7 +100,7 @@ const frequencyOptions = [
   { value: 'seasonal', label: 'Seasonal' },
 ]
 
-const featuredSectionOptions = [
+const featuredSectionFallback = [
   { value: 'editors_choice', label: "Editor's Choice" },
   { value: 'trending', label: 'Trending' },
   { value: 'popular', label: 'Popular' },
@@ -173,12 +173,19 @@ function emptyValues(): EventFormValues {
   }
 }
 
+export interface FeaturedSection {
+  id: string
+  label: string
+  slug?: string
+}
+
 export function EventForm({
   mode,
   eventId,
   categories,
   hosts,
   organizers,
+  featuredSections = [],
   initial,
   onCancel,
   onSaved,
@@ -188,6 +195,7 @@ export function EventForm({
   categories: Category[]
   hosts: Host[]
   organizers: Organizer[]
+  featuredSections?: FeaturedSection[]
   initial?: Partial<EventFormValues>
   onCancel?: () => void
   onSaved?: () => void
@@ -208,6 +216,9 @@ export function EventForm({
 
   const parentCategories = categories.filter(c => !c.parent_id)
   const subCategories = categories.filter(c => c.parent_id)
+  const featuredSectionOptions = featuredSections.length > 0
+    ? featuredSections.map(s => ({ value: s.slug, label: s.label }))
+    : featuredSectionFallback
 
   const validate = () => {
     if (!form.title.trim() || !form.start_date) {

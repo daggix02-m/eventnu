@@ -12,8 +12,20 @@ export default async function UsersPage({
   const search = typeof params.search === 'string' ? params.search : ''
   const page = typeof params.page === 'string' ? parseInt(params.page) : 1
 
-  const { users, count } = await getUsers({ status, search, page, perPage: 20 })
-  const currentAdmin = await getCurrentAdminProfile()
+  let users: Awaited<ReturnType<typeof getUsers>>['users'] = []
+  let count = 0
+  try {
+    ;({ users, count } = await getUsers({ status, search, page, perPage: 20 }))
+  } catch (err) {
+    console.error('Failed to load users:', err)
+  }
+
+  let currentAdmin = null
+  try {
+    currentAdmin = await getCurrentAdminProfile()
+  } catch (err) {
+    console.error('Failed to load admin profile:', err)
+  }
 
   return (
     <UsersClient

@@ -27,9 +27,12 @@ export function useHosts(
       : undefined,
     page: filters.page ?? 1,
     fetchAll: async () => {
-      const { hosts } = await getHosts({ search: filters.search, status: filters.status })
-      if (!filters.type || filters.type === 'all') return hosts
-      return hosts.filter((host) => host.host_type === filters.type)
+      const { hosts } = await getHosts({
+        search: filters.search,
+        status: filters.status,
+        type: filters.type,
+      })
+      return hosts
     },
   })
 }

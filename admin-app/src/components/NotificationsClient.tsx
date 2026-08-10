@@ -11,35 +11,53 @@ import {
   Megaphone,
   User,
   Users,
+  Search,
   type LucideIcon,
 } from 'lucide-react'
-import { Button, Card, Badge, Input } from '@/components/ui'
+import { Button, Card, Badge, Input, Select } from '@/components/ui'
 import { PageHeader } from '@/components/Page'
 import { Pagination, EmptyState, useListFilters } from '@/components/list'
 import { formatDateTime } from '@/lib/format'
 import { getErrorMessage } from '@/lib/errors'
 import { useNotifications, notificationsKeys } from '@/lib/api/notifications'
-import type { NotificationListFilters } from '@/lib/api/notifications'
 import { sendNotification } from '@/lib/actions/notifications'
 import { toast } from 'sonner'
 import type { MappedNotification } from '@/lib/mappers'
+
+const typeOptions = [
+  { value: 'all', label: 'All Types' },
+  { value: 'announcement', label: 'Announcement' },
+  { value: 'warning', label: 'Warning' },
+  { value: 'info', label: 'Info' },
+  { value: 'friend_request', label: 'Friend Request' },
+  { value: 'event_cancelled', label: 'Event Cancelled' },
+  { value: 'event_rejected', label: 'Event Rejected' },
+]
+
+const readOptions = [
+  { value: 'all', label: 'All' },
+  { value: 'false', label: 'Unread' },
+  { value: 'true', label: 'Read' },
+]
 
 interface NotificationsClientProps {
   initialNotifications: MappedNotification[]
   initialCount: number
   initialPage: number
+  initialFilters?: { search?: string; type?: string; read?: string }
 }
 
 export function NotificationsClient({
   initialNotifications,
   initialCount,
   initialPage,
+  initialFilters = {},
 }: NotificationsClientProps) {
   const queryClient = useQueryClient()
-  const { filters, setPage } = useListFilters<NotificationListFilters>({
+  const { filters, update, setPage, searchInput, setSearchInput } = useListFilters({
     basePath: '/notifications',
-    initial: { page: initialPage },
-    defaults: { page: 1 },
+    initial: { page: initialPage, ...initialFilters },
+    defaults: { page: 1, search: '', type: 'all', read: 'all' },
   })
 
   const { data, isFetching } = useNotifications(filters, { notifications: initialNotifications, count: initialCount })
@@ -194,6 +212,34 @@ export function NotificationsClient({
         </Card>
       )}
 
+      {/* Filters */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center bg-surface-container-high rounded-md border border-outline-variant px-3 py-2 flex-1 min-w-[200px] focus-within:border-ring focus-within:ring-1 focus-within:ring-ring">
+          <Search size={16} className="text-muted-foreground mr-2" />
+          <input
+            type="text"
+            placeholder="Search notifications..."
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            className="bg-transparent border-none focus:ring-0 text-sm w-full placeholder:text-muted-foreground outline-none"
+          />
+        </div>
+        <Select
+          value={filters.type ?? 'all'}
+          onChange={(e) => update('type', e.target.value)}
+          className="w-auto min-w-[140px]"
+        >
+          {typeOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+        </Select>
+        <Select
+          value={filters.read ?? 'all'}
+          onChange={(e) => update('read', e.target.value)}
+          className="w-auto min-w-[120px]"
+        >
+          {readOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+        </Select>
+      </div>
+
       <Card className="overflow-hidden">
         <div className="p-6 border-b border-outline-variant">
           <h3 className="text-lg font-bold text-foreground">Notification History</h3>
@@ -202,7 +248,7 @@ export function NotificationsClient({
         <div className={isFetching ? 'opacity-60 transition-opacity' : 'transition-opacity'}>
           <div className="divide-y divide-outline-variant">
             {notifications.length === 0 ? (
-              <EmptyState icon={Bell} title="No notifications sent yet." />
+              <EmptyState icon={Bell} title="No notifications found." description="Try adjusting your filters." />
             ) : (
               notifications.map((notification) => {
                 const TypeIcon = typeIcons[notification.type] || Info

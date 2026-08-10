@@ -3,7 +3,10 @@ import { query, mutation } from "./_generated/server";
 import { requireAdmin } from "./helpers";
 
 export const list = query({
-  args: { status: v.optional(v.string()) },
+  args: {
+    status: v.optional(v.string()),
+    targetType: v.optional(v.string()),
+  },
   handler: async (ctx, args) => {
     await requireAdmin(ctx);
     let reports;
@@ -19,8 +22,12 @@ export const list = query({
         .order("desc")
         .take(100);
     }
+    let filtered = reports;
+    if (args.targetType && args.targetType !== "all") {
+      filtered = filtered.filter((r) => r.targetType === args.targetType);
+    }
     const enriched = await Promise.all(
-      reports.map(async (r) => {
+      filtered.map(async (r) => {
         const reporter = await ctx.db.get("profiles", r.reporterId);
         return { ...r, reporter: reporter ?? null };
       }),

@@ -5,6 +5,7 @@ import { requireAdmin } from "./helpers";
 export const list = query({
   args: { search: v.optional(v.string()) },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx);
     const organizers = await ctx.db.query("organizerProfiles").take(200);
     if (args.search) {
       const q = args.search.toLowerCase();
@@ -19,6 +20,7 @@ export const list = query({
 export const getById = query({
   args: { profileId: v.id("profiles") },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx);
     const org = await ctx.db
       .query("organizerProfiles")
       .withIndex("by_profile", (q) => q.eq("profileId", args.profileId))
@@ -30,6 +32,7 @@ export const getById = query({
 export const getVerified = query({
   args: {},
   handler: async (ctx) => {
+    await requireAdmin(ctx);
     return await ctx.db
       .query("organizerProfiles")
       .filter((q) => q.eq(q.field("verified"), true))

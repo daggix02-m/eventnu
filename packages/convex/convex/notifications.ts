@@ -26,13 +26,35 @@ export const list = query({
 });
 
 export const listAll = query({
-  args: {},
-  handler: async (ctx) => {
+  args: {
+    search: v.optional(v.string()),
+    type: v.optional(v.string()),
+    read: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
     await requireAdmin(ctx);
-    const notifications = await ctx.db
+    let notifications = await ctx.db
       .query("notifications")
       .order("desc")
       .take(300);
+
+    if (args.search) {
+      const q = args.search.toLowerCase();
+      notifications = notifications.filter(
+        (n) =>
+          n.title.toLowerCase().includes(q) ||
+          n.body.toLowerCase().includes(q),
+      );
+    }
+
+    if (args.type && args.type !== "all") {
+      notifications = notifications.filter((n) => n.type === args.type);
+    }
+
+    if (args.read !== undefined) {
+      notifications = notifications.filter((n) => n.read === args.read);
+    }
+
     const userIds = [...new Set(notifications.map((n) => n.userId))];
     const profiles = await Promise.all(
       userIds.map((userId) => ctx.db.get("profiles", userId)),

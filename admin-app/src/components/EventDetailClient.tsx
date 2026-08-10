@@ -40,7 +40,7 @@ import {
 import { PickedImage } from '@/components/media/ImagePicker'
 import { PublishToInstagramDialog } from '@/components/instagram/PublishToInstagramDialog'
 import { Instagram } from 'lucide-react'
-import { EventForm, Category, Host, Organizer, EventFormValues } from '@/components/event/EventForm'
+import { EventForm, Category, Host, Organizer, FeaturedSection, EventFormValues } from '@/components/event/EventForm'
 import type { MappedEvent, MappedModerationLog } from '@/lib/mappers'
 import Link from 'next/link'
 
@@ -98,6 +98,7 @@ export function EventDetailClient({
   allCategories,
   hosts,
   organizers,
+  featuredSections = [],
   moderationLogs,
   initialImages,
 }: {
@@ -106,6 +107,7 @@ export function EventDetailClient({
   allCategories: Category[]
   hosts: Host[]
   organizers: Organizer[]
+  featuredSections?: FeaturedSection[]
   moderationLogs: MappedModerationLog[]
   initialImages?: PickedImage[]
 }) {
@@ -301,6 +303,7 @@ export function EventDetailClient({
           categories={allCategories}
           hosts={hosts}
           organizers={organizers}
+          featuredSections={featuredSections}
           initial={initialForm}
           onCancel={() => setEditMode(false)}
           onSaved={() => setEditMode(false)}

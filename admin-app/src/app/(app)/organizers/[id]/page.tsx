@@ -7,7 +7,14 @@ export default async function OrganizerDetailPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const { organizer, eventCount } = await getOrganizerById(id)
+
+  let organizer: Awaited<ReturnType<typeof getOrganizerById>>['organizer'] = null
+  let eventCount = 0
+  try {
+    ;({ organizer, eventCount } = await getOrganizerById(id))
+  } catch (err) {
+    console.error('Failed to load organizer:', err)
+  }
 
   if (!organizer) {
     return (

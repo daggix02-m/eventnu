@@ -18,9 +18,25 @@ import {
 } from 'lucide-react'
 
 export default async function DashboardPage() {
-  const stats = await getDashboardStats()
-  const pendingEvents = await getPendingReviewEvents()
-  const moderationLogs = await getRecentModerationLogs()
+  let stats: Awaited<ReturnType<typeof getDashboardStats>> = {
+    totalPublished: 0,
+    upcomingCount: 0,
+    pendingReview: 0,
+    activeHosts: 0,
+    totalUsers: 0,
+    openReports: 0,
+  }
+  let pendingEvents: Awaited<ReturnType<typeof getPendingReviewEvents>> = []
+  let moderationLogs: Awaited<ReturnType<typeof getRecentModerationLogs>> = []
+  try {
+    ;[stats, pendingEvents, moderationLogs] = await Promise.all([
+      getDashboardStats(),
+      getPendingReviewEvents(),
+      getRecentModerationLogs(),
+    ])
+  } catch (err) {
+    console.error('Failed to load dashboard:', err)
+  }
 
   const isEmpty =
     stats.totalPublished === 0 &&

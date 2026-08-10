@@ -8,11 +8,19 @@ export default async function SettingsPage({
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
   const params = await searchParams
-  const [featuredSections, adminStats, instagramStatus] = await Promise.all([
-    getFeaturedSections(),
-    getAdminStats(),
-    getInstagramStatus(),
-  ])
+
+  let featuredSections: Awaited<ReturnType<typeof getFeaturedSections>> = []
+  let adminStats: Awaited<ReturnType<typeof getAdminStats>> = { totalEvents: 0, totalUsers: 0, totalHosts: 0, totalOrganizers: 0, openReports: 0, moderationCount: 0 }
+  let instagramStatus: Awaited<ReturnType<typeof getInstagramStatus>> = null
+  try {
+    ;[featuredSections, adminStats, instagramStatus] = await Promise.all([
+      getFeaturedSections(),
+      getAdminStats(),
+      getInstagramStatus(),
+    ])
+  } catch (err) {
+    console.error('Failed to load settings:', err)
+  }
 
   const flag = params.instagram
   const notice = flag === 'connected' ? 'Instagram connected successfully' : null

@@ -14,9 +14,15 @@ export default async function EventsPage({
   const search = typeof params.search === 'string' ? params.search : ''
   const page = typeof params.page === 'string' ? parseInt(params.page) : 1
 
-  const { events, count } = await getEvents({
-    status, source, featured, frequency, search, page, perPage: 20,
-  })
+  let events: Awaited<ReturnType<typeof getEvents>>['events'] = []
+  let count = 0
+  try {
+    ;({ events, count } = await getEvents({
+      status, source, featured, frequency, search, page, perPage: 20,
+    }))
+  } catch (err) {
+    console.error('Failed to load events:', err)
+  }
 
   return (
     <EventsClient

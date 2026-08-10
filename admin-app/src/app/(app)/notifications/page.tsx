@@ -8,14 +8,30 @@ export default async function NotificationsPage({
 }) {
   const params = await searchParams
   const page = typeof params.page === 'string' ? parseInt(params.page) : 1
+  const search = typeof params.search === 'string' ? params.search : ''
+  const type = typeof params.type === 'string' ? params.type : 'all'
+  const read = typeof params.read === 'string' ? params.read === 'true' : undefined
 
-  const { notifications, count } = await getNotifications({ page, perPage: 20 })
+  let notifications: Awaited<ReturnType<typeof getNotifications>>['notifications'] = []
+  let count = 0
+  try {
+    ;({ notifications, count } = await getNotifications({
+      page,
+      perPage: 20,
+      search: search || undefined,
+      type: type !== 'all' ? type : undefined,
+      read,
+    }))
+  } catch (err) {
+    console.error('Failed to load notifications:', err)
+  }
 
   return (
     <NotificationsClient
       initialNotifications={notifications}
       initialCount={count}
       initialPage={page}
+      initialFilters={{ search, type, read: read !== undefined ? String(read) : 'all' }}
     />
   )
 }

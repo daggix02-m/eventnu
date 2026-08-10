@@ -24,10 +24,6 @@ export function useListFilters<T extends object>({
   )
 
   useEffect(() => {
-    setFilters(initial)
-  }, [initial])
-
-  useEffect(() => {
     const current = filters[searchKey]
     if (searchInput === (current ?? '')) return
     const timer = setTimeout(() => {
@@ -44,7 +40,11 @@ export function useListFilters<T extends object>({
       params.set(key, String(value))
     }
     const qs = params.toString()
-    history.replaceState(null, '', `${basePath}${qs ? `?${qs}` : ''}`)
+    const url = `${basePath}${qs ? `?${qs}` : ''}`
+    const timer = setTimeout(() => {
+      history.replaceState(null, '', url)
+    }, 100)
+    return () => clearTimeout(timer)
   }, [filters, basePath, defaults])
 
   const update = useCallback((key: keyof T, value: FilterValue) => {

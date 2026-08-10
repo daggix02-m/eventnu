@@ -6,6 +6,7 @@ export const list = query({
   args: {
     search: v.optional(v.string()),
     status: v.optional(v.string()),
+    hostType: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     await requireAdmin(ctx);
@@ -13,6 +14,9 @@ export const list = query({
     let filtered = hosts;
     if (args.status && args.status !== "all") {
       filtered = filtered.filter((h) => h.status === args.status);
+    }
+    if (args.hostType && args.hostType !== "all") {
+      filtered = filtered.filter((h) => h.hostType === args.hostType);
     }
     if (args.search) {
       const q = args.search.toLowerCase();

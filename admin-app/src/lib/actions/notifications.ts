@@ -9,9 +9,16 @@ import { mapNotification } from '../mappers'
 export async function getNotifications(params: {
   page?: number
   perPage?: number
+  search?: string
+  type?: string
+  read?: boolean
 }) {
   try {
-    const all = await fetchQuery(api.notifications.listAll, {})
+    const all = await fetchQuery(api.notifications.listAll, {
+      search: params.search,
+      type: params.type,
+      read: params.read,
+    })
     const from = ((params.page ?? 1) - 1) * (params.perPage ?? 20)
     const to = from + (params.perPage ?? 20)
     const notifications = all

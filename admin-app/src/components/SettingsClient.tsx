@@ -38,6 +38,7 @@ import {
   Loader2,
 } from 'lucide-react'
 import { updateProfile } from '@/lib/actions/users'
+import { changePassword } from '@/lib/actions/auth'
 import { usernameFromEmail } from '@/lib/mappers'
 import {
   InstagramSettingsCard,
@@ -213,7 +214,42 @@ export function SettingsClient({
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault()
-    toast.info('Password change is not available yet. Configure SMTP first.')
+    if (!passwordForm.current || !passwordForm.new || !passwordForm.confirm) {
+      toast.error('Please fill in all password fields')
+      return
+    }
+    if (passwordForm.new !== passwordForm.confirm) {
+      toast.error('New passwords do not match')
+      return
+    }
+    if (passwordForm.new.length < 8) {
+      toast.error('New password must be at least 8 characters')
+      return
+    }
+    if (passwordForm.current === passwordForm.new) {
+      toast.error('New password must be different from current password')
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      const result = await changePassword(passwordForm.current, passwordForm.new)
+      if (result.ok) {
+        toast.success('Password changed successfully')
+        setPasswordForm({ current: '', new: '', confirm: '' })
+      } else {
+        const messages: Record<string, string> = {
+          invalid_current_password: 'Current password is incorrect',
+          rate_limited: 'Too many failed attempts. Please try again later.',
+          not_authenticated: 'Please sign in again to change your password.',
+        }
+        toast.error(messages[result.reason] || 'Failed to change password')
+      }
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'Failed to change password'))
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleToggleSection = async (section: FeaturedSection) => {
@@ -399,7 +435,6 @@ export function SettingsClient({
                   value={passwordForm.current}
                   onChange={(e) => setPasswordForm({ ...passwordForm, current: e.target.value })}
                   placeholder="Enter current password"
-                  disabled
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -410,7 +445,6 @@ export function SettingsClient({
                     value={passwordForm.new}
                     onChange={(e) => setPasswordForm({ ...passwordForm, new: e.target.value })}
                     placeholder="Min 8 characters"
-                    disabled
                   />
                 </div>
                 <div className="space-y-2">
@@ -420,17 +454,16 @@ export function SettingsClient({
                     value={passwordForm.confirm}
                     onChange={(e) => setPasswordForm({ ...passwordForm, confirm: e.target.value })}
                     placeholder="Confirm new password"
-                    disabled
                   />
                 </div>
               </div>
               <div className="pt-2">
-                <Button type="submit" variant="outline" disabled>
+                <Button type="submit" variant="outline" disabled={isLoading}>
                   <Lock size={16} className="mr-2" />
-                  Change Password
+                  {isLoading ? 'Changing...' : 'Change Password'}
                 </Button>
                 <p className="text-xs text-muted-foreground mt-3">
-                  Password changes are not available yet. Configure SMTP to enable this.
+                  Must be at least 8 characters. You will remain signed in after changing.
                 </p>
               </div>
             </form>

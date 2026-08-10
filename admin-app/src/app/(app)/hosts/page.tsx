@@ -12,7 +12,13 @@ export default async function HostsPage({
   const search = typeof params.search === 'string' ? params.search : ''
   const page = typeof params.page === 'string' ? parseInt(params.page) : 1
 
-  const { hosts, count } = await getHosts({ status, type, search, page, perPage: 20 })
+  let hosts: Awaited<ReturnType<typeof getHosts>>['hosts'] = []
+  let count = 0
+  try {
+    ;({ hosts, count } = await getHosts({ status, type, search, page, perPage: 20 }))
+  } catch (err) {
+    console.error('Failed to load hosts:', err)
+  }
 
   return (
     <HostsClient
