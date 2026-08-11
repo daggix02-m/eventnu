@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -42,7 +41,7 @@ export function CategoryPills({ categories, activeSlug, onSelect, className }: C
         onClick={() => onSelect(undefined)}
         aria-pressed={activeSlug === undefined}
         className={cn(
-          "px-md py-2 rounded-full font-label-sm text-label-sm whitespace-nowrap transition-colors border",
+          "tap-feedback px-md py-2 rounded-full font-label-sm text-label-sm whitespace-nowrap transition-colors border",
           activeSlug === undefined
             ? "bg-primary text-on-primary border-primary"
             : "bg-surface-container border-outline-variant text-on-surface-variant hover:text-primary hover:border-primary"
@@ -57,7 +56,7 @@ export function CategoryPills({ categories, activeSlug, onSelect, className }: C
           onClick={() => onSelect(category.slug)}
           aria-pressed={activeSlug === category.slug}
           className={cn(
-            "px-md py-2 rounded-full font-label-sm text-label-sm whitespace-nowrap transition-colors border",
+            "tap-feedback px-md py-2 rounded-full font-label-sm text-label-sm whitespace-nowrap transition-colors border",
             activeSlug === category.slug
               ? "bg-primary text-on-primary border-primary"
               : "bg-surface-container border-outline-variant text-on-surface-variant hover:text-primary hover:border-primary"
@@ -102,7 +101,7 @@ export function DateFilter({ value, onChange, className }: DateFilterProps) {
           onClick={() => onChange(filter.value)}
           aria-pressed={value === filter.value}
           className={cn(
-            "px-md py-2 rounded-full font-label-sm text-label-sm whitespace-nowrap transition-colors border",
+            "tap-feedback px-md py-2 rounded-full font-label-sm text-label-sm whitespace-nowrap transition-colors border",
             value === filter.value
               ? "bg-secondary text-on-secondary border-secondary"
               : "bg-surface-container border-outline-variant text-on-surface-variant hover:text-secondary hover:border-secondary"

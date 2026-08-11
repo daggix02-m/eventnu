@@ -1,9 +1,11 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { EventHero } from "@/components/events/EventHero";
+import { EventStickyCTA } from "@/components/events/EventStickyCTA";
 import { EventDetails } from "@/components/events/EventDetails";
 import { EventPhotoGrid } from "@/components/events/EventPhotoGrid";
 import { EventInfoCard } from "@/components/events/EventInfoCard";
+import { EventExperiences } from "@/components/events/EventExperiences";
 import { ReservationForm } from "@/components/events/ReservationForm";
 import { OrganizerCard } from "@/components/events/OrganizerCard";
 import { SimilarEvents } from "@/components/events/SimilarEvents";
@@ -11,7 +13,7 @@ import { Container } from "@/components/layout/Container";
 import { getEventBySlug, getSimilarEvents } from "@/lib/api/events";
 import { absoluteUrl } from "@/lib/site";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 interface EventPageProps {
   params: Promise<{ slug: string }>;
@@ -97,14 +99,20 @@ export default async function EventPage({ params }: EventPageProps) {
               </section>
             )}
             <OrganizerCard event={event} />
+            <EventExperiences eventId={event.id} />
           </div>
           <div className="md:col-span-4 space-y-md">
             <EventInfoCard event={event} />
-            {event.action_type === "reservation" && <ReservationForm event={event} />}
+            {event.action_type === "reservation" && (
+              <div id="reserve" className="scroll-mt-24">
+                <ReservationForm event={event} />
+              </div>
+            )}
           </div>
         </div>
       </Container>
       <SimilarEvents events={similarEvents} />
+      <EventStickyCTA event={event} />
     </>
   );
 }

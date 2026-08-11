@@ -3,15 +3,17 @@ import Image from "next/image";
 import { ArrowUpRight, Images } from "lucide-react";
 import { cn, formatPrice, formatEventDateShort, isEventPast } from "@/lib/utils";
 import { filterStyle } from "@/lib/media";
+import { CardQuickActions } from "@/components/social/EventSocialActions";
 import type { Event } from "@/types";
 
 interface EventCardProps {
   event: Event;
   className?: string;
   size?: "lg" | "default";
+  priority?: boolean;
 }
 
-export function EventCard({ event, className, size = "default" }: EventCardProps) {
+export function EventCard({ event, className, size = "default", priority = false }: EventCardProps) {
   const ended = isEventPast(event.start_date);
   const isLg = size === "lg";
   const images = [...(event.images ?? [])].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
@@ -27,6 +29,7 @@ export function EventCard({ event, className, size = "default" }: EventCardProps
             src={coverUrl}
             alt={event.title}
             fill
+            priority={priority}
             className="object-cover group-hover:scale-105 transition-transform duration-500"
             style={{ filter: filterStyle(cover?.filter) }}
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -50,6 +53,7 @@ export function EventCard({ event, className, size = "default" }: EventCardProps
         )}>
           {ended ? "ENDED" : formatEventDateShort(event.start_date)}
         </div>
+        <CardQuickActions eventId={event.id} className="absolute bottom-sm left-sm" />
       </div>
       <div className={cn("space-y-sm", isLg ? "p-lg" : "p-md")}>
         <h3 className={cn("font-bold text-on-surface group-hover:text-primary transition-colors line-clamp-2", isLg ? "font-display text-headline-md" : "font-headline-md text-body-lg")}>

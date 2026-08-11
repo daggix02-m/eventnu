@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { DiscoverPageClient } from "@/components/events/DiscoverPageClient";
 import { FeaturedCarousel } from "@/components/events/FeaturedCarousel";
-import { getPublishedEvents, getFeaturedEvents, getCategories, getActiveAnnouncements } from "@/lib/api/events";
+import { getPublishedEvents, getFeaturedEvents, getCategories } from "@/lib/api/events";
+import { getActiveAnnouncements } from "@/lib/api/announcements";
 import { AnnouncementBanner } from "@/components/events/AnnouncementBanner";
 import { SiteBackground } from "@/components/layout/SiteBackground";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Event Nu — Discover Live Experiences in Addis",
@@ -19,12 +20,20 @@ interface PageProps {
 
 export default async function HomePage({ searchParams }: PageProps) {
   const params = await searchParams;
-  const [events, featured, categories, announcements] = await Promise.all([
+  const [events, featured, categories, announcements] = await Promise.allSettled([
     getPublishedEvents(),
     getFeaturedEvents(5),
     getCategories(),
     getActiveAnnouncements(),
-  ]);
+  ]).then(
+    (results): [
+      Awaited<ReturnType<typeof getPublishedEvents>>,
+      Awaited<ReturnType<typeof getFeaturedEvents>>,
+      Awaited<ReturnType<typeof getCategories>>,
+      Awaited<ReturnType<typeof getActiveAnnouncements>>
+    ] =>
+      results.map((r) => (r.status === "fulfilled" ? r.value : [])) as never
+  );
 
   return (
     <>

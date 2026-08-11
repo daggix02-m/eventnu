@@ -24,6 +24,37 @@ export function mapProfile(p: Doc<'profiles'> | null | undefined) {
   }
 }
 
+export interface AdminUserRow {
+  authUserId: string
+  email: string
+  name: string | null
+  image: string | null
+  profileId: string | null
+  role: string
+  fullName: string | null
+  avatarUrl: string | null
+  suspended: boolean
+  hasProfile: boolean
+  created_at: number
+}
+
+export function mapAdminUser(u: AdminUserRow) {
+  return {
+    id: u.authUserId,
+    authUserId: u.authUserId,
+    profileId: u.profileId,
+    username: usernameFromEmail(u.email),
+    full_name: u.fullName ?? u.name ?? '',
+    email: u.email,
+    avatar_url: u.avatarUrl ?? undefined,
+    role: u.role,
+    suspended: u.suspended,
+    has_profile: u.hasProfile,
+    created_at: iso(u.created_at),
+    updated_at: iso(u.created_at),
+  }
+}
+
 export function mapEvent(e: Doc<'events'> | null | undefined) {
   return {
     id: e?._id ?? '',
@@ -151,6 +182,9 @@ export function mapAnnouncement(a: Doc<'announcements'> | null | undefined) {
     link_url: a?.linkUrl ?? null,
     link_text: a?.linkText ?? null,
     is_active: a?.isActive ?? false,
+    starts_at: a?.startsAt ?? null,
+    ends_at: a?.endsAt ?? null,
+    target_user_id: a?.targetUserId ?? null,
     created_at: iso(a?._creationTime),
   }
 }
@@ -273,7 +307,7 @@ export function mapReportTargetPreview(
   return { target_type: 'user', full_name: p.fullName ?? '', username: usernameFromEmail(p.email), avatar_url: p.avatarUrl }
 }
 
-export type MappedProfile = ReturnType<typeof mapProfile>
+export type MappedUser = ReturnType<typeof mapAdminUser>
 export type MappedEvent = ReturnType<typeof mapEvent>
 export type MappedHost = ReturnType<typeof mapHost>
 export type MappedOrganizer = ReturnType<typeof mapOrganizer>

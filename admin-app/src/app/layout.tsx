@@ -42,7 +42,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full bg-surface-container-low text-foreground">
-        <ConvexAuthNextjsServerProvider>
+        <ConvexAuthNextjsServerProvider shouldHandleCode={false}>
           <ConvexAuthClientProvider>
             <ThemeProvider
               attribute="class"

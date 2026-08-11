@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
-import { requireAdmin } from "./helpers";
+import { getUserProfile, requireAdmin } from "./helpers";
 import { rateLimiter } from "./rateLimiter";
 
 export const getPublishedPages = query({
@@ -100,12 +100,15 @@ export const deletePage = mutation({
 export const getActiveAnnouncements = query({
   args: { now: v.number() },
   handler: async (ctx, args) => {
+    const profile = await getUserProfile(ctx);
+    const profileId = profile?._id ?? null;
     const announcements = await ctx.db
       .query("announcements")
       .withIndex("by_active", (q) => q.eq("isActive", true))
       .take(50);
     return announcements.filter(
       (a) =>
+        (a.targetUserId === undefined || a.targetUserId === profileId) &&
         (a.startsAt === undefined || a.startsAt <= args.now) &&
         (a.endsAt === undefined || a.endsAt >= args.now),
     );
@@ -129,6 +132,7 @@ export const createAnnouncement = mutation({
     isActive: v.optional(v.boolean()),
     startsAt: v.optional(v.number()),
     endsAt: v.optional(v.number()),
+    targetUserId: v.optional(v.id("profiles")),
   },
   handler: async (ctx, args) => {
     await requireAdmin(ctx);
@@ -140,6 +144,7 @@ export const createAnnouncement = mutation({
       isActive: args.isActive ?? false,
       startsAt: args.startsAt ?? undefined,
       endsAt: args.endsAt ?? undefined,
+      targetUserId: args.targetUserId ?? undefined,
     });
   },
 });
@@ -154,6 +159,7 @@ export const updateAnnouncement = mutation({
     isActive: v.optional(v.boolean()),
     startsAt: v.optional(v.number()),
     endsAt: v.optional(v.number()),
+    targetUserId: v.optional(v.id("profiles")),
   },
   handler: async (ctx, args) => {
     await requireAdmin(ctx);

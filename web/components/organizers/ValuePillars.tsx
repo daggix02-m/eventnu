@@ -6,7 +6,7 @@ import { gsap } from "@/lib/gsap";
 import {
   Zap,
   Wallet,
-  Sparkle,
+  Search,
   BarChart3,
   CreditCard,
   Instagram,
@@ -25,7 +25,7 @@ const PILLARS = [
     featured: true,
   },
   {
-    icon: Sparkle,
+    icon: Search,
     iconColor: "text-secondary",
     iconBg: "bg-secondary/10 border-secondary/20",
     accentColor: "from-secondary/20 to-transparent",

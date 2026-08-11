@@ -53,8 +53,9 @@ export function OrganizersCTA({ contactUrl }: OrganizersCTAProps) {
               <Image
                 src="/logo.png"
                 alt="Event Nu logo"
-                width={64}
-                height={64}
+                width={794}
+                height={672}
+                style={{ height: '64px', width: 'auto' }}
                 className="rounded-xl"
               />
             </div>

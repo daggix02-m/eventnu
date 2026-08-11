@@ -10,36 +10,14 @@ import { Button } from '@/components/ui'
 import { Input } from '@/components/ui'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui'
 import { toast } from 'sonner'
-import { Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import { getErrorMessage } from '@/lib/errors'
-
-const INVALID_CREDENTIALS = 'Invalid email or password'
-const RATE_LIMITED = 'Too many failed sign-in attempts. Try again in about an hour.'
-const UNAVAILABLE = 'Unable to sign in right now. Please try again.'
-
-function describeSignInError(err: unknown, fallback: string): string {
-  if (err instanceof Error) {
-    const msg = err.message
-    if (msg.includes('Invalid credentials') || msg.includes('InvalidAccountId')) {
-      return INVALID_CREDENTIALS
-    }
-    if (msg.includes('TooManyFailedAttempts')) return RATE_LIMITED
-    if (isNetworkError(err)) return UNAVAILABLE
-  }
-  return fallback
-}
-
-function isNetworkError(err: unknown): boolean {
-  if (!(err instanceof Error)) return false
-  const msg = err.message
-  return (
-    msg.includes('Failed to fetch') ||
-    msg.includes('Network request failed') ||
-    msg.includes('fetch failed') ||
-    msg.includes('ECONNRESET') ||
-    msg.includes('Could not connect to the Convex deployment')
-  )
-}
+import {
+  describeSignInError,
+  isNetworkError,
+  INVALID_CREDENTIALS,
+  RATE_LIMITED,
+} from '@/lib/auth'
 
 const VERIFY_RESULT_MESSAGES = {
   invalid_account: 'No admin account found for this email.',
@@ -69,55 +47,54 @@ export default function SignIn() {
     setLoading(true)
 
     const form = e.currentTarget
+    const formData = new FormData(form)
+    formData.set('flow', 'signIn')
+    const inputEmail = String(formData.get('email') ?? '').trim()
+    const password = String(formData.get('password') ?? '')
 
-    const readForm = () => {
-      const formData = new FormData(form)
-      formData.set('flow', 'signIn')
-      return formData
+    if (!inputEmail || !password) {
+      toast.error('Please enter your email and password.')
+      setLoading(false)
+      return
     }
-    const readCredentials = (formData: FormData) => ({
-      email: String(formData.get('email') ?? '').trim(),
-      password: String(formData.get('password') ?? ''),
-    })
 
     let verifyError: string | null = null
 
     try {
-      const preflight = readCredentials(readForm())
-      if (preflight.email && preflight.password) {
-        try {
-          const result = await verify({ email: preflight.email, password: preflight.password })
-          if (!result.ok) {
-            const msg = verifyResultMessage(result.reason)
-            toast.error(msg)
-            return
+      try {
+        const result = await verify({ email: inputEmail, password })
+        if (!result.ok) {
+          toast.error(verifyResultMessage(result.reason))
+          if (result.reason === 'invalid_account') {
+            setFieldErrors({ email: verifyResultMessage('invalid_account') })
+          } else if (result.reason === 'invalid_secret') {
+            setFieldErrors({ password: verifyResultMessage('invalid_secret') })
           }
-        } catch (err: unknown) {
-          verifyError = describeSignInError(err, getErrorMessage(err, 'Authentication failed'))
+          return
         }
+      } catch (err: unknown) {
+        verifyError = describeSignInError(err, getErrorMessage(err, 'Authentication failed'))
       }
 
+      let result: { signingIn: boolean } | null = null
       for (let attempt = 0; attempt < 2; attempt++) {
         try {
-          const formData = readForm()
-          const { email, password } = readCredentials(formData)
-          if (!email || !password) {
-            throw new Error('Please enter your email and password.')
-          }
-          await signIn('password', formData)
+          result = await signIn('password', formData)
           break
         } catch (err: unknown) {
           if (attempt === 0 && isNetworkError(err)) continue
           throw err
         }
       }
-      router.push('/')
-      router.refresh()
+
+      if (result?.signingIn) {
+        router.push('/')
+        router.refresh()
+      } else {
+        toast.error('Sign in failed. Please try again.')
+      }
     } catch (err: unknown) {
-      const msg =
-        err instanceof Error && err.message === 'Please enter your email and password.'
-          ? err.message
-          : describeSignInError(err, verifyError ?? getErrorMessage(err, 'Authentication failed'))
+      const msg = describeSignInError(err, verifyError ?? getErrorMessage(err, 'Authentication failed'))
       toast.error(msg)
       if (msg === INVALID_CREDENTIALS) {
         setFieldErrors({ email: msg, password: msg })
@@ -142,9 +119,14 @@ export default function SignIn() {
 
         <Card className="border-0 shadow-[0_2px_4px_rgba(30,20,10,0.04),0_8px_24px_rgba(30,20,10,0.08)] rounded-2xl overflow-hidden bg-card">
           <CardHeader className="space-y-1 pb-4 text-center">
-            <CardTitle className="text-2xl font-semibold tracking-tight text-foreground">Welcome back</CardTitle>
-            <CardDescription className="text-muted-foreground">Sign in with your admin credentials</CardDescription>
+            <CardTitle className="text-2xl font-semibold tracking-tight text-foreground">
+              Welcome back
+            </CardTitle>
+            <CardDescription className="text-muted-foreground">
+              Sign in with your admin credentials
+            </CardDescription>
           </CardHeader>
+
           <CardContent className="space-y-4">
             <form onSubmit={handleSignIn} className="space-y-4" noValidate>
               <div className="space-y-1">
@@ -153,7 +135,7 @@ export default function SignIn() {
                   name="email"
                   type="email"
                   autoComplete="email"
-                  placeholder="admin@example.com"
+                  placeholder="admin@eventnu.et"
                   onChange={() => clearError('email')}
                   aria-invalid={!!fieldErrors.email}
                   className="h-11"
@@ -188,14 +170,20 @@ export default function SignIn() {
                 </div>
               </div>
               <Button className="w-full h-11" type="submit" disabled={loading}>
-                {loading ? 'Signing in…' : 'Sign in'}
+                {loading ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" /> Signing in…
+                  </>
+                ) : (
+                  'Sign in'
+                )}
               </Button>
             </form>
           </CardContent>
         </Card>
 
         <p className="text-center text-xs text-muted-foreground mt-6">
-          Admin access only.
+          Admin access only. Access is provisioned — contact the administrator if you need an account.
         </p>
       </div>
     </div>

@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
 @source not "../stitch-screenshots";
 
@@ -75,6 +76,7 @@
   --spacing-3xl: 96px;
   --spacing-gutter: 24px;
   --spacing-container-max: 1280px;
+  --spacing-tabbar: 4rem;
 
   /* Border radius */
   --radius-sm: 0.375rem;
@@ -178,6 +180,23 @@
   }
 }
 
+/* App-like safe-area helpers */
+@utility pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+@utility pb-tabbar-safe {
+  padding-bottom: calc(var(--spacing-tabbar) + env(safe-area-inset-bottom));
+}
+@utility mb-safe {
+  margin-bottom: env(safe-area-inset-bottom);
+}
+@utility tap-feedback {
+  transition: transform 0.12s ease;
+  &:active {
+    transform: scale(0.97);
+  }
+}
+
 html {
   scroll-behavior: smooth;
 }
@@ -277,6 +296,13 @@ textarea:focus-visible {
 .carousel-progress-fill {
   transform-origin: left;
   animation: carousel-progress 6s linear forwards;
+}
+
+/* Tighten gutters to an app-like rhythm on phones */
+@media (max-width: 767px) {
+  :root {
+    --spacing-gutter: 16px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

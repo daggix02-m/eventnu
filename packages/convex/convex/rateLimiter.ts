@@ -9,4 +9,7 @@ export const rateLimiter = new RateLimiter(components.rateLimiter, {
   likeToggle: { kind: "token bucket", rate: 60, period: 60_000, capacity: 10 },
   followToggle: { kind: "token bucket", rate: 30, period: 60_000, capacity: 10 },
   uploadUrl: { kind: "token bucket", rate: 30, period: 60_000, capacity: 10 },
+  bookmarkToggle: { kind: "token bucket", rate: 60, period: 60_000, capacity: 10 },
+  shareTrack: { kind: "token bucket", rate: 120, period: 60_000, capacity: 30 },
+  experiencePostCreate: { kind: "fixed window", rate: 10, period: 60_000 },
 });

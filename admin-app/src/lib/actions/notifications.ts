@@ -47,9 +47,12 @@ export async function sendNotification(params: {
       data: params.data,
     })
   } else {
-    const profiles = await fetchQuery(api.profiles.list, {})
+    const users = await fetchQuery(api.profiles.listUsers, {})
+    const userIds = users
+      .filter((u) => u.profileId)
+      .map((u) => u.profileId as Id<'profiles'>)
     await fetchMutation(api.notifications.sendBatch, {
-      userIds: profiles.map((p) => p._id),
+      userIds,
       type: params.type,
       title: params.title,
       body: params.body,

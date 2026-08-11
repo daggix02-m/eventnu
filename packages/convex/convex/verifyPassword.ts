@@ -2,6 +2,8 @@ import { v } from "convex/values";
 import { retrieveAccount, modifyAccountCredentials, getAuthUserId } from "@convex-dev/auth/server";
 import { action } from "./_generated/server";
 
+export const ADMIN_EMAIL = "event.nua@gmail.com";
+
 export type VerifyPasswordResult =
   | { ok: true }
   | { ok: false; reason: "invalid_account" | "invalid_secret" | "rate_limited" };
@@ -12,10 +14,14 @@ export const verifyPassword = action({
     password: v.string(),
   },
   handler: async (ctx, { email, password }): Promise<VerifyPasswordResult> => {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (normalizedEmail !== ADMIN_EMAIL) {
+      return { ok: false, reason: "invalid_account" };
+    }
     try {
       await retrieveAccount(ctx, {
         provider: "password",
-        account: { id: email.trim(), secret: password },
+        account: { id: normalizedEmail, secret: password },
       });
       return { ok: true };
     } catch (err) {

@@ -5,6 +5,7 @@ import type { Id } from '@eventnu/convex/_generated/dataModel'
 import { api } from '@eventnu/convex/_generated/api'
 import { revalidatePath } from 'next/cache'
 import { mapAnnouncement, mapContactSubmission, mapPage } from '../mappers'
+import { getUsers } from './users'
 
 export async function getPages() {
   try {
@@ -87,7 +88,18 @@ export async function deletePage(id: string) {
 export async function getAnnouncements() {
   try {
     const announcements = await fetchQuery(api.cms.getAnnouncements)
-    return announcements.map(mapAnnouncement)
+    const { users } = await getUsers({ status: 'all' })
+    const byId = new Map(
+      users.filter((u) => u.profileId).map((u) => [u.profileId, u]),
+    )
+    return announcements.map((a) => {
+      const mapped = mapAnnouncement(a)
+      const target = mapped.target_user_id ? byId.get(mapped.target_user_id) : null
+      return {
+        ...mapped,
+        target_user_name: target ? target.full_name || target.username : null,
+      }
+    })
   } catch (err) {
     console.error('Failed to load announcements:', err)
     throw err
@@ -102,6 +114,7 @@ export async function createAnnouncement(data: {
   is_active?: boolean
   starts_at?: string | null
   ends_at?: string | null
+  target_user_id?: string | null
 }) {
   await fetchMutation(api.cms.createAnnouncement, {
     title: data.title,
@@ -111,6 +124,9 @@ export async function createAnnouncement(data: {
     isActive: data.is_active ?? false,
     startsAt: data.starts_at ? new Date(data.starts_at).getTime() : undefined,
     endsAt: data.ends_at ? new Date(data.ends_at).getTime() : undefined,
+    targetUserId: data.target_user_id
+      ? (data.target_user_id as Id<'profiles'>)
+      : undefined,
   })
   revalidatePath('/cms/announcements')
   revalidatePath('/cms')
@@ -127,6 +143,7 @@ export async function updateAnnouncement(
     is_active?: boolean
     starts_at?: string | null
     ends_at?: string | null
+    target_user_id?: string | null
   }
 ) {
   await fetchMutation(api.cms.updateAnnouncement, {
@@ -138,6 +155,9 @@ export async function updateAnnouncement(
     isActive: data.is_active,
     startsAt: data.starts_at ? new Date(data.starts_at).getTime() : undefined,
     endsAt: data.ends_at ? new Date(data.ends_at).getTime() : undefined,
+    targetUserId: data.target_user_id
+      ? (data.target_user_id as Id<'profiles'>)
+      : undefined,
   })
   revalidatePath('/cms/announcements')
   revalidatePath('/cms')

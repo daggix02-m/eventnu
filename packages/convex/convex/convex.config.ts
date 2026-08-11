@@ -11,6 +11,9 @@ const app = defineApp({
     ADMIN_APP_URL: v.optional(v.string()),
     CONVEX_SITE_URL: v.optional(v.string()),
     ADMIN_BOOTSTRAP_KEY: v.optional(v.string()),
+    ADMIN_BOOTSTRAP_PASSWORD: v.optional(v.string()),
+    RESEND_API_KEY: v.optional(v.string()),
+    RESEND_FROM: v.optional(v.string()),
   },
 });
 

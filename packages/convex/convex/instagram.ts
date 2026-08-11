@@ -656,7 +656,7 @@ export const listAdmins = internalQuery({
       .query("profiles")
       .filter((q) => q.eq(q.field("role"), "admin"))
       .take(50);
-    return admins.map((p) => ({ profileId: p._id }));
+    return admins.map((p) => ({ profileId: p._id, email: p.email ?? null }));
   },
 });
 

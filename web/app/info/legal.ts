@@ -15,16 +15,18 @@ export const LEGAL_PAGES: Record<string, LegalPage> = {
 
       <h2>1. What we collect</h2>
       <ul>
-        <li><strong>Account information.</strong> Name, email address, phone number, and password when you create an account.</li>
+        <li><strong>Account information.</strong> Name, email address, phone number, and password when you create an account. When you verify your email, we send you a one-time verification code.</li>
         <li><strong>Event information.</strong> Details that organizers submit when listing an event — including title, description, dates, venue, and pricing.</li>
         <li><strong>Ticketing and reservation data.</strong> Names, contact details, and ticket/reservation records for events that use Event Nu for check-in.</li>
+        <li><strong>Community content.</strong> Experience posts, likes, and saved events. Content you post publicly — such as experience posts and their photos — is visible to other users.</li>
         <li><strong>Usage data.</strong> Basic analytics such as pages visited and how you reached the site.</li>
       </ul>
 
       <h2>2. How we use it</h2>
       <ul>
         <li>To operate the platform: publish events, process tickets and reservations, and enable check-in.</li>
-        <li>To communicate with you about events you attend or organize, and about platform updates.</li>
+        <li>To verify accounts and communicate with you about events you attend or organize, and about platform updates.</li>
+        <li>To show you the events you saved and the posts you made.</li>
         <li>To improve the product and understand how people use it.</li>
         <li>To prevent fraud, abuse, and content that violates our Community Guidelines.</li>
       </ul>
@@ -45,11 +47,15 @@ export const LEGAL_PAGES: Record<string, LegalPage> = {
       <h2>6. Your choices</h2>
       <ul>
         <li>You can edit or remove information tied to your account.</li>
+        <li>You can delete experience posts you have created, and unsave events at any time.</li>
         <li>You can unsubscribe from non-transactional emails at any time.</li>
         <li>You can contact us to request access to, correction of, or deletion of your personal data.</li>
       </ul>
 
-      <h2>7. Contact</h2>
+      <h2>7. Community content</h2>
+      <p>Experience posts, photos, likes, and saved-event lists you create on Event Nu are considered public content. If you post a photo, it is uploaded to secure storage and displayed publicly on the platform. You can remove your own posts at any time from your profile.</p>
+
+      <h2>8. Contact</h2>
       <p>Questions about this policy? Email us at event.nua@gmail.com.</p>
     `,
   },
@@ -61,9 +67,16 @@ export const LEGAL_PAGES: Record<string, LegalPage> = {
       <p>These terms govern your use of eventnu.et and the Event Nu platform. By using the platform you agree to these terms.</p>
 
       <h2>1. Using Event Nu</h2>
-      <p>Event Nu helps people discover events and helps organizers list and manage them. You must be at least 13 years old to create an account.</p>
+      <p>Event Nu helps people discover events and helps organizers list and manage them. You must be at least 13 years old to create an account. By signing up you confirm you have read and agreed to these terms and our Privacy Policy.</p>
 
-      <h2>2. Organizer responsibilities</h2>
+      <h2>2. Accounts and security</h2>
+      <ul>
+        <li>Keep your password confidential and do not share your account.</li>
+        <li>You must verify your email address to use all features, such as liking, saving, and posting experiences.</li>
+        <li>You are responsible for activity that happens under your account.</li>
+      </ul>
+
+      <h2>3. Organizer responsibilities</h2>
       <ul>
         <li>Provide accurate information about your events, including dates, times, venues, and pricing.</li>
         <li>Ensure your events are lawful and do not infringe on the rights of others.</li>
@@ -72,29 +85,32 @@ export const LEGAL_PAGES: Record<string, LegalPage> = {
       </ul>
       <p>Event Nu may remove listings that violate these responsibilities or our Community Guidelines.</p>
 
-      <h2>3. Attendee responsibilities</h2>
+      <h2>4. Attendee responsibilities</h2>
       <ul>
         <li>Use your own name when buying tickets or reserving spots.</li>
         <li>Not resell tickets at inflated prices unless the organizer allows it.</li>
         <li>Follow venue rules and event-specific requirements.</li>
       </ul>
 
-      <h2>4. Tickets and refunds</h2>
+      <h2>5. User-generated content</h2>
+      <p>Experience posts you write, and any photos you attach to them, are yours, but you grant Event Nu a non-exclusive license to display them on the platform. Keep posts respectful and truthful: do not post content that is unlawful, harassing, defamatory, or otherwise prohibited by our Community Guidelines. You may delete your own posts at any time.</p>
+
+      <h2>6. Tickets and refunds</h2>
       <p>Tickets purchased for paid events are issued by the organizer. Refund and exchange policies are set by each organizer and communicated on the event page. Contact the organizer directly for refund requests.</p>
 
-      <h2>5. Intellectual property</h2>
+      <h2>7. Intellectual property</h2>
       <p>Event listings and their content belong to the organizers who submit them. The Event Nu name, logo, and platform software are owned by Event Nu.</p>
 
-      <h2>6. Disclaimers</h2>
+      <h2>8. Disclaimers</h2>
       <p>The platform is provided "as is" and "as available." We make no guarantees that the service will be uninterrupted or error-free, and we are not responsible for events listed by third-party organizers.</p>
 
-      <h2>7. Limitation of liability</h2>
+      <h2>9. Limitation of liability</h2>
       <p>To the maximum extent permitted by law, Event Nu is not liable for indirect or consequential damages arising from your use of the platform or from attendance at events listed on it.</p>
 
-      <h2>8. Changes</h2>
+      <h2>10. Changes</h2>
       <p>We may update these terms from time to time. Significant changes will be noted on this page.</p>
 
-      <h2>9. Contact</h2>
+      <h2>11. Contact</h2>
       <p>Questions about these terms? Email us at event.nua@gmail.com.</p>
     `,
   },

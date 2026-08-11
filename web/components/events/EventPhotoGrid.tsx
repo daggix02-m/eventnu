@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, X, ZoomIn } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { filterStyle, sortedImages } from "@/lib/media";
 import type { EventImage } from "@/types";
 

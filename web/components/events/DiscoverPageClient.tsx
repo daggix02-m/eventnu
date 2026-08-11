@@ -119,7 +119,7 @@ export function DiscoverPageClient({
               placeholder="Search events..."
             />
           </div>
-          <div className="md:w-2/3 flex flex-col gap-sm">
+          <div className="md:w-2/3 flex flex-col gap-sm sticky top-16 z-30 -mx-gutter px-gutter py-sm bg-background/90 backdrop-blur-md border-b border-outline-variant/60 md:static md:mx-0 md:px-0 md:py-0 md:bg-transparent md:backdrop-blur-none md:border-0">
             <CategoryPills
               categories={categories}
               activeSlug={activeCategory}

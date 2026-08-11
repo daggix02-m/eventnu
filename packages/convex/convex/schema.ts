@@ -12,6 +12,8 @@ const schema = defineSchema({
     avatarUrl: v.optional(v.string()),
     email: v.optional(v.string()),
     suspended: v.boolean(),
+    acceptedTermsAt: v.optional(v.number()),
+    acceptedTermsVersion: v.optional(v.string()),
   }).index("by_auth_user", ["authUserId"]),
 
   events: defineTable({
@@ -58,6 +60,7 @@ const schema = defineSchema({
     reservationEnabled: v.boolean(),
     reservationLimit: v.optional(v.number()),
     likeCount: v.number(),
+    bookmarkCount: v.optional(v.number()),
     timezone: v.string(),
     venueName: v.string(),
     venueAddress: v.optional(v.string()),
@@ -181,6 +184,33 @@ const schema = defineSchema({
     .index("by_follower", ["followerId"])
     .index("by_follower_following", ["followerId", "followingId"]),
 
+  eventBookmarks: defineTable({
+    userId: v.id("profiles"),
+    eventId: v.id("events"),
+  })
+    .index("by_user", ["userId"])
+    .index("by_event", ["eventId"])
+    .index("by_user_event", ["userId", "eventId"]),
+
+  eventShares: defineTable({
+    eventId: v.id("events"),
+    userId: v.optional(v.id("profiles")),
+    platform: v.optional(v.string()),
+  })
+    .index("by_event", ["eventId"])
+    .index("by_user", ["userId"]),
+
+  experiencePosts: defineTable({
+    userId: v.id("profiles"),
+    eventId: v.optional(v.id("events")),
+    content: v.string(),
+    imageStorageId: v.optional(v.string()),
+    imageUrl: v.optional(v.string()),
+    isDeleted: v.boolean(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_event", ["eventId"]),
+
   pages: defineTable({
     slug: v.string(),
     title: v.string(),
@@ -202,6 +232,7 @@ const schema = defineSchema({
     isActive: v.boolean(),
     startsAt: v.optional(v.number()),
     endsAt: v.optional(v.number()),
+    targetUserId: v.optional(v.id("profiles")),
   }).index("by_active", ["isActive"]),
 
   contactSubmissions: defineTable({

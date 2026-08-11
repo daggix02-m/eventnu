@@ -13,7 +13,6 @@ interface FeaturedCarouselProps {
   events: Event[];
 }
 
-const SLIDE_BASE_MS = 6000;
 const IMAGE_STEP_MS = 3000;
 const SWIPE_THRESHOLD = 60;
 
@@ -132,7 +131,7 @@ export function FeaturedCarousel({ events }: FeaturedCarouselProps) {
   return (
     <section
       ref={sectionRef}
-      className="relative h-[614px] md:h-[768px] w-full overflow-hidden touch-pan-y select-none"
+      className="relative h-[520px] md:h-[768px] w-full overflow-hidden touch-pan-y select-none"
       aria-roledescription="carousel"
       aria-label="Featured events"
       tabIndex={0}

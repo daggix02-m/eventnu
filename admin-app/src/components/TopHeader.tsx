@@ -1,7 +1,5 @@
 'use client'
 
-import Link from 'next/link'
-import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { Bell, HelpCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -13,26 +11,9 @@ export function TopHeader() {
 
   return (
     <header className={cn(
-      'w-full h-16 fixed top-0 right-0 z-30 bg-surface-container-lowest dark:bg-surface-container-low border-b border-outline-variant dark:border-outline flex justify-between items-center pl-16 lg:pl-6 pr-6 transition-[width] duration-300',
+      'w-full h-16 fixed top-0 right-0 z-30 bg-surface-container-lowest dark:bg-surface-container-low border-b border-outline-variant dark:border-outline flex justify-end items-center pl-16 lg:pl-6 pr-6 transition-[width] duration-300',
       collapsed ? 'lg:w-[calc(100%-76px)]' : 'lg:w-[calc(100%-260px)]'
     )}>
-      {/* Brand */}
-      <Link href="/" className="flex items-center gap-3 group">
-        <Image
-          src="/logo.png"
-          alt="Event Nu"
-          width={40}
-          height={34}
-          priority
-          style={{ height: '34px', width: 'auto' }}
-          className="rounded-md transition-opacity group-hover:opacity-80"
-        />
-        <span className="hidden sm:block">
-          <span className="block font-headline text-base font-semibold text-foreground leading-tight">Event Nu</span>
-          <span className="block font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Admin</span>
-        </span>
-      </Link>
-
       {/* Actions */}
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-1">

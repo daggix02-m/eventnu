@@ -4,6 +4,8 @@ import { IdleTimeout } from "@/components/IdleTimeout";
 import { AccountRestrictedScreen } from "@/components/AccountRestrictedScreen";
 import { getCurrentAdminProfile } from "@/lib/actions/session";
 
+export const dynamic = "force-dynamic";
+
 export default async function AppLayout({
   children,
 }: Readonly<{

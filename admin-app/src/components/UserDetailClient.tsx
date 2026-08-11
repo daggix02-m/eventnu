@@ -17,6 +17,8 @@ import {
   MessageSquare,
   Shield,
   ShieldCheck,
+  ShieldOff,
+  ShieldPlus,
   XCircle,
   Bell,
   Send,
@@ -26,17 +28,27 @@ import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import { fadeUp } from '@/lib/motion'
-import { suspendUser, unsuspendUser, banUser } from '@/lib/actions/users'
+import {
+  suspendUser,
+  unsuspendUser,
+  banUser,
+  promoteUser,
+  demoteUser,
+} from '@/lib/actions/users'
 import { sendNotification } from '@/lib/actions/notifications'
 import { getOrganizerRecentEvents } from '@/lib/actions/events'
 
 interface Profile {
   id: string
+  authUserId: string
+  profileId: string | null
   username: string
   full_name: string
   email: string
   avatar_url?: string
+  role: string
   suspended: boolean
+  has_profile: boolean
   created_at: string
   updated_at: string
 }
@@ -50,7 +62,6 @@ interface Stats {
 
 interface UserDetailClientProps {
   profile: Profile
-  role: string | null
   stats: Stats | null
   currentAdminId: string | null
 }
@@ -62,12 +73,13 @@ interface EventItem {
   status: string
 }
 
-export function UserDetailClient({ profile, role, stats, currentAdminId }: UserDetailClientProps) {
+export function UserDetailClient({ profile, stats, currentAdminId }: UserDetailClientProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [recentEvents, setRecentEvents] = useState<EventItem[]>([])
   const [eventsLoading, setEventsLoading] = useState(true)
   const [showSuspendDialog, setShowSuspendDialog] = useState(false)
   const [showBanDialog, setShowBanDialog] = useState(false)
+  const [showRoleDialog, setShowRoleDialog] = useState(false)
   const [showNotificationForm, setShowNotificationForm] = useState(false)
   const [notificationTitle, setNotificationTitle] = useState('')
   const [notificationBody, setNotificationBody] = useState('')
@@ -76,9 +88,16 @@ export function UserDetailClient({ profile, role, stats, currentAdminId }: UserD
 
   useEffect(() => {
     let cancelled = false
+    if (!profile.profileId) {
+      setEventsLoading(false)
+      setRecentEvents([])
+      return () => {
+        cancelled = true
+      }
+    }
     setEventsLoading(true)
     setRecentEvents([])
-    getOrganizerRecentEvents(profile.id)
+    getOrganizerRecentEvents(profile.profileId)
       .then((items) => {
         if (!cancelled) setRecentEvents(items)
       })
@@ -89,7 +108,7 @@ export function UserDetailClient({ profile, role, stats, currentAdminId }: UserD
     return () => {
       cancelled = true
     }
-  }, [profile.id])
+  }, [profile.id, profile.profileId])
 
   const handleSuspend = async () => {
     setIsLoading(true)
@@ -134,15 +153,36 @@ export function UserDetailClient({ profile, role, stats, currentAdminId }: UserD
     }
   }
 
+  const handleRoleChange = async () => {
+    const promote = profile.role !== 'admin'
+    setIsLoading(true)
+    try {
+      if (promote) await promoteUser(profile.id)
+      else await demoteUser(profile.id)
+      toast.success(promote ? 'User promoted to admin' : 'Admin role removed')
+      setShowRoleDialog(false)
+      router.refresh()
+    } catch (err) {
+      console.error('Role change error:', err)
+      toast.error('Failed to change role')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const handleSendNotification = async () => {
     if (!notificationTitle.trim() || !notificationBody.trim()) {
       toast.error('Please fill in both title and body')
       return
     }
+    if (!profile.profileId) {
+      toast.error('This user has no profile yet')
+      return
+    }
     setIsLoading(true)
     try {
       await sendNotification({
-        userId: profile.id,
+        userId: profile.profileId,
         type: 'admin',
         title: notificationTitle,
         body: notificationBody,
@@ -186,6 +226,9 @@ export function UserDetailClient({ profile, role, stats, currentAdminId }: UserD
             <div className="flex items-center gap-2 mt-1">
               <Mail size={14} className="text-muted-foreground" />
               <span className="text-sm text-muted-foreground">{profile.email}</span>
+              {!profile.has_profile && (
+                <Badge variant="warning" className="text-xs ml-2">No Profile</Badge>
+              )}
             </div>
           </div>
         </div>
@@ -200,7 +243,7 @@ export function UserDetailClient({ profile, role, stats, currentAdminId }: UserD
                 <XCircle size={20} className="text-destructive" />
               </div>
               <div>
-                <Badge className="text-xs bg-destructive/10 text-destructive border-destructive/20">Suspended</Badge>
+                <Badge variant="destructive" className="text-xs">Suspended</Badge>
                 <p className="text-xs text-muted-foreground mt-1">Status</p>
               </div>
             </>
@@ -210,7 +253,7 @@ export function UserDetailClient({ profile, role, stats, currentAdminId }: UserD
                 <ShieldCheck size={20} className="text-success" />
               </div>
               <div>
-                <Badge className="text-xs bg-success/10 text-success border-success/20">
+                <Badge variant="success" className="text-xs">
                   <ShieldCheck size={10} className="mr-1" />
                   Active
                 </Badge>
@@ -224,7 +267,7 @@ export function UserDetailClient({ profile, role, stats, currentAdminId }: UserD
             <Shield size={20} className="text-primary" />
           </div>
           <div>
-            <p className="font-bold text-foreground capitalize">{role || 'user'}</p>
+            <p className="font-bold text-foreground capitalize">{profile.role || 'user'}</p>
             <p className="text-xs text-muted-foreground">Role</p>
           </div>
         </Card>
@@ -303,6 +346,16 @@ export function UserDetailClient({ profile, role, stats, currentAdminId }: UserD
               <p className="text-xs text-muted-foreground uppercase tracking-tight font-semibold">User ID</p>
               <p className="text-sm text-muted-foreground font-mono text-xs">{profile.id}</p>
             </div>
+            <div>
+              <p className="text-xs text-muted-foreground uppercase tracking-tight font-semibold">Profile</p>
+              <p className="text-sm text-foreground">
+                {profile.has_profile ? 'Complete' : 'Not created yet'}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground uppercase tracking-tight font-semibold">Role</p>
+              <p className="text-sm text-foreground capitalize">{profile.role || 'user'}</p>
+            </div>
           </div>
         </Card>
       </motion.div>
@@ -320,41 +373,68 @@ export function UserDetailClient({ profile, role, stats, currentAdminId }: UserD
               <p className="text-sm text-muted-foreground">
                 This is your account. You cannot suspend or ban yourself.
               </p>
-            ) : profile.suspended ? (
-              <Button
-                onClick={handleUnsuspend}
-                disabled={isLoading}
-                className="bg-success hover:bg-success/90 text-white"
-              >
-                <ShieldCheck size={16} className="mr-2" />
-                Unsuspend User
-              </Button>
             ) : (
               <>
-                <Button
-                  onClick={() => setShowSuspendDialog(true)}
-                  disabled={isLoading}
-                  variant="outline"
-                  className="text-warning border-warning/30 hover:bg-warning/10"
-                >
-                  <Shield size={16} className="mr-2" />
-                  Suspend User
-                </Button>
-                <Button
-                  onClick={() => setShowBanDialog(true)}
-                  disabled={isLoading}
-                  variant="outline"
-                  className="text-destructive border-destructive/30 hover:bg-destructive/10"
-                >
-                  <XCircle size={16} className="mr-2" />
-                  Ban User
-                </Button>
+                {profile.suspended ? (
+                  <Button
+                    onClick={handleUnsuspend}
+                    disabled={isLoading}
+                    className="bg-success hover:bg-success/90 text-white"
+                  >
+                    <ShieldCheck size={16} className="mr-2" />
+                    Unsuspend User
+                  </Button>
+                ) : (
+                  <>
+                    <Button
+                      onClick={() => setShowSuspendDialog(true)}
+                      disabled={isLoading}
+                      variant="outline"
+                      className="text-warning border-warning/30 hover:bg-warning/10"
+                    >
+                      <Shield size={16} className="mr-2" />
+                      Suspend User
+                    </Button>
+                    <Button
+                      onClick={() => setShowBanDialog(true)}
+                      disabled={isLoading}
+                      variant="outline"
+                      className="text-destructive border-destructive/30 hover:bg-destructive/10"
+                    >
+                      <XCircle size={16} className="mr-2" />
+                      Ban User
+                    </Button>
+                  </>
+                )}
+                {profile.has_profile && (
+                  profile.role === 'admin' ? (
+                    <Button
+                      onClick={() => setShowRoleDialog(true)}
+                      disabled={isLoading}
+                      variant="outline"
+                      className="text-warning border-warning/30 hover:bg-warning/10"
+                    >
+                      <ShieldOff size={16} className="mr-2" />
+                      Remove Admin
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={() => setShowRoleDialog(true)}
+                      disabled={isLoading}
+                      variant="outline"
+                    >
+                      <ShieldPlus size={16} className="mr-2" />
+                      Make Admin
+                    </Button>
+                  )
+                )}
               </>
             )}
             <Button
               onClick={() => setShowNotificationForm(!showNotificationForm)}
-              disabled={isLoading}
+              disabled={isLoading || !profile.has_profile}
               variant="outline"
+              title={profile.has_profile ? undefined : 'User has no profile yet'}
             >
               <Bell size={16} className="mr-2" />
               Send Notification
@@ -401,7 +481,9 @@ export function UserDetailClient({ profile, role, stats, currentAdminId }: UserD
       >
         <Card className="p-6">
           <h2 className="text-lg font-bold text-foreground mb-4">Organized Events</h2>
-          {eventsLoading ? (
+          {!profile.has_profile ? (
+            <p className="text-sm text-muted-foreground">This user has not created a profile yet.</p>
+          ) : eventsLoading ? (
             <p className="text-sm text-muted-foreground">Loading...</p>
           ) : recentEvents.length === 0 ? (
             <p className="text-sm text-muted-foreground">No events created.</p>
@@ -416,13 +498,14 @@ export function UserDetailClient({ profile, role, stats, currentAdminId }: UserD
                     </p>
                   </div>
                   <Badge
-                    className={`text-xs ${
+                    variant={
                       event.status === 'published'
-                        ? 'bg-success/10 text-success border-success/20'
+                        ? 'success'
                         : event.status === 'pending_review'
-                        ? 'bg-warning/10 text-warning border-warning/20'
-                        : 'bg-muted text-muted-foreground'
-                    }`}
+                        ? 'warning'
+                        : 'outline'
+                    }
+                    className="text-xs"
                   >
                     {event.status}
                   </Badge>
@@ -469,6 +552,22 @@ export function UserDetailClient({ profile, role, stats, currentAdminId }: UserD
         destructive
         loading={isLoading}
         onConfirm={handleBan}
+      />
+
+      <ConfirmDialog
+        open={showRoleDialog}
+        onOpenChange={(open) => {
+          if (!open) setShowRoleDialog(false)
+        }}
+        title={profile.role === 'admin' ? 'Remove admin role?' : 'Make this user an admin?'}
+        description={
+          profile.role === 'admin'
+            ? 'This will remove full admin access to the dashboard.'
+            : 'This will grant the user full admin access to the dashboard.'
+        }
+        confirmLabel={profile.role === 'admin' ? 'Remove Admin' : 'Make Admin'}
+        loading={isLoading}
+        onConfirm={handleRoleChange}
       />
     </div>
   )

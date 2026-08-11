@@ -4,14 +4,6 @@ import { Mail, Instagram, Send, Phone, MapPin, ArrowUpRight, CalendarHeart } fro
 import { getCategories, getPublishedPages } from "@/lib/api/events";
 import { SITE } from "@/lib/site";
 
-const exploreLinks = [
-  { href: "/", label: "Find Events" },
-  { href: "/categories", label: "Categories" },
-  { href: "/organizers", label: "For Organizers" },
-  { href: "/about", label: "About" },
-  { href: "/contact", label: "Contact" },
-];
-
 const LEGAL_PAGES = [
   { href: "/info/privacy-policy", label: "Privacy Policy" },
   { href: "/info/terms-of-service", label: "Terms of Service" },
@@ -19,7 +11,13 @@ const LEGAL_PAGES = [
 ];
 
 export async function Footer() {
-  const [categories, pages] = await Promise.all([getCategories(), getPublishedPages()]);
+  let categories: Awaited<ReturnType<typeof getCategories>> = [];
+  let pages: Awaited<ReturnType<typeof getPublishedPages>> = [];
+  try {
+    [categories, pages] = await Promise.all([getCategories(), getPublishedPages()]);
+  } catch (err) {
+    console.error("Footer data fetch failed:", err);
+  }
 
   const infoLinks = [
     ...LEGAL_PAGES,
@@ -29,13 +27,12 @@ export async function Footer() {
   ];
 
   const socialLinks = [
-    { href: SITE.email, label: SITE.email, icon: Mail, external: false },
     { href: SITE.social.instagram.url, label: SITE.social.instagram.label, icon: Instagram, external: true },
     { href: SITE.social.telegram.url, label: SITE.social.telegram.label, icon: Send, external: true },
   ];
 
   return (
-    <footer className="w-full bg-surface-container-lowest">
+    <footer className="w-full bg-surface-container-lowest pb-tabbar-safe md:pb-0">
       <div
         className="h-[2px] w-full"
         style={{
@@ -58,8 +55,9 @@ export async function Footer() {
               <Image
                 src="/logo.png"
                 alt="Event Nu"
-                width={40}
-                height={40}
+                width={794}
+                height={672}
+                style={{ height: '40px', width: 'auto' }}
                 className="rounded-lg"
               />
               <span className="text-headline-md text-primary font-bold">
@@ -92,7 +90,7 @@ export async function Footer() {
                   href={`mailto:${SITE.email}`}
                   className="inline-flex items-center gap-sm text-body-md text-on-surface-variant hover:text-primary transition-colors"
                 >
-                  <Mail className="w-4 h-4 flex-shrink-0" />
+                  <Mail className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
                   {SITE.email}
                 </a>
               </li>
@@ -101,7 +99,7 @@ export async function Footer() {
                   href={`tel:${SITE.phones[0].tel}`}
                   className="inline-flex items-center gap-sm text-body-md text-on-surface-variant hover:text-primary transition-colors"
                 >
-                  <Phone className="w-4 h-4 flex-shrink-0" />
+                  <Phone className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
                   {SITE.phones[0].label}
                 </a>
               </li>
@@ -115,7 +113,7 @@ export async function Footer() {
                       rel={link.external ? "noopener noreferrer" : undefined}
                       className="inline-flex items-center gap-sm text-body-md text-on-surface-variant hover:text-primary transition-colors"
                     >
-                      <Icon className="w-4 h-4 flex-shrink-0" />
+                      <Icon className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
                       {link.label}
                     </a>
                   </li>
@@ -129,26 +127,7 @@ export async function Footer() {
           </div>
         </div>
 
-        {/* Row 2: Explore — giant nav list */}
-        <nav
-          className="mt-xl border-t border-outline-variant"
-          aria-label="Explore links"
-        >
-          {exploreLinks.map((link) => (
-            <Link
-              key={link.label}
-              href={link.href}
-              className="group flex items-center justify-between border-b border-outline-variant py-sm md:py-md transition-colors"
-            >
-              <span className="font-display text-2xl md:text-3xl font-bold text-on-surface-variant group-hover:text-primary transition-colors">
-                {link.label}
-              </span>
-              <ArrowUpRight className="w-6 h-6 md:w-7 md:h-7 text-on-surface-variant group-hover:text-primary group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
-            </Link>
-          ))}
-        </nav>
-
-        {/* Row 3: real-data columns */}
+        {/* Row 2: real-data columns */}
         <div className="mt-xl grid grid-cols-1 md:grid-cols-2 gap-xl">
           {categories.length > 0 && (
             <div>

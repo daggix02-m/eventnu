@@ -3,6 +3,9 @@ import { Container } from "@/components/layout/Container";
 export default function Loading() {
   return (
     <Container className="py-xl space-y-xl">
+      <p className="sr-only" role="status" aria-live="polite">
+        Loading content…
+      </p>
       <div className="space-y-sm" aria-hidden="true">
         <div className="h-10 w-72 bg-surface-container-high rounded animate-pulse" />
         <div className="h-6 w-96 max-w-full bg-surface-container rounded animate-pulse" />

@@ -21,6 +21,7 @@ import { formatDateTime } from '@/lib/format'
 import { getErrorMessage } from '@/lib/errors'
 import { useNotifications, notificationsKeys } from '@/lib/api/notifications'
 import { sendNotification } from '@/lib/actions/notifications'
+import { UserCombobox } from '@/components/UserCombobox'
 import { toast } from 'sonner'
 import type { MappedNotification } from '@/lib/mappers'
 
@@ -79,6 +80,10 @@ export function NotificationsClient({
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!form.broadcast && !form.userId) {
+      toast.error('Select a user to send to.')
+      return
+    }
     setIsLoading(true)
     try {
       await sendNotification({
@@ -155,12 +160,10 @@ export function NotificationsClient({
 
             {!form.broadcast && (
               <div className="space-y-2">
-                <label className="text-sm font-medium">User ID</label>
-                <Input
-                  value={form.userId}
-                  onChange={(e) => setForm({ ...form, userId: e.target.value })}
-                  placeholder="Enter user UUID"
-                  required={!form.broadcast}
+                <label className="text-sm font-medium">User</label>
+                <UserCombobox
+                  value={form.userId || null}
+                  onChange={(id) => setForm({ ...form, userId: id ?? '' })}
                 />
               </div>
             )}

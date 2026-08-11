@@ -36,7 +36,7 @@ export function EventList({ events, className, emptyMessage = "No events found."
       )}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-md">
         {events.map((event, i) => (
-          <EventCard key={event.id} event={event} size={bento && i === 0 ? "lg" : "default"} />
+          <EventCard key={event.id} event={event} size={bento && i === 0 ? "lg" : "default"} priority={i === 0} />
         ))}
       </div>
     </div>

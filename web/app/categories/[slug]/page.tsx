@@ -11,7 +11,7 @@ import {
 } from "@/lib/api/events";
 import { getCategoryIcon } from "@/lib/category-icons";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 interface CategoryPageProps {
   params: Promise<{ slug: string }>;

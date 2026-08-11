@@ -1,6 +1,7 @@
 import { AnnouncementBanner } from "@/components/events/AnnouncementBanner";
 import { FeaturedCarousel } from "@/components/events/FeaturedCarousel";
-import { getActiveAnnouncements, getPublishedEvents } from "@/lib/api/events";
+import { getActiveAnnouncements } from "@/lib/api/announcements";
+import { getPublishedEvents } from "@/lib/api/events";
 
 export const dynamic = "force-dynamic";
 

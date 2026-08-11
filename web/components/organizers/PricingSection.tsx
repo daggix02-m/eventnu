@@ -9,7 +9,6 @@ import {
   Ticket,
   CheckCircle2,
   ArrowRight,
-  Sparkles,
   ShieldCheck,
 } from "lucide-react";
 import { Container } from "@/components/layout/Container";
@@ -173,7 +172,6 @@ export function OrganizersPricing({ contactUrl = "/contact" }: OrganizersPricing
             {/* "Most popular" badge */}
             <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
               <span className="inline-flex items-center gap-xs px-md py-1 rounded-full bg-primary border border-primary/20 font-mono text-[11px] font-bold text-on-primary uppercase tracking-wider shadow-lg shadow-primary/30">
-                <Sparkles className="w-3 h-3" aria-hidden="true" />
                 Paid Ticketing
               </span>
             </div>

@@ -56,12 +56,11 @@ async function getEventCategoryLinks(
   );
 }
 
-async function enrichEvent(
+export async function enrichEvent(
   ctx: QueryCtx,
   event: Doc<"events">,
   includeOrganizer = false,
-) {
-  const links = await getEventCategoryLinks(ctx, event._id);
+) {  const links = await getEventCategoryLinks(ctx, event._id);
   const categories = await Promise.all(
     links.map((link) => ctx.db.get("categories", link.categoryId)),
   );
@@ -409,6 +408,7 @@ export const create = mutation({
       reservationEnabled: args.actionType === "reservation",
       reservationLimit: args.reservationLimit ?? undefined,
       likeCount: 0,
+      bookmarkCount: 0,
       source: "admin",
       venueLat: undefined,
       venueLng: undefined,
@@ -561,6 +561,21 @@ export const deleteEvent = mutation({
       .query("eventComments")
       .withIndex("by_event", (q) => q.eq("eventId", args.eventId))) {
       await ctx.db.delete("eventComments", row._id);
+    }
+    for await (const row of ctx.db
+      .query("eventBookmarks")
+      .withIndex("by_event", (q) => q.eq("eventId", args.eventId))) {
+      await ctx.db.delete("eventBookmarks", row._id);
+    }
+    for await (const row of ctx.db
+      .query("eventShares")
+      .withIndex("by_event", (q) => q.eq("eventId", args.eventId))) {
+      await ctx.db.delete("eventShares", row._id);
+    }
+    for await (const row of ctx.db
+      .query("experiencePosts")
+      .withIndex("by_event", (q) => q.eq("eventId", args.eventId))) {
+      await ctx.db.delete("experiencePosts", row._id);
     }
     for await (const row of ctx.db
       .query("eventCategories")

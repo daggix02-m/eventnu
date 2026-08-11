@@ -10,10 +10,9 @@ export default async function UserDetailPage({
   const { id } = await params
 
   let profile: Awaited<ReturnType<typeof getUserById>>['profile'] = null
-  let role: Awaited<ReturnType<typeof getUserById>>['role'] = null
   let stats: Awaited<ReturnType<typeof getUserById>>['stats'] = null
   try {
-    ;({ profile, role, stats } = await getUserById(id))
+    ;({ profile, stats } = await getUserById(id))
   } catch (err) {
     console.error('Failed to load user:', err)
   }
@@ -36,9 +35,8 @@ export default async function UserDetailPage({
   return (
     <UserDetailClient
       profile={profile}
-      role={role}
       stats={stats}
-      currentAdminId={currentAdmin?._id ?? null}
+      currentAdminId={currentAdmin?.authUserId ?? null}
     />
   )
 }

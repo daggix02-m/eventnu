@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
-import { getActiveAnnouncements, getPublishedEvents, getCategories } from "@/lib/api/events";
+import { getActiveAnnouncements } from "@/lib/api/announcements";
+import { getPublishedEvents, getCategories } from "@/lib/api/events";
 import { AnnouncementBanner } from "@/components/events/AnnouncementBanner";
 import type { OrganizerStat } from "@/components/organizers/StatBand";
 import { OrganizersClient } from "./OrganizersClient";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "For Organizers | Event Nu — Launch Your Event in Addis",

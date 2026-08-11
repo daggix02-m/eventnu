@@ -2,7 +2,7 @@
 
 import { getUsers } from '@/lib/actions/users'
 import { usePaginatedList } from './use-paginated-list'
-import type { MappedProfile } from '@/lib/mappers'
+import type { MappedUser } from '@/lib/mappers'
 
 export const usersKeys = ['users'] as const
 
@@ -14,10 +14,10 @@ export interface UserListFilters {
 
 export function useUsers(
   filters: UserListFilters,
-  initial: { users: MappedProfile[]; count: number },
+  initial: { users: MappedUser[]; count: number },
   initialFilters: UserListFilters,
 ) {
-  return usePaginatedList<MappedProfile, UserListFilters>({
+  return usePaginatedList<MappedUser, UserListFilters>({
     queryKey: usersKeys,
     filters,
     initialFilters,

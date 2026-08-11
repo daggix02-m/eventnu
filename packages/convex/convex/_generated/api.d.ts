@@ -12,6 +12,7 @@ import type * as admin from "../admin.js";
 import type * as adminSettings from "../adminSettings.js";
 import type * as analytics from "../analytics.js";
 import type * as auth from "../auth.js";
+import type * as bookmarks from "../bookmarks.js";
 import type * as categories from "../categories.js";
 import type * as cms from "../cms.js";
 import type * as comments from "../comments.js";
@@ -19,6 +20,7 @@ import type * as crons from "../crons.js";
 import type * as dashboard from "../dashboard.js";
 import type * as email from "../email.js";
 import type * as events from "../events.js";
+import type * as experiencePosts from "../experiencePosts.js";
 import type * as features from "../features.js";
 import type * as follows from "../follows.js";
 import type * as helpers from "../helpers.js";
@@ -35,6 +37,7 @@ import type * as rateLimiter from "../rateLimiter.js";
 import type * as reports from "../reports.js";
 import type * as reservations from "../reservations.js";
 import type * as seed from "../seed.js";
+import type * as shares from "../shares.js";
 import type * as support from "../support.js";
 import type * as verifyPassword from "../verifyPassword.js";
 
@@ -49,6 +52,7 @@ declare const fullApi: ApiFromModules<{
   adminSettings: typeof adminSettings;
   analytics: typeof analytics;
   auth: typeof auth;
+  bookmarks: typeof bookmarks;
   categories: typeof categories;
   cms: typeof cms;
   comments: typeof comments;
@@ -56,6 +60,7 @@ declare const fullApi: ApiFromModules<{
   dashboard: typeof dashboard;
   email: typeof email;
   events: typeof events;
+  experiencePosts: typeof experiencePosts;
   features: typeof features;
   follows: typeof follows;
   helpers: typeof helpers;
@@ -72,6 +77,7 @@ declare const fullApi: ApiFromModules<{
   reports: typeof reports;
   reservations: typeof reservations;
   seed: typeof seed;
+  shares: typeof shares;
   support: typeof support;
   verifyPassword: typeof verifyPassword;
 }>;

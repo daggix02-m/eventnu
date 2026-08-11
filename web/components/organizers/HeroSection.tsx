@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useGSAP } from "@gsap/react";
 import { gsap } from "@/lib/gsap";
-import { Sparkles, ArrowRight, Ticket, CheckCircle2, MapPin, Banknote } from "lucide-react";
+import { ArrowRight, Ticket, CheckCircle2, MapPin, Banknote } from "lucide-react";
 import { Container } from "@/components/layout/Container";
 import { Button } from "@/components/ui/Button";
 import { usePrefersReducedMotion } from "@/lib/usePrefersReducedMotion";
@@ -138,7 +138,6 @@ export function OrganizersHero({ contactUrl, events, categoryCount }: Organizers
               ref={badgeRef}
               className="inline-flex items-center gap-xs px-sm py-1.5 rounded-full bg-primary/10 border border-primary/30 text-primary font-mono text-label-sm"
             >
-              <Sparkles className="w-4 h-4" aria-hidden="true" />
               <span>For organizers in Addis Ababa</span>
             </div>
 
@@ -216,7 +215,7 @@ export function OrganizersHero({ contactUrl, events, categoryCount }: Organizers
                   <span className="w-2.5 h-2.5 rounded-full bg-red-500/80" aria-hidden="true" />
                   <span className="w-2.5 h-2.5 rounded-full bg-yellow-500/80" aria-hidden="true" />
                   <span className="w-2.5 h-2.5 rounded-full bg-green-500/80" aria-hidden="true" />
-                  <Image src="/logo.png" alt="Event Nu" width={18} height={18} className="rounded ml-xs" />
+                  <Image src="/logo.png" alt="Event Nu" width={794} height={672} style={{ height: '18px', width: 'auto' }} className="rounded ml-xs" />
                   <span className="font-mono text-[11px] text-on-surface-variant">eventnu.et/events</span>
                 </div>
                 <div className="flex items-center gap-xs px-xs py-0.5 bg-green-500/10 border border-green-500/30 rounded-full">

@@ -107,10 +107,11 @@ export function Sidebar() {
           <Image
             src="/logo.png"
             alt="Event Nu"
-            width={36}
-            height={31}
+            width={794}
+            height={672}
             priority
-            className="h-[31px] w-auto rounded-md"
+            style={{ height: '31px', width: 'auto' }}
+            className="rounded-md"
           />
           <div className={cn('min-w-0', collapsed && 'lg:hidden')}>
             <h1 className="font-headline text-lg font-semibold text-foreground leading-tight truncate">Event Nu</h1>

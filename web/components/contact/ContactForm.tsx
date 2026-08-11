@@ -6,9 +6,13 @@ import { Button } from "@/components/ui/Button";
 
 export function ContactForm() {
   const [state, formAction, pending] = useActionState(submitContactForm, null);
+  const nameError = state?.success === false ? state.errors?.name?.[0] : undefined;
+  const emailError = state?.success === false ? state.errors?.email?.[0] : undefined;
+  const messageError = state?.success === false ? state.errors?.message?.[0] : undefined;
+  const rootError = state?.success === false ? state.errors?.root?.[0] : undefined;
 
   return (
-    <form action={formAction} className="space-y-md">
+    <form action={formAction} noValidate className="space-y-md">
       <div className="space-y-sm">
         <label htmlFor="name" className="font-mono text-label-sm text-on-surface-variant uppercase">
           Name
@@ -19,11 +23,15 @@ export function ContactForm() {
           type="text"
           required
           minLength={2}
+          aria-describedby={nameError ? "name-error" : undefined}
+          aria-invalid={nameError ? true : undefined}
           className="w-full px-md py-3 bg-surface-container-low border border-outline-variant rounded-xl text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
           placeholder="Your name"
         />
-        {state?.success === false && state.errors?.name && (
-          <p className="text-error text-body-md">{state.errors.name[0]}</p>
+        {nameError && (
+          <p id="name-error" className="text-error text-body-md">
+            {nameError}
+          </p>
         )}
       </div>
 
@@ -36,11 +44,15 @@ export function ContactForm() {
           name="email"
           type="email"
           required
+          aria-describedby={emailError ? "email-error" : undefined}
+          aria-invalid={emailError ? true : undefined}
           className="w-full px-md py-3 bg-surface-container-low border border-outline-variant rounded-xl text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
           placeholder="you@example.com"
         />
-        {state?.success === false && state.errors?.email && (
-          <p className="text-error text-body-md">{state.errors.email[0]}</p>
+        {emailError && (
+          <p id="email-error" className="text-error text-body-md">
+            {emailError}
+          </p>
         )}
       </div>
 
@@ -54,17 +66,19 @@ export function ContactForm() {
           required
           minLength={10}
           rows={5}
+          aria-describedby={messageError ? "message-error" : undefined}
+          aria-invalid={messageError ? true : undefined}
           className="w-full px-md py-3 bg-surface-container-low border border-outline-variant rounded-xl text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
           placeholder="How can we help?"
         />
-        {state?.success === false && state.errors?.message && (
-          <p className="text-error text-body-md">{state.errors.message[0]}</p>
+        {messageError && (
+          <p id="message-error" className="text-error text-body-md">
+            {messageError}
+          </p>
         )}
       </div>
 
-      {state?.success === false && state.errors?.root && (
-        <p className="text-error text-body-md">{state.errors.root[0]}</p>
-      )}
+      {rootError && <p className="text-error text-body-md">{rootError}</p>}
       {state?.success === true && (
         <p className="text-secondary text-body-md">{state.message}</p>
       )}

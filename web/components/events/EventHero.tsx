@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { Calendar, MapPin, ExternalLink } from "lucide-react";
+import { Calendar, MapPin, ExternalLink, Ticket } from "lucide-react";
 import { formatEventDate, formatEventDateShort, isEventPast } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -25,9 +25,9 @@ export function EventHero({ event }: EventHeroProps) {
   return (
     <section className="relative w-full overflow-hidden">
       {showGallery ? (
-        <EventGallery event={event} className="h-[500px] md:h-[640px]" />
+        <EventGallery event={event} className="h-[440px] md:h-[640px]" />
       ) : (
-        <div className="relative h-[500px] md:h-[640px] w-full">
+        <div className="relative h-[440px] md:h-[640px] w-full">
           {event.poster_url && (
             <Image
               src={event.poster_url}
@@ -87,11 +87,14 @@ export function EventHero({ event }: EventHeroProps) {
                     {externalLabel}
                   </a>
                 </Button>
-              ) : (
-                <Button disabled className="flex-1 md:flex-none">
-                  {event.is_free ? "Free Event" : "View Details"}
+              ) : event.action_type === "reservation" ? (
+                <Button asChild className="flex-1 md:flex-none">
+                  <a href="#reserve">
+                    <Ticket className="w-4 h-4" />
+                    Reserve a spot
+                  </a>
                 </Button>
-              )}
+              ) : null}
             </div>
           </div>
         </div>

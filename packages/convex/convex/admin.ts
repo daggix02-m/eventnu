@@ -1,8 +1,11 @@
 import { v } from "convex/values";
-import { action, internalMutation } from "./_generated/server";
+import { action, internalMutation, query } from "./_generated/server";
+import { env } from "./_generated/server";
 import { internal } from "./_generated/api";
-import { createAccount } from "@convex-dev/auth/server";
+import { createAccount, modifyAccountCredentials } from "@convex-dev/auth/server";
 import type { Id, TableNames } from "./_generated/dataModel";
+
+const ADMIN_EMAIL = "event.nua@gmail.com";
 
 const ALL_TABLES: TableNames[] = [
   "users",
@@ -42,25 +45,56 @@ function normalizeEmail(email: string): string {
 }
 
 function validateBootstrapKey(key: string): void {
-  if (!process.env.ADMIN_BOOTSTRAP_KEY || key !== process.env.ADMIN_BOOTSTRAP_KEY) {
+  if (!env.ADMIN_BOOTSTRAP_KEY || key !== env.ADMIN_BOOTSTRAP_KEY) {
     throw new Error("Invalid bootstrap key");
   }
 }
 
-export const createAdminUser = action({
-  args: { email: v.string(), password: v.string(), name: v.string(), key: v.string() },
+function requireAdminPassword(): string {
+  if (!env.ADMIN_BOOTSTRAP_PASSWORD) {
+    throw new Error("ADMIN_BOOTSTRAP_PASSWORD not configured");
+  }
+  return env.ADMIN_BOOTSTRAP_PASSWORD;
+}
+
+export const getAdminInfo = query({
+  args: { key: v.string() },
   handler: async (ctx, args) => {
     validateBootstrapKey(args.key);
+    const admins = await ctx.db
+      .query("profiles")
+      .filter((q) => q.eq(q.field("role"), "admin"))
+      .take(50);
+    return {
+      admins: admins.map((p) => ({
+        email: p.email ?? null,
+        fullName: p.fullName ?? null,
+        profileId: p._id,
+      })),
+      pinnedAdminEmail: ADMIN_EMAIL,
+      pinnedAdminExists: admins.some((p) => p.email === ADMIN_EMAIL),
+    };
+  },
+});
+
+export const createAdminUser = action({
+  args: { email: v.string(), name: v.string(), key: v.string() },
+  handler: async (ctx, args) => {
+    validateBootstrapKey(args.key);
+
+    const email = normalizeEmail(args.email);
+    if (email !== ADMIN_EMAIL) {
+      throw new Error("Only the pinned admin email can be created");
+    }
 
     const admins = await ctx.runQuery(internal.instagram.listAdmins);
     if (admins.length > 0) {
       throw new Error("An admin already exists. Admin creation is bootstrap-only.");
     }
 
-    const email = normalizeEmail(args.email);
     const { user } = await createAccount(ctx, {
       provider: "password",
-      account: { id: email, secret: args.password },
+      account: { id: email, secret: requireAdminPassword() },
       profile: { email, name: args.name },
     });
 
@@ -71,6 +105,26 @@ export const createAdminUser = action({
     });
 
     return { userId: user._id };
+  },
+});
+
+export const setAdminPassword = action({
+  args: { key: v.string() },
+  handler: async (ctx, args) => {
+    validateBootstrapKey(args.key);
+
+    const admins = await ctx.runQuery(internal.instagram.listAdmins);
+    const admin = admins.find((a) => a.email === ADMIN_EMAIL);
+    if (!admin) {
+      throw new Error(`Pinned admin (${ADMIN_EMAIL}) does not exist`);
+    }
+
+    await modifyAccountCredentials(ctx, {
+      provider: "password",
+      account: { id: ADMIN_EMAIL, secret: requireAdminPassword() },
+    });
+
+    return { email: ADMIN_EMAIL, updated: true };
   },
 });
 
@@ -123,8 +177,6 @@ export const wipeDatabase = internalMutation({
 
 export const resetAdmins = action({
   args: {
-    email: v.string(),
-    password: v.string(),
     name: v.optional(v.string()),
     key: v.string(),
   },
@@ -136,19 +188,18 @@ export const resetAdmins = action({
 
     const deleted: Record<string, number> = await ctx.runMutation(internal.admin.wipeDatabase, {});
 
-    const email = normalizeEmail(args.email);
     const { user } = await createAccount(ctx, {
       provider: "password",
-      account: { id: email, secret: args.password },
-      profile: { email, name: args.name },
+      account: { id: ADMIN_EMAIL, secret: requireAdminPassword() },
+      profile: { email: ADMIN_EMAIL, name: args.name },
     });
 
     const adminProfileId: Id<"profiles"> = await ctx.runMutation(internal.admin.createAdminProfile, {
       authUserId: user._id,
-      email,
+      email: ADMIN_EMAIL,
       fullName: args.name,
     });
 
-    return { deleted, adminProfileId, email };
+    return { deleted, adminProfileId, email: ADMIN_EMAIL };
   },
 });

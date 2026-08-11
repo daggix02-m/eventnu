@@ -32,7 +32,7 @@ export default async function UsersPage({
       initialUsers={users}
       initialCount={count}
       initialFilters={{ status, search, page }}
-      currentAdminId={currentAdmin?._id ?? null}
+      currentAdminId={currentAdmin?.authUserId ?? null}
     />
   )
 }

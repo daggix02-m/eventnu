@@ -1,10 +1,10 @@
 'use server'
 
 import { fetchQuery, fetchMutation } from '@/lib/actions/authedFetch'
-import type { Doc, Id } from '@eventnu/convex/_generated/dataModel'
+import type { Id } from '@eventnu/convex/_generated/dataModel'
 import { api } from '@eventnu/convex/_generated/api'
 import { revalidatePath } from 'next/cache'
-import { mapProfile } from '../mappers'
+import { mapAdminUser, mapProfile } from '../mappers'
 
 export async function getUsers(params: {
   status?: string
@@ -13,14 +13,17 @@ export async function getUsers(params: {
   perPage?: number
 }) {
   try {
-    const users = await fetchQuery(api.profiles.list, { search: params.search })
-    let filtered = users.map(mapProfile)
-    if (params.status === 'suspended') {
-      filtered = filtered.filter((u) => u.suspended)
-    } else if (params.status === 'active') {
-      filtered = filtered.filter((u) => !u.suspended)
-    }
-    return { users: filtered, count: filtered.length }
+    const status =
+      params.status === 'active' ||
+      params.status === 'suspended' ||
+      params.status === 'no_profile'
+        ? params.status
+        : 'all'
+    const users = await fetchQuery(api.profiles.listUsers, {
+      search: params.search,
+      status,
+    })
+    return { users: users.map(mapAdminUser), count: users.length }
   } catch (err) {
     console.error('Failed to load users:', err)
     throw err
@@ -28,17 +31,42 @@ export async function getUsers(params: {
 }
 
 export async function suspendUser(userId: string) {
-  await fetchMutation(api.profiles.suspend, { profileId: userId as Id<'profiles'> })
+  await fetchMutation(api.profiles.setUserSuspended, {
+    userId: userId as Id<'users'>,
+    suspended: true,
+  })
   revalidatePath('/users')
 }
 
 export async function unsuspendUser(userId: string) {
-  await fetchMutation(api.profiles.unsuspend, { profileId: userId as Id<'profiles'> })
+  await fetchMutation(api.profiles.setUserSuspended, {
+    userId: userId as Id<'users'>,
+    suspended: false,
+  })
   revalidatePath('/users')
 }
 
 export async function banUser(userId: string) {
-  await fetchMutation(api.profiles.suspend, { profileId: userId as Id<'profiles'> })
+  await fetchMutation(api.profiles.setUserSuspended, {
+    userId: userId as Id<'users'>,
+    suspended: true,
+  })
+  revalidatePath('/users')
+}
+
+export async function promoteUser(userId: string) {
+  await fetchMutation(api.profiles.setRole, {
+    userId: userId as Id<'users'>,
+    role: 'admin',
+  })
+  revalidatePath('/users')
+}
+
+export async function demoteUser(userId: string) {
+  await fetchMutation(api.profiles.setRole, {
+    userId: userId as Id<'users'>,
+    role: 'user',
+  })
   revalidatePath('/users')
 }
 
@@ -56,34 +84,64 @@ export async function updateProfile(userId: string, updates: {
   revalidatePath('/settings')
 }
 
-export async function getUserById(userId: string) {
-  try {
-    const profile = await fetchQuery(api.profiles.getById, { profileId: userId as Id<'profiles'> })
-    if (!profile) return { profile: null, role: null, stats: null }
+const EMPTY_STATS = { eventCount: 0, likeCount: 0, followCount: 0, commentCount: 0 }
 
-    let userWithCounts:
-      | (Doc<'profiles'> & {
-          eventCount: number
-          likeCount: number
-          followCount: number
-          commentCount: number
-        })
-      | null = null
+async function buildDetail(
+  row: NonNullable<Awaited<ReturnType<typeof fetchQuery<typeof api.profiles.getUserByAuthId>>>>,
+) {
+  let stats = EMPTY_STATS
+  if (row.profileId) {
     try {
-      userWithCounts = await fetchQuery(api.profiles.getUserWithCounts, { profileId: userId as Id<'profiles'> })
+      const withCounts = await fetchQuery(api.profiles.getUserWithCounts, {
+        profileId: row.profileId as Id<'profiles'>,
+      })
+      stats = {
+        eventCount: withCounts?.eventCount ?? 0,
+        likeCount: withCounts?.likeCount ?? 0,
+        followCount: withCounts?.followCount ?? 0,
+        commentCount: withCounts?.commentCount ?? 0,
+      }
     } catch (err) {
       console.error('Failed to load user counts:', err)
     }
+  }
+  return { profile: mapAdminUser(row), role: row.role, stats }
+}
+
+export async function getUserById(userId: string) {
+  try {
+    let row: Awaited<ReturnType<typeof fetchQuery<typeof api.profiles.getUserByAuthId>>> = null
+    try {
+      row = await fetchQuery(api.profiles.getUserByAuthId, {
+        userId: userId as Id<'users'>,
+      })
+    } catch {
+      row = null
+    }
+    if (row) return await buildDetail(row)
+
+    const profile = await fetchQuery(api.profiles.getById, {
+      profileId: userId as Id<'profiles'>,
+    })
+    if (!profile) return { profile: null, role: null, stats: null }
+
+    if (profile.authUserId) {
+      const row = await fetchQuery(api.profiles.getUserByAuthId, {
+        userId: profile.authUserId,
+      })
+      if (row) return await buildDetail(row)
+    }
 
     return {
-      profile: mapProfile(profile),
-      role: profile.role || null,
-      stats: {
-        eventCount: userWithCounts?.eventCount ?? 0,
-        likeCount: userWithCounts?.likeCount ?? 0,
-        followCount: userWithCounts?.followCount ?? 0,
-        commentCount: userWithCounts?.commentCount ?? 0,
+      profile: {
+        ...mapProfile(profile),
+        authUserId: profile.authUserId ?? '',
+        profileId: profile._id,
+        role: profile.role,
+        has_profile: true,
       },
+      role: profile.role,
+      stats: EMPTY_STATS,
     }
   } catch (err) {
     console.error('Failed to load user details:', err)

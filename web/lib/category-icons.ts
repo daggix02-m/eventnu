@@ -19,7 +19,6 @@ import {
   Gamepad2,
   Leaf,
   Globe,
-  Sparkles,
   Star,
   type LucideIcon,
 } from "lucide-react";
@@ -62,5 +61,5 @@ const ICON_BY_SLUG: Record<string, LucideIcon> = {
 export function getCategoryIcon(icon?: string | null, slug?: string | null): LucideIcon {
   if (icon && ICON_BY_VALUE[icon]) return ICON_BY_VALUE[icon];
   if (slug && ICON_BY_SLUG[slug]) return ICON_BY_SLUG[slug];
-  return Sparkles;
+  return Star;
 }
