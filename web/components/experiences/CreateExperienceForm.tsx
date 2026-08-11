@@ -18,8 +18,8 @@ export function CreateExperienceForm({
   eventTitle?: string
 }) {
   const createPost = useMutation(api.experiencePosts.create)
-  const getUploadUrl = useMutation(api.events.generateUploadUrl)
-  const events = useQuery(api.events.getPublished)
+  const getUploadUrl = useMutation(api.events.write.generateUploadUrl)
+  const events = useQuery(api.events.read.getPublished)
 
   const [content, setContent] = useState('')
   const [eventId, setEventId] = useState(initialEventId ?? '')

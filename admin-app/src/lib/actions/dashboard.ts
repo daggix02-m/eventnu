@@ -6,7 +6,7 @@ import { mapModerationLog } from '../mappers'
 
 export async function getDashboardStats() {
   try {
-    const eventStats = await fetchQuery(api.events.getStats, { now: Date.now() })
+    const eventStats = await fetchQuery(api.events.read.getStats, { now: Date.now() })
     const analytics = await fetchQuery(api.analytics.getStats)
     return {
       totalPublished: eventStats.totalPublished,
@@ -24,7 +24,7 @@ export async function getDashboardStats() {
 
 export async function getPendingReviewEvents() {
   try {
-    const events = await fetchQuery(api.events.getPendingReview)
+    const events = await fetchQuery(api.events.read.getPendingReview)
     return events.map((e) => ({
       id: e._id,
       title: e.title,

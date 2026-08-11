@@ -87,7 +87,7 @@ export const createAdminUser = action({
       throw new Error('Only the pinned admin email can be created')
     }
 
-    const admins = await ctx.runQuery(internal.instagram.listAdmins)
+    const admins = await ctx.runQuery(internal.instagram.connect.listAdmins)
     if (admins.length > 0) {
       throw new Error('An admin already exists. Admin creation is bootstrap-only.')
     }
@@ -113,7 +113,7 @@ export const setAdminPassword = action({
   handler: async (ctx, args) => {
     validateBootstrapKey(args.key)
 
-    const admins = await ctx.runQuery(internal.instagram.listAdmins)
+    const admins = await ctx.runQuery(internal.instagram.connect.listAdmins)
     const admin = admins.find((a) => a.email === ADMIN_EMAIL)
     if (!admin) {
       throw new Error(`Pinned admin (${ADMIN_EMAIL}) does not exist`)

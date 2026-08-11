@@ -4,7 +4,7 @@ import { api } from '@eventnu/convex/_generated/api'
 import type { Id } from '@eventnu/convex/_generated/dataModel'
 import type { Event, Category, Page } from '@/types'
 
-type RawEvent = FunctionReturnType<typeof api.events.getPublished>[number]
+type RawEvent = FunctionReturnType<typeof api.events.read.getPublished>[number]
 type RawCategory = FunctionReturnType<typeof api.categories.getRoot>[number]
 type RawCategoryWithCount = FunctionReturnType<typeof api.categories.getWithEventCounts>[number]
 type RawPage = FunctionReturnType<typeof api.cms.getPublishedPages>[number]
@@ -79,7 +79,7 @@ export function mapEvent(raw: RawEvent): Event {
 
 export async function getPublishedEvents(): Promise<Event[]> {
   try {
-    const events = await fetchQuery(api.events.getPublished)
+    const events = await fetchQuery(api.events.read.getPublished)
     return (events ?? []).map(mapEvent)
   } catch (err) {
     console.error('Failed to fetch published events:', err)
@@ -89,7 +89,7 @@ export async function getPublishedEvents(): Promise<Event[]> {
 
 export async function getFeaturedEvents(limit = 5): Promise<Event[]> {
   try {
-    const events = await fetchQuery(api.events.getFeatured, {
+    const events = await fetchQuery(api.events.read.getFeatured, {
       startDate: Date.now(),
       limit,
     })
@@ -102,7 +102,7 @@ export async function getFeaturedEvents(limit = 5): Promise<Event[]> {
 
 export async function getEventBySlug(slug: string): Promise<Event | null> {
   try {
-    const event = await fetchQuery(api.events.getBySlug, { slug })
+    const event = await fetchQuery(api.events.read.getBySlug, { slug })
     return event ? mapEvent(event) : null
   } catch (err) {
     console.error('Failed to fetch event by slug:', err)
@@ -112,7 +112,7 @@ export async function getEventBySlug(slug: string): Promise<Event | null> {
 
 export async function getSimilarEvents(event: Event, limit = 3): Promise<Event[]> {
   try {
-    const events = await fetchQuery(api.events.getSimilar, {
+    const events = await fetchQuery(api.events.read.getSimilar, {
       eventId: event.id as Id<'events'>,
       limit,
     })
@@ -185,7 +185,7 @@ export async function getCategoriesWithCounts(): Promise<CategoryWithCount[]> {
 
 export async function getEventsByCategory(categoryId: string): Promise<Event[]> {
   try {
-    const events = await fetchQuery(api.events.getByCategory, {
+    const events = await fetchQuery(api.events.read.getByCategory, {
       categoryId: categoryId as Id<'categories'>,
     })
     return (events ?? []).map(mapEvent)

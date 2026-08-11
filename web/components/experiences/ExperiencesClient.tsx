@@ -11,7 +11,7 @@ export function ExperiencesClient({ eventSlug }: { eventSlug?: string }) {
   const { isAuthenticated, isLoading: authLoading } = useConvexAuth()
   const posts = useQuery(api.experiencePosts.listRecent, { limit: 30 })
   const me = useQuery(api.profiles.getMe)
-  const events = useQuery(api.events.getPublished)
+  const events = useQuery(api.events.read.getPublished)
 
   const preselectedEvent = events?.find((e) => e.slug === eventSlug)
   const initialEventId = preselectedEvent?._id

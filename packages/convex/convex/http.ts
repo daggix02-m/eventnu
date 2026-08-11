@@ -66,7 +66,7 @@ http.route({
       return new Response('OK', { status: 200 })
     }
     for (const entry of body.entry) {
-      await ctx.scheduler.runAfter(0, internal.instagram.processWebhook, {
+      await ctx.scheduler.runAfter(0, internal.instagram.import.processWebhook, {
         entry,
       })
     }
@@ -108,7 +108,7 @@ http.route({
       return redirect('?instagram=error')
     }
     try {
-      await ctx.runAction(api.instagram.completeConnect, { code, state })
+      await ctx.runAction(api.instagram.connect.completeConnect, { code, state })
       return redirect('?instagram=connected')
     } catch (e) {
       return redirect(`?instagram=error&reason=${encodeURIComponent((e as Error).message)}`)

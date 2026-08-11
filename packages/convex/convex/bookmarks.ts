@@ -2,7 +2,7 @@ import { v } from 'convex/values'
 import { query, mutation, QueryCtx } from './_generated/server'
 import { Doc } from './_generated/dataModel'
 import { getUserProfile, requireUser } from './helpers'
-import { enrichEvent } from './events'
+import { enrichEvent } from './events/enrichment'
 import { rateLimiter } from './rateLimiter'
 
 export const countByEvent = query({

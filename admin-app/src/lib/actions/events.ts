@@ -18,7 +18,7 @@ export async function getEvents(params: {
   perPage?: number
 }) {
   try {
-    const result = await fetchQuery(api.events.list, {
+    const result = await fetchQuery(api.events.read.list, {
       paginationOpts: { numItems: params.perPage ?? 20, cursor: null },
       status: params.status !== 'all' ? params.status : undefined,
       source: params.source !== 'all' ? params.source : undefined,
@@ -35,7 +35,7 @@ export async function getEvents(params: {
 }
 
 export async function updateEventStatus(eventId: string, status: string, note?: string) {
-  await fetchMutation(api.events.updateStatus, {
+  await fetchMutation(api.events.moderation.updateStatus, {
     eventId: eventId as Id<'events'>,
     status,
     note,
@@ -45,7 +45,7 @@ export async function updateEventStatus(eventId: string, status: string, note?: 
 }
 
 export async function bulkUpdateEventStatus(eventIds: string[], status: string) {
-  await fetchMutation(api.events.bulkUpdateStatus, {
+  await fetchMutation(api.events.moderation.bulkUpdateStatus, {
     eventIds: eventIds as Id<'events'>[],
     status,
   })
@@ -54,7 +54,7 @@ export async function bulkUpdateEventStatus(eventIds: string[], status: string) 
 }
 
 export async function featureEvent(eventId: string, section: string, until: string | null) {
-  await fetchMutation(api.events.feature, {
+  await fetchMutation(api.events.moderation.feature, {
     eventId: eventId as Id<'events'>,
     section,
     until: until ? new Date(until).getTime() : undefined,
@@ -63,19 +63,19 @@ export async function featureEvent(eventId: string, section: string, until: stri
 }
 
 export async function unfeatureEvent(eventId: string) {
-  await fetchMutation(api.events.unfeature, { eventId: eventId as Id<'events'> })
+  await fetchMutation(api.events.moderation.unfeature, { eventId: eventId as Id<'events'> })
   revalidatePath('/events')
 }
 
 export async function deleteEvent(eventId: string) {
-  await fetchMutation(api.events.deleteEvent, { eventId: eventId as Id<'events'> })
+  await fetchMutation(api.events.write.deleteEvent, { eventId: eventId as Id<'events'> })
   revalidatePath('/events')
   revalidatePath('/')
 }
 
 export async function getEventById(eventId: string) {
   try {
-    const result = await fetchQuery(api.events.getById, { eventId: eventId as Id<'events'> })
+    const result = await fetchQuery(api.events.read.getById, { eventId: eventId as Id<'events'> })
     return {
       event: result.event ? mapEvent(result.event) : null,
       categories: (result.categories ?? []).map((c, i) => mapEventCategory(c, i)),
@@ -114,19 +114,19 @@ async function getRecentEvents(
 }
 
 export async function getHostRecentEvents(hostId: string) {
-  return getRecentEvents(api.events.listByHost, 'hostId', hostId)
+  return getRecentEvents(api.events.read.listByHost, 'hostId', hostId)
 }
 
 export async function getOrganizerRecentEvents(profileId: string) {
-  return getRecentEvents(api.events.listByOrganizer, 'profileId', profileId)
+  return getRecentEvents(api.events.read.listByOrganizer, 'profileId', profileId)
 }
 
 export async function getUploadUrl() {
-  return await fetchMutation(api.events.generateUploadUrl)
+  return await fetchMutation(api.events.write.generateUploadUrl)
 }
 
 export async function resolveStorageUrls(storageIds: string[]) {
-  return await fetchQuery(api.events.getStorageUrls, {
+  return await fetchQuery(api.events.read.getStorageUrls, {
     storageIds: storageIds.filter(Boolean),
   })
 }
@@ -164,7 +164,7 @@ export async function createEvent(data: {
   slug?: string | null
   categoryIds?: string[]
 }) {
-  const result = await fetchMutation(api.events.create, {
+  const result = await fetchMutation(api.events.write.create, {
     title: data.title,
     description: data.description,
     startDate: new Date(data.start_date).getTime(),
@@ -243,7 +243,7 @@ export async function updateEvent(
     categoryIds?: string[]
   },
 ) {
-  await fetchMutation(api.events.update, {
+  await fetchMutation(api.events.write.update, {
     eventId: eventId as Id<'events'>,
     title: data.title,
     description: data.description,

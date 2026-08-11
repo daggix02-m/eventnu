@@ -7,7 +7,7 @@ import { revalidatePath } from 'next/cache'
 
 export async function getInstagramStatus() {
   try {
-    const result = await fetchQuery(api.instagram.getConnectionStatus)
+    const result = await fetchQuery(api.instagram.connect.getConnectionStatus)
     return result
   } catch {
     return null
@@ -15,26 +15,26 @@ export async function getInstagramStatus() {
 }
 
 export async function startInstagramConnect() {
-  return await fetchMutation(api.instagram.startConnect)
+  return await fetchMutation(api.instagram.connect.startConnect)
 }
 
 export async function setInstagramSync(enabled: boolean) {
-  await fetchMutation(api.instagram.setSyncEnabled, { enabled })
+  await fetchMutation(api.instagram.connect.setSyncEnabled, { enabled })
   revalidatePath('/settings')
 }
 
 export async function setInstagramAutoPublish(enabled: boolean) {
-  await fetchMutation(api.instagram.setAutoPublish, { enabled })
+  await fetchMutation(api.instagram.connect.setAutoPublish, { enabled })
   revalidatePath('/settings')
 }
 
 export async function disconnectInstagram() {
-  await fetchMutation(api.instagram.disconnect)
+  await fetchMutation(api.instagram.connect.disconnect)
   revalidatePath('/settings')
 }
 
 export async function publishEventToInstagram(eventId: string, caption: string) {
-  return await fetchAction(api.instagram.publishToInstagram, {
+  return await fetchAction(api.instagram.publish.publishToInstagram, {
     eventId: eventId as Id<'events'>,
     caption,
   })
