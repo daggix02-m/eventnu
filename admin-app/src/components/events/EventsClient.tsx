@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 import { getErrorMessage } from '@/lib/errors'
 import { formatDate } from '@/lib/format'
 import {
@@ -32,13 +32,14 @@ import {
 } from '@/components/list'
 import { toast } from 'sonner'
 import {
-  getEvents,
   updateEventStatus,
   bulkUpdateEventStatus,
   featureEvent,
   unfeatureEvent,
   deleteEvent,
 } from '@/lib/actions/events'
+import { eventsKeys, useEvents } from '@/lib/api/events'
+import type { EventsListFilters } from '@/lib/api/events'
 import type { MappedEvent } from '@/lib/mappers'
 import Link from 'next/link'
 
@@ -87,15 +88,6 @@ const statusVariantMap: Record<
   archived: 'secondary',
 }
 
-interface EventListFilters {
-  search?: string
-  status?: string
-  source?: string
-  frequency?: string
-  featured?: boolean
-  page?: number
-}
-
 export function EventsClient({
   initialEvents,
   initialCount,
@@ -103,11 +95,11 @@ export function EventsClient({
 }: {
   initialEvents: MappedEvent[]
   initialCount: number
-  initialFilters: EventListFilters
+  initialFilters: EventsListFilters
 }) {
   const queryClient = useQueryClient()
   const { filters, update, setPage, searchInput, setSearchInput } =
-    useListFilters<EventListFilters>({
+    useListFilters<EventsListFilters>({
       basePath: '/events',
       initial: initialFilters,
       defaults: { page: 1, search: '', status: 'all', source: 'all', frequency: 'all' },
@@ -129,29 +121,17 @@ export function EventsClient({
     return () => document.removeEventListener('click', handleOutsideClick)
   }, [actionMenuOpen])
 
-  const matchesInitial = JSON.stringify(filters) === JSON.stringify(initialFilters)
-
-  const { data, isFetching } = useQuery({
-    queryKey: ['events', filters],
-    queryFn: () =>
-      getEvents({
-        status: filters.status !== 'all' ? filters.status : undefined,
-        source: filters.source !== 'all' ? filters.source : undefined,
-        featured: filters.featured,
-        frequency: filters.frequency !== 'all' ? filters.frequency : undefined,
-        search: filters.search || undefined,
-        page: filters.page ?? 1,
-        perPage: 20,
-      }),
-    initialData: matchesInitial ? { events: initialEvents, count: initialCount } : undefined,
-    placeholderData: keepPreviousData,
-    staleTime: 30_000,
+  const { data, isFetching } = useEvents({
+    filters,
+    initialEvents,
+    initialCount,
+    initialFilters,
   })
 
   const events = data?.events ?? []
   const count = data?.count ?? 0
 
-  const refreshEvents = () => queryClient.invalidateQueries({ queryKey: ['events'] })
+  const refreshEvents = () => queryClient.invalidateQueries({ queryKey: eventsKeys })
 
   const handleStatusAction = async (eventId: string, status: string) => {
     try {
