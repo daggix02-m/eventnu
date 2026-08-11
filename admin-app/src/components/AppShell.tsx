@@ -22,7 +22,7 @@ function Shell({ children }: { children: React.ReactNode }) {
       <div
         className={cn(
           'flex flex-col min-h-screen transition-[margin-left] duration-300',
-          collapsed ? 'lg:ml-[76px]' : 'lg:ml-[260px]'
+          collapsed ? 'lg:ml-[76px]' : 'lg:ml-[260px]',
         )}
       >
         <TopHeader />

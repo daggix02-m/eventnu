@@ -75,7 +75,10 @@ export function PagesClient({ pages }: { pages: Page[] }) {
               </tr>
             )}
             {pages.map((page) => (
-              <tr key={page.id} className="border-b border-outline-variant last:border-0 hover:bg-surface-container-high/50">
+              <tr
+                key={page.id}
+                className="border-b border-outline-variant last:border-0 hover:bg-surface-container-high/50"
+              >
                 <td className="px-4 py-3 font-medium">{page.title}</td>
                 <td className="px-4 py-3 text-muted-foreground">/{page.slug}</td>
                 <td className="px-4 py-3">

@@ -1,26 +1,26 @@
-import { redirect } from "next/navigation";
+import { redirect } from 'next/navigation'
 
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic'
 
 interface PageProps {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }
 
 export default async function DiscoverPage(props: PageProps) {
-  const searchParams = await props.searchParams;
-  
+  const searchParams = await props.searchParams
+
   // Build query string from searchParams to preserve filters (like search, category, etc.)
-  const params = new URLSearchParams();
+  const params = new URLSearchParams()
   Object.entries(searchParams).forEach(([key, val]) => {
     if (val !== undefined) {
       if (Array.isArray(val)) {
-        val.forEach((v) => params.append(key, v));
+        val.forEach((v) => params.append(key, v))
       } else {
-        params.append(key, val);
+        params.append(key, val)
       }
     }
-  });
+  })
 
-  const queryString = params.toString();
-  redirect(queryString ? `/?${queryString}` : "/");
+  const queryString = params.toString()
+  redirect(queryString ? `/?${queryString}` : '/')
 }

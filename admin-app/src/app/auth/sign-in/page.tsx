@@ -12,12 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { toast } from 'sonner'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import { getErrorMessage } from '@/lib/errors'
-import {
-  describeSignInError,
-  isNetworkError,
-  INVALID_CREDENTIALS,
-  RATE_LIMITED,
-} from '@/lib/auth'
+import { describeSignInError, isNetworkError, INVALID_CREDENTIALS, RATE_LIMITED } from '@/lib/auth'
 
 const VERIFY_RESULT_MESSAGES = {
   invalid_account: 'No admin account found for this email.',
@@ -38,8 +33,7 @@ export default function SignIn() {
   const [showPassword, setShowPassword] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
 
-  const clearError = (field: string) =>
-    setFieldErrors(prev => ({ ...prev, [field]: '' }))
+  const clearError = (field: string) => setFieldErrors((prev) => ({ ...prev, [field]: '' }))
 
   const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -94,7 +88,10 @@ export default function SignIn() {
         toast.error('Sign in failed. Please try again.')
       }
     } catch (err: unknown) {
-      const msg = describeSignInError(err, verifyError ?? getErrorMessage(err, 'Authentication failed'))
+      const msg = describeSignInError(
+        err,
+        verifyError ?? getErrorMessage(err, 'Authentication failed'),
+      )
       toast.error(msg)
       if (msg === INVALID_CREDENTIALS) {
         setFieldErrors({ email: msg, password: msg })
@@ -112,8 +109,12 @@ export default function SignIn() {
             En
           </div>
           <div className="text-left">
-            <h1 className="font-headline text-xl font-semibold text-foreground tracking-tight">Event Nu</h1>
-            <p className="font-mono text-[10px] text-muted-foreground uppercase tracking-[0.2em]">Admin · Addissuite</p>
+            <h1 className="font-headline text-xl font-semibold text-foreground tracking-tight">
+              Event Nu
+            </h1>
+            <p className="font-mono text-[10px] text-muted-foreground uppercase tracking-[0.2em]">
+              Admin · Addissuite
+            </p>
           </div>
         </div>
 
@@ -140,7 +141,9 @@ export default function SignIn() {
                   aria-invalid={!!fieldErrors.email}
                   className="h-11"
                 />
-                {fieldErrors.email && <p className="text-destructive text-xs">{fieldErrors.email}</p>}
+                {fieldErrors.email && (
+                  <p className="text-destructive text-xs">{fieldErrors.email}</p>
+                )}
               </div>
               <div className="space-y-1 relative">
                 <div className="relative">
@@ -162,9 +165,14 @@ export default function SignIn() {
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
-                {fieldErrors.password && <p className="text-destructive text-xs">{fieldErrors.password}</p>}
+                {fieldErrors.password && (
+                  <p className="text-destructive text-xs">{fieldErrors.password}</p>
+                )}
                 <div className="flex justify-end pt-1">
-                  <Link href="/auth/forgot-password" className="text-xs text-primary hover:underline font-medium">
+                  <Link
+                    href="/auth/forgot-password"
+                    className="text-xs text-primary hover:underline font-medium"
+                  >
                     Forgot password?
                   </Link>
                 </div>
@@ -183,7 +191,8 @@ export default function SignIn() {
         </Card>
 
         <p className="text-center text-xs text-muted-foreground mt-6">
-          Admin access only. Access is provisioned — contact the administrator if you need an account.
+          Admin access only. Access is provisioned — contact the administrator if you need an
+          account.
         </p>
       </div>
     </div>

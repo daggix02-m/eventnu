@@ -19,7 +19,9 @@ export default async function CMSPage() {
               <CardTitle className="text-lg">Pages</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">Create and edit informational pages like About, Privacy, and Terms.</p>
+              <p className="text-sm text-muted-foreground">
+                Create and edit informational pages like About, Privacy, and Terms.
+              </p>
             </CardContent>
           </Card>
         </Link>
@@ -32,7 +34,9 @@ export default async function CMSPage() {
               <CardTitle className="text-lg">Announcements</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">Publish banners and announcements on the public site.</p>
+              <p className="text-sm text-muted-foreground">
+                Publish banners and announcements on the public site.
+              </p>
             </CardContent>
           </Card>
         </Link>
@@ -45,7 +49,9 @@ export default async function CMSPage() {
               <CardTitle className="text-lg">Contact Submissions</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">View messages submitted through the public contact form.</p>
+              <p className="text-sm text-muted-foreground">
+                View messages submitted through the public contact form.
+              </p>
             </CardContent>
           </Card>
         </Link>

@@ -1,10 +1,10 @@
-import Link from "next/link";
-import { Container } from "@/components/layout/Container";
-import { Button } from "@/components/ui/Button";
+import Link from 'next/link'
+import { Container } from '@/components/layout/Container'
+import { Button } from '@/components/ui/Button'
 
 export const metadata = {
-  title: "Page Not Found | Event Nu",
-};
+  title: 'Page Not Found | Event Nu',
+}
 
 export default function NotFoundPage() {
   return (
@@ -18,5 +18,5 @@ export default function NotFoundPage() {
         <Link href="/">Find Events</Link>
       </Button>
     </Container>
-  );
+  )
 }

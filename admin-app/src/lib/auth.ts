@@ -1,4 +1,4 @@
-import type { ConvexAuthActionsContext } from "@convex-dev/auth/react"
+import type { ConvexAuthActionsContext } from '@convex-dev/auth/react'
 
 type AuthResult = { signingIn: boolean }
 
@@ -7,8 +7,8 @@ type AuthResult = { signingIn: boolean }
  * Stored in sessionStorage (per-tab), not localStorage, to avoid leaking
  * the address into other tabs.
  */
-export const AUTH_EMAIL_KEY = "eventnu_admin_auth_email"
-export const RESET_EMAIL_KEY = "eventnu_admin_reset_email"
+export const AUTH_EMAIL_KEY = 'eventnu_admin_auth_email'
+export const RESET_EMAIL_KEY = 'eventnu_admin_reset_email'
 
 export function setStoredEmail(key: string, email: string): void {
   try {
@@ -20,9 +20,9 @@ export function setStoredEmail(key: string, email: string): void {
 
 export function getStoredEmail(key: string): string {
   try {
-    return sessionStorage.getItem(key) ?? ""
+    return sessionStorage.getItem(key) ?? ''
   } catch {
-    return ""
+    return ''
   }
 }
 
@@ -68,11 +68,13 @@ export function describeSignInError(err: unknown, fallback: string): string {
  * requires a provider string — this wrapper bridges the gap.
  */
 export async function redeemVerificationCode(
-  signIn: ConvexAuthActionsContext["signIn"],
+  signIn: ConvexAuthActionsContext['signIn'],
   email: string,
   code: string,
 ): Promise<AuthResult> {
-  return await (signIn as unknown as (params: { email: string; code: string }) => Promise<AuthResult>)({
+  return await (
+    signIn as unknown as (params: { email: string; code: string }) => Promise<AuthResult>
+  )({
     email,
     code,
   })

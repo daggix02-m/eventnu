@@ -18,9 +18,7 @@ export async function getOrganizers(params: {
       search: params.search,
     })
     const profiles = await fetchQuery(api.profiles.list, {})
-    const profileById = new Map(
-      profiles.map((p) => [p._id, p]),
-    )
+    const profileById = new Map(profiles.map((p) => [p._id, p]))
     let filtered = organizers.map((o) => mapOrganizer(o, profileById.get(o.profileId)))
     if (params.verified !== undefined) {
       filtered = filtered.filter((o) => o.verified === params.verified)
@@ -54,13 +52,17 @@ export async function unsuspendOrganizer(profileId: string) {
 
 export async function getOrganizerById(profileId: string) {
   try {
-    const organizer = await fetchQuery(api.organizers.getById, { profileId: profileId as Id<'profiles'> })
+    const organizer = await fetchQuery(api.organizers.getById, {
+      profileId: profileId as Id<'profiles'>,
+    })
     if (!organizer) return { organizer: null, eventCount: 0 }
 
     let profile: Doc<'profiles'> | null = null
     let eventCount = 0
     try {
-      const withCounts = await fetchQuery(api.profiles.getUserWithCounts, { profileId: profileId as Id<'profiles'> })
+      const withCounts = await fetchQuery(api.profiles.getUserWithCounts, {
+        profileId: profileId as Id<'profiles'>,
+      })
       if (withCounts) {
         profile = withCounts
         eventCount = withCounts.eventCount ?? 0

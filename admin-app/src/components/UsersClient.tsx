@@ -32,13 +32,7 @@ import { formatDate } from '@/lib/format'
 import { getErrorMessage } from '@/lib/errors'
 import { useUsers, usersKeys } from '@/lib/api/users'
 import type { UserListFilters } from '@/lib/api/users'
-import {
-  suspendUser,
-  unsuspendUser,
-  banUser,
-  promoteUser,
-  demoteUser,
-} from '@/lib/actions/users'
+import { suspendUser, unsuspendUser, banUser, promoteUser, demoteUser } from '@/lib/actions/users'
 import type { MappedUser } from '@/lib/mappers'
 
 const statusOptions = [
@@ -67,7 +61,12 @@ interface UsersClientProps {
   currentAdminId: string | null
 }
 
-export function UsersClient({ initialUsers, initialCount, initialFilters, currentAdminId }: UsersClientProps) {
+export function UsersClient({
+  initialUsers,
+  initialCount,
+  initialFilters,
+  currentAdminId,
+}: UsersClientProps) {
   const queryClient = useQueryClient()
   const { filters, update, setPage, searchInput, setSearchInput } = useListFilters({
     basePath: '/users',
@@ -75,7 +74,11 @@ export function UsersClient({ initialUsers, initialCount, initialFilters, curren
     defaults: { status: 'all', page: 1 },
   })
 
-  const { data, isFetching } = useUsers(filters, { users: initialUsers, count: initialCount }, initialFilters)
+  const { data, isFetching } = useUsers(
+    filters,
+    { users: initialUsers, count: initialCount },
+    initialFilters,
+  )
   const users = data?.items ?? []
   const all = data?.all ?? users
   const count = data?.total ?? 0
@@ -117,32 +120,32 @@ export function UsersClient({ initialUsers, initialCount, initialFilters, curren
           confirmTarget.type === 'ban'
             ? 'Ban user?'
             : confirmTarget.type === 'suspend'
-            ? 'Suspend user?'
-            : confirmTarget.type === 'promote'
-            ? 'Make this user an admin?'
-            : confirmTarget.type === 'demote'
-            ? 'Remove admin role?'
-            : 'Unsuspend user?',
+              ? 'Suspend user?'
+              : confirmTarget.type === 'promote'
+                ? 'Make this user an admin?'
+                : confirmTarget.type === 'demote'
+                  ? 'Remove admin role?'
+                  : 'Unsuspend user?',
         description:
           confirmTarget.type === 'ban'
             ? 'Are you sure you want to ban this user? This will suspend their account.'
             : confirmTarget.type === 'suspend'
-            ? 'Are you sure you want to suspend this user?'
-            : confirmTarget.type === 'promote'
-            ? 'This will grant the user full admin access to the dashboard.'
-            : confirmTarget.type === 'demote'
-            ? 'This will remove admin access from this user.'
-            : 'Are you sure you want to unsuspend this user?',
+              ? 'Are you sure you want to suspend this user?'
+              : confirmTarget.type === 'promote'
+                ? 'This will grant the user full admin access to the dashboard.'
+                : confirmTarget.type === 'demote'
+                  ? 'This will remove admin access from this user.'
+                  : 'Are you sure you want to unsuspend this user?',
         confirmLabel:
           confirmTarget.type === 'promote'
             ? 'Make admin'
             : confirmTarget.type === 'demote'
-            ? 'Remove admin'
-            : confirmTarget.type === 'unsuspend'
-            ? 'Unsuspend'
-            : confirmTarget.type === 'ban'
-            ? 'Ban'
-            : 'Suspend',
+              ? 'Remove admin'
+              : confirmTarget.type === 'unsuspend'
+                ? 'Unsuspend'
+                : confirmTarget.type === 'ban'
+                  ? 'Ban'
+                  : 'Suspend',
         destructive: confirmTarget.type !== 'promote' && confirmTarget.type !== 'unsuspend',
       }
     : null
@@ -154,23 +157,55 @@ export function UsersClient({ initialUsers, initialCount, initialFilters, curren
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatsCard icon={Users} label="Total Users" value={count} />
-          <StatsCard icon={CheckCircle} label="Active" value={all.filter((u) => u.has_profile && !u.suspended).length} />
-          <StatsCard icon={Shield} label="Suspended" value={all.filter((u) => u.suspended).length} />
-          <StatsCard icon={UserX} label="No Profile" value={all.filter((u) => !u.has_profile).length} />
+          <StatsCard
+            icon={CheckCircle}
+            label="Active"
+            value={all.filter((u) => u.has_profile && !u.suspended).length}
+          />
+          <StatsCard
+            icon={Shield}
+            label="Suspended"
+            value={all.filter((u) => u.suspended).length}
+          />
+          <StatsCard
+            icon={UserX}
+            label="No Profile"
+            value={all.filter((u) => !u.has_profile).length}
+          />
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <SearchInput value={searchInput} onChange={setSearchInput} placeholder="Search users by name..." className="flex-1 max-w-md" />
-          <FilterSelect value={filters.status ?? 'all'} onChange={(v) => update('status', v)} options={statusOptions} />
+          <SearchInput
+            value={searchInput}
+            onChange={setSearchInput}
+            placeholder="Search users by name..."
+            className="flex-1 max-w-md"
+          />
+          <FilterSelect
+            value={filters.status ?? 'all'}
+            onChange={(v) => update('status', v)}
+            options={statusOptions}
+          />
         </div>
 
         <DataTable<MappedUser>
           data={users}
           rowKey={(user) => user.id}
           loading={isFetching || mutating}
-          empty={<EmptyState icon={User} title="No users found." description="Try adjusting your search or filters." />}
+          empty={
+            <EmptyState
+              icon={User}
+              title="No users found."
+              description="Try adjusting your search or filters."
+            />
+          }
           footer={
-            <Pagination page={filters.page ?? 1} totalPages={totalPages} count={count} onPageChange={setPage} />
+            <Pagination
+              page={filters.page ?? 1}
+              totalPages={totalPages}
+              count={count}
+              onPageChange={setPage}
+            />
           }
           columns={[
             {
@@ -178,9 +213,15 @@ export function UsersClient({ initialUsers, initialCount, initialFilters, curren
               header: 'User',
               render: (user) => (
                 <div className="flex items-center gap-3">
-                  <UserAvatar src={user.avatar_url} fallback={(user.full_name || user.username || 'U').charAt(0)} />
+                  <UserAvatar
+                    src={user.avatar_url}
+                    fallback={(user.full_name || user.username || 'U').charAt(0)}
+                  />
                   <div>
-                    <Link href={`/users/${user.id}`} className="font-semibold text-sm text-foreground hover:text-primary transition-colors">
+                    <Link
+                      href={`/users/${user.id}`}
+                      className="font-semibold text-sm text-foreground hover:text-primary transition-colors"
+                    >
                       {user.full_name}
                     </Link>
                     <p className="text-xs text-muted-foreground">
@@ -225,7 +266,9 @@ export function UsersClient({ initialUsers, initialCount, initialFilters, curren
             {
               key: 'joined',
               header: 'Joined',
-              render: (user) => <span className="text-sm text-muted-foreground">{formatDate(user.created_at)}</span>,
+              render: (user) => (
+                <span className="text-sm text-muted-foreground">{formatDate(user.created_at)}</span>
+              ),
             },
             {
               key: 'actions',

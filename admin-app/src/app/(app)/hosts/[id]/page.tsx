@@ -1,11 +1,7 @@
 import { getHostById } from '@/lib/actions/hosts'
 import { HostDetailClient } from '@/components/HostDetailClient'
 
-export default async function HostDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
+export default async function HostDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
 
   let host: Awaited<ReturnType<typeof getHostById>>['host'] = null
@@ -24,10 +20,5 @@ export default async function HostDetailPage({
     )
   }
 
-  return (
-    <HostDetailClient
-      host={host}
-      eventCount={eventCount}
-    />
-  )
+  return <HostDetailClient host={host} eventCount={eventCount} />
 }

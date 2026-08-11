@@ -26,8 +26,7 @@ export function PostPreview({
   isFree?: boolean
 }) {
   const cover = images[0]
-  const aspect =
-    ASPECT_OPTIONS.find((a) => a.id === aspectRatio) ?? ASPECT_OPTIONS[0]
+  const aspect = ASPECT_OPTIONS.find((a) => a.id === aspectRatio) ?? ASPECT_OPTIONS[0]
   const overLimit = caption.length > 2200
 
   return (
@@ -46,7 +45,7 @@ export function PostPreview({
       <div
         className={cn(
           'relative w-full overflow-hidden bg-surface-container-high',
-          aspect.className
+          aspect.className,
         )}
       >
         {cover ? (
@@ -82,7 +81,12 @@ export function PostPreview({
           <span className="font-semibold">event.nua </span>
           {caption.trim() || 'Your caption will appear here…'}
         </p>
-        <p className={cn('text-[10px] font-medium tabular-nums', overLimit ? 'text-destructive' : 'text-muted-foreground')}>
+        <p
+          className={cn(
+            'text-[10px] font-medium tabular-nums',
+            overLimit ? 'text-destructive' : 'text-muted-foreground',
+          )}
+        >
           {caption.length}/2200
         </p>
         {venueName && (
@@ -100,7 +104,7 @@ export function PostPreview({
               key={`${img.url}-${i}`}
               className={cn(
                 'w-9 h-9 rounded-md overflow-hidden border-2',
-                i === 0 ? 'border-primary' : 'border-transparent opacity-70'
+                i === 0 ? 'border-primary' : 'border-transparent opacity-70',
               )}
             >
               <img

@@ -96,7 +96,9 @@ export function InstagramSettingsCard({
     try {
       await setInstagramAutoPublish(enabled)
       await refresh()
-      toast.success(enabled ? 'Publishing to Instagram enabled' : 'Publishing to Instagram disabled')
+      toast.success(
+        enabled ? 'Publishing to Instagram enabled' : 'Publishing to Instagram disabled',
+      )
     } catch (err) {
       toast.error(getErrorMessage(err, 'Failed to update'))
     } finally {
@@ -109,9 +111,7 @@ export function InstagramSettingsCard({
     if (status) setExpired(status.tokenExpiresAt < Date.now())
   }, [status])
 
-  const expiresLabel = status
-    ? new Date(status.tokenExpiresAt).toLocaleDateString()
-    : ''
+  const expiresLabel = status ? new Date(status.tokenExpiresAt).toLocaleDateString() : ''
 
   return (
     <Card className="bg-card rounded-2xl border border-outline-variant shadow-sm p-6">
@@ -124,9 +124,7 @@ export function InstagramSettingsCard({
             <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">
               Instagram
             </h3>
-            <p className="text-xs text-muted-foreground">
-              Sync & publish events through Instagram
-            </p>
+            <p className="text-xs text-muted-foreground">Sync & publish events through Instagram</p>
           </div>
         </div>
       </div>
@@ -134,8 +132,8 @@ export function InstagramSettingsCard({
       {!status ? (
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            Connect Event Nu&apos;s Instagram account to auto-publish its posts
-            as events on the site, and to publish events to Instagram.
+            Connect Event Nu&apos;s Instagram account to auto-publish its posts as events on the
+            site, and to publish events to Instagram.
           </p>
           <Button
             onClick={handleConnect}

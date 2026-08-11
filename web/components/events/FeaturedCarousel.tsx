@@ -1,132 +1,141 @@
-"use client";
+'use client'
 
-import { useState, useEffect, useCallback, useRef } from "react";
-import Link from "next/link";
-import Image from "next/image";
-import { ChevronLeft, ChevronRight, Calendar, MapPin, Pause, Play, Images, Instagram } from "lucide-react";
-import { cn, formatEventDate, isEventPast } from "@/lib/utils";
-import { filterStyle, sortedImages } from "@/lib/media";
-import { Button } from "@/components/ui/Button";
-import type { Event } from "@/types";
+import { useState, useEffect, useCallback, useRef } from 'react'
+import Link from 'next/link'
+import Image from 'next/image'
+import {
+  ChevronLeft,
+  ChevronRight,
+  Calendar,
+  MapPin,
+  Pause,
+  Play,
+  Images,
+  Instagram,
+} from 'lucide-react'
+import { cn, formatEventDate, isEventPast } from '@/lib/utils'
+import { filterStyle, sortedImages } from '@/lib/media'
+import { Button } from '@/components/ui/Button'
+import type { Event } from '@/types'
 
 interface FeaturedCarouselProps {
-  events: Event[];
+  events: Event[]
 }
 
-const IMAGE_STEP_MS = 3000;
-const SWIPE_THRESHOLD = 60;
+const IMAGE_STEP_MS = 3000
+const SWIPE_THRESHOLD = 60
 
 function getPrimaryCategory(event: Event) {
   return (
     event.event_categories?.find((ec) => ec.is_primary)?.categories ??
     event.event_categories?.[0]?.categories
-  );
+  )
 }
 
 export function FeaturedCarousel({ events }: FeaturedCarouselProps) {
-  const [current, setCurrent] = useState(0);
-  const [img, setImg] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
-  const [hovered, setHovered] = useState(false);
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-  const sectionRef = useRef<HTMLElement | null>(null);
+  const [current, setCurrent] = useState(0)
+  const [img, setImg] = useState(0)
+  const [isPaused, setIsPaused] = useState(false)
+  const [hovered, setHovered] = useState(false)
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
+  const sectionRef = useRef<HTMLElement | null>(null)
   const swipeRef = useRef<{ startX: number; startY: number; active: boolean }>({
     startX: 0,
     startY: 0,
     active: false,
-  });
+  })
 
-  const paused = isPaused || hovered;
+  const paused = isPaused || hovered
 
   const slideTicks = useCallback(
     (index: number) => {
-      const count = Math.max(1, sortedImages(events[index]?.images).length);
-      return Math.max(2, count) * (IMAGE_STEP_MS / 1000);
+      const count = Math.max(1, sortedImages(events[index]?.images).length)
+      return Math.max(2, count) * (IMAGE_STEP_MS / 1000)
     },
-    [events]
-  );
+    [events],
+  )
 
   const next = useCallback(() => {
-    setCurrent((prev) => (prev + 1) % events.length);
-    setImg(0);
-  }, [events.length]);
+    setCurrent((prev) => (prev + 1) % events.length)
+    setImg(0)
+  }, [events.length])
 
   const prev = useCallback(() => {
-    setCurrent((prev) => (prev - 1 + events.length) % events.length);
-    setImg(0);
-  }, [events.length]);
+    setCurrent((prev) => (prev - 1 + events.length) % events.length)
+    setImg(0)
+  }, [events.length])
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setPrefersReducedMotion(mediaQuery.matches);
-    const handleChange = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
-    mediaQuery.addEventListener("change", handleChange);
-    return () => mediaQuery.removeEventListener("change", handleChange);
-  }, []);
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+    setPrefersReducedMotion(mediaQuery.matches)
+    const handleChange = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches)
+    mediaQuery.addEventListener('change', handleChange)
+    return () => mediaQuery.removeEventListener('change', handleChange)
+  }, [])
 
   useEffect(() => {
-    if (events.length <= 1 || paused || prefersReducedMotion) return;
-    const activeImages = sortedImages(events[current]?.images);
-    const imageCount = Math.max(1, activeImages.length);
-    const rotateEvery = Math.round(IMAGE_STEP_MS / 1000);
-    const advanceEvery = Math.max(2, imageCount) * rotateEvery;
+    if (events.length <= 1 || paused || prefersReducedMotion) return
+    const activeImages = sortedImages(events[current]?.images)
+    const imageCount = Math.max(1, activeImages.length)
+    const rotateEvery = Math.round(IMAGE_STEP_MS / 1000)
+    const advanceEvery = Math.max(2, imageCount) * rotateEvery
 
-    let tick = 0;
+    let tick = 0
     const timer = setInterval(() => {
-      tick += 1;
+      tick += 1
       if (imageCount > 1 && tick % rotateEvery === 0) {
-        setImg((i) => (i + 1) % imageCount);
+        setImg((i) => (i + 1) % imageCount)
       }
       if (tick % advanceEvery === 0) {
-        setCurrent((prev) => (prev + 1) % events.length);
-        setImg(0);
+        setCurrent((prev) => (prev + 1) % events.length)
+        setImg(0)
       }
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [events, current, paused, prefersReducedMotion]);
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [events, current, paused, prefersReducedMotion])
 
   useEffect(() => {
-    const el = sectionRef.current;
-    if (!el) return;
+    const el = sectionRef.current
+    if (!el) return
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "ArrowRight") next();
-      if (e.key === "ArrowLeft") prev();
-      if (e.key === " ") {
-        e.preventDefault();
-        setIsPaused((p) => !p);
+      if (e.key === 'ArrowRight') next()
+      if (e.key === 'ArrowLeft') prev()
+      if (e.key === ' ') {
+        e.preventDefault()
+        setIsPaused((p) => !p)
       }
-    };
-    el.addEventListener("keydown", handleKeyDown);
-    return () => el.removeEventListener("keydown", handleKeyDown);
-  }, [next, prev]);
+    }
+    el.addEventListener('keydown', handleKeyDown)
+    return () => el.removeEventListener('keydown', handleKeyDown)
+  }, [next, prev])
 
   const handlePointerDown = (e: React.PointerEvent) => {
-    swipeRef.current = { startX: e.clientX, startY: e.clientY, active: true };
-  };
+    swipeRef.current = { startX: e.clientX, startY: e.clientY, active: true }
+  }
 
   const handlePointerUp = (e: React.PointerEvent) => {
-    if (!swipeRef.current.active) return;
-    swipeRef.current.active = false;
-    const dx = e.clientX - swipeRef.current.startX;
-    const dy = e.clientY - swipeRef.current.startY;
+    if (!swipeRef.current.active) return
+    swipeRef.current.active = false
+    const dx = e.clientX - swipeRef.current.startX
+    const dy = e.clientY - swipeRef.current.startY
     if (Math.abs(dx) > SWIPE_THRESHOLD && Math.abs(dx) > Math.abs(dy)) {
-      if (dx < 0) next();
-      else prev();
+      if (dx < 0) next()
+      else prev()
     }
-  };
+  }
 
   const cancelSwipe = () => {
-    swipeRef.current.active = false;
-  };
+    swipeRef.current.active = false
+  }
 
-  if (events.length === 0) return null;
+  if (events.length === 0) return null
 
-  const currentEvent = events[current];
-  const category = currentEvent ? getPrimaryCategory(currentEvent) : undefined;
-  const externalLabel = currentEvent?.external_link_label?.trim() || "RSVP Now";
-  const currentImages = sortedImages(currentEvent?.images);
-  const currentImageCount = currentImages.length > 1 ? currentImages.length : 1;
-  const currentSlideTicks = slideTicks(current);
+  const currentEvent = events[current]
+  const category = currentEvent ? getPrimaryCategory(currentEvent) : undefined
+  const externalLabel = currentEvent?.external_link_label?.trim() || 'RSVP Now'
+  const currentImages = sortedImages(currentEvent?.images)
+  const currentImageCount = currentImages.length > 1 ? currentImages.length : 1
+  const currentSlideTicks = slideTicks(current)
 
   return (
     <section
@@ -142,14 +151,14 @@ export function FeaturedCarousel({ events }: FeaturedCarouselProps) {
       onPointerCancel={cancelSwipe}
     >
       {events.map((event, index) => {
-        const images = sortedImages(event.images);
+        const images = sortedImages(event.images)
         const posters: { url: string; filter: string | null }[] =
           images.length > 0
             ? images.map((im) => ({ url: im.url, filter: im.filter ?? null }))
             : event.poster_url
               ? [{ url: event.poster_url, filter: null }]
-              : [];
-        const activeMedia = index === current ? Math.min(img, posters.length - 1) : 0;
+              : []
+        const activeMedia = index === current ? Math.min(img, posters.length - 1) : 0
         return (
           <div
             key={event.id}
@@ -158,8 +167,8 @@ export function FeaturedCarousel({ events }: FeaturedCarouselProps) {
             aria-label={`Slide ${index + 1} of ${events.length}`}
             aria-hidden={index !== current}
             className={cn(
-              "absolute inset-0 transition-opacity duration-700 ease-in-out",
-              index === current ? "opacity-100 z-10" : "opacity-0 z-0"
+              'absolute inset-0 transition-opacity duration-700 ease-in-out',
+              index === current ? 'opacity-100 z-10' : 'opacity-0 z-0',
             )}
           >
             {posters.map((m, i) => (
@@ -171,8 +180,8 @@ export function FeaturedCarousel({ events }: FeaturedCarouselProps) {
                 priority={index === 0}
                 draggable={false}
                 className={cn(
-                  "object-cover transition-opacity duration-1000",
-                  i === activeMedia ? "opacity-100" : "opacity-0"
+                  'object-cover transition-opacity duration-1000',
+                  i === activeMedia ? 'opacity-100' : 'opacity-0',
                 )}
                 style={{ filter: filterStyle(m.filter) }}
                 sizes="100vw"
@@ -180,7 +189,7 @@ export function FeaturedCarousel({ events }: FeaturedCarouselProps) {
             ))}
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
           </div>
-        );
+        )
       })}
 
       <div className="absolute bottom-0 left-0 w-full p-gutter pb-xl z-20">
@@ -270,7 +279,7 @@ export function FeaturedCarousel({ events }: FeaturedCarouselProps) {
               type="button"
               onClick={() => setIsPaused((p) => !p)}
               className="p-xs rounded-full bg-background/60 backdrop-blur-md border border-outline-variant text-on-surface hover:text-primary hover:bg-background transition-colors"
-              aria-label={isPaused ? "Play slideshow" : "Pause slideshow"}
+              aria-label={isPaused ? 'Play slideshow' : 'Pause slideshow'}
               aria-pressed={isPaused}
             >
               {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
@@ -285,16 +294,16 @@ export function FeaturedCarousel({ events }: FeaturedCarouselProps) {
                   key={index}
                   type="button"
                   onClick={() => {
-                    setCurrent(index);
-                    setImg(0);
+                    setCurrent(index)
+                    setImg(0)
                   }}
                   aria-label={`Go to slide ${index + 1}`}
                   aria-current={index === current}
                   className={cn(
-                    "group h-1.5 flex-1 overflow-hidden rounded-full transition-colors",
+                    'group h-1.5 flex-1 overflow-hidden rounded-full transition-colors',
                     index === current
-                      ? "bg-on-surface-variant/40"
-                      : "bg-on-surface-variant/20 hover:bg-on-surface-variant/40"
+                      ? 'bg-on-surface-variant/40'
+                      : 'bg-on-surface-variant/20 hover:bg-on-surface-variant/40',
                   )}
                   style={{ minWidth: 28, maxWidth: 40 }}
                 >
@@ -304,7 +313,7 @@ export function FeaturedCarousel({ events }: FeaturedCarouselProps) {
                       className="carousel-progress-fill block h-full w-full bg-primary"
                       style={{
                         animationDuration: `${currentSlideTicks}s`,
-                        animationPlayState: paused ? "paused" : "running",
+                        animationPlayState: paused ? 'paused' : 'running',
                       }}
                     />
                   )}
@@ -318,5 +327,5 @@ export function FeaturedCarousel({ events }: FeaturedCarouselProps) {
         {currentEvent?.title}, {currentEvent && formatEventDate(currentEvent.start_date)}
       </div>
     </section>
-  );
+  )
 }

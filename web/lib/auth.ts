@@ -1,6 +1,6 @@
-import type { ConvexAuthActionsContext } from "@convex-dev/auth/react";
+import type { ConvexAuthActionsContext } from '@convex-dev/auth/react'
 
-type RedeemResult = { signingIn: boolean };
+type RedeemResult = { signingIn: boolean }
 
 /**
  * Redeem a verification code. The @convex-dev/auth runtime accepts a
@@ -8,12 +8,14 @@ type RedeemResult = { signingIn: boolean };
  * signature requires a provider string — this wrapper bridges the gap.
  */
 export async function redeemVerificationCode(
-  signIn: ConvexAuthActionsContext["signIn"],
+  signIn: ConvexAuthActionsContext['signIn'],
   email: string,
   code: string,
 ): Promise<RedeemResult> {
-  return await (signIn as unknown as (params: { email: string; code: string }) => Promise<RedeemResult>)({
+  return await (
+    signIn as unknown as (params: { email: string; code: string }) => Promise<RedeemResult>
+  )({
     email,
     code,
-  });
+  })
 }

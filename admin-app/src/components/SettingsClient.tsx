@@ -113,7 +113,7 @@ export function SettingsClient({
   })
   const notificationPrefs = useQuery(
     api.adminSettings.getByAdmin,
-    profile ? { adminId: profile.id as Id<'profiles'> } : 'skip'
+    profile ? { adminId: profile.id as Id<'profiles'> } : 'skip',
   )
   const [passwordForm, setPasswordForm] = useState({
     current: '',
@@ -139,7 +139,7 @@ export function SettingsClient({
 
   const handleToggleNotification = async (
     key: 'emailReports' | 'emailEvents' | 'emailUsers',
-    checked: boolean
+    checked: boolean,
   ) => {
     if (!profile) return
     const next = { ...notifications, [key]: checked }
@@ -305,7 +305,9 @@ export function SettingsClient({
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="font-headline text-3xl font-semibold text-foreground tracking-tight">Settings</h1>
+          <h1 className="font-headline text-3xl font-semibold text-foreground tracking-tight">
+            Settings
+          </h1>
           <p className="text-muted-foreground mt-1">Admin preferences and configuration.</p>
         </div>
         <Card className="p-12 text-center">
@@ -322,8 +324,12 @@ export function SettingsClient({
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="font-headline text-3xl font-semibold text-foreground tracking-tight">Settings</h1>
-        <p className="text-muted-foreground mt-1">Manage your admin profile, preferences, and security.</p>
+        <h1 className="font-headline text-3xl font-semibold text-foreground tracking-tight">
+          Settings
+        </h1>
+        <p className="text-muted-foreground mt-1">
+          Manage your admin profile, preferences, and security.
+        </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -346,7 +352,14 @@ export function SettingsClient({
                 <div className="relative">
                   <Avatar className="w-20 h-20">
                     {form.avatar_url ? (
-                      <img src={form.avatar_url} alt="" width={80} height={80} loading="lazy" className="w-full h-full object-cover" />
+                      <img
+                        src={form.avatar_url}
+                        alt=""
+                        width={80}
+                        height={80}
+                        loading="lazy"
+                        className="w-full h-full object-cover"
+                      />
                     ) : (
                       <div className="w-full h-full bg-surface-container-high flex items-center justify-center text-muted-foreground font-bold text-2xl">
                         {(form.full_name || 'A').charAt(0)}
@@ -367,13 +380,19 @@ export function SettingsClient({
                     disabled={uploadingAvatar}
                     title="Change avatar"
                   >
-                    {uploadingAvatar ? <Loader2 size={14} className="animate-spin" /> : <Camera size={14} />}
+                    {uploadingAvatar ? (
+                      <Loader2 size={14} className="animate-spin" />
+                    ) : (
+                      <Camera size={14} />
+                    )}
                   </button>
                 </div>
                 <div className="flex-1">
                   <p className="font-semibold text-foreground">{form.full_name || 'Admin'}</p>
                   <p className="text-sm text-muted-foreground">{profile.email}</p>
-                  <p className="text-xs text-muted-foreground mt-1 capitalize">Role: {profile.role}</p>
+                  <p className="text-xs text-muted-foreground mt-1 capitalize">
+                    Role: {profile.role}
+                  </p>
                 </div>
               </div>
 
@@ -407,7 +426,11 @@ export function SettingsClient({
               </div>
 
               <div className="pt-2">
-                <Button type="submit" disabled={isLoading} className="bg-primary text-primary-foreground">
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  className="bg-primary text-primary-foreground"
+                >
                   <Save size={16} className="mr-2" />
                   {isLoading ? 'Saving...' : 'Save Profile'}
                 </Button>
@@ -429,7 +452,9 @@ export function SettingsClient({
 
             <form onSubmit={handlePasswordChange} className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-muted-foreground">Current Password</label>
+                <label className="text-sm font-medium text-muted-foreground">
+                  Current Password
+                </label>
                 <Input
                   type="password"
                   value={passwordForm.current}
@@ -448,7 +473,9 @@ export function SettingsClient({
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-muted-foreground">Confirm Password</label>
+                  <label className="text-sm font-medium text-muted-foreground">
+                    Confirm Password
+                  </label>
                   <Input
                     type="password"
                     value={passwordForm.confirm}
@@ -482,36 +509,46 @@ export function SettingsClient({
             </div>
 
             {featuredSections.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-4 text-center">No featured sections configured.</p>
+              <p className="text-sm text-muted-foreground py-4 text-center">
+                No featured sections configured.
+              </p>
             ) : (
               <div className="space-y-2">
                 {featuredSections.map((section) => {
                   const isEditing = editingSection === section.id
                   return (
-                    <div
-                      key={section.id}
-                      className="border border-outline-variant rounded-xl p-4"
-                    >
+                    <div key={section.id} className="border border-outline-variant rounded-xl p-4">
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex-1 min-w-0">
                           {isEditing ? (
                             <div className="space-y-2">
                               <Input
                                 value={sectionEditForm.label}
-                                onChange={(e) => setSectionEditForm({ ...sectionEditForm, label: e.target.value })}
+                                onChange={(e) =>
+                                  setSectionEditForm({ ...sectionEditForm, label: e.target.value })
+                                }
                                 placeholder="Section label"
                               />
                               <Input
                                 value={sectionEditForm.description}
-                                onChange={(e) => setSectionEditForm({ ...sectionEditForm, description: e.target.value })}
+                                onChange={(e) =>
+                                  setSectionEditForm({
+                                    ...sectionEditForm,
+                                    description: e.target.value,
+                                  })
+                                }
                                 placeholder="Section description"
                               />
                             </div>
                           ) : (
                             <>
-                              <p className="text-sm font-medium text-foreground truncate">{section.label}</p>
+                              <p className="text-sm font-medium text-foreground truncate">
+                                {section.label}
+                              </p>
                               {section.description && (
-                                <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{section.description}</p>
+                                <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
+                                  {section.description}
+                                </p>
                               )}
                             </>
                           )}
@@ -665,7 +702,9 @@ export function SettingsClient({
                       <Icon size={14} className="text-muted-foreground" />
                       <span className="text-sm text-muted-foreground">{item.label}</span>
                     </div>
-                    <span className="text-sm font-semibold text-foreground">{item.value.toLocaleString()}</span>
+                    <span className="text-sm font-semibold text-foreground">
+                      {item.value.toLocaleString()}
+                    </span>
                   </div>
                 )
               })}
@@ -692,7 +731,9 @@ export function SettingsClient({
             <div className="space-y-3 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">User ID</span>
-                <span className="text-foreground font-mono text-xs">{profile.id.slice(0, 12)}...</span>
+                <span className="text-foreground font-mono text-xs">
+                  {profile.id.slice(0, 12)}...
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Role</span>
@@ -700,7 +741,9 @@ export function SettingsClient({
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Joined</span>
-                <span className="text-foreground">{new Date(profile.created_at).toLocaleDateString()}</span>
+                <span className="text-foreground">
+                  {new Date(profile.created_at).toLocaleDateString()}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Status</span>

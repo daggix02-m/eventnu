@@ -7,11 +7,7 @@ import { getModerationLogsByTarget } from '@/lib/actions/dashboard'
 import { EventDetailClient } from '@/components/EventDetailClient'
 import { notFound } from 'next/navigation'
 
-export default async function EventDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
+export default async function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
 
   let event: Awaited<ReturnType<typeof getEventById>>['event'] = null
@@ -31,7 +27,13 @@ export default async function EventDetailPage({
   let featuredSections: Awaited<ReturnType<typeof getFeaturedSections>> = []
   let moderationLogs: Awaited<ReturnType<typeof getModerationLogsByTarget>> = []
   try {
-    ;[allCategories, { hosts: hostsList }, { organizers: organizersList }, featuredSections, moderationLogs] = await Promise.all([
+    ;[
+      allCategories,
+      { hosts: hostsList },
+      { organizers: organizersList },
+      featuredSections,
+      moderationLogs,
+    ] = await Promise.all([
       getCategories(),
       getHosts({ status: 'active', perPage: 200 }),
       getOrganizers({ perPage: 200 }),

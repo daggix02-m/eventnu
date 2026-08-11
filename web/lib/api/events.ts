@@ -1,6 +1,6 @@
-import { fetchQuery } from "convex/nextjs";
-import { api } from "@eventnu/convex/_generated/api";
-import type { Event, Category, Page } from "@/types";
+import { fetchQuery } from 'convex/nextjs'
+import { api } from '@eventnu/convex/_generated/api'
+import type { Event, Category, Page } from '@/types'
 
 export function mapEvent(raw: any): Event {
   return {
@@ -67,16 +67,16 @@ export function mapEvent(raw: any): Event {
             : undefined,
         }
       : null,
-  };
+  }
 }
 
 export async function getPublishedEvents(): Promise<Event[]> {
   try {
-    const events = await fetchQuery(api.events.getPublished);
-    return (events ?? []).map(mapEvent);
+    const events = await fetchQuery(api.events.getPublished)
+    return (events ?? []).map(mapEvent)
   } catch (err) {
-    console.error("Failed to fetch published events:", err);
-    return [];
+    console.error('Failed to fetch published events:', err)
+    return []
   }
 }
 
@@ -85,21 +85,21 @@ export async function getFeaturedEvents(limit = 5): Promise<Event[]> {
     const events = await fetchQuery(api.events.getFeatured, {
       startDate: Date.now(),
       limit,
-    });
-    return (events ?? []).map(mapEvent);
+    })
+    return (events ?? []).map(mapEvent)
   } catch (err) {
-    console.error("Failed to fetch featured events:", err);
-    return [];
+    console.error('Failed to fetch featured events:', err)
+    return []
   }
 }
 
 export async function getEventBySlug(slug: string): Promise<Event | null> {
   try {
-    const event = await fetchQuery(api.events.getBySlug, { slug });
-    return event ? mapEvent(event) : null;
+    const event = await fetchQuery(api.events.getBySlug, { slug })
+    return event ? mapEvent(event) : null
   } catch (err) {
-    console.error("Failed to fetch event by slug:", err);
-    return null;
+    console.error('Failed to fetch event by slug:', err)
+    return null
   }
 }
 
@@ -108,17 +108,17 @@ export async function getSimilarEvents(event: Event, limit = 3): Promise<Event[]
     const events = await fetchQuery(api.events.getSimilar, {
       eventId: event.id as any,
       limit,
-    });
-    return (events ?? []).map(mapEvent);
+    })
+    return (events ?? []).map(mapEvent)
   } catch (err) {
-    console.error("Failed to fetch similar events:", err);
-    return [];
+    console.error('Failed to fetch similar events:', err)
+    return []
   }
 }
 
 export async function getCategories(): Promise<Category[]> {
   try {
-    const categories = await fetchQuery(api.categories.getRoot);
+    const categories = await fetchQuery(api.categories.getRoot)
     return (categories ?? []).map((raw: any) => ({
       id: raw._id,
       slug: raw.slug,
@@ -127,17 +127,17 @@ export async function getCategories(): Promise<Category[]> {
       icon: raw.icon,
       parent_id: raw.parentId,
       sort_order: raw.sortOrder,
-    }));
+    }))
   } catch (err) {
-    console.error("Failed to fetch categories:", err);
-    return [];
+    console.error('Failed to fetch categories:', err)
+    return []
   }
 }
 
 export async function getCategoryBySlug(slug: string): Promise<Category | null> {
   try {
-    const category = await fetchQuery(api.categories.getBySlug, { slug });
-    if (!category) return null;
+    const category = await fetchQuery(api.categories.getBySlug, { slug })
+    if (!category) return null
     return {
       id: category._id,
       slug: category.slug,
@@ -146,20 +146,20 @@ export async function getCategoryBySlug(slug: string): Promise<Category | null> 
       icon: category.icon,
       parent_id: category.parentId,
       sort_order: category.sortOrder,
-    };
+    }
   } catch (err) {
-    console.error("Failed to fetch category by slug:", err);
-    return null;
+    console.error('Failed to fetch category by slug:', err)
+    return null
   }
 }
 
 export interface CategoryWithCount extends Category {
-  eventCount: number;
+  eventCount: number
 }
 
 export async function getCategoriesWithCounts(): Promise<CategoryWithCount[]> {
   try {
-    const categories = await fetchQuery(api.categories.getWithEventCounts);
+    const categories = await fetchQuery(api.categories.getWithEventCounts)
     return (categories ?? []).map((raw: any) => ({
       id: raw._id,
       slug: raw.slug,
@@ -169,10 +169,10 @@ export async function getCategoriesWithCounts(): Promise<CategoryWithCount[]> {
       parent_id: raw.parentId,
       sort_order: raw.sortOrder,
       eventCount: raw.eventCount ?? 0,
-    }));
+    }))
   } catch (err) {
-    console.error("Failed to fetch categories with counts:", err);
-    return [];
+    console.error('Failed to fetch categories with counts:', err)
+    return []
   }
 }
 
@@ -180,17 +180,17 @@ export async function getEventsByCategory(categoryId: string): Promise<Event[]> 
   try {
     const events = await fetchQuery(api.events.getByCategory, {
       categoryId: categoryId as any,
-    });
-    return (events ?? []).map(mapEvent);
+    })
+    return (events ?? []).map(mapEvent)
   } catch (err) {
-    console.error("Failed to fetch events by category:", err);
-    return [];
+    console.error('Failed to fetch events by category:', err)
+    return []
   }
 }
 
 export async function getPublishedPages(): Promise<Page[]> {
   try {
-    const pages = await fetchQuery(api.cms.getPublishedPages);
+    const pages = await fetchQuery(api.cms.getPublishedPages)
     return (pages ?? []).map((raw: any) => ({
       id: raw._id,
       slug: raw.slug,
@@ -202,17 +202,17 @@ export async function getPublishedPages(): Promise<Page[]> {
       is_published: raw.isPublished,
       sort_order: raw.sortOrder,
       created_at: raw._creationTime ? new Date(raw._creationTime).toISOString() : undefined,
-    }));
+    }))
   } catch (err) {
-    console.error("Failed to fetch published pages:", err);
-    return [];
+    console.error('Failed to fetch published pages:', err)
+    return []
   }
 }
 
 export async function getPageBySlug(slug: string): Promise<Page | null> {
   try {
-    const raw = await fetchQuery(api.cms.getPageBySlug, { slug });
-    if (!raw) return null;
+    const raw = await fetchQuery(api.cms.getPageBySlug, { slug })
+    if (!raw) return null
     return {
       id: raw._id,
       slug: raw.slug,
@@ -224,9 +224,9 @@ export async function getPageBySlug(slug: string): Promise<Page | null> {
       is_published: raw.isPublished,
       sort_order: raw.sortOrder,
       created_at: raw._creationTime ? new Date(raw._creationTime).toISOString() : undefined,
-    };
+    }
   } catch (err) {
-    console.error("Failed to fetch page by slug:", err);
-    return null;
+    console.error('Failed to fetch page by slug:', err)
+    return null
   }
 }

@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -77,7 +77,7 @@
   /* Typography — Fidäl grid: angular geometric display, workhorse body, annotation mono */
   --font-sans: var(--font-body), system-ui, sans-serif;
   --font-headline: var(--font-display), system-ui, sans-serif;
-  --font-mono: var(--font-code), ui-monospace, "JetBrains Mono", monospace;
+  --font-mono: var(--font-code), ui-monospace, 'JetBrains Mono', monospace;
 
   /* Spacing */
   --spacing-sidebar: 260px;
@@ -270,16 +270,32 @@ body {
 
 /* Animations */
 @keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 @keyframes slide-in {
-  from { opacity: 0; transform: translateX(10px); }
-  to { opacity: 1; transform: translateX(0); }
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 @keyframes slide-out {
-  from { opacity: 1; transform: translateX(0); }
-  to { opacity: 0; transform: translateX(10px); }
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(10px);
+  }
 }
 
 /* Fidäl motion — the ink wash: content soaks into the page */
@@ -298,8 +314,12 @@ body {
 
 /* Fidäl motion — the ruled line being inked (skeleton shimmer) */
 @keyframes ruling-shimmer {
-  from { background-position: 150% 0; }
-  to { background-position: -50% 0; }
+  from {
+    background-position: 150% 0;
+  }
+  to {
+    background-position: -50% 0;
+  }
 }
 .skeleton-sheen {
   position: relative;
@@ -307,7 +327,7 @@ body {
   background-color: hsl(var(--surface-container-high));
 }
 .skeleton-sheen::after {
-  content: "";
+  content: '';
   position: absolute;
   inset: 0;
   background: linear-gradient(
@@ -325,7 +345,7 @@ body {
   position: relative;
 }
 .rubric-rule::after {
-  content: "";
+  content: '';
   position: absolute;
   left: 0;
   right: 0;

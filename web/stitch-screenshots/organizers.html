@@ -1,330 +1,492 @@
-<!DOCTYPE html>
+<!doctype html>
 
-<html class="dark" lang="en"><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Event Nu | For Organizers</title>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&amp;family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<style>
-        .material-symbols-outlined {
-            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+<html class="dark" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Event Nu | For Organizers</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&amp;family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@500&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      .material-symbols-outlined {
+        font-variation-settings:
+          'FILL' 0,
+          'wght' 400,
+          'GRAD' 0,
+          'opsz' 24;
+      }
+      .glass-card {
+        background: rgba(30, 30, 30, 0.6);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(45, 45, 45, 1);
+      }
+      .electric-glow:hover {
+        box-shadow: 0 0 20px rgba(208, 188, 255, 0.3);
+      }
+      .zig-zag-container > div:nth-child(even) {
+        flex-direction: row-reverse;
+      }
+      @keyframes float {
+        0% {
+          transform: translateY(0px);
         }
-        .glass-card {
-            background: rgba(30, 30, 30, 0.6);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(45, 45, 45, 1);
+        50% {
+          transform: translateY(-10px);
         }
-        .electric-glow:hover {
-            box-shadow: 0 0 20px rgba(208, 188, 255, 0.3);
+        100% {
+          transform: translateY(0px);
         }
-        .zig-zag-container > div:nth-child(even) {
-            flex-direction: row-reverse;
-        }
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-            100% { transform: translateY(0px); }
-        }
-        .animate-float {
-            animation: float 4s ease-in-out infinite;
-        }
+      }
+      .animate-float {
+        animation: float 4s ease-in-out infinite;
+      }
     </style>
-<script id="tailwind-config">
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    "colors": {
-                        "on-tertiary-container": "#002d43",
-                        "surface-container-high": "#2a2a2a",
-                        "secondary": "#ffb59e",
-                        "outline-variant": "#494454",
-                        "background": "#131313",
-                        "secondary-fixed": "#ffdbd0",
-                        "error-container": "#93000a",
-                        "on-surface": "#e5e2e1",
-                        "on-secondary": "#5d1800",
-                        "surface-container-low": "#1c1b1b",
-                        "surface-container-lowest": "#0e0e0e",
-                        "inverse-on-surface": "#313030",
-                        "on-tertiary-fixed-variant": "#004c6e",
-                        "outline": "#958ea0",
-                        "on-primary-container": "#340080",
-                        "surface-variant": "#353534",
-                        "tertiary-container": "#009ada",
-                        "primary-fixed": "#e9ddff",
-                        "on-secondary-container": "#521400",
-                        "on-primary-fixed": "#23005c",
-                        "on-secondary-fixed": "#390b00",
-                        "on-error": "#690005",
-                        "tertiary-fixed-dim": "#89ceff",
-                        "surface-tint": "#d0bcff",
-                        "surface-container-highest": "#353534",
-                        "surface": "#131313",
-                        "on-tertiary": "#00344d",
-                        "on-tertiary-fixed": "#001e2f",
-                        "inverse-primary": "#6d3bd7",
-                        "surface-dim": "#131313",
-                        "primary-fixed-dim": "#d0bcff",
-                        "on-secondary-fixed-variant": "#842500",
-                        "primary-container": "#a078ff",
-                        "on-background": "#e5e2e1",
-                        "on-surface-variant": "#cbc3d7",
-                        "primary": "#d0bcff",
-                        "on-error-container": "#ffdad6",
-                        "inverse-surface": "#e5e2e1",
-                        "on-primary": "#3c0091",
-                        "tertiary-fixed": "#c9e6ff",
-                        "surface-container": "#201f1f",
-                        "secondary-container": "#fc5b1f",
-                        "error": "#ffb4ab",
-                        "secondary-fixed-dim": "#ffb59e",
-                        "surface-bright": "#393939",
-                        "tertiary": "#89ceff",
-                        "on-primary-fixed-variant": "#5516be"
-                    },
-                    "borderRadius": {
-                        "DEFAULT": "0.25rem",
-                        "lg": "0.5rem",
-                        "xl": "0.75rem",
-                        "full": "9999px"
-                    },
-                    "spacing": {
-                        "base": "4px",
-                        "md": "24px",
-                        "xl": "64px",
-                        "container-max": "1280px",
-                        "sm": "16px",
-                        "gutter": "24px",
-                        "xs": "8px",
-                        "lg": "40px"
-                    },
-                    "fontFamily": {
-                        "body-lg": ["Inter"],
-                        "display-lg": ["Plus Jakarta Sans"],
-                        "label-sm": ["JetBrains Mono"],
-                        "headline-md": ["Plus Jakarta Sans"],
-                        "display-lg-mobile": ["Plus Jakarta Sans"],
-                        "body-md": ["Inter"]
-                    },
-                    "fontSize": {
-                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
-                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
-                        "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
-                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
-                        "display-lg-mobile": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
-                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
-                    }
-                },
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              'on-tertiary-container': '#002d43',
+              'surface-container-high': '#2a2a2a',
+              secondary: '#ffb59e',
+              'outline-variant': '#494454',
+              background: '#131313',
+              'secondary-fixed': '#ffdbd0',
+              'error-container': '#93000a',
+              'on-surface': '#e5e2e1',
+              'on-secondary': '#5d1800',
+              'surface-container-low': '#1c1b1b',
+              'surface-container-lowest': '#0e0e0e',
+              'inverse-on-surface': '#313030',
+              'on-tertiary-fixed-variant': '#004c6e',
+              outline: '#958ea0',
+              'on-primary-container': '#340080',
+              'surface-variant': '#353534',
+              'tertiary-container': '#009ada',
+              'primary-fixed': '#e9ddff',
+              'on-secondary-container': '#521400',
+              'on-primary-fixed': '#23005c',
+              'on-secondary-fixed': '#390b00',
+              'on-error': '#690005',
+              'tertiary-fixed-dim': '#89ceff',
+              'surface-tint': '#d0bcff',
+              'surface-container-highest': '#353534',
+              surface: '#131313',
+              'on-tertiary': '#00344d',
+              'on-tertiary-fixed': '#001e2f',
+              'inverse-primary': '#6d3bd7',
+              'surface-dim': '#131313',
+              'primary-fixed-dim': '#d0bcff',
+              'on-secondary-fixed-variant': '#842500',
+              'primary-container': '#a078ff',
+              'on-background': '#e5e2e1',
+              'on-surface-variant': '#cbc3d7',
+              primary: '#d0bcff',
+              'on-error-container': '#ffdad6',
+              'inverse-surface': '#e5e2e1',
+              'on-primary': '#3c0091',
+              'tertiary-fixed': '#c9e6ff',
+              'surface-container': '#201f1f',
+              'secondary-container': '#fc5b1f',
+              error: '#ffb4ab',
+              'secondary-fixed-dim': '#ffb59e',
+              'surface-bright': '#393939',
+              tertiary: '#89ceff',
+              'on-primary-fixed-variant': '#5516be',
             },
-        }
+            borderRadius: {
+              DEFAULT: '0.25rem',
+              lg: '0.5rem',
+              xl: '0.75rem',
+              full: '9999px',
+            },
+            spacing: {
+              base: '4px',
+              md: '24px',
+              xl: '64px',
+              'container-max': '1280px',
+              sm: '16px',
+              gutter: '24px',
+              xs: '8px',
+              lg: '40px',
+            },
+            fontFamily: {
+              'body-lg': ['Inter'],
+              'display-lg': ['Plus Jakarta Sans'],
+              'label-sm': ['JetBrains Mono'],
+              'headline-md': ['Plus Jakarta Sans'],
+              'display-lg-mobile': ['Plus Jakarta Sans'],
+              'body-md': ['Inter'],
+            },
+            fontSize: {
+              'body-lg': ['18px', { lineHeight: '28px', fontWeight: '400' }],
+              'display-lg': [
+                '48px',
+                { lineHeight: '56px', letterSpacing: '-0.02em', fontWeight: '800' },
+              ],
+              'label-sm': ['12px', { lineHeight: '16px', fontWeight: '500' }],
+              'headline-md': ['24px', { lineHeight: '32px', fontWeight: '700' }],
+              'display-lg-mobile': [
+                '32px',
+                { lineHeight: '40px', letterSpacing: '-0.02em', fontWeight: '800' },
+              ],
+              'body-md': ['16px', { lineHeight: '24px', fontWeight: '400' }],
+            },
+          },
+        },
+      }
     </script>
-</head>
-<body class="bg-background text-on-background font-body-md overflow-x-hidden">
-<!-- Top Navigation -->
-<header class="w-full sticky top-0 z-50 border-b border-outline-variant bg-background/80 backdrop-blur-md">
-<div class="flex justify-between items-center h-16 px-gutter max-w-container-max mx-auto">
-<div class="flex items-center gap-xl">
-<a class="font-headline-md text-headline-md font-bold text-primary" href="#">Event Nu</a>
-<nav class="hidden md:flex gap-md items-center font-body-md text-body-md">
-<a class="text-on-surface-variant hover:text-primary transition-colors duration-200" href="#">Discover</a>
-<a class="text-on-surface-variant hover:text-primary transition-colors duration-200" href="#">Categories</a>
-<a class="text-on-surface-variant hover:text-primary transition-colors duration-200" href="#">My Tickets</a>
-<a class="text-on-surface-variant hover:text-primary transition-colors duration-200" href="#">Favorites</a>
-</nav>
-</div>
-<div class="flex items-center gap-sm">
-<button class="p-xs text-on-surface-variant hover:text-primary active:scale-95 transition-all">
-<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
-</button>
-<button class="flex items-center gap-xs px-sm py-xs bg-primary-container text-on-primary-container rounded-lg font-bold active:scale-95 transition-all">
-<span class="material-symbols-outlined" data-icon="person">person</span>
-<span class="hidden sm:inline">Organizer Hub</span>
-</button>
-</div>
-</div>
-</header>
-<main>
-<!-- Hero Section -->
-<section class="relative min-h-[870px] flex items-center justify-center overflow-hidden px-gutter">
+  </head>
+  <body class="bg-background text-on-background font-body-md overflow-x-hidden">
+    <!-- Top Navigation -->
+    <header
+      class="w-full sticky top-0 z-50 border-b border-outline-variant bg-background/80 backdrop-blur-md"
+    >
+      <div class="flex justify-between items-center h-16 px-gutter max-w-container-max mx-auto">
+        <div class="flex items-center gap-xl">
+          <a class="font-headline-md text-headline-md font-bold text-primary" href="#">Event Nu</a>
+          <nav class="hidden md:flex gap-md items-center font-body-md text-body-md">
+            <a
+              class="text-on-surface-variant hover:text-primary transition-colors duration-200"
+              href="#"
+              >Discover</a
+            >
+            <a
+              class="text-on-surface-variant hover:text-primary transition-colors duration-200"
+              href="#"
+              >Categories</a
+            >
+            <a
+              class="text-on-surface-variant hover:text-primary transition-colors duration-200"
+              href="#"
+              >My Tickets</a
+            >
+            <a
+              class="text-on-surface-variant hover:text-primary transition-colors duration-200"
+              href="#"
+              >Favorites</a
+            >
+          </nav>
+        </div>
+        <div class="flex items-center gap-sm">
+          <button
+            class="p-xs text-on-surface-variant hover:text-primary active:scale-95 transition-all"
+          >
+            <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+          </button>
+          <button
+            class="flex items-center gap-xs px-sm py-xs bg-primary-container text-on-primary-container rounded-lg font-bold active:scale-95 transition-all"
+          >
+            <span class="material-symbols-outlined" data-icon="person">person</span>
+            <span class="hidden sm:inline">Organizer Hub</span>
+          </button>
+        </div>
+      </div>
+    </header>
+    <main>
+      <!-- Hero Section -->
+      <section
+        class="relative min-h-[870px] flex items-center justify-center overflow-hidden px-gutter"
+      >
+        <div
+          class="relative z-10 max-w-container-max mx-auto grid md:grid-cols-2 gap-lg items-center"
+        >
+          <div class="space-y-md text-center md:text-left">
+            <span class="font-label-sm text-label-sm text-tertiary tracking-widest uppercase"
+              >For the Visionaries</span
+            >
+            <h1 class="font-display-lg text-display-lg-mobile md:text-display-lg text-on-surface">
+              Transform Your Ideas into <span class="text-primary">Iconic Events</span>
+            </h1>
+            <p class="font-body-lg text-body-lg text-on-surface-variant max-w-xl mx-auto md:mx-0">
+              Empower your creative vision with Addis Ababa's premier event management platform.
+              Join thousands of creators making history.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-sm justify-center md:justify-start pt-sm">
+              <button
+                class="px-lg py-sm bg-primary-container text-on-primary-container rounded-full font-bold text-body-lg electric-glow transition-all active:scale-95"
+              >
+                Grow your audience
+              </button>
+              <button
+                class="px-lg py-sm border-2 border-outline-variant text-on-surface rounded-full font-bold text-body-lg hover:border-primary transition-all active:scale-95"
+              >
+                View Showcase
+              </button>
+            </div>
+          </div>
+          <div class="hidden md:block relative animate-float">
+            <div class="glass-card rounded-xl p-base overflow-hidden transform rotate-2">
+              <img
+                class="w-full aspect-[4/5] object-cover rounded-lg"
+                data-alt="A high-energy photograph of a successful event organizer standing on a stage overlooking a crowded concert venue in Addis Ababa. The lighting is dominated by deep purples and electric blues, reflecting a modern corporate yet vibrant nightlife aesthetic. The organizer is holding a tablet showing a data dashboard. The mood is triumphant and professional."
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBYpU3b-T5jEevTZnF5rFZ3NRwpwOBYPhcXTaCdCtpsvC1wIUa6OH6oZrxUMTIICwnMFx5bn-3zWVoZpfTfhOawm-frODDtVisz_g-KU9KRQdOIVjcs1zxs9TlxRU0osdOR-foStJaoTiIklZmMSujkR5OTVNrUpUO9hzk9oMEySUkdJVa98zcQrUpDzIuKXhZT39d5qJDgW9kbjvTy3kaarLYb21YOM0LHQr2dEgknPPdem9-gNfqBC0LdDY4pgE5aK9HPeR1NDM1K"
+              />
+            </div>
+            <div
+              class="absolute -bottom-10 -left-10 glass-card p-md rounded-xl space-y-xs max-w-[200px] transform -rotate-3"
+            >
+              <div class="flex gap-xs items-center text-primary">
+                <span class="material-symbols-outlined" data-icon="trending_up">trending_up</span>
+                <span class="font-label-sm">+42% Growth</span>
+              </div>
+              <p class="font-label-sm text-on-surface-variant">
+                Average increase in ticket sales for new partners.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- Metric Cards -->
+      <section class="py-xl bg-surface-container-low">
+        <div class="max-w-container-max mx-auto px-gutter">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-md">
+            <div
+              class="glass-card p-lg rounded-xl text-center space-y-xs group hover:bg-surface-container-high transition-colors"
+            >
+              <h3 class="font-display-lg text-primary">100k+</h3>
+              <p class="font-label-sm text-on-surface-variant uppercase tracking-tighter">
+                Event Goers
+              </p>
+            </div>
+            <div
+              class="glass-card p-lg rounded-xl text-center space-y-xs group hover:bg-surface-container-high transition-colors"
+            >
+              <h3 class="font-display-lg text-secondary">1.2M</h3>
+              <p class="font-label-sm text-on-surface-variant uppercase tracking-tighter">
+                Tickets Sold
+              </p>
+            </div>
+            <div
+              class="glass-card p-lg rounded-xl text-center space-y-xs group hover:bg-surface-container-high transition-colors"
+            >
+              <h3 class="font-display-lg text-tertiary">500+</h3>
+              <p class="font-label-sm text-on-surface-variant uppercase tracking-tighter">
+                Active Organizers
+              </p>
+            </div>
+            <div
+              class="glass-card p-lg rounded-xl text-center space-y-xs group hover:bg-surface-container-high transition-colors"
+            >
+              <h3 class="font-display-lg text-primary">98%</h3>
+              <p class="font-label-sm text-on-surface-variant uppercase tracking-tighter">
+                Growth Rate
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- Feature Breakdown (Zig-Zag) -->
+      <section class="py-xl space-y-xl zig-zag-container">
+        <!-- Feature 1 -->
+        <div
+          class="max-w-container-max mx-auto px-gutter flex flex-col md:flex-row items-center gap-lg"
+        >
+          <div class="w-full md:w-1/2 space-y-md">
+            <div
+              class="w-12 h-12 bg-primary-container/20 rounded-lg flex items-center justify-center text-primary"
+            >
+              <span class="material-symbols-outlined text-4xl" data-icon="dashboard_customize"
+                >dashboard_customize</span
+              >
+            </div>
+            <h2 class="font-display-lg text-display-lg-mobile md:text-headline-md text-on-surface">
+              Precision Event Management
+            </h2>
+            <p class="text-on-surface-variant font-body-lg">
+              Every detail matters. Our robust suite of tools allows you to manage everything from
+              tiered ticketing and VIP table bookings to staff permissions and venue logistics in
+              one unified interface.
+            </p>
+            <ul class="space-y-sm">
+              <li class="flex gap-sm items-center text-on-surface">
+                <span class="material-symbols-outlined text-primary" data-icon="check_circle"
+                  >check_circle</span
+                >
+                <span>Real-time inventory tracking</span>
+              </li>
+              <li class="flex gap-sm items-center text-on-surface">
+                <span class="material-symbols-outlined text-primary" data-icon="check_circle"
+                  >check_circle</span
+                >
+                <span>Automated waitlist management</span>
+              </li>
+            </ul>
+          </div>
+          <div class="w-full md:w-1/2">
+            <div class="relative rounded-xl overflow-hidden glass-card p-base">
+              <img
+                class="w-full h-80 object-cover rounded-lg"
+                data-alt="A sleek digital workspace showing a professional event management dashboard on a dual-monitor setup. The interface is dark-themed with neon purple accents and high-contrast charts. In the background, a modern studio office with warm low-light lamps is visible. The scene looks high-tech, organized, and premium."
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuDF7FkZfD9EmhS1RQXs7uvCWj5cfSKBlWfGoTjBkHnMK693nPHjnYwpN5JcNptXL4YsMQpc7-u_LzrabMEIRYGJSSFpoY7mJEPJ8mHrwEMyfn3VBdO_t5kxzwrhKzUM85Ludb0MDPQ6odCE7Sga3rPx1Ad8T_oajpKPh5by9ZGteCMBgHv7REx0_EaKAT4G9KnlDUqD4P6vtdugy3gWmzaAoY9Ow6oZC9gSRCC_PHeo-jMSD61i5xLdKUNBxuqc8muCi7KRBQg-PJFZ"
+              />
+            </div>
+          </div>
+        </div>
+        <!-- Feature 2 -->
+        <div
+          class="max-w-container-max mx-auto px-gutter flex flex-col md:flex-row items-center gap-lg"
+        >
+          <div class="w-full md:w-1/2 space-y-md">
+            <div
+              class="w-12 h-12 bg-secondary-container/20 rounded-lg flex items-center justify-center text-secondary"
+            >
+              <span class="material-symbols-outlined text-4xl" data-icon="query_stats"
+                >query_stats</span
+              >
+            </div>
+            <h2 class="font-display-lg text-display-lg-mobile md:text-headline-md text-on-surface">
+              Deep Audience Insights
+            </h2>
+            <p class="text-on-surface-variant font-body-lg">
+              Know exactly who is coming to your events. Our analytics provide demographic
+              breakdowns, behavioral patterns, and predictive revenue models to help you optimize
+              future experiences.
+            </p>
+            <ul class="space-y-sm">
+              <li class="flex gap-sm items-center text-on-surface">
+                <span class="material-symbols-outlined text-secondary" data-icon="check_circle"
+                  >check_circle</span
+                >
+                <span>Heatmaps of ticket purchase times</span>
+              </li>
+              <li class="flex gap-sm items-center text-on-surface">
+                <span class="material-symbols-outlined text-secondary" data-icon="check_circle"
+                  >check_circle</span
+                >
+                <span>Customer lifetime value tracking</span>
+              </li>
+            </ul>
+          </div>
+          <div class="w-full md:w-1/2">
+            <div class="relative rounded-xl overflow-hidden glass-card p-base">
+              <img
+                class="w-full h-80 object-cover rounded-lg"
+                data-alt="Close up of a tablet screen displaying colorful, high-contrast heatmaps and demographic bar charts. The data is vibrant against a dark background, reflecting the Event Nu brand colors of purple, orange, and blue. A hand with a stylus is interacting with the data. The lighting is cinematic, highlighting the clarity and sophistication of the insights."
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuDYGfaePznr7MevAJoKiNhVDDzXrWCLzTU8SNWJttt7cBrKuvHj41iwOAoL6z-O2G2Ny31-goiAfRWhbzju_-Of8SL5HFvnRqtyilY6If7boER_GSmAkvjuDmyVryyXNhXdfX2zvmqeSSSVLnNH20IF3qJVNpMb46zIw38oEcz3KzjoN1rIeYX34EiIZj-nr0l7T_6aA8lX0ljjx3hdJtHUqCMAGsWxmebVcRira4TqTjnhtdoX2GqzSAT3BULyaNpQl4KvMs3ilk4r"
+              />
+            </div>
+          </div>
+        </div>
+        <!-- Feature 3 -->
+        <div
+          class="max-w-container-max mx-auto px-gutter flex flex-col md:flex-row items-center gap-lg"
+        >
+          <div class="w-full md:w-1/2 space-y-md">
+            <div
+              class="w-12 h-12 bg-tertiary-container/20 rounded-lg flex items-center justify-center text-tertiary"
+            >
+              <span class="material-symbols-outlined text-4xl" data-icon="rocket_launch"
+                >rocket_launch</span
+              >
+            </div>
+            <h2 class="font-display-lg text-display-lg-mobile md:text-headline-md text-on-surface">
+              Seamless Global Publishing
+            </h2>
+            <p class="text-on-surface-variant font-body-lg">
+              Launch your event to our entire ecosystem with one click. We handle the SEO, social
+              sharing previews, and payment processing, so you can focus on building the production.
+            </p>
+            <ul class="space-y-sm">
+              <li class="flex gap-sm items-center text-on-surface">
+                <span class="material-symbols-outlined text-tertiary" data-icon="check_circle"
+                  >check_circle</span
+                >
+                <span>Instant mobile notification blasts</span>
+              </li>
+              <li class="flex gap-sm items-center text-on-surface">
+                <span class="material-symbols-outlined text-tertiary" data-icon="check_circle"
+                  >check_circle</span
+                >
+                <span>Integrated promotional tools</span>
+              </li>
+            </ul>
+          </div>
+          <div class="w-full md:w-1/2">
+            <div class="relative rounded-xl overflow-hidden glass-card p-base">
+              <img
+                class="w-full h-80 object-cover rounded-lg"
+                data-alt="A conceptual 3D render of a smartphone screen launching a vibrant event poster into a digital cloud of glowing social media icons. The background is a dark, atmospheric purple. The lighting is high-contrast with electric purple and orange glows, conveying a sense of rapid movement and widespread digital reach."
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuD5Qa4GCwLRMcXpGLA9FbiuxNN-_Na44XorFBmT49OQpJ61i-d3i0myzzCYB96IznsCbMeEGzepj7FsCxMz2tT2rpnUZwKF9yRZ4Ai-caO41FV0-eBLj_FgibrCAdnRqIEcCd9qXdm9d-NKTjJPltsbrejcMq3n3ptK0t3tXIBa1w1VxvdqsD-brOCyXWlf0qH156yrSC9pAHp8dPoNOh44Tm-OnZjJsQzFmyFrcyGrXhpk_jlvQwOHQUnBJKr8f0_jE6RST658Ck7o"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- Final CTA -->
+      <section class="py-xl px-gutter relative overflow-hidden">
+        <div
+          class="max-w-container-max mx-auto relative z-10 glass-card p-lg md:p-xl rounded-2xl text-center space-y-md border-primary/20"
+        >
+          <h2 class="font-display-lg text-on-surface">Ready to lead the scene?</h2>
+          <p class="font-body-lg text-on-surface-variant max-w-2xl mx-auto">
+            Stop managing events with spreadsheets. Join the elite network of organizers using Event
+            Nu to define the future of culture.
+          </p>
+          <div class="pt-sm">
+            <button
+              class="px-xl py-md bg-primary-container text-on-primary-container rounded-full font-bold text-headline-md electric-glow active:scale-95 transition-all"
+            >
+              Create Your First Event
+            </button>
+          </div>
+        </div>
+      </section>
+    </main>
+    <!-- Footer -->
+    <footer
+      class="w-full py-xl border-t border-outline-variant bg-surface-container-lowest text-tertiary font-label-sm text-label-sm"
+    >
+      <div class="flex flex-col items-center justify-center gap-md px-gutter w-full">
+        <div class="font-headline-md text-headline-md text-on-surface font-bold">Event Nu</div>
+        <div class="flex flex-wrap justify-center gap-md">
+          <a class="text-on-surface-variant hover:text-primary transition-colors" href="#"
+            >Privacy Policy</a
+          >
+          <a class="text-on-surface-variant hover:text-primary transition-colors" href="#"
+            >Terms of Service</a
+          >
+          <a class="text-on-surface-variant hover:text-primary transition-colors" href="#"
+            >Contact Support</a
+          >
+          <a class="text-on-surface-variant hover:text-primary transition-colors" href="#"
+            >Community Guidelines</a
+          >
+        </div>
+        <p class="text-on-surface-variant/60">© 2024 Event Nu Ecosystem. All rights reserved.</p>
+      </div>
+    </footer>
+    <script>
+      // Micro-interactions for scrolling
+      const observerOptions = {
+        threshold: 0.1,
+      }
 
-<div class="relative z-10 max-w-container-max mx-auto grid md:grid-cols-2 gap-lg items-center">
-<div class="space-y-md text-center md:text-left">
-<span class="font-label-sm text-label-sm text-tertiary tracking-widest uppercase">For the Visionaries</span>
-<h1 class="font-display-lg text-display-lg-mobile md:text-display-lg text-on-surface">Transform Your Ideas into <span class="text-primary">Iconic Events</span></h1>
-<p class="font-body-lg text-body-lg text-on-surface-variant max-w-xl mx-auto md:mx-0">Empower your creative vision with Addis Ababa's premier event management platform. Join thousands of creators making history.</p>
-<div class="flex flex-col sm:flex-row gap-sm justify-center md:justify-start pt-sm">
-<button class="px-lg py-sm bg-primary-container text-on-primary-container rounded-full font-bold text-body-lg electric-glow transition-all active:scale-95">
-                            Grow your audience
-                        </button>
-<button class="px-lg py-sm border-2 border-outline-variant text-on-surface rounded-full font-bold text-body-lg hover:border-primary transition-all active:scale-95">
-                            View Showcase
-                        </button>
-</div>
-</div>
-<div class="hidden md:block relative animate-float">
-<div class="glass-card rounded-xl p-base overflow-hidden transform rotate-2">
-<img class="w-full aspect-[4/5] object-cover rounded-lg" data-alt="A high-energy photograph of a successful event organizer standing on a stage overlooking a crowded concert venue in Addis Ababa. The lighting is dominated by deep purples and electric blues, reflecting a modern corporate yet vibrant nightlife aesthetic. The organizer is holding a tablet showing a data dashboard. The mood is triumphant and professional." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBYpU3b-T5jEevTZnF5rFZ3NRwpwOBYPhcXTaCdCtpsvC1wIUa6OH6oZrxUMTIICwnMFx5bn-3zWVoZpfTfhOawm-frODDtVisz_g-KU9KRQdOIVjcs1zxs9TlxRU0osdOR-foStJaoTiIklZmMSujkR5OTVNrUpUO9hzk9oMEySUkdJVa98zcQrUpDzIuKXhZT39d5qJDgW9kbjvTy3kaarLYb21YOM0LHQr2dEgknPPdem9-gNfqBC0LdDY4pgE5aK9HPeR1NDM1K"/>
-</div>
-<div class="absolute -bottom-10 -left-10 glass-card p-md rounded-xl space-y-xs max-w-[200px] transform -rotate-3">
-<div class="flex gap-xs items-center text-primary">
-<span class="material-symbols-outlined" data-icon="trending_up">trending_up</span>
-<span class="font-label-sm">+42% Growth</span>
-</div>
-<p class="font-label-sm text-on-surface-variant">Average increase in ticket sales for new partners.</p>
-</div>
-</div>
-</div>
-</section>
-<!-- Metric Cards -->
-<section class="py-xl bg-surface-container-low">
-<div class="max-w-container-max mx-auto px-gutter">
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-md">
-<div class="glass-card p-lg rounded-xl text-center space-y-xs group hover:bg-surface-container-high transition-colors">
-<h3 class="font-display-lg text-primary">100k+</h3>
-<p class="font-label-sm text-on-surface-variant uppercase tracking-tighter">Event Goers</p>
-</div>
-<div class="glass-card p-lg rounded-xl text-center space-y-xs group hover:bg-surface-container-high transition-colors">
-<h3 class="font-display-lg text-secondary">1.2M</h3>
-<p class="font-label-sm text-on-surface-variant uppercase tracking-tighter">Tickets Sold</p>
-</div>
-<div class="glass-card p-lg rounded-xl text-center space-y-xs group hover:bg-surface-container-high transition-colors">
-<h3 class="font-display-lg text-tertiary">500+</h3>
-<p class="font-label-sm text-on-surface-variant uppercase tracking-tighter">Active Organizers</p>
-</div>
-<div class="glass-card p-lg rounded-xl text-center space-y-xs group hover:bg-surface-container-high transition-colors">
-<h3 class="font-display-lg text-primary">98%</h3>
-<p class="font-label-sm text-on-surface-variant uppercase tracking-tighter">Growth Rate</p>
-</div>
-</div>
-</div>
-</section>
-<!-- Feature Breakdown (Zig-Zag) -->
-<section class="py-xl space-y-xl zig-zag-container">
-<!-- Feature 1 -->
-<div class="max-w-container-max mx-auto px-gutter flex flex-col md:flex-row items-center gap-lg">
-<div class="w-full md:w-1/2 space-y-md">
-<div class="w-12 h-12 bg-primary-container/20 rounded-lg flex items-center justify-center text-primary">
-<span class="material-symbols-outlined text-4xl" data-icon="dashboard_customize">dashboard_customize</span>
-</div>
-<h2 class="font-display-lg text-display-lg-mobile md:text-headline-md text-on-surface">Precision Event Management</h2>
-<p class="text-on-surface-variant font-body-lg">Every detail matters. Our robust suite of tools allows you to manage everything from tiered ticketing and VIP table bookings to staff permissions and venue logistics in one unified interface.</p>
-<ul class="space-y-sm">
-<li class="flex gap-sm items-center text-on-surface">
-<span class="material-symbols-outlined text-primary" data-icon="check_circle">check_circle</span>
-<span>Real-time inventory tracking</span>
-</li>
-<li class="flex gap-sm items-center text-on-surface">
-<span class="material-symbols-outlined text-primary" data-icon="check_circle">check_circle</span>
-<span>Automated waitlist management</span>
-</li>
-</ul>
-</div>
-<div class="w-full md:w-1/2">
-<div class="relative rounded-xl overflow-hidden glass-card p-base">
-<img class="w-full h-80 object-cover rounded-lg" data-alt="A sleek digital workspace showing a professional event management dashboard on a dual-monitor setup. The interface is dark-themed with neon purple accents and high-contrast charts. In the background, a modern studio office with warm low-light lamps is visible. The scene looks high-tech, organized, and premium." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDF7FkZfD9EmhS1RQXs7uvCWj5cfSKBlWfGoTjBkHnMK693nPHjnYwpN5JcNptXL4YsMQpc7-u_LzrabMEIRYGJSSFpoY7mJEPJ8mHrwEMyfn3VBdO_t5kxzwrhKzUM85Ludb0MDPQ6odCE7Sga3rPx1Ad8T_oajpKPh5by9ZGteCMBgHv7REx0_EaKAT4G9KnlDUqD4P6vtdugy3gWmzaAoY9Ow6oZC9gSRCC_PHeo-jMSD61i5xLdKUNBxuqc8muCi7KRBQg-PJFZ"/>
-</div>
-</div>
-</div>
-<!-- Feature 2 -->
-<div class="max-w-container-max mx-auto px-gutter flex flex-col md:flex-row items-center gap-lg">
-<div class="w-full md:w-1/2 space-y-md">
-<div class="w-12 h-12 bg-secondary-container/20 rounded-lg flex items-center justify-center text-secondary">
-<span class="material-symbols-outlined text-4xl" data-icon="query_stats">query_stats</span>
-</div>
-<h2 class="font-display-lg text-display-lg-mobile md:text-headline-md text-on-surface">Deep Audience Insights</h2>
-<p class="text-on-surface-variant font-body-lg">Know exactly who is coming to your events. Our analytics provide demographic breakdowns, behavioral patterns, and predictive revenue models to help you optimize future experiences.</p>
-<ul class="space-y-sm">
-<li class="flex gap-sm items-center text-on-surface">
-<span class="material-symbols-outlined text-secondary" data-icon="check_circle">check_circle</span>
-<span>Heatmaps of ticket purchase times</span>
-</li>
-<li class="flex gap-sm items-center text-on-surface">
-<span class="material-symbols-outlined text-secondary" data-icon="check_circle">check_circle</span>
-<span>Customer lifetime value tracking</span>
-</li>
-</ul>
-</div>
-<div class="w-full md:w-1/2">
-<div class="relative rounded-xl overflow-hidden glass-card p-base">
-<img class="w-full h-80 object-cover rounded-lg" data-alt="Close up of a tablet screen displaying colorful, high-contrast heatmaps and demographic bar charts. The data is vibrant against a dark background, reflecting the Event Nu brand colors of purple, orange, and blue. A hand with a stylus is interacting with the data. The lighting is cinematic, highlighting the clarity and sophistication of the insights." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDYGfaePznr7MevAJoKiNhVDDzXrWCLzTU8SNWJttt7cBrKuvHj41iwOAoL6z-O2G2Ny31-goiAfRWhbzju_-Of8SL5HFvnRqtyilY6If7boER_GSmAkvjuDmyVryyXNhXdfX2zvmqeSSSVLnNH20IF3qJVNpMb46zIw38oEcz3KzjoN1rIeYX34EiIZj-nr0l7T_6aA8lX0ljjx3hdJtHUqCMAGsWxmebVcRira4TqTjnhtdoX2GqzSAT3BULyaNpQl4KvMs3ilk4r"/>
-</div>
-</div>
-</div>
-<!-- Feature 3 -->
-<div class="max-w-container-max mx-auto px-gutter flex flex-col md:flex-row items-center gap-lg">
-<div class="w-full md:w-1/2 space-y-md">
-<div class="w-12 h-12 bg-tertiary-container/20 rounded-lg flex items-center justify-center text-tertiary">
-<span class="material-symbols-outlined text-4xl" data-icon="rocket_launch">rocket_launch</span>
-</div>
-<h2 class="font-display-lg text-display-lg-mobile md:text-headline-md text-on-surface">Seamless Global Publishing</h2>
-<p class="text-on-surface-variant font-body-lg">Launch your event to our entire ecosystem with one click. We handle the SEO, social sharing previews, and payment processing, so you can focus on building the production.</p>
-<ul class="space-y-sm">
-<li class="flex gap-sm items-center text-on-surface">
-<span class="material-symbols-outlined text-tertiary" data-icon="check_circle">check_circle</span>
-<span>Instant mobile notification blasts</span>
-</li>
-<li class="flex gap-sm items-center text-on-surface">
-<span class="material-symbols-outlined text-tertiary" data-icon="check_circle">check_circle</span>
-<span>Integrated promotional tools</span>
-</li>
-</ul>
-</div>
-<div class="w-full md:w-1/2">
-<div class="relative rounded-xl overflow-hidden glass-card p-base">
-<img class="w-full h-80 object-cover rounded-lg" data-alt="A conceptual 3D render of a smartphone screen launching a vibrant event poster into a digital cloud of glowing social media icons. The background is a dark, atmospheric purple. The lighting is high-contrast with electric purple and orange glows, conveying a sense of rapid movement and widespread digital reach." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD5Qa4GCwLRMcXpGLA9FbiuxNN-_Na44XorFBmT49OQpJ61i-d3i0myzzCYB96IznsCbMeEGzepj7FsCxMz2tT2rpnUZwKF9yRZ4Ai-caO41FV0-eBLj_FgibrCAdnRqIEcCd9qXdm9d-NKTjJPltsbrejcMq3n3ptK0t3tXIBa1w1VxvdqsD-brOCyXWlf0qH156yrSC9pAHp8dPoNOh44Tm-OnZjJsQzFmyFrcyGrXhpk_jlvQwOHQUnBJKr8f0_jE6RST658Ck7o"/>
-</div>
-</div>
-</div>
-</section>
-<!-- Final CTA -->
-<section class="py-xl px-gutter relative overflow-hidden">
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('opacity-100', 'translate-y-0')
+            entry.target.classList.remove('opacity-0', 'translate-y-10')
+          }
+        })
+      }, observerOptions)
 
-<div class="max-w-container-max mx-auto relative z-10 glass-card p-lg md:p-xl rounded-2xl text-center space-y-md border-primary/20">
-<h2 class="font-display-lg text-on-surface">Ready to lead the scene?</h2>
-<p class="font-body-lg text-on-surface-variant max-w-2xl mx-auto">Stop managing events with spreadsheets. Join the elite network of organizers using Event Nu to define the future of culture.</p>
-<div class="pt-sm">
-<button class="px-xl py-md bg-primary-container text-on-primary-container rounded-full font-bold text-headline-md electric-glow active:scale-95 transition-all">
-                        Create Your First Event
-                    </button>
-</div>
-</div>
-</section>
-</main>
-<!-- Footer -->
-<footer class="w-full py-xl border-t border-outline-variant bg-surface-container-lowest text-tertiary font-label-sm text-label-sm">
-<div class="flex flex-col items-center justify-center gap-md px-gutter w-full">
-<div class="font-headline-md text-headline-md text-on-surface font-bold">Event Nu</div>
-<div class="flex flex-wrap justify-center gap-md">
-<a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Privacy Policy</a>
-<a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Terms of Service</a>
-<a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Contact Support</a>
-<a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Community Guidelines</a>
-</div>
-<p class="text-on-surface-variant/60">© 2024 Event Nu Ecosystem. All rights reserved.</p>
-</div>
-</footer>
-<script>
-        // Micro-interactions for scrolling
-        const observerOptions = {
-            threshold: 0.1
-        };
-
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('opacity-100', 'translate-y-0');
-                    entry.target.classList.remove('opacity-0', 'translate-y-10');
-                }
-            });
-        }, observerOptions);
-
-        document.querySelectorAll('.zig-zag-container > div').forEach(el => {
-            el.classList.add('transition-all', 'duration-700', 'opacity-0', 'translate-y-10');
-            observer.observe(el);
-        });
+      document.querySelectorAll('.zig-zag-container > div').forEach((el) => {
+        el.classList.add('transition-all', 'duration-700', 'opacity-0', 'translate-y-10')
+        observer.observe(el)
+      })
     </script>
-</body></html>
+  </body>
+</html>

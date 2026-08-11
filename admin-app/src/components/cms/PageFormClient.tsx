@@ -66,7 +66,9 @@ export function PageFormClient({ initialData }: PageFormClientProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-3xl">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">{initialData ? 'Edit Page' : 'New Page'}</h1>
+        <h1 className="text-2xl font-bold text-foreground">
+          {initialData ? 'Edit Page' : 'New Page'}
+        </h1>
         <p className="text-muted-foreground">Create content for the public discovery site.</p>
       </div>
 
@@ -74,22 +76,38 @@ export function PageFormClient({ initialData }: PageFormClientProps) {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <label className="text-sm font-medium">Title</label>
-            <Input value={form.title} onChange={(e) => updateField('title', e.target.value)} placeholder="About Us" />
+            <Input
+              value={form.title}
+              onChange={(e) => updateField('title', e.target.value)}
+              placeholder="About Us"
+            />
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium">Slug</label>
-            <Input value={form.slug} onChange={(e) => updateField('slug', e.target.value)} placeholder="about-us" />
+            <Input
+              value={form.slug}
+              onChange={(e) => updateField('slug', e.target.value)}
+              placeholder="about-us"
+            />
           </div>
         </div>
 
         <div className="space-y-2">
           <label className="text-sm font-medium">Subtitle</label>
-          <Input value={form.subtitle} onChange={(e) => updateField('subtitle', e.target.value)} placeholder="Optional subtitle" />
+          <Input
+            value={form.subtitle}
+            onChange={(e) => updateField('subtitle', e.target.value)}
+            placeholder="Optional subtitle"
+          />
         </div>
 
         <div className="space-y-2">
           <label className="text-sm font-medium">Hero Image URL</label>
-          <Input value={form.hero_image_url} onChange={(e) => updateField('hero_image_url', e.target.value)} placeholder="https://..." />
+          <Input
+            value={form.hero_image_url}
+            onChange={(e) => updateField('hero_image_url', e.target.value)}
+            placeholder="https://..."
+          />
         </div>
 
         <div className="space-y-2">
@@ -101,7 +119,9 @@ export function PageFormClient({ initialData }: PageFormClientProps) {
             className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 resize-none"
             placeholder="<p>Page content...</p>"
           />
-          <p className="text-xs text-muted-foreground">Use HTML. A rich text editor can be added later.</p>
+          <p className="text-xs text-muted-foreground">
+            Use HTML. A rich text editor can be added later.
+          </p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -121,7 +141,9 @@ export function PageFormClient({ initialData }: PageFormClientProps) {
               onChange={(e) => updateField('is_published', e.target.checked)}
               className="w-4 h-4 rounded border-input"
             />
-            <label htmlFor="is_published" className="text-sm font-medium">Published</label>
+            <label htmlFor="is_published" className="text-sm font-medium">
+              Published
+            </label>
           </div>
         </div>
       </div>

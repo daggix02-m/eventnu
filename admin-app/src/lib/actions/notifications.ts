@@ -21,9 +21,7 @@ export async function getNotifications(params: {
     })
     const from = ((params.page ?? 1) - 1) * (params.perPage ?? 20)
     const to = from + (params.perPage ?? 20)
-    const notifications = all
-      .slice(from, to)
-      .map((n) => mapNotification(n, n.profile))
+    const notifications = all.slice(from, to).map((n) => mapNotification(n, n.profile))
     return { notifications, count: all.length }
   } catch (err) {
     console.error('Failed to load notifications:', err)
@@ -48,9 +46,7 @@ export async function sendNotification(params: {
     })
   } else {
     const users = await fetchQuery(api.profiles.listUsers, {})
-    const userIds = users
-      .filter((u) => u.profileId)
-      .map((u) => u.profileId as Id<'profiles'>)
+    const userIds = users.filter((u) => u.profileId).map((u) => u.profileId as Id<'profiles'>)
     await fetchMutation(api.notifications.sendBatch, {
       userIds,
       type: params.type,

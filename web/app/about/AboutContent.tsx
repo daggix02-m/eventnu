@@ -1,33 +1,33 @@
-"use client";
+'use client'
 
-import Link from "next/link";
-import Image from "next/image";
-import { Ticket, BarChart3, Users, Zap, Shield, Check } from "lucide-react";
+import Link from 'next/link'
+import Image from 'next/image'
+import { Ticket, BarChart3, Users, Zap, Shield, Check } from 'lucide-react'
 
 const valueCards = [
   {
     icon: Users,
-    title: "Community First",
-    description: "Building bridges between local talent and global audiences.",
-    imageUrl: "/images/events/july-13-19/feta-socity.png",
+    title: 'Community First',
+    description: 'Building bridges between local talent and global audiences.',
+    imageUrl: '/images/events/july-13-19/feta-socity.png',
   },
   {
     icon: Zap,
-    title: "Radical Simplicity",
-    description: "Removing every friction point between you and the experience.",
-    imageUrl: "/images/events/july-01-05/utopia-night.png",
+    title: 'Radical Simplicity',
+    description: 'Removing every friction point between you and the experience.',
+    imageUrl: '/images/events/july-01-05/utopia-night.png',
   },
   {
     icon: Shield,
-    title: "Trust & Security",
-    description: "Secure QR tickets, transparent listings, and clear info before you buy.",
-    imageUrl: "/images/events/july-20-26/bloom-week.png",
+    title: 'Trust & Security',
+    description: 'Secure QR tickets, transparent listings, and clear info before you buy.',
+    imageUrl: '/images/events/july-20-26/bloom-week.png',
   },
-];
+]
 
 interface AboutContentProps {
-  eventCount: number;
-  categoryCount: number;
+  eventCount: number
+  categoryCount: number
 }
 
 export function AboutContent({ eventCount, categoryCount }: AboutContentProps) {
@@ -42,9 +42,9 @@ export function AboutContent({ eventCount, categoryCount }: AboutContentProps) {
             one place.
           </h1>
           <p className="font-body-lg text-body-lg text-[#e9ddff] max-w-[42rem]">
-            Event Nu is where Addis Ababa finds what&apos;s on. Local organizers
-            list their events in one place — from underground jazz sessions to
-            high-energy festivals — so you never miss a beat.
+            Event Nu is where Addis Ababa finds what&apos;s on. Local organizers list their events
+            in one place — from underground jazz sessions to high-energy festivals — so you never
+            miss a beat.
           </p>
           <div className="mt-md flex flex-wrap items-center gap-md">
             <Link
@@ -104,9 +104,8 @@ export function AboutContent({ eventCount, categoryCount }: AboutContentProps) {
           </div>
           <h3 className="font-headline-md text-headline-md text-primary mb-xs">For Attendees</h3>
           <p className="font-body-md text-body-md text-on-surface-variant flex-grow mb-md">
-            Discover events listed by Addis Ababa&apos;s organizers. Book tickets,
-            get instant digital entry, and receive reminders so the fun starts
-            before you even arrive.
+            Discover events listed by Addis Ababa&apos;s organizers. Book tickets, get instant
+            digital entry, and receive reminders so the fun starts before you even arrive.
           </p>
           <ul className="space-y-xs">
             <li className="flex items-center gap-xs font-label-sm text-label-sm text-tertiary">
@@ -125,8 +124,8 @@ export function AboutContent({ eventCount, categoryCount }: AboutContentProps) {
           </div>
           <h3 className="font-headline-md text-headline-md text-secondary mb-xs">For Organizers</h3>
           <p className="font-body-md text-body-md text-on-surface-variant flex-grow mb-md">
-            Scale your impact with professional tools. Manage ticket sales, track real-time analytics,
-            and reach a dedicated community of event-seekers in the heart of Addis.
+            Scale your impact with professional tools. Manage ticket sales, track real-time
+            analytics, and reach a dedicated community of event-seekers in the heart of Addis.
           </p>
           <ul className="space-y-xs">
             <li className="flex items-center gap-xs font-label-sm text-label-sm text-secondary">
@@ -190,5 +189,5 @@ export function AboutContent({ eventCount, categoryCount }: AboutContentProps) {
         </div>
       </section>
     </div>
-  );
+  )
 }

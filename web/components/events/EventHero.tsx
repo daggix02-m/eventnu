@@ -1,26 +1,29 @@
-import Image from "next/image";
-import { Calendar, MapPin, ExternalLink, Ticket } from "lucide-react";
-import { formatEventDate, formatEventDateShort, isEventPast } from "@/lib/utils";
-import { Button } from "@/components/ui/Button";
-import { Badge } from "@/components/ui/Badge";
-import { EventGallery } from "@/components/events/EventGallery";
-import { hasGallery } from "@/lib/media";
-import type { Event } from "@/types";
+import Image from 'next/image'
+import { Calendar, MapPin, ExternalLink, Ticket } from 'lucide-react'
+import { formatEventDate, formatEventDateShort, isEventPast } from '@/lib/utils'
+import { Button } from '@/components/ui/Button'
+import { Badge } from '@/components/ui/Badge'
+import { EventGallery } from '@/components/events/EventGallery'
+import { hasGallery } from '@/lib/media'
+import type { Event } from '@/types'
 
 interface EventHeroProps {
-  event: Event;
+  event: Event
 }
 
 function getPrimaryCategory(event: Event) {
-  return event.event_categories?.find((ec) => ec.is_primary)?.categories ?? event.event_categories?.[0]?.categories;
+  return (
+    event.event_categories?.find((ec) => ec.is_primary)?.categories ??
+    event.event_categories?.[0]?.categories
+  )
 }
 
 export function EventHero({ event }: EventHeroProps) {
-  const category = getPrimaryCategory(event);
+  const category = getPrimaryCategory(event)
   const externalLabel =
-    event.external_link_label?.trim() || (event.is_free ? "More Info" : "Get Tickets");
-  const ended = isEventPast(event.start_date);
-  const showGallery = hasGallery(event.images);
+    event.external_link_label?.trim() || (event.is_free ? 'More Info' : 'Get Tickets')
+  const ended = isEventPast(event.start_date)
+  const showGallery = hasGallery(event.images)
 
   return (
     <section className="relative w-full overflow-hidden">
@@ -87,7 +90,7 @@ export function EventHero({ event }: EventHeroProps) {
                     {externalLabel}
                   </a>
                 </Button>
-              ) : event.action_type === "reservation" ? (
+              ) : event.action_type === 'reservation' ? (
                 <Button asChild className="flex-1 md:flex-none">
                   <a href="#reserve">
                     <Ticket className="w-4 h-4" />
@@ -100,5 +103,5 @@ export function EventHero({ event }: EventHeroProps) {
         </div>
       </div>
     </section>
-  );
+  )
 }

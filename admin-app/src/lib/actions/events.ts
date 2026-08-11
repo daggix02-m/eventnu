@@ -34,11 +34,7 @@ export async function getEvents(params: {
   }
 }
 
-export async function updateEventStatus(
-  eventId: string,
-  status: string,
-  note?: string
-) {
+export async function updateEventStatus(eventId: string, status: string, note?: string) {
   await fetchMutation(api.events.updateStatus, {
     eventId: eventId as Id<'events'>,
     status,
@@ -48,10 +44,7 @@ export async function updateEventStatus(
   revalidatePath('/')
 }
 
-export async function bulkUpdateEventStatus(
-  eventIds: string[],
-  status: string
-) {
+export async function bulkUpdateEventStatus(eventIds: string[], status: string) {
   await fetchMutation(api.events.bulkUpdateStatus, {
     eventIds: eventIds as Id<'events'>[],
     status,
@@ -60,11 +53,7 @@ export async function bulkUpdateEventStatus(
   revalidatePath('/')
 }
 
-export async function featureEvent(
-  eventId: string,
-  section: string,
-  until: string | null
-) {
+export async function featureEvent(eventId: string, section: string, until: string | null) {
   await fetchMutation(api.events.feature, {
     eventId: eventId as Id<'events'>,
     section,
@@ -106,15 +95,22 @@ async function getRecentEvents(
   queryRef: FunctionReference<'query', 'public'>,
   idKey: 'hostId' | 'profileId',
   id: string,
-  limit = 20
+  limit = 20,
 ) {
   const events = await fetchQuery(queryRef, { [idKey]: id as Id<'hosts'>, limit })
-  return (events ?? []).map((e: { _id: string; title?: string | null; startDate?: number | null; status?: string | null }) => ({
-    id: e._id,
-    title: e.title ?? '',
-    start_date: toDateTimeLocal(e.startDate),
-    status: e.status ?? 'draft',
-  }))
+  return (events ?? []).map(
+    (e: {
+      _id: string
+      title?: string | null
+      startDate?: number | null
+      status?: string | null
+    }) => ({
+      id: e._id,
+      title: e.title ?? '',
+      start_date: toDateTimeLocal(e.startDate),
+      status: e.status ?? 'draft',
+    }),
+  )
 }
 
 export async function getHostRecentEvents(hostId: string) {
@@ -135,41 +131,39 @@ export async function resolveStorageUrls(storageIds: string[]) {
   })
 }
 
-export async function createEvent(
-  data: {
-    title: string
-    description?: string
-    start_date: string
-    end_date?: string | null
-    poster_url?: string | null
-    image_aspect_ratio?: string | null
-    images?: { url: string; storageId?: string | null; filter?: string | null }[]
-    venue_name?: string
-    venue_address?: string
-    is_free?: boolean
-    price_display?: string | null
-    action_type?: string
-    external_link?: string | null
-    external_link_label?: string | null
-    contact_email?: string | null
-    reservation_limit?: number | null
-    status?: string
-    host_id?: string | null
-    organizer_id?: string | null
-    is_standalone?: boolean
-    frequency_type?: string
-    teaser_video_url?: string | null
-    video_aspect_ratio?: string | null
-    is_featured?: boolean
-    featured_section?: string | null
-    admin_note?: string | null
-    venue_map_link?: string | null
-    timezone?: string
-    source?: string
-    slug?: string | null
-    categoryIds?: string[]
-  }
-) {
+export async function createEvent(data: {
+  title: string
+  description?: string
+  start_date: string
+  end_date?: string | null
+  poster_url?: string | null
+  image_aspect_ratio?: string | null
+  images?: { url: string; storageId?: string | null; filter?: string | null }[]
+  venue_name?: string
+  venue_address?: string
+  is_free?: boolean
+  price_display?: string | null
+  action_type?: string
+  external_link?: string | null
+  external_link_label?: string | null
+  contact_email?: string | null
+  reservation_limit?: number | null
+  status?: string
+  host_id?: string | null
+  organizer_id?: string | null
+  is_standalone?: boolean
+  frequency_type?: string
+  teaser_video_url?: string | null
+  video_aspect_ratio?: string | null
+  is_featured?: boolean
+  featured_section?: string | null
+  admin_note?: string | null
+  venue_map_link?: string | null
+  timezone?: string
+  source?: string
+  slug?: string | null
+  categoryIds?: string[]
+}) {
   const result = await fetchMutation(api.events.create, {
     title: data.title,
     description: data.description,
@@ -177,11 +171,12 @@ export async function createEvent(
     endDate: data.end_date ? new Date(data.end_date).getTime() : undefined,
     posterUrl: data.poster_url ?? undefined,
     imageAspectRatio: data.image_aspect_ratio ?? undefined,
-    images: data.images?.map((img) => ({
-      url: img.url,
-      storageId: img.storageId ?? undefined,
-      filter: img.filter ?? undefined,
-    })) ?? undefined,
+    images:
+      data.images?.map((img) => ({
+        url: img.url,
+        storageId: img.storageId ?? undefined,
+        filter: img.filter ?? undefined,
+      })) ?? undefined,
     venueName: data.venue_name,
     venueAddress: data.venue_address,
     isFree: data.is_free,
@@ -191,8 +186,8 @@ export async function createEvent(
     externalLinkLabel: data.external_link_label ?? undefined,
     contactEmail: data.contact_email ?? undefined,
     status: data.status,
-    hostId: data.host_id as Id<'hosts'> ?? undefined,
-    organizerId: data.organizer_id as Id<'profiles'> ?? undefined,
+    hostId: (data.host_id as Id<'hosts'>) ?? undefined,
+    organizerId: (data.organizer_id as Id<'profiles'>) ?? undefined,
     isStandalone: data.is_standalone,
     frequencyType: data.frequency_type,
     isFeatured: data.is_featured,
@@ -201,7 +196,7 @@ export async function createEvent(
     venueMapLink: data.venue_map_link ?? undefined,
     timezone: data.timezone,
     slug: data.slug ?? undefined,
-    categoryIds: data.categoryIds as Id<'categories'>[] ?? undefined,
+    categoryIds: (data.categoryIds as Id<'categories'>[]) ?? undefined,
     reservationLimit: data.reservation_limit ?? undefined,
     teaserVideoUrl: data.teaser_video_url ?? undefined,
     videoAspectRatio: data.video_aspect_ratio ?? undefined,
@@ -246,7 +241,7 @@ export async function updateEvent(
     source?: string
     slug?: string | null
     categoryIds?: string[]
-  }
+  },
 ) {
   await fetchMutation(api.events.update, {
     eventId: eventId as Id<'events'>,
@@ -256,11 +251,12 @@ export async function updateEvent(
     endDate: data.end_date ? new Date(data.end_date).getTime() : undefined,
     posterUrl: data.poster_url ?? undefined,
     imageAspectRatio: data.image_aspect_ratio ?? undefined,
-    images: data.images?.map((img) => ({
-      url: img.url,
-      storageId: img.storageId ?? undefined,
-      filter: img.filter ?? undefined,
-    })) ?? undefined,
+    images:
+      data.images?.map((img) => ({
+        url: img.url,
+        storageId: img.storageId ?? undefined,
+        filter: img.filter ?? undefined,
+      })) ?? undefined,
     venueName: data.venue_name,
     venueAddress: data.venue_address,
     isFree: data.is_free,
@@ -270,8 +266,8 @@ export async function updateEvent(
     externalLinkLabel: data.external_link_label ?? undefined,
     contactEmail: data.contact_email ?? undefined,
     status: data.status,
-    hostId: data.host_id as Id<'hosts'> ?? undefined,
-    organizerId: data.organizer_id as Id<'profiles'> ?? undefined,
+    hostId: (data.host_id as Id<'hosts'>) ?? undefined,
+    organizerId: (data.organizer_id as Id<'profiles'>) ?? undefined,
     isStandalone: data.is_standalone,
     frequencyType: data.frequency_type,
     isFeatured: data.is_featured,
@@ -281,7 +277,7 @@ export async function updateEvent(
     venueMapLink: data.venue_map_link ?? undefined,
     timezone: data.timezone,
     slug: data.slug ?? undefined,
-    categoryIds: data.categoryIds as Id<'categories'>[] ?? undefined,
+    categoryIds: (data.categoryIds as Id<'categories'>[]) ?? undefined,
     reservationLimit: data.reservation_limit ?? undefined,
     teaserVideoUrl: data.teaser_video_url ?? undefined,
     videoAspectRatio: data.video_aspect_ratio ?? undefined,

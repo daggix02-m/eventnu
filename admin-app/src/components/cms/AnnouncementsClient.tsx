@@ -104,15 +104,34 @@ export function AnnouncementsClient({ announcements }: { announcements: Announce
         <p className="text-muted-foreground">Manage homepage banners and announcements.</p>
       </div>
 
-      <form onSubmit={handleCreate} className="bg-card rounded-2xl border border-outline-variant shadow-sm p-6 space-y-4">
+      <form
+        onSubmit={handleCreate}
+        className="bg-card rounded-2xl border border-outline-variant shadow-sm p-6 space-y-4"
+      >
         <h2 className="text-lg font-semibold">New Announcement</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Title" />
-          <Input value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} placeholder="Message" />
+          <Input
+            value={form.title}
+            onChange={(e) => setForm({ ...form, title: e.target.value })}
+            placeholder="Title"
+          />
+          <Input
+            value={form.message}
+            onChange={(e) => setForm({ ...form, message: e.target.value })}
+            placeholder="Message"
+          />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Input value={form.link_url} onChange={(e) => setForm({ ...form, link_url: e.target.value })} placeholder="Link URL" />
-          <Input value={form.link_text} onChange={(e) => setForm({ ...form, link_text: e.target.value })} placeholder="Link text" />
+          <Input
+            value={form.link_url}
+            onChange={(e) => setForm({ ...form, link_url: e.target.value })}
+            placeholder="Link URL"
+          />
+          <Input
+            value={form.link_text}
+            onChange={(e) => setForm({ ...form, link_text: e.target.value })}
+            placeholder="Link text"
+          />
         </div>
         <div className="flex items-center gap-3">
           <input
@@ -122,7 +141,9 @@ export function AnnouncementsClient({ announcements }: { announcements: Announce
             onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
             className="w-4 h-4 rounded border-input"
           />
-          <label htmlFor="is_active" className="text-sm font-medium">Active</label>
+          <label htmlFor="is_active" className="text-sm font-medium">
+            Active
+          </label>
         </div>
         <div className="space-y-2">
           <label className="flex items-center gap-2 text-sm">
@@ -160,7 +181,9 @@ export function AnnouncementsClient({ announcements }: { announcements: Announce
           <tbody>
             {announcements.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">No announcements yet.</td>
+                <td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">
+                  No announcements yet.
+                </td>
               </tr>
             )}
             {announcements.map((item) => (
@@ -178,7 +201,9 @@ export function AnnouncementsClient({ announcements }: { announcements: Announce
                 </td>
                 <td className="px-4 py-3">
                   {item.is_active ? (
-                    <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">Active</Badge>
+                    <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
+                      Active
+                    </Badge>
                   ) : (
                     <Badge variant="secondary">Inactive</Badge>
                   )}
@@ -189,7 +214,9 @@ export function AnnouncementsClient({ announcements }: { announcements: Announce
                       variant="ghost"
                       size="icon"
                       onClick={() => toggleActive(item)}
-                      aria-label={item.is_active ? `Deactivate ${item.title}` : `Activate ${item.title}`}
+                      aria-label={
+                        item.is_active ? `Deactivate ${item.title}` : `Activate ${item.title}`
+                      }
                     >
                       {item.is_active ? <X size={16} /> : <Check size={16} />}
                     </Button>

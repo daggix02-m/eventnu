@@ -21,13 +21,13 @@ import {
   Globe,
   Star,
   type LucideIcon,
-} from "lucide-react";
+} from 'lucide-react'
 
 const ICON_BY_VALUE: Record<string, LucideIcon> = {
   music: Music,
   palette: Palette,
   moon: Moon,
-  "utensils-crossed": UtensilsCrossed,
+  'utensils-crossed': UtensilsCrossed,
   dumbbell: Dumbbell,
   cpu: Cpu,
   tech: Laptop,
@@ -46,20 +46,20 @@ const ICON_BY_VALUE: Record<string, LucideIcon> = {
   fitness: Dumbbell,
   wellness: Leaf,
   culture: Globe,
-};
+}
 
 const ICON_BY_SLUG: Record<string, LucideIcon> = {
   music: Music,
-  "arts-culture": Palette,
+  'arts-culture': Palette,
   nightlife: Moon,
-  "food-drink": UtensilsCrossed,
-  "sports-fitness": Dumbbell,
-  "tech-innovation": Cpu,
+  'food-drink': UtensilsCrossed,
+  'sports-fitness': Dumbbell,
+  'tech-innovation': Cpu,
   default: Star,
-};
+}
 
 export function getCategoryIcon(icon?: string | null, slug?: string | null): LucideIcon {
-  if (icon && ICON_BY_VALUE[icon]) return ICON_BY_VALUE[icon];
-  if (slug && ICON_BY_SLUG[slug]) return ICON_BY_SLUG[slug];
-  return Star;
+  if (icon && ICON_BY_VALUE[icon]) return ICON_BY_VALUE[icon]
+  if (slug && ICON_BY_SLUG[slug]) return ICON_BY_SLUG[slug]
+  return Star
 }

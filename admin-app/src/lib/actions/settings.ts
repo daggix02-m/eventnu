@@ -16,12 +16,15 @@ export async function getFeaturedSections() {
   }
 }
 
-export async function updateFeaturedSection(id: string, updates: {
-  label?: string
-  description?: string
-  enabled?: boolean
-  sort_order?: number
-}) {
+export async function updateFeaturedSection(
+  id: string,
+  updates: {
+    label?: string
+    description?: string
+    enabled?: boolean
+    sort_order?: number
+  },
+) {
   await fetchMutation(api.features.update, {
     sectionId: id as Id<'featuredSections'>,
     label: updates.label,
@@ -49,11 +52,14 @@ export async function getAdminStats() {
   }
 }
 
-export async function updateAdminNotificationPrefs(adminId: string, prefs: {
-  email_reports: boolean
-  email_events: boolean
-  email_users: boolean
-}) {
+export async function updateAdminNotificationPrefs(
+  adminId: string,
+  prefs: {
+    email_reports: boolean
+    email_events: boolean
+    email_users: boolean
+  },
+) {
   await fetchMutation(api.adminSettings.upsert, {
     adminId: adminId as Id<'profiles'>,
     emailReports: prefs.email_reports,

@@ -1,15 +1,15 @@
 export interface LegalPage {
-  slug: string;
-  title: string;
-  subtitle: string;
-  bodyHtml: string;
+  slug: string
+  title: string
+  subtitle: string
+  bodyHtml: string
 }
 
 export const LEGAL_PAGES: Record<string, LegalPage> = {
-  "privacy-policy": {
-    slug: "privacy-policy",
-    title: "Privacy Policy",
-    subtitle: "Last updated: August 2026",
+  'privacy-policy': {
+    slug: 'privacy-policy',
+    title: 'Privacy Policy',
+    subtitle: 'Last updated: August 2026',
     bodyHtml: `
       <p>This policy explains what information Event Nu collects, how we use it, and the choices you have. It applies to eventnu.et and the Event Nu platform.</p>
 
@@ -59,10 +59,10 @@ export const LEGAL_PAGES: Record<string, LegalPage> = {
       <p>Questions about this policy? Email us at event.nua@gmail.com.</p>
     `,
   },
-  "terms-of-service": {
-    slug: "terms-of-service",
-    title: "Terms of Service",
-    subtitle: "Last updated: August 2026",
+  'terms-of-service': {
+    slug: 'terms-of-service',
+    title: 'Terms of Service',
+    subtitle: 'Last updated: August 2026',
     bodyHtml: `
       <p>These terms govern your use of eventnu.et and the Event Nu platform. By using the platform you agree to these terms.</p>
 
@@ -114,10 +114,10 @@ export const LEGAL_PAGES: Record<string, LegalPage> = {
       <p>Questions about these terms? Email us at event.nua@gmail.com.</p>
     `,
   },
-  "community-guidelines": {
-    slug: "community-guidelines",
-    title: "Community Guidelines",
-    subtitle: "Last updated: August 2026",
+  'community-guidelines': {
+    slug: 'community-guidelines',
+    title: 'Community Guidelines',
+    subtitle: 'Last updated: August 2026',
     bodyHtml: `
       <p>Event Nu works best when listings are accurate, honest, and respectful. These guidelines apply to everyone using the platform.</p>
 
@@ -153,6 +153,6 @@ export const LEGAL_PAGES: Record<string, LegalPage> = {
       <p>We may remove listings, cancel reservations, or suspend accounts that violate these guidelines. If you see something that breaks them, report it by emailing event.nua@gmail.com.</p>
     `,
   },
-};
+}
 
-export const LEGAL_PAGE_SLUGS = Object.keys(LEGAL_PAGES);
+export const LEGAL_PAGE_SLUGS = Object.keys(LEGAL_PAGES)

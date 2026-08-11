@@ -14,9 +14,7 @@ export async function getUsers(params: {
 }) {
   try {
     const status =
-      params.status === 'active' ||
-      params.status === 'suspended' ||
-      params.status === 'no_profile'
+      params.status === 'active' || params.status === 'suspended' || params.status === 'no_profile'
         ? params.status
         : 'all'
     const users = await fetchQuery(api.profiles.listUsers, {
@@ -70,11 +68,14 @@ export async function demoteUser(userId: string) {
   revalidatePath('/users')
 }
 
-export async function updateProfile(userId: string, updates: {
-  full_name?: string
-  email?: string
-  avatar_url?: string
-}) {
+export async function updateProfile(
+  userId: string,
+  updates: {
+    full_name?: string
+    email?: string
+    avatar_url?: string
+  },
+) {
   await fetchMutation(api.profiles.updateProfile, {
     profileId: userId as Id<'profiles'>,
     fullName: updates.full_name,

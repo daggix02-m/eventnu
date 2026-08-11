@@ -1,44 +1,44 @@
-import { v } from "convex/values";
-import { query, mutation } from "./_generated/server";
-import { getUserProfile, requireAdmin } from "./helpers";
-import { rateLimiter } from "./rateLimiter";
+import { v } from 'convex/values'
+import { query, mutation } from './_generated/server'
+import { getUserProfile, requireAdmin } from './helpers'
+import { rateLimiter } from './rateLimiter'
 
 export const getPublishedPages = query({
   args: {},
   handler: async (ctx) => {
     return await ctx.db
-      .query("pages")
-      .withIndex("by_published", (q) => q.eq("isPublished", true))
-      .take(100);
+      .query('pages')
+      .withIndex('by_published', (q) => q.eq('isPublished', true))
+      .take(100)
   },
-});
+})
 
 export const getPageBySlug = query({
   args: { slug: v.string() },
   handler: async (ctx, args) => {
     const page = await ctx.db
-      .query("pages")
-      .withIndex("by_slug", (q) => q.eq("slug", args.slug))
-      .first();
-    return page ?? null;
+      .query('pages')
+      .withIndex('by_slug', (q) => q.eq('slug', args.slug))
+      .first()
+    return page ?? null
   },
-});
+})
 
 export const getPages = query({
   args: {},
   handler: async (ctx) => {
-    await requireAdmin(ctx);
-    return await ctx.db.query("pages").order("asc").take(100);
+    await requireAdmin(ctx)
+    return await ctx.db.query('pages').order('asc').take(100)
   },
-});
+})
 
 export const getPageById = query({
-  args: { pageId: v.id("pages") },
+  args: { pageId: v.id('pages') },
   handler: async (ctx, args) => {
-    await requireAdmin(ctx);
-    return await ctx.db.get("pages", args.pageId);
+    await requireAdmin(ctx)
+    return await ctx.db.get('pages', args.pageId)
   },
-});
+})
 
 export const createPage = mutation({
   args: {
@@ -52,8 +52,8 @@ export const createPage = mutation({
     sortOrder: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    await requireAdmin(ctx);
-    return await ctx.db.insert("pages", {
+    await requireAdmin(ctx)
+    return await ctx.db.insert('pages', {
       slug: args.slug,
       title: args.title,
       subtitle: args.subtitle ?? undefined,
@@ -62,13 +62,13 @@ export const createPage = mutation({
       heroImageUrl: args.heroImageUrl ?? undefined,
       isPublished: args.isPublished ?? false,
       sortOrder: args.sortOrder ?? 0,
-    });
+    })
   },
-});
+})
 
 export const updatePage = mutation({
   args: {
-    pageId: v.id("pages"),
+    pageId: v.id('pages'),
     slug: v.optional(v.string()),
     title: v.optional(v.string()),
     subtitle: v.optional(v.string()),
@@ -79,49 +79,49 @@ export const updatePage = mutation({
     sortOrder: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    await requireAdmin(ctx);
-    const { pageId, ...fields } = args;
-    const updates: Record<string, any> = {};
+    await requireAdmin(ctx)
+    const { pageId, ...fields } = args
+    const updates: Record<string, any> = {}
     for (const [key, value] of Object.entries(fields)) {
-      if (value !== undefined) updates[key] = value;
+      if (value !== undefined) updates[key] = value
     }
-    await ctx.db.patch("pages", pageId, updates);
+    await ctx.db.patch('pages', pageId, updates)
   },
-});
+})
 
 export const deletePage = mutation({
-  args: { pageId: v.id("pages") },
+  args: { pageId: v.id('pages') },
   handler: async (ctx, args) => {
-    await requireAdmin(ctx);
-    await ctx.db.delete("pages", args.pageId);
+    await requireAdmin(ctx)
+    await ctx.db.delete('pages', args.pageId)
   },
-});
+})
 
 export const getActiveAnnouncements = query({
   args: { now: v.number() },
   handler: async (ctx, args) => {
-    const profile = await getUserProfile(ctx);
-    const profileId = profile?._id ?? null;
+    const profile = await getUserProfile(ctx)
+    const profileId = profile?._id ?? null
     const announcements = await ctx.db
-      .query("announcements")
-      .withIndex("by_active", (q) => q.eq("isActive", true))
-      .take(50);
+      .query('announcements')
+      .withIndex('by_active', (q) => q.eq('isActive', true))
+      .take(50)
     return announcements.filter(
       (a) =>
         (a.targetUserId === undefined || a.targetUserId === profileId) &&
         (a.startsAt === undefined || a.startsAt <= args.now) &&
         (a.endsAt === undefined || a.endsAt >= args.now),
-    );
+    )
   },
-});
+})
 
 export const getAnnouncements = query({
   args: {},
   handler: async (ctx) => {
-    await requireAdmin(ctx);
-    return await ctx.db.query("announcements").order("desc").take(100);
+    await requireAdmin(ctx)
+    return await ctx.db.query('announcements').order('desc').take(100)
   },
-});
+})
 
 export const createAnnouncement = mutation({
   args: {
@@ -132,11 +132,11 @@ export const createAnnouncement = mutation({
     isActive: v.optional(v.boolean()),
     startsAt: v.optional(v.number()),
     endsAt: v.optional(v.number()),
-    targetUserId: v.optional(v.id("profiles")),
+    targetUserId: v.optional(v.id('profiles')),
   },
   handler: async (ctx, args) => {
-    await requireAdmin(ctx);
-    return await ctx.db.insert("announcements", {
+    await requireAdmin(ctx)
+    return await ctx.db.insert('announcements', {
       title: args.title,
       message: args.message ?? undefined,
       linkUrl: args.linkUrl ?? undefined,
@@ -145,13 +145,13 @@ export const createAnnouncement = mutation({
       startsAt: args.startsAt ?? undefined,
       endsAt: args.endsAt ?? undefined,
       targetUserId: args.targetUserId ?? undefined,
-    });
+    })
   },
-});
+})
 
 export const updateAnnouncement = mutation({
   args: {
-    announcementId: v.id("announcements"),
+    announcementId: v.id('announcements'),
     title: v.optional(v.string()),
     message: v.optional(v.string()),
     linkUrl: v.optional(v.string()),
@@ -159,34 +159,34 @@ export const updateAnnouncement = mutation({
     isActive: v.optional(v.boolean()),
     startsAt: v.optional(v.number()),
     endsAt: v.optional(v.number()),
-    targetUserId: v.optional(v.id("profiles")),
+    targetUserId: v.optional(v.id('profiles')),
   },
   handler: async (ctx, args) => {
-    await requireAdmin(ctx);
-    const { announcementId, ...fields } = args;
-    const updates: Record<string, any> = {};
+    await requireAdmin(ctx)
+    const { announcementId, ...fields } = args
+    const updates: Record<string, any> = {}
     for (const [key, value] of Object.entries(fields)) {
-      if (value !== undefined) updates[key] = value;
+      if (value !== undefined) updates[key] = value
     }
-    await ctx.db.patch("announcements", announcementId, updates);
+    await ctx.db.patch('announcements', announcementId, updates)
   },
-});
+})
 
 export const deleteAnnouncement = mutation({
-  args: { announcementId: v.id("announcements") },
+  args: { announcementId: v.id('announcements') },
   handler: async (ctx, args) => {
-    await requireAdmin(ctx);
-    await ctx.db.delete("announcements", args.announcementId);
+    await requireAdmin(ctx)
+    await ctx.db.delete('announcements', args.announcementId)
   },
-});
+})
 
 export const getContactSubmissions = query({
   args: {},
   handler: async (ctx) => {
-    await requireAdmin(ctx);
-    return await ctx.db.query("contactSubmissions").order("desc").take(200);
+    await requireAdmin(ctx)
+    return await ctx.db.query('contactSubmissions').order('desc').take(200)
   },
-});
+})
 
 export const submitContact = mutation({
   args: {
@@ -195,22 +195,22 @@ export const submitContact = mutation({
     message: v.string(),
   },
   handler: async (ctx, args) => {
-    await rateLimiter.limit(ctx, "submitContact", { key: "global", throws: true });
-    return await ctx.db.insert("contactSubmissions", {
+    await rateLimiter.limit(ctx, 'submitContact', { key: 'global', throws: true })
+    return await ctx.db.insert('contactSubmissions', {
       name: args.name,
       email: args.email,
       message: args.message,
       isResolved: false,
-    });
+    })
   },
-});
+})
 
 export const markContactResolved = mutation({
-  args: { submissionId: v.id("contactSubmissions"), resolved: v.boolean() },
+  args: { submissionId: v.id('contactSubmissions'), resolved: v.boolean() },
   handler: async (ctx, args) => {
-    await requireAdmin(ctx);
-    await ctx.db.patch("contactSubmissions", args.submissionId, {
+    await requireAdmin(ctx)
+    await ctx.db.patch('contactSubmissions', args.submissionId, {
       isResolved: args.resolved,
-    });
+    })
   },
-});
+})

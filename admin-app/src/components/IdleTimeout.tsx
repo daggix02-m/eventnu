@@ -40,7 +40,7 @@ export function IdleTimeout() {
     }
 
     ACTIVITY_EVENTS.forEach((event) =>
-      window.addEventListener(event, markActive, { passive: true })
+      window.addEventListener(event, markActive, { passive: true }),
     )
     window.addEventListener('focus', markActive)
     document.addEventListener('visibilitychange', onVisibility)
@@ -70,9 +70,7 @@ export function IdleTimeout() {
     }, 1000)
 
     return () => {
-      ACTIVITY_EVENTS.forEach((event) =>
-        window.removeEventListener(event, markActive)
-      )
+      ACTIVITY_EVENTS.forEach((event) => window.removeEventListener(event, markActive))
       window.removeEventListener('focus', markActive)
       document.removeEventListener('visibilitychange', onVisibility)
       clearInterval(tick)
@@ -100,8 +98,8 @@ export function IdleTimeout() {
           </CardTitle>
           <CardDescription className="text-muted-foreground">
             You have been idle for a while. You will be signed out in{' '}
-            <span className="font-semibold text-foreground">{warnSeconds}s</span>{' '}
-            if you don&apos;t continue.
+            <span className="font-semibold text-foreground">{warnSeconds}s</span> if you don&apos;t
+            continue.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex justify-center">

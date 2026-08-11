@@ -1,6 +1,6 @@
-import { defineApp } from "convex/server";
-import { v } from "convex/values";
-import rateLimiter from "@convex-dev/rate-limiter/convex.config";
+import { defineApp } from 'convex/server'
+import { v } from 'convex/values'
+import rateLimiter from '@convex-dev/rate-limiter/convex.config'
 
 const app = defineApp({
   env: {
@@ -15,8 +15,8 @@ const app = defineApp({
     RESEND_API_KEY: v.optional(v.string()),
     RESEND_FROM: v.optional(v.string()),
   },
-});
+})
 
-app.use(rateLimiter);
+app.use(rateLimiter)
 
-export default app;
+export default app

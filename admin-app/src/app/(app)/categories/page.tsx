@@ -9,9 +9,5 @@ export default async function CategoriesPage() {
     console.error('Failed to load categories:', err)
   }
 
-  return (
-    <CategoriesClient
-      initialCategories={categories}
-    />
-  )
+  return <CategoriesClient initialCategories={categories} />
 }

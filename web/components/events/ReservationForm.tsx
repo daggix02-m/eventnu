@@ -1,69 +1,67 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import { useMutation } from "convex/react";
-import { api } from "@eventnu/convex/_generated/api";
-import { Button } from "@/components/ui/Button";
-import { Ticket, Loader2 } from "lucide-react";
-import type { Event } from "@/types";
+import { useState } from 'react'
+import { useMutation } from 'convex/react'
+import { api } from '@eventnu/convex/_generated/api'
+import { Button } from '@/components/ui/Button'
+import { Ticket, Loader2 } from 'lucide-react'
+import type { Event } from '@/types'
 
 interface ReservationFormProps {
-  event: Event;
+  event: Event
 }
 
 const inputClass =
-  "w-full rounded-xl border border-outline-variant bg-surface-container-low px-md py-3 text-body-md text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-2 focus:ring-primary";
+  'w-full rounded-xl border border-outline-variant bg-surface-container-low px-md py-3 text-body-md text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-2 focus:ring-primary'
 
 export function ReservationForm({ event }: ReservationFormProps) {
-  const createReservation = useMutation(api.reservations.create);
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [message, setMessage] = useState("");
-  const [status, setStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
-  const [error, setError] = useState("");
+  const createReservation = useMutation(api.reservations.create)
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [message, setMessage] = useState('')
+  const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
+  const [error, setError] = useState('')
 
   const remaining =
-    event.reservation_enabled && event.reservation_limit != null
-      ? event.reservation_limit
-      : null;
+    event.reservation_enabled && event.reservation_limit != null ? event.reservation_limit : null
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
     if (!name.trim() || !email.trim()) {
-      setStatus("error");
-      setError("Please provide your name and email.");
-      return;
+      setStatus('error')
+      setError('Please provide your name and email.')
+      return
     }
-    setStatus("loading");
-    setError("");
+    setStatus('loading')
+    setError('')
     try {
       await createReservation({
         eventId: event.id as any,
         name: name.trim(),
         email: email.trim(),
         message: message.trim() || undefined,
-      });
-      setStatus("done");
+      })
+      setStatus('done')
     } catch (err) {
-      setStatus("error");
+      setStatus('error')
       if (err instanceof Error) {
-        const msg = err.message;
-        if (msg.includes("Reservation limit reached")) {
-          setError("This event has reached its reservation limit. No more spots are available.");
-        } else if (msg.includes("Event not found")) {
-          setError("This event is no longer available.");
-        } else if (msg.includes("rate limit")) {
-          setError("Too many requests. Please wait a moment and try again.");
+        const msg = err.message
+        if (msg.includes('Reservation limit reached')) {
+          setError('This event has reached its reservation limit. No more spots are available.')
+        } else if (msg.includes('Event not found')) {
+          setError('This event is no longer available.')
+        } else if (msg.includes('rate limit')) {
+          setError('Too many requests. Please wait a moment and try again.')
         } else {
-          setError(msg || "Could not submit your reservation. Please try again.");
+          setError(msg || 'Could not submit your reservation. Please try again.')
         }
       } else {
-        setError("Could not submit your reservation. Please try again.");
+        setError('Could not submit your reservation. Please try again.')
       }
     }
-  };
+  }
 
-  if (status === "done") {
+  if (status === 'done') {
     return (
       <div className="p-lg bg-surface-container-high border border-outline-variant rounded-xl space-y-sm">
         <div className="flex items-center gap-md">
@@ -74,7 +72,7 @@ export function ReservationForm({ event }: ReservationFormProps) {
           We&apos;ll confirm your spot for {event.title}. Watch your inbox for updates.
         </p>
       </div>
-    );
+    )
   }
 
   return (
@@ -130,17 +128,17 @@ export function ReservationForm({ event }: ReservationFormProps) {
             className={inputClass}
           />
         </div>
-        {status === "error" && <p className="text-label-sm text-error">{error}</p>}
-        <Button type="submit" className="w-full" disabled={status === "loading"}>
-          {status === "loading" ? (
+        {status === 'error' && <p className="text-label-sm text-error">{error}</p>}
+        <Button type="submit" className="w-full" disabled={status === 'loading'}>
+          {status === 'loading' ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" /> Submitting...
             </>
           ) : (
-            "Request reservation"
+            'Request reservation'
           )}
         </Button>
       </form>
     </div>
-  );
+  )
 }

@@ -141,7 +141,7 @@ export function mapEventCategory(c: Doc<'categories'> | null | undefined, index 
 
 export function mapOrganizer(
   o: Doc<'organizerProfiles'> | null | undefined,
-  profile?: Doc<'profiles'> | null | undefined
+  profile?: Doc<'profiles'> | null | undefined,
 ) {
   return {
     profile_id: o?.profileId ?? '',
@@ -201,7 +201,7 @@ export function mapContactSubmission(s: Doc<'contactSubmissions'> | null | undef
 }
 
 export function mapReport(
-  r: (Doc<'reports'> & { reporter?: Doc<'profiles'> | null }) | null | undefined
+  r: (Doc<'reports'> & { reporter?: Doc<'profiles'> | null }) | null | undefined,
 ) {
   const reporter = r?.reporter ? mapProfile(r.reporter) : null
   return {
@@ -218,7 +218,7 @@ export function mapReport(
 
 export function mapNotification(
   n: Doc<'notifications'> | null | undefined,
-  profile?: Doc<'profiles'> | null | undefined
+  profile?: Doc<'profiles'> | null | undefined,
 ) {
   return {
     id: n?._id ?? '',
@@ -264,7 +264,7 @@ export function mapSupportTicket(t: Doc<'supportTickets'> | null | undefined) {
 }
 
 export function mapModerationLog(
-  l: (Doc<'moderationLogs'> & { adminName?: string }) | null | undefined
+  l: (Doc<'moderationLogs'> & { adminName?: string }) | null | undefined,
 ) {
   return {
     id: l?._id ?? '',
@@ -287,13 +287,7 @@ export function mapTopEvent(e: Doc<'events'> | null | undefined) {
 }
 
 export function mapReportTargetPreview(
-  p:
-    | Doc<'eventComments'>
-    | Doc<'events'>
-    | Doc<'hosts'>
-    | Doc<'profiles'>
-    | null
-    | undefined
+  p: Doc<'eventComments'> | Doc<'events'> | Doc<'hosts'> | Doc<'profiles'> | null | undefined,
 ):
   | { target_type: 'comment'; content: string }
   | { target_type: 'event'; poster_url?: string; title: string; status: string }
@@ -302,9 +296,21 @@ export function mapReportTargetPreview(
   | null {
   if (!p) return null
   if ('content' in p) return { target_type: 'comment', content: p.content ?? '' }
-  if ('title' in p) return { target_type: 'event', title: p.title ?? '', poster_url: p.posterUrl, status: p.status ?? '' }
-  if ('name' in p) return { target_type: 'host', name: p.name ?? '', logo_url: p.logoUrl, status: p.status ?? '' }
-  return { target_type: 'user', full_name: p.fullName ?? '', username: usernameFromEmail(p.email), avatar_url: p.avatarUrl }
+  if ('title' in p)
+    return {
+      target_type: 'event',
+      title: p.title ?? '',
+      poster_url: p.posterUrl,
+      status: p.status ?? '',
+    }
+  if ('name' in p)
+    return { target_type: 'host', name: p.name ?? '', logo_url: p.logoUrl, status: p.status ?? '' }
+  return {
+    target_type: 'user',
+    full_name: p.fullName ?? '',
+    username: usernameFromEmail(p.email),
+    avatar_url: p.avatarUrl,
+  }
 }
 
 export type MappedUser = ReturnType<typeof mapAdminUser>

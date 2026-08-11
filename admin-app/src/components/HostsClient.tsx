@@ -100,7 +100,11 @@ export function HostsClient({ initialHosts, initialCount, initialFilters }: Host
     defaults: { status: 'all', type: 'all', page: 1 },
   })
 
-  const { data, isFetching } = useHosts(filters, { hosts: initialHosts, count: initialCount }, initialFilters)
+  const { data, isFetching } = useHosts(
+    filters,
+    { hosts: initialHosts, count: initialCount },
+    initialFilters,
+  )
   const hosts = data?.items ?? []
   const count = data?.total ?? 0
   const totalPages = Math.ceil(count / 20)
@@ -182,7 +186,11 @@ export function HostsClient({ initialHosts, initialCount, initialFilters }: Host
   const handleStatusChange = async (hostId: string, newStatus: string) => {
     setIsLoading(true)
     try {
-      await updateHostStatus(hostId, newStatus, newStatus === 'suspended' ? 'suspend_host' : 'unsuspend_host')
+      await updateHostStatus(
+        hostId,
+        newStatus,
+        newStatus === 'suspended' ? 'suspend_host' : 'unsuspend_host',
+      )
       toast.success(`Host ${newStatus}`)
       await refresh()
     } catch (err) {
@@ -213,8 +221,16 @@ export function HostsClient({ initialHosts, initialCount, initialFilters }: Host
             placeholder="Search hosts..."
             className="flex-1 max-w-md"
           />
-          <FilterSelect value={filters.status ?? 'all'} onChange={(v) => update('status', v)} options={statusOptions} />
-          <FilterSelect value={filters.type ?? 'all'} onChange={(v) => update('type', v)} options={typeOptions} />
+          <FilterSelect
+            value={filters.status ?? 'all'}
+            onChange={(v) => update('status', v)}
+            options={statusOptions}
+          />
+          <FilterSelect
+            value={filters.type ?? 'all'}
+            onChange={(v) => update('type', v)}
+            options={typeOptions}
+          />
         </div>
 
         <DataTable<MappedHost>
@@ -222,10 +238,19 @@ export function HostsClient({ initialHosts, initialCount, initialFilters }: Host
           rowKey={(host) => host.id}
           loading={isFetching || isLoading}
           empty={
-            <EmptyState icon={Building2} title="No hosts found." description="Try adjusting your search or filters." />
+            <EmptyState
+              icon={Building2}
+              title="No hosts found."
+              description="Try adjusting your search or filters."
+            />
           }
           footer={
-            <Pagination page={filters.page ?? 1} totalPages={totalPages} count={count} onPageChange={setPage} />
+            <Pagination
+              page={filters.page ?? 1}
+              totalPages={totalPages}
+              count={count}
+              onPageChange={setPage}
+            />
           }
           columns={[
             {
@@ -235,13 +260,23 @@ export function HostsClient({ initialHosts, initialCount, initialFilters }: Host
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center overflow-hidden flex-shrink-0">
                     {host.logo_url ? (
-                      <img src={host.logo_url} alt="" width={40} height={40} loading="lazy" className="w-full h-full object-cover" />
+                      <img
+                        src={host.logo_url}
+                        alt=""
+                        width={40}
+                        height={40}
+                        loading="lazy"
+                        className="w-full h-full object-cover"
+                      />
                     ) : (
                       <Building2 size={18} className="text-muted-foreground" />
                     )}
                   </div>
                   <div>
-                    <Link href={`/hosts/${host.id}`} className="font-semibold text-sm text-foreground hover:text-primary transition-colors">
+                    <Link
+                      href={`/hosts/${host.id}`}
+                      className="font-semibold text-sm text-foreground hover:text-primary transition-colors"
+                    >
                       {host.name}
                     </Link>
                     <p className="text-xs text-muted-foreground">@{host.slug}</p>
@@ -295,7 +330,9 @@ export function HostsClient({ initialHosts, initialCount, initialFilters }: Host
             {
               key: 'created',
               header: 'Created',
-              render: (host) => <span className="text-sm text-muted-foreground">{formatDate(host.created_at)}</span>,
+              render: (host) => (
+                <span className="text-sm text-muted-foreground">{formatDate(host.created_at)}</span>
+              ),
             },
             {
               key: 'actions',
@@ -391,7 +428,10 @@ export function HostsClient({ initialHosts, initialCount, initialFilters }: Host
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Type</label>
-              <Select value={form.host_type} onChange={(e) => setForm({ ...form, host_type: e.target.value })}>
+              <Select
+                value={form.host_type}
+                onChange={(e) => setForm({ ...form, host_type: e.target.value })}
+              >
                 <option value="registered_org">Registered Org</option>
                 <option value="community_organizer">Community Organizer</option>
                 <option value="venue">Venue</option>
@@ -409,7 +449,10 @@ export function HostsClient({ initialHosts, initialCount, initialFilters }: Host
               <div className="space-y-2">
                 <label className="text-sm font-medium">Email</label>
                 <div className="relative">
-                  <Mail size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <Mail
+                    size={14}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                  />
                   <Input
                     value={form.contact_email}
                     onChange={(e) => setForm({ ...form, contact_email: e.target.value })}
@@ -421,7 +464,10 @@ export function HostsClient({ initialHosts, initialCount, initialFilters }: Host
               <div className="space-y-2">
                 <label className="text-sm font-medium">Phone</label>
                 <div className="relative">
-                  <Phone size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <Phone
+                    size={14}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                  />
                   <Input
                     value={form.contact_phone}
                     onChange={(e) => setForm({ ...form, contact_phone: e.target.value })}
@@ -435,7 +481,10 @@ export function HostsClient({ initialHosts, initialCount, initialFilters }: Host
               <div className="space-y-2">
                 <label className="text-sm font-medium">Website</label>
                 <div className="relative">
-                  <Globe size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <Globe
+                    size={14}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                  />
                   <Input
                     value={form.website}
                     onChange={(e) => setForm({ ...form, website: e.target.value })}
@@ -447,7 +496,10 @@ export function HostsClient({ initialHosts, initialCount, initialFilters }: Host
               <div className="space-y-2">
                 <label className="text-sm font-medium">Location</label>
                 <div className="relative">
-                  <MapPin size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <MapPin
+                    size={14}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                  />
                   <Input
                     value={form.location_text}
                     onChange={(e) => setForm({ ...form, location_text: e.target.value })}

@@ -41,10 +41,7 @@ export default function AdminError({ error, reset }: ErrorPageProps) {
             </p>
           )}
           <div className="flex flex-col gap-2 pt-2">
-            <Button
-              onClick={reset}
-              className="w-full h-11"
-            >
+            <Button onClick={reset} className="w-full h-11">
               Try again
             </Button>
             <Button

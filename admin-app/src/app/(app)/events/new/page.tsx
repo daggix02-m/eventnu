@@ -10,12 +10,13 @@ export default async function CreateEventPage() {
   let organizersList: Awaited<ReturnType<typeof getOrganizers>>['organizers'] = []
   let featuredSections: Awaited<ReturnType<typeof getFeaturedSections>> = []
   try {
-    ;[allCategories, { hosts: hostsList }, { organizers: organizersList }, featuredSections] = await Promise.all([
-      getCategories(),
-      getHosts({ status: 'active', perPage: 200 }),
-      getOrganizers({ perPage: 200 }),
-      getFeaturedSections(),
-    ])
+    ;[allCategories, { hosts: hostsList }, { organizers: organizersList }, featuredSections] =
+      await Promise.all([
+        getCategories(),
+        getHosts({ status: 'active', perPage: 200 }),
+        getOrganizers({ perPage: 200 }),
+        getFeaturedSections(),
+      ])
   } catch (err) {
     console.error('Failed to load event form data:', err)
   }

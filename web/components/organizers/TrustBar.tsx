@@ -1,49 +1,52 @@
-"use client";
+'use client'
 
-import { useRef } from "react";
-import { useGSAP } from "@gsap/react";
-import { gsap } from "@/lib/gsap";
-import { Shield, Star, CheckCircle2 } from "lucide-react";
-import { Container } from "@/components/layout/Container";
+import { useRef } from 'react'
+import { useGSAP } from '@gsap/react'
+import { gsap } from '@/lib/gsap'
+import { Shield, Star, CheckCircle2 } from 'lucide-react'
+import { Container } from '@/components/layout/Container'
 
 const PARTNERS = [
-  { name: "Telebirr", color: "text-[#00bcd4] border-[#00bcd4]/30 bg-[#00bcd4]/8" },
-  { name: "CBE Birr", color: "text-[#4caf50] border-[#4caf50]/30 bg-[#4caf50]/8" },
-  { name: "Chapa", color: "text-[#ff9800] border-[#ff9800]/30 bg-[#ff9800]/8" },
-  { name: "Visa / Mastercard", color: "text-primary border-primary/30 bg-primary/8" },
-  { name: "Mobile Wallets", color: "text-secondary border-secondary/30 bg-secondary/8" },
-];
+  { name: 'Telebirr', color: 'text-[#00bcd4] border-[#00bcd4]/30 bg-[#00bcd4]/8' },
+  { name: 'CBE Birr', color: 'text-[#4caf50] border-[#4caf50]/30 bg-[#4caf50]/8' },
+  { name: 'Chapa', color: 'text-[#ff9800] border-[#ff9800]/30 bg-[#ff9800]/8' },
+  { name: 'Visa / Mastercard', color: 'text-primary border-primary/30 bg-primary/8' },
+  { name: 'Mobile Wallets', color: 'text-secondary border-secondary/30 bg-secondary/8' },
+]
 
 const TRUST_BADGES = [
-  { icon: Shield, label: "Secure Payments", sub: "Encrypted checkout" },
-  { icon: Star, label: "Built in Addis", sub: "Events city-wide" },
-  { icon: CheckCircle2, label: "Fast Payouts", sub: "24–48 hrs" },
-];
+  { icon: Shield, label: 'Secure Payments', sub: 'Encrypted checkout' },
+  { icon: Star, label: 'Built in Addis', sub: 'Events city-wide' },
+  { icon: CheckCircle2, label: 'Fast Payouts', sub: '24–48 hrs' },
+]
 
 export function OrganizersTrustBar() {
-  const sectionRef = useRef<HTMLElement>(null);
+  const sectionRef = useRef<HTMLElement>(null)
 
-  useGSAP(() => {
-    if (sectionRef.current) {
-      const items = sectionRef.current.querySelectorAll(".trust-item");
-      gsap.fromTo(
-        items,
-        { opacity: 0, y: 10 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.4,
-          stagger: 0.06,
-          ease: "power2.out",
-          scrollTrigger: {
-            trigger: sectionRef.current,
-            start: "top 90%",
-            toggleActions: "play none none none",
+  useGSAP(
+    () => {
+      if (sectionRef.current) {
+        const items = sectionRef.current.querySelectorAll('.trust-item')
+        gsap.fromTo(
+          items,
+          { opacity: 0, y: 10 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.4,
+            stagger: 0.06,
+            ease: 'power2.out',
+            scrollTrigger: {
+              trigger: sectionRef.current,
+              start: 'top 90%',
+              toggleActions: 'play none none none',
+            },
           },
-        }
-      );
-    }
-  }, { scope: sectionRef });
+        )
+      }
+    },
+    { scope: sectionRef },
+  )
 
   return (
     <section
@@ -56,7 +59,7 @@ export function OrganizersTrustBar() {
         className="absolute top-0 left-0 right-0 h-[1px] opacity-50"
         style={{
           background:
-            "linear-gradient(90deg, transparent 0%, var(--color-primary) 30%, var(--color-secondary) 70%, transparent 100%)",
+            'linear-gradient(90deg, transparent 0%, var(--color-primary) 30%, var(--color-secondary) 70%, transparent 100%)',
         }}
         aria-hidden="true"
       />
@@ -90,7 +93,9 @@ export function OrganizersTrustBar() {
                   <Icon className="w-4 h-4 text-primary" aria-hidden="true" />
                 </div>
                 <div className="leading-tight">
-                  <p className="font-display text-[12px] font-bold text-white leading-none">{label}</p>
+                  <p className="font-display text-[12px] font-bold text-white leading-none">
+                    {label}
+                  </p>
                   <p className="font-mono text-[10px] text-on-surface-variant">{sub}</p>
                 </div>
               </div>
@@ -112,5 +117,5 @@ export function OrganizersTrustBar() {
         </div>
       </Container>
     </section>
-  );
+  )
 }

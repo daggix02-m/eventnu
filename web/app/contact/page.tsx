@@ -1,13 +1,13 @@
-import { Container } from "@/components/layout/Container";
-import { ContactForm } from "@/components/contact/ContactForm";
-import { Mail, MapPin, Phone, MessageCircle, Send } from "lucide-react";
-import Link from "next/link";
-import { SITE } from "@/lib/site";
+import { Container } from '@/components/layout/Container'
+import { ContactForm } from '@/components/contact/ContactForm'
+import { Mail, MapPin, Phone, MessageCircle, Send } from 'lucide-react'
+import Link from 'next/link'
+import { SITE } from '@/lib/site'
 
 export const metadata = {
-  title: "Contact | Event Nu",
-  description: "Get in touch with the Event Nu team.",
-};
+  title: 'Contact | Event Nu',
+  description: 'Get in touch with the Event Nu team.',
+}
 
 export default function ContactPage() {
   return (
@@ -17,8 +17,8 @@ export default function ContactPage() {
           <div className="space-y-sm">
             <h1 className="font-display text-display-lg-mobile md:text-display-lg">Contact Us</h1>
             <p className="text-on-surface-variant text-body-lg">
-              Have a question, partnership idea, or feedback? We would love to hear from you.
-              We usually reply within 1–2 business days.
+              Have a question, partnership idea, or feedback? We would love to hear from you. We
+              usually reply within 1–2 business days.
             </p>
           </div>
 
@@ -29,7 +29,10 @@ export default function ContactPage() {
               </div>
               <div>
                 <p className="font-mono text-label-sm text-on-surface-variant uppercase">Email</p>
-                <Link href={`mailto:${SITE.email}`} className="text-on-surface text-body-md hover:text-primary transition-colors">
+                <Link
+                  href={`mailto:${SITE.email}`}
+                  className="text-on-surface text-body-md hover:text-primary transition-colors"
+                >
                   {SITE.email}
                 </Link>
               </div>
@@ -43,13 +46,28 @@ export default function ContactPage() {
                 <div className="flex flex-col gap-xs">
                   {SITE.phones.map((phone) => (
                     <div key={phone.tel} className="flex items-center gap-sm">
-                      <Link href={`tel:${phone.tel}`} className="text-on-surface text-body-md hover:text-primary transition-colors">
+                      <Link
+                        href={`tel:${phone.tel}`}
+                        className="text-on-surface text-body-md hover:text-primary transition-colors"
+                      >
                         {phone.label}
                       </Link>
-                      <Link href={`https://wa.me/${phone.whatsapp}`} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" className="text-on-surface-variant hover:text-secondary transition-colors">
+                      <Link
+                        href={`https://wa.me/${phone.whatsapp}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label="WhatsApp"
+                        className="text-on-surface-variant hover:text-secondary transition-colors"
+                      >
                         <MessageCircle className="w-4 h-4" />
                       </Link>
-                      <Link href={`https://t.me/+${phone.tel.replace(/^\+/, "")}`} target="_blank" rel="noopener noreferrer" aria-label="Telegram" className="text-on-surface-variant hover:text-secondary transition-colors">
+                      <Link
+                        href={`https://t.me/+${phone.tel.replace(/^\+/, '')}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label="Telegram"
+                        className="text-on-surface-variant hover:text-secondary transition-colors"
+                      >
                         <Send className="w-4 h-4" />
                       </Link>
                     </div>
@@ -75,5 +93,5 @@ export default function ContactPage() {
         </div>
       </div>
     </Container>
-  );
+  )
 }

@@ -1,51 +1,51 @@
-"use client";
+'use client'
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import Image from "next/image";
-import { ChevronLeft, ChevronRight, Instagram } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { filterStyle, aspectClass, sortedImages } from "@/lib/media";
-import type { Event, EventImage } from "@/types";
+import { useCallback, useEffect, useRef, useState } from 'react'
+import Image from 'next/image'
+import { ChevronLeft, ChevronRight, Instagram } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { filterStyle, aspectClass, sortedImages } from '@/lib/media'
+import type { Event, EventImage } from '@/types'
 
 interface EventGalleryProps {
-  event: Event;
-  className?: string;
+  event: Event
+  className?: string
 }
 
 export function EventGallery({ event, className }: EventGalleryProps) {
-  const images: EventImage[] = sortedImages(event.images);
-  const [index, setIndex] = useState(0);
-  const count = images.length;
-  const active = images[index];
-  const aspect = aspectClass(event.image_aspect_ratio);
-  const containerRef = useRef<HTMLDivElement | null>(null);
+  const images: EventImage[] = sortedImages(event.images)
+  const [index, setIndex] = useState(0)
+  const count = images.length
+  const active = images[index]
+  const aspect = aspectClass(event.image_aspect_ratio)
+  const containerRef = useRef<HTMLDivElement | null>(null)
 
   const go = useCallback(
     (dir: number) => {
-      if (count === 0) return;
-      setIndex((i) => (i + dir + count) % count);
+      if (count === 0) return
+      setIndex((i) => (i + dir + count) % count)
     },
-    [count]
-  );
+    [count],
+  )
 
   useEffect(() => {
-    const el = containerRef.current;
-    if (!el || count <= 1) return;
+    const el = containerRef.current
+    if (!el || count <= 1) return
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "ArrowLeft") go(-1);
-      if (e.key === "ArrowRight") go(1);
-    };
-    el.addEventListener("keydown", onKey);
-    return () => el.removeEventListener("keydown", onKey);
-  }, [go, count]);
+      if (e.key === 'ArrowLeft') go(-1)
+      if (e.key === 'ArrowRight') go(1)
+    }
+    el.addEventListener('keydown', onKey)
+    return () => el.removeEventListener('keydown', onKey)
+  }, [go, count])
 
   if (count === 0 || !active) {
-    return null;
+    return null
   }
 
   return (
-    <div ref={containerRef} className={cn("group relative w-full overflow-hidden", className)}>
-      <div className={cn("relative w-full", aspect)}>
+    <div ref={containerRef} className={cn('group relative w-full overflow-hidden', className)}>
+      <div className={cn('relative w-full', aspect)}>
         <Image
           key={active.id}
           src={active.url}
@@ -105,8 +105,10 @@ export function EventGallery({ event, className }: EventGalleryProps) {
               onClick={() => setIndex(i)}
               aria-label={`Go to image ${i + 1}`}
               className={cn(
-                "w-8 h-8 rounded-md overflow-hidden border-2 transition-all",
-                i === index ? "border-white opacity-100" : "border-transparent opacity-60 hover:opacity-100"
+                'w-8 h-8 rounded-md overflow-hidden border-2 transition-all',
+                i === index
+                  ? 'border-white opacity-100'
+                  : 'border-transparent opacity-60 hover:opacity-100',
               )}
             >
               <Image
@@ -121,5 +123,5 @@ export function EventGallery({ event, className }: EventGalleryProps) {
         </div>
       )}
     </div>
-  );
+  )
 }

@@ -31,27 +31,33 @@ import { createSupportTicket, closeSupportTicket } from '@/lib/actions/support'
 const faqs = [
   {
     question: 'How do I approve pending events?',
-    answer: 'Navigate to the Events page, filter by "Pending Review" status, and click on any event to view details. Use the action menu to publish or reject events.',
+    answer:
+      'Navigate to the Events page, filter by "Pending Review" status, and click on any event to view details. Use the action menu to publish or reject events.',
   },
   {
     question: 'How do I handle user reports?',
-    answer: 'Go to Reports & Moderation. Select a report from the list to view details. You can dismiss the report, warn the user, or take action on the reported content.',
+    answer:
+      'Go to Reports & Moderation. Select a report from the list to view details. You can dismiss the report, warn the user, or take action on the reported content.',
   },
   {
     question: 'How do I create a new host profile?',
-    answer: 'Visit the Hosts page and click "Create Host". Fill in the required information including name, type, and contact details. The host will be immediately available.',
+    answer:
+      'Visit the Hosts page and click "Create Host". Fill in the required information including name, type, and contact details. The host will be immediately available.',
   },
   {
     question: 'How do I verify an organizer?',
-    answer: 'On the Organizers page, find the organizer and click the verify icon. Verified organizers get a badge and can access additional features.',
+    answer:
+      'On the Organizers page, find the organizer and click the verify icon. Verified organizers get a badge and can access additional features.',
   },
   {
     question: 'How do I send a broadcast notification?',
-    answer: 'Go to Notifications and click "Compose". Select "Broadcast to all users", enter your title and message, and click Send.',
+    answer:
+      'Go to Notifications and click "Compose". Select "Broadcast to all users", enter your title and message, and click Send.',
   },
   {
     question: 'What is the moderation log?',
-    answer: 'The moderation log is an audit trail of all admin actions taken on the platform. Every publish, reject, suspend, and delete action is recorded for accountability.',
+    answer:
+      'The moderation log is an audit trail of all admin actions taken on the platform. Every publish, reject, suspend, and delete action is recorded for accountability.',
   },
 ]
 
@@ -132,9 +138,7 @@ export function SupportClient({ initialTickets = [] }: SupportClientProps) {
     try {
       await closeSupportTicket(ticketId)
       toast.success('Ticket closed')
-      setTickets((prev) =>
-        prev.map((t) => (t.id === ticketId ? { ...t, status: 'closed' } : t))
-      )
+      setTickets((prev) => prev.map((t) => (t.id === ticketId ? { ...t, status: 'closed' } : t)))
       router.refresh()
     } catch (err) {
       toast.error(getErrorMessage(err, 'Failed to close ticket'))
@@ -154,7 +158,9 @@ export function SupportClient({ initialTickets = [] }: SupportClientProps) {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="font-headline text-3xl font-semibold text-foreground tracking-tight">Support</h1>
+        <h1 className="font-headline text-3xl font-semibold text-foreground tracking-tight">
+          Support
+        </h1>
         <p className="text-muted-foreground mt-1">Help center, FAQ, and contact support.</p>
       </div>
 
@@ -249,11 +255,21 @@ export function SupportClient({ initialTickets = [] }: SupportClientProps) {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-outline-variant">
-                      <th className="text-left py-2 px-3 text-xs font-medium text-muted-foreground">Subject</th>
-                      <th className="text-left py-2 px-3 text-xs font-medium text-muted-foreground">Priority</th>
-                      <th className="text-left py-2 px-3 text-xs font-medium text-muted-foreground">Status</th>
-                      <th className="text-left py-2 px-3 text-xs font-medium text-muted-foreground">Date</th>
-                      <th className="text-right py-2 px-3 text-xs font-medium text-muted-foreground">Actions</th>
+                      <th className="text-left py-2 px-3 text-xs font-medium text-muted-foreground">
+                        Subject
+                      </th>
+                      <th className="text-left py-2 px-3 text-xs font-medium text-muted-foreground">
+                        Priority
+                      </th>
+                      <th className="text-left py-2 px-3 text-xs font-medium text-muted-foreground">
+                        Status
+                      </th>
+                      <th className="text-left py-2 px-3 text-xs font-medium text-muted-foreground">
+                        Date
+                      </th>
+                      <th className="text-right py-2 px-3 text-xs font-medium text-muted-foreground">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -267,7 +283,9 @@ export function SupportClient({ initialTickets = [] }: SupportClientProps) {
                             onClick={() => setExpandedTicket(isExpanded ? null : ticket.id)}
                           >
                             <td className="py-2.5 px-3">
-                              <p className="text-foreground font-medium text-xs">{ticket.subject}</p>
+                              <p className="text-foreground font-medium text-xs">
+                                {ticket.subject}
+                              </p>
                             </td>
                             <td className="py-2.5 px-3">
                               <Badge variant={priorityColors[ticket.priority] || 'default'}>
@@ -304,7 +322,9 @@ export function SupportClient({ initialTickets = [] }: SupportClientProps) {
                           {isExpanded && (
                             <tr key={`${ticket.id}-detail`}>
                               <td colSpan={5} className="py-3 px-6 bg-surface-container-low/50">
-                                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{ticket.message}</p>
+                                <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                                  {ticket.message}
+                                </p>
                                 <p className="text-xs text-muted-foreground mt-2">
                                   Created: {format(new Date(ticket.created_at), 'PPP p')}
                                 </p>
@@ -366,7 +386,11 @@ export function SupportClient({ initialTickets = [] }: SupportClientProps) {
                 />
               </div>
               <div className="flex items-center gap-3 pt-2">
-                <Button type="submit" disabled={isSubmitting} className="bg-primary text-primary-foreground">
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="bg-primary text-primary-foreground"
+                >
                   <Send size={16} className="mr-2" />
                   {isSubmitting ? 'Sending...' : 'Submit Ticket'}
                 </Button>
@@ -404,7 +428,10 @@ export function SupportClient({ initialTickets = [] }: SupportClientProps) {
                       <p className="text-sm font-medium text-foreground">{link.label}</p>
                       <p className="text-xs text-muted-foreground">{link.description}</p>
                     </div>
-                    <ExternalLink size={14} className="text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <ExternalLink
+                      size={14}
+                      className="text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+                    />
                   </a>
                 )
               })}
@@ -432,7 +459,9 @@ export function SupportClient({ initialTickets = [] }: SupportClientProps) {
               </div>
               <div className="flex items-center gap-2">
                 <AlertTriangle size={14} className="text-muted-foreground" />
-                <span className="text-muted-foreground">For critical issues, escalate immediately</span>
+                <span className="text-muted-foreground">
+                  For critical issues, escalate immediately
+                </span>
               </div>
             </div>
           </Card>

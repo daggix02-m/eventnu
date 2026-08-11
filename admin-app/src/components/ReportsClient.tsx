@@ -81,13 +81,19 @@ export function ReportsClient({
     defaults: { status: 'all', targetType: 'all' },
   })
 
-  const { data, isFetching } = useReports(filters, { reports: initialReports, count: initialCount }, initialFilters)
+  const { data, isFetching } = useReports(
+    filters,
+    { reports: initialReports, count: initialCount },
+    initialFilters,
+  )
   const reports = data?.all ?? []
   const count = data?.total ?? 0
 
   const [selectedReport, setSelectedReport] = useState<MappedReport | null>(null)
   const [loading, setLoading] = useState(false)
-  const [targetPreview, setTargetPreview] = useState<Awaited<ReturnType<typeof getReportTargetPreview>> | null>(null)
+  const [targetPreview, setTargetPreview] = useState<Awaited<
+    ReturnType<typeof getReportTargetPreview>
+  > | null>(null)
   const [noteDraft, setNoteDraft] = useState('')
 
   const refresh = () => {
@@ -157,13 +163,28 @@ export function ReportsClient({
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Reports & Moderation" description="Manage user-submitted flags and maintain community guidelines." />
+      <PageHeader
+        title="Reports & Moderation"
+        description="Manage user-submitted flags and maintain community guidelines."
+      />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatsCard icon={Flag} label="Total Reports" value={count} />
-        <StatsCard icon={AlertTriangle} label="Pending" value={reports.filter((r) => r.status === 'pending').length} />
-        <StatsCard icon={EyeOff} label="Actioned" value={reports.filter((r) => r.status === 'actioned').length} />
-        <StatsCard icon={X} label="Dismissed" value={reports.filter((r) => r.status === 'dismissed').length} />
+        <StatsCard
+          icon={AlertTriangle}
+          label="Pending"
+          value={reports.filter((r) => r.status === 'pending').length}
+        />
+        <StatsCard
+          icon={EyeOff}
+          label="Actioned"
+          value={reports.filter((r) => r.status === 'actioned').length}
+        />
+        <StatsCard
+          icon={X}
+          label="Dismissed"
+          value={reports.filter((r) => r.status === 'dismissed').length}
+        />
       </div>
 
       <div className="bg-card rounded-3xl border border-outline-variant overflow-hidden shadow-sm flex flex-col lg:flex-row h-[700px]">
@@ -178,7 +199,7 @@ export function ReportsClient({
                     'px-4 py-2 rounded-full text-xs font-bold transition-colors',
                     filters.status === o.value
                       ? 'bg-primary text-primary-foreground'
-                      : 'text-muted-foreground hover:bg-surface-container'
+                      : 'text-muted-foreground hover:bg-surface-container',
                   )}
                 >
                   {o.label}
@@ -199,18 +220,32 @@ export function ReportsClient({
             <table className="w-full text-left">
               <thead className="sticky top-[73px] bg-card z-10">
                 <tr className="text-muted-foreground border-b border-outline-variant">
-                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider">Reporter</th>
-                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider">Target</th>
-                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider">Reason</th>
-                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-right">Date</th>
+                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider">
+                    Reporter
+                  </th>
+                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider">
+                    Target
+                  </th>
+                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider">
+                    Reason
+                  </th>
+                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-right">
+                    Date
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-outline-variant">
                 {reports.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="px-6 py-12">
-                      <EmptyState icon={Flag} title="No reports found." description="Try adjusting your filters." />
+                      <EmptyState
+                        icon={Flag}
+                        title="No reports found."
+                        description="Try adjusting your filters."
+                      />
                     </td>
                   </tr>
                 ) : (
@@ -222,17 +257,23 @@ export function ReportsClient({
                         onClick={() => handleSelectReport(report)}
                         className={cn(
                           'hover:bg-surface-container-low cursor-pointer transition-colors',
-                          selectedReport?.id === report.id && 'bg-surface-container-high'
+                          selectedReport?.id === report.id && 'bg-surface-container-high',
                         )}
                       >
                         <td className="px-6 py-5">
                           <div className="flex items-center gap-3">
                             <UserAvatar
                               src={report.profiles?.avatar_url}
-                              fallback={(report.profiles?.full_name || report.profiles?.username || 'U').charAt(0)}
+                              fallback={(
+                                report.profiles?.full_name ||
+                                report.profiles?.username ||
+                                'U'
+                              ).charAt(0)}
                               size="sm"
                             />
-                            <span className="font-semibold text-sm">{report.profiles?.full_name || report.profiles?.username || 'Unknown'}</span>
+                            <span className="font-semibold text-sm">
+                              {report.profiles?.full_name || report.profiles?.username || 'Unknown'}
+                            </span>
                           </div>
                         </td>
                         <td className="px-6 py-5">
@@ -247,7 +288,13 @@ export function ReportsClient({
                           <span className="text-sm">{report.reason}</span>
                         </td>
                         <td className="px-6 py-5">
-                          <Badge variant="outline" className={cn('text-xs font-bold', statusBadgeStyles[report.status] || 'bg-muted')}>
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              'text-xs font-bold',
+                              statusBadgeStyles[report.status] || 'bg-muted',
+                            )}
+                          >
                             {report.status}
                           </Badge>
                         </td>
@@ -263,21 +310,30 @@ export function ReportsClient({
           </div>
         </div>
 
-        <div className={cn(
-          'w-full lg:w-[400px] flex flex-col bg-surface-container-low h-full overflow-hidden transition-all duration-300 border-l border-outline-variant',
-          selectedReport ? 'block' : 'hidden lg:flex'
-        )}>
+        <div
+          className={cn(
+            'w-full lg:w-[400px] flex flex-col bg-surface-container-low h-full overflow-hidden transition-all duration-300 border-l border-outline-variant',
+            selectedReport ? 'block' : 'hidden lg:flex',
+          )}
+        >
           {selectedReport ? (
             <>
               <div className="p-6 border-b border-outline-variant flex justify-between items-center bg-card">
-                <h3 className="font-headline text-lg font-semibold text-foreground">Report Details</h3>
-                <button onClick={() => setSelectedReport(null)} className="lg:hidden text-muted-foreground">
+                <h3 className="font-headline text-lg font-semibold text-foreground">
+                  Report Details
+                </h3>
+                <button
+                  onClick={() => setSelectedReport(null)}
+                  className="lg:hidden text-muted-foreground"
+                >
                   <X size={20} />
                 </button>
               </div>
               <div className="flex-1 overflow-y-auto p-6 space-y-6">
                 <div className="bg-card p-4 rounded-2xl border border-outline-variant">
-                  <p className="text-[10px] uppercase font-bold text-muted-foreground mb-3 tracking-widest">Reporter</p>
+                  <p className="text-[10px] uppercase font-bold text-muted-foreground mb-3 tracking-widest">
+                    Reporter
+                  </p>
                   <div className="flex items-center gap-4">
                     <UserAvatar
                       src={selectedReport.profiles?.avatar_url}
@@ -285,22 +341,34 @@ export function ReportsClient({
                       size="lg"
                     />
                     <div>
-                      <p className="font-bold text-sm">{selectedReport.profiles?.full_name || selectedReport.profiles?.username || 'Unknown'}</p>
-                      <p className="text-xs text-muted-foreground">Reported {formatDateTime(selectedReport.created_at)}</p>
+                      <p className="font-bold text-sm">
+                        {selectedReport.profiles?.full_name ||
+                          selectedReport.profiles?.username ||
+                          'Unknown'}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Reported {formatDateTime(selectedReport.created_at)}
+                      </p>
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <p className="text-[10px] uppercase font-bold text-muted-foreground mb-3 tracking-widest">Incident Summary</p>
+                  <p className="text-[10px] uppercase font-bold text-muted-foreground mb-3 tracking-widest">
+                    Incident Summary
+                  </p>
                   <div className="bg-card rounded-2xl border border-outline-variant overflow-hidden">
                     <div className="flex justify-between px-4 py-3 border-b border-outline-variant border-dashed">
                       <span className="text-sm text-muted-foreground">Type</span>
-                      <span className="font-bold text-sm capitalize">{selectedReport.target_type}</span>
+                      <span className="font-bold text-sm capitalize">
+                        {selectedReport.target_type}
+                      </span>
                     </div>
                     <div className="flex justify-between px-4 py-3 border-b border-outline-variant border-dashed">
                       <span className="text-sm text-muted-foreground">Reason</span>
-                      <span className="font-bold text-sm text-destructive">{selectedReport.reason}</span>
+                      <span className="font-bold text-sm text-destructive">
+                        {selectedReport.reason}
+                      </span>
                     </div>
                     <div className="flex justify-between px-4 py-3">
                       <span className="text-sm text-muted-foreground">Date reported</span>
@@ -311,16 +379,27 @@ export function ReportsClient({
 
                 {targetPreview && (
                   <div className="bg-surface-container-high/50 p-4 rounded-2xl border border-dashed border-outline">
-                    <p className="text-[10px] uppercase font-bold text-muted-foreground mb-3 tracking-widest">Reported Content</p>
+                    <p className="text-[10px] uppercase font-bold text-muted-foreground mb-3 tracking-widest">
+                      Reported Content
+                    </p>
                     <div className="bg-card p-4 rounded-xl shadow-sm border border-outline-variant">
                       {targetPreview.target_type === 'comment' && (
-                        <p className="italic text-sm text-foreground">&ldquo;{targetPreview.content}&rdquo;</p>
+                        <p className="italic text-sm text-foreground">
+                          &ldquo;{targetPreview.content}&rdquo;
+                        </p>
                       )}
                       {targetPreview.target_type === 'event' && (
                         <div className="flex items-center gap-3">
                           <div className="w-12 h-12 rounded-lg bg-surface-container-high flex items-center justify-center overflow-hidden">
                             {targetPreview.poster_url ? (
-                              <img src={targetPreview.poster_url} alt="" width={48} height={48} loading="lazy" className="w-full h-full object-cover" />
+                              <img
+                                src={targetPreview.poster_url}
+                                alt=""
+                                width={48}
+                                height={48}
+                                loading="lazy"
+                                className="w-full h-full object-cover"
+                              />
                             ) : (
                               <Calendar size={18} className="text-muted-foreground" />
                             )}
@@ -335,11 +414,19 @@ export function ReportsClient({
                         <div className="flex items-center gap-3">
                           <UserAvatar
                             src={targetPreview.avatar_url}
-                            fallback={(targetPreview.full_name || targetPreview.username || 'U').charAt(0)}
+                            fallback={(
+                              targetPreview.full_name ||
+                              targetPreview.username ||
+                              'U'
+                            ).charAt(0)}
                           />
                           <div>
-                            <p className="font-semibold text-sm">{targetPreview.full_name || targetPreview.username}</p>
-                            <p className="text-xs text-muted-foreground">@{targetPreview.username}</p>
+                            <p className="font-semibold text-sm">
+                              {targetPreview.full_name || targetPreview.username}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              @{targetPreview.username}
+                            </p>
                           </div>
                         </div>
                       )}
@@ -347,7 +434,14 @@ export function ReportsClient({
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center overflow-hidden">
                             {targetPreview.logo_url ? (
-                              <img src={targetPreview.logo_url} alt="" width={40} height={40} loading="lazy" className="w-full h-full object-cover" />
+                              <img
+                                src={targetPreview.logo_url}
+                                alt=""
+                                width={40}
+                                height={40}
+                                loading="lazy"
+                                className="w-full h-full object-cover"
+                              />
                             ) : (
                               <Building2 size={18} className="text-muted-foreground" />
                             )}
@@ -363,7 +457,9 @@ export function ReportsClient({
                 )}
 
                 <div>
-                  <p className="text-[10px] uppercase font-bold text-muted-foreground mb-3 tracking-widest">Moderator Notes</p>
+                  <p className="text-[10px] uppercase font-bold text-muted-foreground mb-3 tracking-widest">
+                    Moderator Notes
+                  </p>
                   <textarea
                     className="w-full bg-background border border-outline-variant rounded-xl p-3 text-sm focus:ring-primary focus:border-primary min-h-[80px] outline-none"
                     placeholder="Add a note about this decision..."
@@ -382,7 +478,12 @@ export function ReportsClient({
               </div>
 
               <div className="p-6 bg-card border-t border-outline-variant grid grid-cols-2 gap-3">
-                <Button variant="outline" className="h-10" onClick={handleDismiss} disabled={loading}>
+                <Button
+                  variant="outline"
+                  className="h-10"
+                  onClick={handleDismiss}
+                  disabled={loading}
+                >
                   <X size={16} className="mr-1" />
                   Dismiss
                 </Button>
@@ -410,7 +511,11 @@ export function ReportsClient({
                     if (selectedReport.target_type === 'comment') handleAction('delete_comment')
                     else if (selectedReport.target_type === 'user') handleAction('suspend_user')
                   }}
-                  disabled={loading || (selectedReport.target_type !== 'comment' && selectedReport.target_type !== 'user')}
+                  disabled={
+                    loading ||
+                    (selectedReport.target_type !== 'comment' &&
+                      selectedReport.target_type !== 'user')
+                  }
                 >
                   <Trash2 size={16} className="mr-1" />
                   {selectedReport.target_type === 'comment' ? 'Delete' : 'Suspend'}

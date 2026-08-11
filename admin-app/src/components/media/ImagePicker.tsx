@@ -42,7 +42,11 @@ const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 const IMAGE_FILTERS = [
   { id: 'original', label: 'Original', style: 'none' },
   { id: 'vivid', label: 'Vivid', style: 'saturate(1.3) contrast(1.08)' },
-  { id: 'warm', label: 'Warm', style: 'sepia(0.18) saturate(1.35) hue-rotate(-10deg) brightness(1.05)' },
+  {
+    id: 'warm',
+    label: 'Warm',
+    style: 'sepia(0.18) saturate(1.35) hue-rotate(-10deg) brightness(1.05)',
+  },
   { id: 'cool', label: 'Cool', style: 'saturate(1.15) hue-rotate(10deg) brightness(1.02)' },
   { id: 'mono', label: 'Mono', style: 'grayscale(1) contrast(1.1)' },
 ]
@@ -111,7 +115,7 @@ function ImageTile({
       onDragEnd={dragHandlers.onDragEnd}
       className={cn(
         'relative group rounded-xl overflow-hidden border bg-surface-container-high transition-all',
-        isDragging ? 'opacity-50 border-primary scale-95' : 'border-outline-variant'
+        isDragging ? 'opacity-50 border-primary scale-95' : 'border-outline-variant',
       )}
     >
       <div className="relative w-full aspect-square">
@@ -185,11 +189,7 @@ function UploadingTile({ item }: { item: UploadItem }) {
   return (
     <div className="relative rounded-xl overflow-hidden border border-outline-variant bg-surface-container-high">
       <div className="relative w-full aspect-square">
-        <img
-          src={item.preview}
-          alt={item.file.name}
-          className="w-full h-full object-cover"
-        />
+        <img src={item.preview} alt={item.file.name} className="w-full h-full object-cover" />
         {(isProcessing || isUploading) && (
           <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center gap-2">
             <Loader2 size={20} className="animate-spin text-white" />
@@ -250,69 +250,62 @@ export function ImagePicker({
     }
   }, [])
 
-  const processUpload = useCallback(
-    async (item: UploadItem) => {
-      setUploadQueue((q) =>
-        q.map((u) => (u.id === item.id ? { ...u, status: 'compressing' } : u))
-      )
+  const processUpload = useCallback(async (item: UploadItem) => {
+    setUploadQueue((q) => q.map((u) => (u.id === item.id ? { ...u, status: 'compressing' } : u)))
 
-      let fileToUpload = item.file
+    let fileToUpload = item.file
+    try {
+      fileToUpload = await compressImage(item.file)
+    } catch {
+      // Fall back to original file if compression fails
+      fileToUpload = item.file
+    }
+
+    setUploadQueue((q) =>
+      q.map((u) => (u.id === item.id ? { ...u, status: 'uploading', file: fileToUpload } : u)),
+    )
+
+    try {
+      const uploadUrl = await getUploadUrl()
+      let parsed: URL
       try {
-        fileToUpload = await compressImage(item.file)
+        parsed = new URL(uploadUrl)
       } catch {
-        // Fall back to original file if compression fails
-        fileToUpload = item.file
+        throw new Error('Invalid upload URL')
+      }
+      if (!parsed.protocol.startsWith('https:') && parsed.protocol !== 'http:') {
+        throw new Error('Invalid upload URL protocol')
       }
 
+      const res = await fetch(uploadUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': fileToUpload.type },
+        body: fileToUpload,
+        credentials: 'omit',
+      })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+
+      const { storageId } = await res.json()
+      if (!storageId) throw new Error('No storage ID returned')
+
+      const [url] = await resolveStorageUrls([storageId])
+      if (!url) throw new Error('Failed to resolve storage URL')
+
+      const result: PickedImage = {
+        url,
+        storageId,
+        filter: 'original',
+        fileSize: fileToUpload.size,
+      }
+
+      setUploadQueue((q) => q.map((u) => (u.id === item.id ? { ...u, status: 'done', result } : u)))
+    } catch (err) {
+      const msg = getErrorMessage(err, 'Upload failed')
       setUploadQueue((q) =>
-        q.map((u) => (u.id === item.id ? { ...u, status: 'uploading', file: fileToUpload } : u))
+        q.map((u) => (u.id === item.id ? { ...u, status: 'error', error: msg } : u)),
       )
-
-      try {
-        const uploadUrl = await getUploadUrl()
-        let parsed: URL
-        try {
-          parsed = new URL(uploadUrl)
-        } catch {
-          throw new Error('Invalid upload URL')
-        }
-        if (!parsed.protocol.startsWith('https:') && parsed.protocol !== 'http:') {
-          throw new Error('Invalid upload URL protocol')
-        }
-
-        const res = await fetch(uploadUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': fileToUpload.type },
-          body: fileToUpload,
-          credentials: 'omit',
-        })
-        if (!res.ok) throw new Error(`HTTP ${res.status}`)
-
-        const { storageId } = await res.json()
-        if (!storageId) throw new Error('No storage ID returned')
-
-        const [url] = await resolveStorageUrls([storageId])
-        if (!url) throw new Error('Failed to resolve storage URL')
-
-        const result: PickedImage = {
-          url,
-          storageId,
-          filter: 'original',
-          fileSize: fileToUpload.size,
-        }
-
-        setUploadQueue((q) =>
-          q.map((u) => (u.id === item.id ? { ...u, status: 'done', result } : u))
-        )
-      } catch (err) {
-        const msg = getErrorMessage(err, 'Upload failed')
-        setUploadQueue((q) =>
-          q.map((u) => (u.id === item.id ? { ...u, status: 'error', error: msg } : u))
-        )
-      }
-    },
-    []
-  )
+    }
+  }, [])
 
   useEffect(() => {
     const pending = uploadQueue.filter((u) => u.status === 'pending')
@@ -367,7 +360,7 @@ export function ImagePicker({
 
       if (inputRef.current) inputRef.current.value = ''
     },
-    [images, max]
+    [images, max],
   )
 
   const clearAll = () => {
@@ -433,19 +426,18 @@ export function ImagePicker({
 
   const isUploading = uploadQueue.length > 0
   const room = max - images.length - uploadQueue.filter((u) => u.status !== 'error').length
-  const progress = uploadQueue.length > 0
-    ? Math.round(
-        (uploadQueue.filter((u) => u.status === 'done').length / uploadQueue.length) * 100
-      )
-    : 0
+  const progress =
+    uploadQueue.length > 0
+      ? Math.round(
+          (uploadQueue.filter((u) => u.status === 'done').length / uploadQueue.length) * 100,
+        )
+      : 0
 
   return (
     <div className="space-y-4">
       {/* Aspect ratio */}
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-xs font-medium text-muted-foreground mr-1">
-          Aspect ratio:
-        </span>
+        <span className="text-xs font-medium text-muted-foreground mr-1">Aspect ratio:</span>
         {ASPECT_OPTIONS.map((opt) => (
           <button
             key={opt.id}
@@ -455,7 +447,7 @@ export function ImagePicker({
               'px-3 py-1.5 rounded-full text-xs font-medium border transition-colors',
               aspectRatio === opt.id
                 ? 'bg-primary text-primary-foreground border-primary'
-                : 'bg-surface-container-high border-outline-variant text-muted-foreground hover:border-primary/50'
+                : 'bg-surface-container-high border-outline-variant text-muted-foreground hover:border-primary/50',
             )}
           >
             {opt.label}
@@ -488,7 +480,10 @@ export function ImagePicker({
             <span className="text-xs font-medium text-muted-foreground">
               {images.length} / {max} images
               {room > 0 && room < max && (
-                <span className="text-muted-foreground/60"> · {room} slot{room !== 1 ? 's' : ''} left</span>
+                <span className="text-muted-foreground/60">
+                  {' '}
+                  · {room} slot{room !== 1 ? 's' : ''} left
+                </span>
               )}
             </span>
             {confirmClear ? (
@@ -572,7 +567,7 @@ export function ImagePicker({
           isUploading && 'pointer-events-none opacity-70',
           dragOver
             ? 'border-primary bg-primary/5'
-            : 'border-outline-variant hover:border-primary/50'
+            : 'border-outline-variant hover:border-primary/50',
         )}
       >
         <div className="rounded-full bg-surface-container-high p-3">

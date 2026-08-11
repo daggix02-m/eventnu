@@ -1,13 +1,8 @@
-import { cronJobs } from "convex/server";
-import { internal } from "./_generated/api";
+import { cronJobs } from 'convex/server'
+import { internal } from './_generated/api'
 
-const crons = cronJobs();
+const crons = cronJobs()
 
-crons.interval(
-  "check instagram token expiry",
-  { hours: 24 },
-  internal.instagram.checkTokens,
-  {},
-);
+crons.interval('check instagram token expiry', { hours: 24 }, internal.instagram.checkTokens, {})
 
-export default crons;
+export default crons

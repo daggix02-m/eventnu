@@ -125,7 +125,15 @@ function SectionHeader({ index, title }: { index: string; title: string }) {
   )
 }
 
-function Field({ label, required, children }: { label: string; required?: boolean; children: ReactNode }) {
+function Field({
+  label,
+  required,
+  children,
+}: {
+  label: string
+  required?: boolean
+  children: ReactNode
+}) {
   return (
     <div className="space-y-1.5">
       <label className="text-xs font-medium text-muted-foreground">
@@ -210,15 +218,19 @@ export function EventForm({
     images: initial?.images ?? [],
   })
 
-  const updateField = (field: keyof EventFormValues, value: string | boolean | string[] | PickedImage[]) => {
-    setForm(prev => ({ ...prev, [field]: value }))
+  const updateField = (
+    field: keyof EventFormValues,
+    value: string | boolean | string[] | PickedImage[],
+  ) => {
+    setForm((prev) => ({ ...prev, [field]: value }))
   }
 
-  const parentCategories = categories.filter(c => !c.parent_id)
-  const subCategories = categories.filter(c => c.parent_id)
-  const featuredSectionOptions = featuredSections.length > 0
-    ? featuredSections.map(s => ({ value: s.slug, label: s.label }))
-    : featuredSectionFallback
+  const parentCategories = categories.filter((c) => !c.parent_id)
+  const subCategories = categories.filter((c) => c.parent_id)
+  const featuredSectionOptions =
+    featuredSections.length > 0
+      ? featuredSections.map((s) => ({ value: s.slug, label: s.label }))
+      : featuredSectionFallback
 
   const validate = () => {
     if (!form.title.trim() || !form.start_date) {
@@ -238,7 +250,7 @@ export function EventForm({
       end_date: form.end_date || null,
       poster_url: (form.images[0]?.url ?? form.poster_url) || null,
       image_aspect_ratio: form.image_aspect_ratio || null,
-      images: form.images.map(img => ({
+      images: form.images.map((img) => ({
         url: img.url,
         storageId: img.storageId,
         filter: img.filter,
@@ -301,7 +313,7 @@ export function EventForm({
 
   const toggleSubcategory = (id: string) => {
     const current = form.subcategoryIds.includes(id)
-      ? form.subcategoryIds.filter(cid => cid !== id)
+      ? form.subcategoryIds.filter((cid) => cid !== id)
       : [...form.subcategoryIds, id]
     updateField('subcategoryIds', current)
   }
@@ -314,7 +326,11 @@ export function EventForm({
           <div>
             <div className="flex items-center gap-2 mb-1">
               {mode === 'create' ? (
-                <Link href="/events" className="text-muted-foreground hover:text-foreground transition-colors" aria-label="Back to events">
+                <Link
+                  href="/events"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label="Back to events"
+                >
                   <ArrowLeft size={18} />
                 </Link>
               ) : (
@@ -332,17 +348,28 @@ export function EventForm({
               </h1>
             </div>
             <p className="font-mono text-[11px] text-muted-foreground uppercase tracking-widest">
-              {mode === 'create' ? 'Fol. 03 · events · draft by default' : `Fol. 03 · ${form.title || 'untitled'}`}
+              {mode === 'create'
+                ? 'Fol. 03 · events · draft by default'
+                : `Fol. 03 · ${form.title || 'untitled'}`}
             </p>
           </div>
           <div className="flex items-center gap-3">
             {mode === 'create' ? (
               <>
-                <Button variant="outline" onClick={() => handleCreate('draft')} disabled={loading} className="gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => handleCreate('draft')}
+                  disabled={loading}
+                  className="gap-2"
+                >
                   {loading ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
                   Save as Draft
                 </Button>
-                <Button onClick={() => handleCreate('published')} disabled={loading} className="gap-2">
+                <Button
+                  onClick={() => handleCreate('published')}
+                  disabled={loading}
+                  className="gap-2"
+                >
                   {loading ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
                   Publish
                 </Button>
@@ -372,9 +399,9 @@ export function EventForm({
               <div>
                 <ImagePicker
                   images={form.images}
-                  onChange={images => updateField('images', images)}
+                  onChange={(images) => updateField('images', images)}
                   aspectRatio={form.image_aspect_ratio}
-                  onAspectRatioChange={r => updateField('image_aspect_ratio', r)}
+                  onAspectRatioChange={(r) => updateField('image_aspect_ratio', r)}
                 />
               </div>
               <div>
@@ -398,7 +425,7 @@ export function EventForm({
                 <Input
                   placeholder="Enter event title"
                   value={form.title}
-                  onChange={e => updateField('title', e.target.value)}
+                  onChange={(e) => updateField('title', e.target.value)}
                 />
               </Field>
               <Field label="Description">
@@ -406,7 +433,7 @@ export function EventForm({
                   rows={4}
                   placeholder="Describe the event..."
                   value={form.description}
-                  onChange={e => updateField('description', e.target.value)}
+                  onChange={(e) => updateField('description', e.target.value)}
                 />
               </Field>
             </div>
@@ -421,24 +448,26 @@ export function EventForm({
                   <Input
                     type="datetime-local"
                     value={form.start_date}
-                    onChange={e => updateField('start_date', e.target.value)}
+                    onChange={(e) => updateField('start_date', e.target.value)}
                   />
                 </Field>
                 <Field label="End Date & Time">
                   <Input
                     type="datetime-local"
                     value={form.end_date}
-                    onChange={e => updateField('end_date', e.target.value)}
+                    onChange={(e) => updateField('end_date', e.target.value)}
                   />
                 </Field>
               </div>
               <Field label="Timezone">
                 <Select
                   value={form.timezone}
-                  onChange={e => updateField('timezone', e.target.value)}
+                  onChange={(e) => updateField('timezone', e.target.value)}
                 >
-                  {timezoneOptions.map(tz => (
-                    <option key={tz.value} value={tz.value}>{tz.label}</option>
+                  {timezoneOptions.map((tz) => (
+                    <option key={tz.value} value={tz.value}>
+                      {tz.label}
+                    </option>
                   ))}
                 </Select>
               </Field>
@@ -453,21 +482,21 @@ export function EventForm({
                 <Input
                   placeholder="Venue name"
                   value={form.venue_name}
-                  onChange={e => updateField('venue_name', e.target.value)}
+                  onChange={(e) => updateField('venue_name', e.target.value)}
                 />
               </Field>
               <Field label="Address">
                 <Input
                   placeholder="Venue address"
                   value={form.venue_address}
-                  onChange={e => updateField('venue_address', e.target.value)}
+                  onChange={(e) => updateField('venue_address', e.target.value)}
                 />
               </Field>
               <Field label="Map Link">
                 <Input
                   placeholder="Google Maps or venue URL"
                   value={form.venue_map_link}
-                  onChange={e => updateField('venue_map_link', e.target.value)}
+                  onChange={(e) => updateField('venue_map_link', e.target.value)}
                 />
               </Field>
             </div>
@@ -483,11 +512,13 @@ export function EventForm({
               <Field label="Primary Category" required>
                 <Select
                   value={form.categoryId}
-                  onChange={e => updateField('categoryId', e.target.value)}
+                  onChange={(e) => updateField('categoryId', e.target.value)}
                 >
                   <option value="">Select category</option>
-                  {parentCategories.map(c => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
+                  {parentCategories.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
                   ))}
                 </Select>
               </Field>
@@ -496,7 +527,7 @@ export function EventForm({
                   <p className="text-xs text-muted-foreground">No subcategories available.</p>
                 ) : (
                   <div className="flex flex-wrap gap-2">
-                    {subCategories.map(c => (
+                    {subCategories.map((c) => (
                       <button
                         key={c.id}
                         type="button"
@@ -506,7 +537,7 @@ export function EventForm({
                           'px-3 py-1.5 rounded-md text-xs font-medium border transition-colors',
                           form.subcategoryIds.includes(c.id)
                             ? 'bg-primary/10 text-primary border-primary/40'
-                            : 'bg-surface-container-high border-outline-variant text-muted-foreground hover:border-primary/50'
+                            : 'bg-surface-container-high border-outline-variant text-muted-foreground hover:border-primary/50',
                         )}
                       >
                         {c.name}
@@ -530,7 +561,9 @@ export function EventForm({
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <StickyNote size={14} className="text-muted-foreground" />
-                  <span className="font-headline text-base font-semibold text-foreground">More options</span>
+                  <span className="font-headline text-base font-semibold text-foreground">
+                    More options
+                  </span>
                 </div>
                 <p className="font-mono text-[10px] text-muted-foreground uppercase tracking-widest">
                   Pricing · Ownership · Publish · Video
@@ -538,24 +571,32 @@ export function EventForm({
               </div>
               <ChevronDown
                 size={16}
-                className={cn('text-muted-foreground transition-transform duration-200', moreOpen && 'rotate-180')}
+                className={cn(
+                  'text-muted-foreground transition-transform duration-200',
+                  moreOpen && 'rotate-180',
+                )}
               />
             </button>
 
             {moreOpen && (
-              <div id="event-more-options" className="space-y-6 p-6 pt-0 border-t border-outline-variant">
+              <div
+                id="event-more-options"
+                className="space-y-6 p-6 pt-0 border-t border-outline-variant"
+              >
                 {/* Pricing & Access */}
                 <div>
                   <div className="flex items-baseline gap-2 pb-2 mb-3">
                     <span className="font-mono text-[10px] tracking-widest text-primary">06</span>
-                    <h4 className="font-headline text-sm font-semibold text-foreground">Pricing & Access</h4>
+                    <h4 className="font-headline text-sm font-semibold text-foreground">
+                      Pricing & Access
+                    </h4>
                   </div>
                   <div className="space-y-4">
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={form.is_free}
-                        onChange={e => updateField('is_free', e.target.checked)}
+                        onChange={(e) => updateField('is_free', e.target.checked)}
                         className="h-4 w-4 rounded border-outline-variant accent-primary"
                       />
                       <span className="text-sm font-medium">Free Event</span>
@@ -565,17 +606,19 @@ export function EventForm({
                         <Input
                           placeholder="e.g. ETB 500, Free for students"
                           value={form.price_display}
-                          onChange={e => updateField('price_display', e.target.value)}
+                          onChange={(e) => updateField('price_display', e.target.value)}
                         />
                       </Field>
                     )}
                     <Field label="Action Type">
                       <Select
                         value={form.action_type}
-                        onChange={e => updateField('action_type', e.target.value)}
+                        onChange={(e) => updateField('action_type', e.target.value)}
                       >
-                        {actionTypeOptions.map(o => (
-                          <option key={o.value} value={o.value}>{o.label}</option>
+                        {actionTypeOptions.map((o) => (
+                          <option key={o.value} value={o.value}>
+                            {o.label}
+                          </option>
                         ))}
                       </Select>
                     </Field>
@@ -585,14 +628,14 @@ export function EventForm({
                           <Input
                             placeholder="https://..."
                             value={form.external_link}
-                            onChange={e => updateField('external_link', e.target.value)}
+                            onChange={(e) => updateField('external_link', e.target.value)}
                           />
                         </Field>
                         <Field label="Link Label">
                           <Input
                             placeholder="Get Tickets"
                             value={form.external_link_label}
-                            onChange={e => updateField('external_link_label', e.target.value)}
+                            onChange={(e) => updateField('external_link_label', e.target.value)}
                           />
                         </Field>
                       </>
@@ -603,7 +646,7 @@ export function EventForm({
                           type="email"
                           placeholder="contact@example.com"
                           value={form.contact_email}
-                          onChange={e => updateField('contact_email', e.target.value)}
+                          onChange={(e) => updateField('contact_email', e.target.value)}
                         />
                       </Field>
                     )}
@@ -613,7 +656,7 @@ export function EventForm({
                           type="number"
                           placeholder="Max reservations"
                           value={form.reservation_limit}
-                          onChange={e => updateField('reservation_limit', e.target.value)}
+                          onChange={(e) => updateField('reservation_limit', e.target.value)}
                         />
                       </Field>
                     )}
@@ -624,11 +667,13 @@ export function EventForm({
                 <div>
                   <div className="flex items-baseline gap-2 pb-2 mb-3">
                     <span className="font-mono text-[10px] tracking-widest text-primary">07</span>
-                    <h4 className="font-headline text-sm font-semibold text-foreground">Ownership</h4>
+                    <h4 className="font-headline text-sm font-semibold text-foreground">
+                      Ownership
+                    </h4>
                   </div>
                   <div className="space-y-4">
                     <div className="flex gap-2">
-                      {(['standalone', 'host', 'organizer'] as const).map(type => (
+                      {(['standalone', 'host', 'organizer'] as const).map((type) => (
                         <button
                           key={type}
                           type="button"
@@ -638,7 +683,7 @@ export function EventForm({
                             'flex-1 px-3 py-2 rounded-md text-xs font-medium border transition-colors capitalize',
                             form.ownershipType === type
                               ? 'bg-primary/10 text-primary border-primary/40'
-                              : 'bg-surface-container-high border-outline-variant text-muted-foreground hover:border-primary/50'
+                              : 'bg-surface-container-high border-outline-variant text-muted-foreground hover:border-primary/50',
                           )}
                         >
                           {type}
@@ -649,11 +694,13 @@ export function EventForm({
                       <Field label="Select Host">
                         <Select
                           value={form.host_id}
-                          onChange={e => updateField('host_id', e.target.value)}
+                          onChange={(e) => updateField('host_id', e.target.value)}
                         >
                           <option value="">Select a host</option>
-                          {hosts.map(h => (
-                            <option key={h.id} value={h.id}>{h.name}</option>
+                          {hosts.map((h) => (
+                            <option key={h.id} value={h.id}>
+                              {h.name}
+                            </option>
                           ))}
                         </Select>
                       </Field>
@@ -662,11 +709,13 @@ export function EventForm({
                       <Field label="Select Organizer">
                         <Select
                           value={form.organizer_id}
-                          onChange={e => updateField('organizer_id', e.target.value)}
+                          onChange={(e) => updateField('organizer_id', e.target.value)}
                         >
                           <option value="">Select an organizer</option>
-                          {organizers.map(o => (
-                            <option key={o.profile_id} value={o.profile_id}>{o.organizer_name}</option>
+                          {organizers.map((o) => (
+                            <option key={o.profile_id} value={o.profile_id}>
+                              {o.organizer_name}
+                            </option>
                           ))}
                         </Select>
                       </Field>
@@ -683,26 +732,32 @@ export function EventForm({
                 <div>
                   <div className="flex items-baseline gap-2 pb-2 mb-3">
                     <span className="font-mono text-[10px] tracking-widest text-primary">08</span>
-                    <h4 className="font-headline text-sm font-semibold text-foreground">Publish Settings</h4>
+                    <h4 className="font-headline text-sm font-semibold text-foreground">
+                      Publish Settings
+                    </h4>
                   </div>
                   <div className="space-y-4">
                     <Field label="Status">
                       <Select
                         value={form.status}
-                        onChange={e => updateField('status', e.target.value)}
+                        onChange={(e) => updateField('status', e.target.value)}
                       >
-                        {statusOptions.map(o => (
-                          <option key={o.value} value={o.value}>{o.label}</option>
+                        {statusOptions.map((o) => (
+                          <option key={o.value} value={o.value}>
+                            {o.label}
+                          </option>
                         ))}
                       </Select>
                     </Field>
                     <Field label="Frequency Type">
                       <Select
                         value={form.frequency_type}
-                        onChange={e => updateField('frequency_type', e.target.value)}
+                        onChange={(e) => updateField('frequency_type', e.target.value)}
                       >
-                        {frequencyOptions.map(o => (
-                          <option key={o.value} value={o.value}>{o.label}</option>
+                        {frequencyOptions.map((o) => (
+                          <option key={o.value} value={o.value}>
+                            {o.label}
+                          </option>
                         ))}
                       </Select>
                     </Field>
@@ -710,20 +765,25 @@ export function EventForm({
                       <input
                         type="checkbox"
                         checked={form.is_featured}
-                        onChange={e => updateField('is_featured', e.target.checked)}
+                        onChange={(e) => updateField('is_featured', e.target.checked)}
                         className="h-4 w-4 rounded border-outline-variant accent-primary"
                       />
-                      <Star size={14} className={form.is_featured ? 'text-primary' : 'text-muted-foreground'} />
+                      <Star
+                        size={14}
+                        className={form.is_featured ? 'text-primary' : 'text-muted-foreground'}
+                      />
                       <span className="text-sm font-medium">Featured</span>
                     </label>
                     {form.is_featured && (
                       <Field label="Featured Section">
                         <Select
                           value={form.featured_section}
-                          onChange={e => updateField('featured_section', e.target.value)}
+                          onChange={(e) => updateField('featured_section', e.target.value)}
                         >
-                          {featuredSectionOptions.map(o => (
-                            <option key={o.value} value={o.value}>{o.label}</option>
+                          {featuredSectionOptions.map((o) => (
+                            <option key={o.value} value={o.value}>
+                              {o.label}
+                            </option>
                           ))}
                         </Select>
                       </Field>
@@ -735,20 +795,22 @@ export function EventForm({
                 <div>
                   <div className="flex items-baseline gap-2 pb-2 mb-3">
                     <span className="font-mono text-[10px] tracking-widest text-primary">09</span>
-                    <h4 className="font-headline text-sm font-semibold text-foreground">Teaser Video</h4>
+                    <h4 className="font-headline text-sm font-semibold text-foreground">
+                      Teaser Video
+                    </h4>
                   </div>
                   <div className="space-y-4">
                     <Field label="Teaser Video URL">
                       <Input
                         placeholder="https://youtube.com/watch?v=..."
                         value={form.teaser_video_url}
-                        onChange={e => updateField('teaser_video_url', e.target.value)}
+                        onChange={(e) => updateField('teaser_video_url', e.target.value)}
                       />
                     </Field>
                     <Field label="Video Aspect Ratio">
                       <Select
                         value={form.video_aspect_ratio}
-                        onChange={e => updateField('video_aspect_ratio', e.target.value)}
+                        onChange={(e) => updateField('video_aspect_ratio', e.target.value)}
                       >
                         <option value="">Default</option>
                         <option value="16:9">16:9 (Landscape)</option>
@@ -764,16 +826,21 @@ export function EventForm({
                 <div>
                   <div className="flex items-baseline gap-2 pb-2 mb-3">
                     <span className="font-mono text-[10px] tracking-widest text-primary">10</span>
-                    <h4 className="font-headline text-sm font-semibold text-foreground">Public URL Slug</h4>
+                    <h4 className="font-headline text-sm font-semibold text-foreground">
+                      Public URL Slug
+                    </h4>
                   </div>
                   <Field label="Slug">
                     <div className="relative">
-                      <LinkIcon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                      <LinkIcon
+                        size={14}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                      />
                       <Input
                         className="pl-9"
                         placeholder="addis-jazz-night-2024"
                         value={form.slug}
-                        onChange={e => updateField('slug', e.target.value)}
+                        onChange={(e) => updateField('slug', e.target.value)}
                       />
                     </div>
                   </Field>
@@ -783,14 +850,16 @@ export function EventForm({
                 <div>
                   <div className="flex items-baseline gap-2 pb-2 mb-3">
                     <span className="font-mono text-[10px] tracking-widest text-primary">11</span>
-                    <h4 className="font-headline text-sm font-semibold text-foreground">Admin Notes</h4>
+                    <h4 className="font-headline text-sm font-semibold text-foreground">
+                      Admin Notes
+                    </h4>
                   </div>
                   <Field label="Internal Notes (not public)">
                     <Textarea
                       rows={3}
                       placeholder="Internal admin notes..."
                       value={form.admin_note}
-                      onChange={e => updateField('admin_note', e.target.value)}
+                      onChange={(e) => updateField('admin_note', e.target.value)}
                     />
                   </Field>
                 </div>

@@ -20,9 +20,7 @@ export default function RootError({ error, reset }: ErrorPageProps) {
       <div className="w-16 h-16 rounded-2xl bg-error/10 flex items-center justify-center">
         <AlertTriangle className="text-error" size={24} />
       </div>
-      <h1 className="font-display text-headline-md text-on-surface">
-        Something went wrong
-      </h1>
+      <h1 className="font-display text-headline-md text-on-surface">Something went wrong</h1>
       <p className="text-on-surface-variant text-body-md max-w-[28rem]">
         We couldn&apos;t load this page. It may be temporarily unavailable.
       </p>

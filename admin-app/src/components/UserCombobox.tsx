@@ -13,7 +13,11 @@ interface UserComboboxProps {
   placeholder?: string
 }
 
-export function UserCombobox({ value, onChange, placeholder = 'Select a user…' }: UserComboboxProps) {
+export function UserCombobox({
+  value,
+  onChange,
+  placeholder = 'Select a user…',
+}: UserComboboxProps) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [users, setUsers] = useState<MappedUser[] | null>(null)
@@ -100,7 +104,11 @@ export function UserCombobox({ value, onChange, placeholder = 'Select a user…'
       >
         {selected ? (
           <span className="flex items-center gap-2 min-w-0">
-            <UserAvatar src={selected.avatar_url} fallback={selected.full_name || selected.username} size="sm" />
+            <UserAvatar
+              src={selected.avatar_url}
+              fallback={selected.full_name || selected.username}
+              size="sm"
+            />
             <span className="truncate">
               <span className="block font-medium text-foreground leading-tight truncate">
                 {selected.full_name || selected.username}
@@ -132,9 +140,7 @@ export function UserCombobox({ value, onChange, placeholder = 'Select a user…'
             />
           </div>
           <ul role="listbox" aria-label="Users" className="max-h-64 overflow-y-auto py-1">
-            {loading && (
-              <li className="px-3 py-2 text-sm text-muted-foreground">Loading users…</li>
-            )}
+            {loading && <li className="px-3 py-2 text-sm text-muted-foreground">Loading users…</li>}
             {!loading && filtered.length === 0 && (
               <li className="px-3 py-2 text-sm text-muted-foreground">No users match.</li>
             )}
@@ -166,7 +172,9 @@ export function UserCombobox({ value, onChange, placeholder = 'Select a user…'
                         <span className="block font-medium text-foreground leading-tight truncate">
                           {u.full_name || u.username}
                         </span>
-                        <span className="block text-xs text-muted-foreground truncate">{u.email}</span>
+                        <span className="block text-xs text-muted-foreground truncate">
+                          {u.email}
+                        </span>
                       </span>
                       {disabled && (
                         <span className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -174,7 +182,9 @@ export function UserCombobox({ value, onChange, placeholder = 'Select a user…'
                           No profile
                         </span>
                       )}
-                      {u.profileId === value && <Check size={14} className="shrink-0 text-primary" />}
+                      {u.profileId === value && (
+                        <Check size={14} className="shrink-0 text-primary" />
+                      )}
                     </button>
                   </li>
                 )

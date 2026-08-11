@@ -53,7 +53,9 @@ export function ContactSubmissionsClient({ submissions }: { submissions: Contact
           <tbody>
             {submissions.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">No submissions yet.</td>
+                <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
+                  No submissions yet.
+                </td>
               </tr>
             )}
             {submissions.map((sub) => (
@@ -63,18 +65,26 @@ export function ContactSubmissionsClient({ submissions }: { submissions: Contact
                 <td className="px-4 py-3 max-w-xs truncate">{sub.message}</td>
                 <td className="px-4 py-3">
                   {sub.is_resolved ? (
-                    <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">Resolved</Badge>
+                    <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
+                      Resolved
+                    </Badge>
                   ) : (
                     <Badge variant="secondary">Open</Badge>
                   )}
                 </td>
-                <td className="px-4 py-3 text-muted-foreground">{format(new Date(sub.created_at), 'MMM d, yyyy')}</td>
+                <td className="px-4 py-3 text-muted-foreground">
+                  {format(new Date(sub.created_at), 'MMM d, yyyy')}
+                </td>
                 <td className="px-4 py-3 text-right">
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => toggleResolved(sub.id, !sub.is_resolved)}
-                    aria-label={sub.is_resolved ? `Mark message from ${sub.name} as open` : `Mark message from ${sub.name} as resolved`}
+                    aria-label={
+                      sub.is_resolved
+                        ? `Mark message from ${sub.name} as open`
+                        : `Mark message from ${sub.name} as resolved`
+                    }
                   >
                     {sub.is_resolved ? <X size={16} /> : <Check size={16} />}
                   </Button>

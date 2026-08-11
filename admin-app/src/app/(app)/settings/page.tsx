@@ -10,7 +10,14 @@ export default async function SettingsPage({
   const params = await searchParams
 
   let featuredSections: Awaited<ReturnType<typeof getFeaturedSections>> = []
-  let adminStats: Awaited<ReturnType<typeof getAdminStats>> = { totalEvents: 0, totalUsers: 0, totalHosts: 0, totalOrganizers: 0, openReports: 0, moderationCount: 0 }
+  let adminStats: Awaited<ReturnType<typeof getAdminStats>> = {
+    totalEvents: 0,
+    totalUsers: 0,
+    totalHosts: 0,
+    totalOrganizers: 0,
+    openReports: 0,
+    moderationCount: 0,
+  }
   let instagramStatus: Awaited<ReturnType<typeof getInstagramStatus>> = null
   try {
     ;[featuredSections, adminStats, instagramStatus] = await Promise.all([

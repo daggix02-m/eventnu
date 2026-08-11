@@ -34,7 +34,10 @@ export function ListSkeleton({ rows = 8, action = true }: { rows?: number; actio
           ))}
         </div>
         {Array.from({ length: rows }).map((_, i) => (
-          <div key={i} className="flex items-center gap-4 px-4 py-4 border-b border-outline-variant last:border-0">
+          <div
+            key={i}
+            className="flex items-center gap-4 px-4 py-4 border-b border-outline-variant last:border-0"
+          >
             <Skeleton className="h-10 w-10 rounded-md" />
             <div className="flex-1 space-y-2">
               <Skeleton className="h-4 w-1/3" />

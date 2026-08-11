@@ -30,7 +30,12 @@ import { formatDate } from '@/lib/format'
 import { getErrorMessage } from '@/lib/errors'
 import { useOrganizers, organizersKeys } from '@/lib/api/organizers'
 import type { OrganizerListFilters } from '@/lib/api/organizers'
-import { verifyOrganizer, unverifyOrganizer, suspendOrganizer, unsuspendOrganizer } from '@/lib/actions/organizers'
+import {
+  verifyOrganizer,
+  unverifyOrganizer,
+  suspendOrganizer,
+  unsuspendOrganizer,
+} from '@/lib/actions/organizers'
 import type { MappedOrganizer } from '@/lib/mappers'
 
 const verifiedOptions = [
@@ -45,7 +50,11 @@ interface OrganizersClientProps {
   initialFilters: OrganizerListFilters
 }
 
-export function OrganizersClient({ initialOrganizers, initialCount, initialFilters }: OrganizersClientProps) {
+export function OrganizersClient({
+  initialOrganizers,
+  initialCount,
+  initialFilters,
+}: OrganizersClientProps) {
   const queryClient = useQueryClient()
   const { filters, update, setPage, searchInput, setSearchInput } = useListFilters({
     basePath: '/organizers',
@@ -68,7 +77,10 @@ export function OrganizersClient({ initialOrganizers, initialCount, initialFilte
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: organizersKeys })
 
-  const runAction = async (action: 'verify' | 'unverify' | 'suspend' | 'unsuspend', profileId: string) => {
+  const runAction = async (
+    action: 'verify' | 'unverify' | 'suspend' | 'unsuspend',
+    profileId: string,
+  ) => {
     setMutating(true)
     try {
       if (action === 'verify') await verifyOrganizer(profileId)
@@ -95,17 +107,37 @@ export function OrganizersClient({ initialOrganizers, initialCount, initialFilte
         <PageHeader title="Organizers" description="Manage self-signup organizer accounts." />
 
         <div className="flex flex-wrap items-center gap-3">
-          <SearchInput value={searchInput} onChange={setSearchInput} placeholder="Search organizers..." className="flex-1 max-w-md" />
-          <FilterSelect value={filters.verified ?? 'all'} onChange={(v) => update('verified', v)} options={verifiedOptions} />
+          <SearchInput
+            value={searchInput}
+            onChange={setSearchInput}
+            placeholder="Search organizers..."
+            className="flex-1 max-w-md"
+          />
+          <FilterSelect
+            value={filters.verified ?? 'all'}
+            onChange={(v) => update('verified', v)}
+            options={verifiedOptions}
+          />
         </div>
 
         <DataTable<MappedOrganizer>
           data={organizers}
           rowKey={(organizer) => organizer.profile_id}
           loading={isFetching || mutating}
-          empty={<EmptyState icon={UserCog} title="No organizers found." description="Try adjusting your search or filters." />}
+          empty={
+            <EmptyState
+              icon={UserCog}
+              title="No organizers found."
+              description="Try adjusting your search or filters."
+            />
+          }
           footer={
-            <Pagination page={filters.page ?? 1} totalPages={totalPages} count={count} onPageChange={setPage} />
+            <Pagination
+              page={filters.page ?? 1}
+              totalPages={totalPages}
+              count={count}
+              onPageChange={setPage}
+            />
           }
           columns={[
             {
@@ -115,7 +147,10 @@ export function OrganizersClient({ initialOrganizers, initialCount, initialFilte
                 <div className="flex items-center gap-3">
                   <UserAvatar src={org.logo_url} fallback={(org.organizer_name || 'O').charAt(0)} />
                   <div>
-                    <Link href={`/organizers/${org.profile_id}`} className="font-semibold text-sm text-foreground hover:text-primary transition-colors">
+                    <Link
+                      href={`/organizers/${org.profile_id}`}
+                      className="font-semibold text-sm text-foreground hover:text-primary transition-colors"
+                    >
                       {org.organizer_name}
                     </Link>
                     <p className="text-xs text-muted-foreground">{org.profiles[0]?.email}</p>
@@ -126,7 +161,9 @@ export function OrganizersClient({ initialOrganizers, initialCount, initialFilte
             {
               key: 'handle',
               header: 'Handle',
-              render: (org) => <span className="text-sm text-muted-foreground">@{org.organizer_handle}</span>,
+              render: (org) => (
+                <span className="text-sm text-muted-foreground">@{org.organizer_handle}</span>
+              ),
             },
             {
               key: 'status',
@@ -145,7 +182,9 @@ export function OrganizersClient({ initialOrganizers, initialCount, initialFilte
                     </Badge>
                   )}
                   {org.profiles[0]?.suspended && (
-                    <Badge className="text-xs bg-destructive/10 text-destructive border-destructive/20">Suspended</Badge>
+                    <Badge className="text-xs bg-destructive/10 text-destructive border-destructive/20">
+                      Suspended
+                    </Badge>
                   )}
                 </div>
               ),
@@ -163,7 +202,9 @@ export function OrganizersClient({ initialOrganizers, initialCount, initialFilte
             {
               key: 'joined',
               header: 'Joined',
-              render: (org) => <span className="text-sm text-muted-foreground">{formatDate(org.created_at)}</span>,
+              render: (org) => (
+                <span className="text-sm text-muted-foreground">{formatDate(org.created_at)}</span>
+              ),
             },
             {
               key: 'actions',
@@ -222,19 +263,29 @@ export function OrganizersClient({ initialOrganizers, initialCount, initialFilte
       <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="font-headline text-xl font-semibold text-foreground">Organizer Details</DialogTitle>
+            <DialogTitle className="font-headline text-xl font-semibold text-foreground">
+              Organizer Details
+            </DialogTitle>
           </DialogHeader>
           {selectedOrganizer && (
             <div className="space-y-4 mt-4">
               <div className="flex items-center gap-3">
-                <UserAvatar src={selectedOrganizer.logo_url} fallback={(selectedOrganizer.organizer_name || 'O').charAt(0)} size="lg" />
+                <UserAvatar
+                  src={selectedOrganizer.logo_url}
+                  fallback={(selectedOrganizer.organizer_name || 'O').charAt(0)}
+                  size="lg"
+                />
                 <div>
                   <h3 className="font-bold text-foreground">{selectedOrganizer.organizer_name}</h3>
-                  <p className="text-sm text-muted-foreground">@{selectedOrganizer.organizer_handle}</p>
+                  <p className="text-sm text-muted-foreground">
+                    @{selectedOrganizer.organizer_handle}
+                  </p>
                 </div>
               </div>
               <div className="space-y-2 text-sm">
-                <p className="text-muted-foreground">{selectedOrganizer.bio || 'No bio provided.'}</p>
+                <p className="text-muted-foreground">
+                  {selectedOrganizer.bio || 'No bio provided.'}
+                </p>
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Mail size={14} />
                   {selectedOrganizer.contact_email || selectedOrganizer.profiles[0]?.email}
@@ -261,7 +312,9 @@ export function OrganizersClient({ initialOrganizers, initialCount, initialFilte
                   <Badge variant="outline">Unverified</Badge>
                 )}
                 {selectedOrganizer.profiles[0]?.suspended && (
-                  <Badge className="bg-destructive/10 text-destructive border-destructive/20">Suspended</Badge>
+                  <Badge className="bg-destructive/10 text-destructive border-destructive/20">
+                    Suspended
+                  </Badge>
                 )}
               </div>
             </div>

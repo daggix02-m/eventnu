@@ -1,69 +1,69 @@
-"use client";
+'use client'
 
-import Image from "next/image";
-import Link from "next/link";
-import { useState } from "react";
-import { useMutation } from "convex/react";
-import { api } from "@eventnu/convex/_generated/api";
-import { CalendarDays, Trash2 } from "lucide-react";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import Image from 'next/image'
+import Link from 'next/link'
+import { useState } from 'react'
+import { useMutation } from 'convex/react'
+import { api } from '@eventnu/convex/_generated/api'
+import { CalendarDays, Trash2 } from 'lucide-react'
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 
 type Post = {
-  id: string;
-  userId: string;
-  author: { id: string; fullName: string; avatarUrl?: string } | null;
-  eventId?: string;
-  event: { id: string; title: string; slug?: string } | null;
-  content: string;
-  imageUrl?: string;
-  createdAt: number;
-};
+  id: string
+  userId: string
+  author: { id: string; fullName: string; avatarUrl?: string } | null
+  eventId?: string
+  event: { id: string; title: string; slug?: string } | null
+  content: string
+  imageUrl?: string
+  createdAt: number
+}
 
 function timeAgo(timestamp: number) {
-  const seconds = Math.floor((Date.now() - timestamp) / 1000);
-  if (seconds < 60) return "just now";
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  if (days < 7) return `${days}d ago`;
+  const seconds = Math.floor((Date.now() - timestamp) / 1000)
+  if (seconds < 60) return 'just now'
+  const minutes = Math.floor(seconds / 60)
+  if (minutes < 60) return `${minutes}m ago`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}h ago`
+  const days = Math.floor(hours / 24)
+  if (days < 7) return `${days}d ago`
   return new Date(timestamp).toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  })
 }
 
 export function ExperiencePostCard({
   post,
   canDelete = false,
 }: {
-  post: Post;
-  canDelete?: boolean;
+  post: Post
+  canDelete?: boolean
 }) {
-  const remove = useMutation(api.experiencePosts.remove);
-  const [deleting, setDeleting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const remove = useMutation(api.experiencePosts.remove)
+  const [deleting, setDeleting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const initials = (post.author?.fullName ?? "A")
-    .split(" ")
+  const initials = (post.author?.fullName ?? 'A')
+    .split(' ')
     .map((part) => part[0])
     .slice(0, 2)
-    .join("")
-    .toUpperCase();
+    .join('')
+    .toUpperCase()
 
   const handleDelete = async () => {
-    if (!confirm("Delete this experience post?")) return;
-    setDeleting(true);
-    setError(null);
+    if (!confirm('Delete this experience post?')) return
+    setDeleting(true)
+    setError(null)
     try {
-      await remove({ postId: post.id as any });
+      await remove({ postId: post.id as any })
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete post");
-      setDeleting(false);
+      setError(err instanceof Error ? err.message : 'Failed to delete post')
+      setDeleting(false)
     }
-  };
+  }
 
   return (
     <article className="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-low">
@@ -76,12 +76,8 @@ export function ExperiencePostCard({
             <AvatarFallback>{initials}</AvatarFallback>
           </Avatar>
           <div>
-            <p className="font-label-lg text-on-surface">
-              {post.author?.fullName ?? "Anonymous"}
-            </p>
-            <p className="font-body-sm text-on-surface-variant">
-              {timeAgo(post.createdAt)}
-            </p>
+            <p className="font-label-lg text-on-surface">{post.author?.fullName ?? 'Anonymous'}</p>
+            <p className="font-body-sm text-on-surface-variant">{timeAgo(post.createdAt)}</p>
           </div>
         </div>
         {canDelete && (
@@ -129,5 +125,5 @@ export function ExperiencePostCard({
         )}
       </div>
     </article>
-  );
+  )
 }

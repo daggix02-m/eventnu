@@ -1,15 +1,15 @@
-import Image from "next/image";
-import { CalendarDays } from "lucide-react";
-import type { Event } from "@/types";
+import Image from 'next/image'
+import { CalendarDays } from 'lucide-react'
+import type { Event } from '@/types'
 
 interface OrganizerCardProps {
-  event: Event;
+  event: Event
 }
 
 export function OrganizerCard({ event }: OrganizerCardProps) {
-  if (!event.organizer) return null;
+  if (!event.organizer) return null
 
-  const displayName = event.organizer.full_name || event.organizer.email || "Event Organizer";
+  const displayName = event.organizer.full_name || event.organizer.email || 'Event Organizer'
 
   return (
     <div className="p-lg bg-surface-container-low border border-outline-variant rounded-xl flex items-center justify-between">
@@ -35,5 +35,5 @@ export function OrganizerCard({ event }: OrganizerCardProps) {
         </div>
       </div>
     </div>
-  );
+  )
 }

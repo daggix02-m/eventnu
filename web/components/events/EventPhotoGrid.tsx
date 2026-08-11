@@ -1,83 +1,81 @@
-"use client";
+'use client'
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import Image from "next/image";
-import { ChevronLeft, ChevronRight, X, ZoomIn } from "lucide-react";
-import { filterStyle, sortedImages } from "@/lib/media";
-import type { EventImage } from "@/types";
+import { useCallback, useEffect, useRef, useState } from 'react'
+import Image from 'next/image'
+import { ChevronLeft, ChevronRight, X, ZoomIn } from 'lucide-react'
+import { filterStyle, sortedImages } from '@/lib/media'
+import type { EventImage } from '@/types'
 
 interface EventPhotoGridProps {
-  images: EventImage[];
-  eventTitle: string;
+  images: EventImage[]
+  eventTitle: string
 }
 
 export function EventPhotoGrid({ images, eventTitle }: EventPhotoGridProps) {
-  const sorted = sortedImages(images);
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
-  const triggerRefs = useRef<(HTMLButtonElement | null)[]>([]);
-  const dialogRef = useRef<HTMLDivElement>(null);
+  const sorted = sortedImages(images)
+  const [openIndex, setOpenIndex] = useState<number | null>(null)
+  const triggerRefs = useRef<(HTMLButtonElement | null)[]>([])
+  const dialogRef = useRef<HTMLDivElement>(null)
 
   const close = useCallback(() => {
     setOpenIndex((i) => {
       if (i !== null) {
-        triggerRefs.current[i]?.focus();
+        triggerRefs.current[i]?.focus()
       }
-      return null;
-    });
-  }, []);
+      return null
+    })
+  }, [])
 
   const go = useCallback(
     (dir: number) => {
-      setOpenIndex((i) =>
-        i === null ? null : (i + dir + sorted.length) % sorted.length
-      );
+      setOpenIndex((i) => (i === null ? null : (i + dir + sorted.length) % sorted.length))
     },
-    [sorted.length]
-  );
+    [sorted.length],
+  )
 
   useEffect(() => {
-    if (openIndex === null) return;
+    if (openIndex === null) return
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") close();
-      if (e.key === "ArrowRight") go(1);
-      if (e.key === "ArrowLeft") go(-1);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [openIndex, close, go]);
+      if (e.key === 'Escape') close()
+      if (e.key === 'ArrowRight') go(1)
+      if (e.key === 'ArrowLeft') go(-1)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [openIndex, close, go])
 
   useEffect(() => {
-    if (openIndex === null) return;
-    const dialog = dialogRef.current;
-    if (!dialog) return;
-    dialog.focus();
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    if (openIndex === null) return
+    const dialog = dialogRef.current
+    if (!dialog) return
+    dialog.focus()
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
     return () => {
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [openIndex]);
+      document.body.style.overflow = previousOverflow
+    }
+  }, [openIndex])
 
   const onDialogKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key !== "Tab") return;
+    if (e.key !== 'Tab') return
     const focusables = dialogRef.current?.querySelectorAll<HTMLElement>(
-      'button, [href], [tabindex]:not([tabindex="-1"])'
-    );
-    if (!focusables || focusables.length === 0) return;
-    const first = focusables[0];
-    const last = focusables[focusables.length - 1];
+      'button, [href], [tabindex]:not([tabindex="-1"])',
+    )
+    if (!focusables || focusables.length === 0) return
+    const first = focusables[0]
+    const last = focusables[focusables.length - 1]
     if (e.shiftKey && document.activeElement === first) {
-      e.preventDefault();
-      last.focus();
+      e.preventDefault()
+      last.focus()
     } else if (!e.shiftKey && document.activeElement === last) {
-      e.preventDefault();
-      first.focus();
+      e.preventDefault()
+      first.focus()
     }
-  };
+  }
 
-  if (sorted.length === 0) return null;
+  if (sorted.length === 0) return null
 
-  const active = openIndex !== null ? sorted[openIndex] : null;
+  const active = openIndex !== null ? sorted[openIndex] : null
 
   return (
     <div>
@@ -87,7 +85,7 @@ export function EventPhotoGrid({ images, eventTitle }: EventPhotoGridProps) {
             key={img.id}
             type="button"
             ref={(el) => {
-              triggerRefs.current[i] = el;
+              triggerRefs.current[i] = el
             }}
             onClick={() => setOpenIndex(i)}
             aria-label={`Open photo ${i + 1} of ${sorted.length} — ${eventTitle}`}
@@ -173,5 +171,5 @@ export function EventPhotoGrid({ images, eventTitle }: EventPhotoGridProps) {
         </div>
       )}
     </div>
-  );
+  )
 }

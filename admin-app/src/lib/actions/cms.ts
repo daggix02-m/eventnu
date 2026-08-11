@@ -62,7 +62,7 @@ export async function updatePage(
     hero_image_url?: string | null
     is_published?: boolean
     sort_order?: number
-  }
+  },
 ) {
   await fetchMutation(api.cms.updatePage, {
     pageId: id as Id<'pages'>,
@@ -89,9 +89,7 @@ export async function getAnnouncements() {
   try {
     const announcements = await fetchQuery(api.cms.getAnnouncements)
     const { users } = await getUsers({ status: 'all' })
-    const byId = new Map(
-      users.filter((u) => u.profileId).map((u) => [u.profileId, u]),
-    )
+    const byId = new Map(users.filter((u) => u.profileId).map((u) => [u.profileId, u]))
     return announcements.map((a) => {
       const mapped = mapAnnouncement(a)
       const target = mapped.target_user_id ? byId.get(mapped.target_user_id) : null
@@ -124,9 +122,7 @@ export async function createAnnouncement(data: {
     isActive: data.is_active ?? false,
     startsAt: data.starts_at ? new Date(data.starts_at).getTime() : undefined,
     endsAt: data.ends_at ? new Date(data.ends_at).getTime() : undefined,
-    targetUserId: data.target_user_id
-      ? (data.target_user_id as Id<'profiles'>)
-      : undefined,
+    targetUserId: data.target_user_id ? (data.target_user_id as Id<'profiles'>) : undefined,
   })
   revalidatePath('/cms/announcements')
   revalidatePath('/cms')
@@ -144,7 +140,7 @@ export async function updateAnnouncement(
     starts_at?: string | null
     ends_at?: string | null
     target_user_id?: string | null
-  }
+  },
 ) {
   await fetchMutation(api.cms.updateAnnouncement, {
     announcementId: id as Id<'announcements'>,
@@ -155,9 +151,7 @@ export async function updateAnnouncement(
     isActive: data.is_active,
     startsAt: data.starts_at ? new Date(data.starts_at).getTime() : undefined,
     endsAt: data.ends_at ? new Date(data.ends_at).getTime() : undefined,
-    targetUserId: data.target_user_id
-      ? (data.target_user_id as Id<'profiles'>)
-      : undefined,
+    targetUserId: data.target_user_id ? (data.target_user_id as Id<'profiles'>) : undefined,
   })
   revalidatePath('/cms/announcements')
   revalidatePath('/cms')

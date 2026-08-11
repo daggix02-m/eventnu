@@ -1,13 +1,13 @@
-"use client";
+'use client'
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useQuery } from "convex/react";
-import { api } from "@eventnu/convex/_generated/api";
-import { useAuthActions, useConvexAuth } from "@convex-dev/auth/react";
-import { LogOut, Bookmark, User } from "lucide-react";
-import { useAuthModal } from "@/components/auth/AuthModalContext";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useQuery } from 'convex/react'
+import { api } from '@eventnu/convex/_generated/api'
+import { useAuthActions, useConvexAuth } from '@convex-dev/auth/react'
+import { LogOut, Bookmark, User } from 'lucide-react'
+import { useAuthModal } from '@/components/auth/AuthModalContext'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,19 +15,19 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/Button";
-import { Skeleton } from "@/components/ui/skeleton";
+} from '@/components/ui/dropdown-menu'
+import { Button } from '@/components/ui/Button'
+import { Skeleton } from '@/components/ui/skeleton'
 
 export function AuthButton() {
-  const { isAuthenticated, isLoading } = useConvexAuth();
-  const { signOut } = useAuthActions();
-  const { openAuth } = useAuthModal();
-  const router = useRouter();
-  const profile = useQuery(api.profiles.getMe);
+  const { isAuthenticated, isLoading } = useConvexAuth()
+  const { signOut } = useAuthActions()
+  const { openAuth } = useAuthModal()
+  const router = useRouter()
+  const profile = useQuery(api.profiles.getMe)
 
   if (isLoading) {
-    return <Skeleton className="h-9 w-24 rounded-xl" aria-hidden="true" />;
+    return <Skeleton className="h-9 w-24 rounded-xl" aria-hidden="true" />
   }
 
   if (!isAuthenticated) {
@@ -35,18 +35,15 @@ export function AuthButton() {
       <Button variant="outline" size="sm" onClick={openAuth}>
         Sign in
       </Button>
-    );
+    )
   }
 
-  const initials = (profile?.fullName || profile?.email || "U")
-    .trim()
-    .slice(0, 2)
-    .toUpperCase();
+  const initials = (profile?.fullName || profile?.email || 'U').trim().slice(0, 2).toUpperCase()
 
   const handleSignOut = async () => {
-    await signOut();
-    router.refresh();
-  };
+    await signOut()
+    router.refresh()
+  }
 
   return (
     <DropdownMenu>
@@ -58,7 +55,7 @@ export function AuthButton() {
         >
           <Avatar className="h-9 w-9">
             {profile?.avatarUrl ? (
-              <AvatarImage src={profile.avatarUrl} alt={profile.fullName ?? "Profile"} />
+              <AvatarImage src={profile.avatarUrl} alt={profile.fullName ?? 'Profile'} />
             ) : null}
             <AvatarFallback>{initials}</AvatarFallback>
           </Avatar>
@@ -66,9 +63,11 @@ export function AuthButton() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel>
-          <p className="truncate text-on-surface">{profile?.fullName || "Account"}</p>
+          <p className="truncate text-on-surface">{profile?.fullName || 'Account'}</p>
           {profile?.email && (
-            <p className="truncate font-mono text-label-sm normal-case text-on-surface-variant">{profile.email}</p>
+            <p className="truncate font-mono text-label-sm normal-case text-on-surface-variant">
+              {profile.email}
+            </p>
           )}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
@@ -88,5 +87,5 @@ export function AuthButton() {
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
-  );
+  )
 }

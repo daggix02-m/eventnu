@@ -10,10 +10,12 @@ export function TopHeader() {
   const router = useRouter()
 
   return (
-    <header className={cn(
-      'w-full h-16 fixed top-0 right-0 z-30 bg-surface-container-lowest dark:bg-surface-container-low border-b border-outline-variant dark:border-outline flex justify-end items-center pl-16 lg:pl-6 pr-6 transition-[width] duration-300',
-      collapsed ? 'lg:w-[calc(100%-76px)]' : 'lg:w-[calc(100%-260px)]'
-    )}>
+    <header
+      className={cn(
+        'w-full h-16 fixed top-0 right-0 z-30 bg-surface-container-lowest dark:bg-surface-container-low border-b border-outline-variant dark:border-outline flex justify-end items-center pl-16 lg:pl-6 pr-6 transition-[width] duration-300',
+        collapsed ? 'lg:w-[calc(100%-76px)]' : 'lg:w-[calc(100%-260px)]',
+      )}
+    >
       {/* Actions */}
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-1">
@@ -37,7 +39,9 @@ export function TopHeader() {
         <div className="flex items-center gap-3">
           <div className="text-right hidden sm:block">
             <p className="text-xs font-semibold text-foreground leading-none">Admin</p>
-            <p className="font-mono text-[10px] text-muted-foreground uppercase tracking-widest mt-0.5">Super Admin</p>
+            <p className="font-mono text-[10px] text-muted-foreground uppercase tracking-widest mt-0.5">
+              Super Admin
+            </p>
           </div>
           <div className="w-10 h-10 rounded-md bg-surface-container-high flex items-center justify-center text-primary font-headline font-bold text-sm border border-primary/40">
             A

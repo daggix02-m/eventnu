@@ -13,14 +13,7 @@ import {
   LineChart,
   Line,
 } from 'recharts'
-import {
-  Calendar,
-  Users,
-  Building2,
-  UserCog,
-  TrendingUp,
-  Activity,
-} from 'lucide-react'
+import { Calendar, Users, Building2, UserCog, TrendingUp, Activity } from 'lucide-react'
 
 interface AnalyticsData {
   eventsPerWeek: { week_start: string; event_count: number }[]
@@ -42,19 +35,25 @@ export function AnalyticsClient({ data }: AnalyticsClientProps) {
   const eventsChartData = useMemo(
     () =>
       data.eventsPerWeek.map((item) => ({
-        week: new Date(item.week_start).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        week: new Date(item.week_start).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+        }),
         count: Number(item.event_count),
       })),
-    [data.eventsPerWeek]
+    [data.eventsPerWeek],
   )
 
   const usersChartData = useMemo(
     () =>
       data.usersPerWeek.map((item) => ({
-        week: new Date(item.week_start).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        week: new Date(item.week_start).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+        }),
         count: Number(item.user_count),
       })),
-    [data.usersPerWeek]
+    [data.usersPerWeek],
   )
 
   const stats = [
@@ -84,7 +83,9 @@ export function AnalyticsClient({ data }: AnalyticsClientProps) {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="font-headline text-3xl font-semibold text-foreground tracking-tight">Analytics</h1>
+        <h1 className="font-headline text-3xl font-semibold text-foreground tracking-tight">
+          Analytics
+        </h1>
         <p className="text-muted-foreground mt-1">Platform analytics and insights.</p>
       </div>
 
@@ -98,7 +99,9 @@ export function AnalyticsClient({ data }: AnalyticsClientProps) {
               </div>
               <div>
                 <p className="text-2xl font-bold text-foreground">{stat.value}</p>
-                <p className="text-xs text-muted-foreground uppercase tracking-tight font-semibold">{stat.label}</p>
+                <p className="text-xs text-muted-foreground uppercase tracking-tight font-semibold">
+                  {stat.label}
+                </p>
               </div>
             </div>
           </Card>
@@ -137,12 +140,14 @@ export function AnalyticsClient({ data }: AnalyticsClientProps) {
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h3 className="text-lg font-bold text-foreground">Events Over Time</h3>
-                <p className="text-sm text-muted-foreground">Published events per week (last 12 weeks)</p>
+                <p className="text-sm text-muted-foreground">
+                  Published events per week (last 12 weeks)
+                </p>
               </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <div className="w-6 h-6 rounded-md bg-surface-container-high flex items-center justify-center text-muted-foreground">
-                <TrendingUp size={14} />
-              </div>
+                <div className="w-6 h-6 rounded-md bg-surface-container-high flex items-center justify-center text-muted-foreground">
+                  <TrendingUp size={14} />
+                </div>
                 <span>Live data</span>
               </div>
             </div>
@@ -174,9 +179,9 @@ export function AnalyticsClient({ data }: AnalyticsClientProps) {
                 <p className="text-sm text-muted-foreground">New users per week (last 12 weeks)</p>
               </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <div className="w-6 h-6 rounded-md bg-surface-container-high flex items-center justify-center text-muted-foreground">
-                <TrendingUp size={14} />
-              </div>
+                <div className="w-6 h-6 rounded-md bg-surface-container-high flex items-center justify-center text-muted-foreground">
+                  <TrendingUp size={14} />
+                </div>
                 <span>Live data</span>
               </div>
             </div>

@@ -1,80 +1,80 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import { useMutation, useQuery } from "convex/react";
-import { api } from "@eventnu/convex/_generated/api";
-import { ImagePlus, Loader2, Send } from "lucide-react";
-import { Button } from "@/components/ui/Button";
-import { cn } from "@/lib/utils";
+import { useState } from 'react'
+import { useMutation, useQuery } from 'convex/react'
+import { api } from '@eventnu/convex/_generated/api'
+import { ImagePlus, Loader2, Send } from 'lucide-react'
+import { Button } from '@/components/ui/Button'
+import { cn } from '@/lib/utils'
 
-const MAX_CONTENT_LENGTH = 2000;
+const MAX_CONTENT_LENGTH = 2000
 
 export function CreateExperienceForm({
   initialEventId,
   eventTitle,
 }: {
-  initialEventId?: string;
-  eventTitle?: string;
+  initialEventId?: string
+  eventTitle?: string
 }) {
-  const createPost = useMutation(api.experiencePosts.create);
-  const getUploadUrl = useMutation(api.events.generateUploadUrl);
-  const events = useQuery(api.events.getPublished);
+  const createPost = useMutation(api.experiencePosts.create)
+  const getUploadUrl = useMutation(api.events.generateUploadUrl)
+  const events = useQuery(api.events.getPublished)
 
-  const [content, setContent] = useState("");
-  const [eventId, setEventId] = useState(initialEventId ?? "");
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
+  const [content, setContent] = useState('')
+  const [eventId, setEventId] = useState(initialEventId ?? '')
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
 
-  const canSubmit = content.trim().length >= 3 && !submitting;
+  const canSubmit = content.trim().length >= 3 && !submitting
 
   const resetForm = () => {
-    setContent("");
-    setEventId("");
-    setImageFile(null);
-    setSuccess(false);
-  };
+    setContent('')
+    setEventId('')
+    setImageFile(null)
+    setSuccess(false)
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setSuccess(false);
+    e.preventDefault()
+    setError(null)
+    setSuccess(false)
 
-    let imageStorageId: string | undefined;
+    let imageStorageId: string | undefined
     if (imageFile) {
       try {
-        const uploadUrl = await getUploadUrl();
+        const uploadUrl = await getUploadUrl()
         const res = await fetch(uploadUrl, {
-          method: "POST",
-          headers: { "Content-Type": imageFile.type },
+          method: 'POST',
+          headers: { 'Content-Type': imageFile.type },
           body: imageFile,
-        });
-        if (!res.ok) throw new Error(`Upload failed (HTTP ${res.status})`);
-        const { storageId } = await res.json();
-        if (!storageId) throw new Error("Upload failed");
-        imageStorageId = storageId as string;
+        })
+        if (!res.ok) throw new Error(`Upload failed (HTTP ${res.status})`)
+        const { storageId } = await res.json()
+        if (!storageId) throw new Error('Upload failed')
+        imageStorageId = storageId as string
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to upload image");
-        return;
+        setError(err instanceof Error ? err.message : 'Failed to upload image')
+        return
       }
     }
 
-    setSubmitting(true);
+    setSubmitting(true)
     try {
       await createPost({
         content,
         eventId: eventId ? (eventId as any) : undefined,
         imageStorageId,
-      });
-      resetForm();
-      setSuccess(true);
+      })
+      resetForm()
+      setSuccess(true)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to share your experience");
+      setError(err instanceof Error ? err.message : 'Failed to share your experience')
     } finally {
-      setSubmitting(false);
+      setSubmitting(false)
     }
-  };
+  }
 
   return (
     <form
@@ -85,17 +85,15 @@ export function CreateExperienceForm({
       <label htmlFor="experience-content" className="font-label-lg text-on-surface">
         Share your experience
         {eventTitle ? (
-          <span className="block font-body-sm text-on-surface-variant">
-            about {eventTitle}
-          </span>
+          <span className="block font-body-sm text-on-surface-variant">about {eventTitle}</span>
         ) : null}
       </label>
       <textarea
         id="experience-content"
         value={content}
         onChange={(e) => {
-          setContent(e.target.value);
-          setSuccess(false);
+          setContent(e.target.value)
+          setSuccess(false)
         }}
         maxLength={MAX_CONTENT_LENGTH}
         rows={4}
@@ -108,10 +106,7 @@ export function CreateExperienceForm({
       </p>
 
       <div className="mt-sm flex flex-wrap items-center gap-md">
-        <label
-          htmlFor="experience-event"
-          className="font-label-md text-on-surface-variant"
-        >
+        <label htmlFor="experience-event" className="font-label-md text-on-surface-variant">
           Event (optional)
         </label>
         <select
@@ -135,15 +130,15 @@ export function CreateExperienceForm({
           className="inline-flex cursor-pointer items-center gap-xs rounded-lg border border-outline px-sm py-2 font-label-md text-on-surface-variant transition-colors hover:border-primary hover:text-primary"
         >
           <ImagePlus className="h-4 w-4" aria-hidden="true" />
-          {imageFile ? imageFile.name : "Add a photo"}
+          {imageFile ? imageFile.name : 'Add a photo'}
           <input
             id="experience-image"
             type="file"
             accept="image/png,image/jpeg,image/webp"
             className="sr-only"
             onChange={(e) => {
-              setImageFile(e.target.files?.[0] ?? null);
-              setSuccess(false);
+              setImageFile(e.target.files?.[0] ?? null)
+              setSuccess(false)
             }}
           />
         </label>
@@ -161,15 +156,15 @@ export function CreateExperienceForm({
           </p>
         )}
 
-        <Button type="submit" disabled={!canSubmit} className={cn(submitting && "opacity-70")}>
+        <Button type="submit" disabled={!canSubmit} className={cn(submitting && 'opacity-70')}>
           {submitting ? (
             <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
           ) : (
             <Send className="h-4 w-4" aria-hidden="true" />
           )}
-          {submitting ? "Posting..." : "Post"}
+          {submitting ? 'Posting...' : 'Post'}
         </Button>
       </div>
     </form>
-  );
+  )
 }

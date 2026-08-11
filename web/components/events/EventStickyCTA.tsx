@@ -1,17 +1,17 @@
-import { ExternalLink, Ticket } from "lucide-react";
-import { Button } from "@/components/ui/Button";
-import { formatPrice, formatEventDateShort, isEventPast } from "@/lib/utils";
-import type { Event } from "@/types";
+import { ExternalLink, Ticket } from 'lucide-react'
+import { Button } from '@/components/ui/Button'
+import { formatPrice, formatEventDateShort, isEventPast } from '@/lib/utils'
+import type { Event } from '@/types'
 
 interface EventStickyCTAProps {
-  event: Event;
+  event: Event
 }
 
 export function EventStickyCTA({ event }: EventStickyCTAProps) {
-  if (isEventPast(event.start_date)) return null;
+  if (isEventPast(event.start_date)) return null
 
   const externalLabel =
-    event.external_link_label?.trim() || (event.is_free ? "More Info" : "Get Tickets");
+    event.external_link_label?.trim() || (event.is_free ? 'More Info' : 'Get Tickets')
 
   return (
     <div
@@ -34,7 +34,7 @@ export function EventStickyCTA({ event }: EventStickyCTAProps) {
               {externalLabel}
             </a>
           </Button>
-        ) : event.action_type === "reservation" ? (
+        ) : event.action_type === 'reservation' ? (
           <Button asChild size="lg" className="flex-shrink-0">
             <a href="#reserve">
               <Ticket className="w-4 h-4" />
@@ -44,5 +44,5 @@ export function EventStickyCTA({ event }: EventStickyCTAProps) {
         ) : null}
       </div>
     </div>
-  );
+  )
 }

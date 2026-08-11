@@ -1,4 +1,4 @@
-import { Container } from "@/components/layout/Container";
+import { Container } from '@/components/layout/Container'
 
 export default function Loading() {
   return (
@@ -12,7 +12,10 @@ export default function Loading() {
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-md">
         {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="bg-surface-container border border-outline-variant rounded-xl overflow-hidden animate-pulse">
+          <div
+            key={i}
+            className="bg-surface-container border border-outline-variant rounded-xl overflow-hidden animate-pulse"
+          >
             <div className="h-48 bg-surface-container-high" />
             <div className="p-md space-y-sm">
               <div className="h-5 w-3/4 bg-surface-container-high rounded" />
@@ -22,5 +25,5 @@ export default function Loading() {
         ))}
       </div>
     </Container>
-  );
+  )
 }

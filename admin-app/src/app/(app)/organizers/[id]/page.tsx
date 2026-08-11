@@ -1,11 +1,7 @@
 import { getOrganizerById } from '@/lib/actions/organizers'
 import { OrganizerDetailClient } from '@/components/OrganizerDetailClient'
 
-export default async function OrganizerDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
+export default async function OrganizerDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
 
   let organizer: Awaited<ReturnType<typeof getOrganizerById>>['organizer'] = null
@@ -24,10 +20,5 @@ export default async function OrganizerDetailPage({
     )
   }
 
-  return (
-    <OrganizerDetailClient
-      organizer={organizer}
-      eventCount={eventCount}
-    />
-  )
+  return <OrganizerDetailClient organizer={organizer} eventCount={eventCount} />
 }

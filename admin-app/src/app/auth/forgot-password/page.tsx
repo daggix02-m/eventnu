@@ -51,8 +51,12 @@ export default function ForgotPassword() {
             En
           </div>
           <div className="text-left">
-            <h1 className="font-headline text-xl font-semibold text-foreground tracking-tight">Event Nu</h1>
-            <p className="font-mono text-[10px] text-muted-foreground uppercase tracking-[0.2em]">Admin · Addissuite</p>
+            <h1 className="font-headline text-xl font-semibold text-foreground tracking-tight">
+              Event Nu
+            </h1>
+            <p className="font-mono text-[10px] text-muted-foreground uppercase tracking-[0.2em]">
+              Admin · Addissuite
+            </p>
           </div>
         </div>
 
@@ -73,14 +77,18 @@ export default function ForgotPassword() {
               <div className="flex items-start gap-2 rounded-lg bg-muted/50 p-3 text-sm text-muted-foreground">
                 <Mail size={16} className="mt-0.5 shrink-0 text-primary" />
                 <p>
-                  Open the email and click the reset link, or open the reset page and enter the code from the email.
+                  Open the email and click the reset link, or open the reset page and enter the code
+                  from the email.
                 </p>
               </div>
               <Button asChild className="w-full h-11">
                 <Link href="/auth/reset-password">Go to reset password</Link>
               </Button>
               <div className="flex justify-center">
-                <Link href="/auth/sign-in" className="text-sm text-primary hover:underline font-medium flex items-center gap-1">
+                <Link
+                  href="/auth/sign-in"
+                  className="text-sm text-primary hover:underline font-medium flex items-center gap-1"
+                >
                   <ArrowLeft size={14} />
                   Back to sign in
                 </Link>
@@ -97,7 +105,7 @@ export default function ForgotPassword() {
                     autoComplete="email"
                     placeholder="admin@eventnu.et"
                     value={email}
-                    onChange={e => setEmail(e.target.value)}
+                    onChange={(e) => setEmail(e.target.value)}
                     className="h-11"
                   />
                 </div>
@@ -112,7 +120,10 @@ export default function ForgotPassword() {
                 </Button>
               </form>
               <div className="flex justify-center">
-                <Link href="/auth/sign-in" className="text-sm text-primary hover:underline font-medium flex items-center gap-1">
+                <Link
+                  href="/auth/sign-in"
+                  className="text-sm text-primary hover:underline font-medium flex items-center gap-1"
+                >
                   <ArrowLeft size={14} />
                   Back to sign in
                 </Link>
@@ -121,9 +132,7 @@ export default function ForgotPassword() {
           )}
         </Card>
 
-        <p className="text-center text-xs text-muted-foreground mt-6">
-          Admin access only.
-        </p>
+        <p className="text-center text-xs text-muted-foreground mt-6">Admin access only.</p>
       </div>
     </div>
   )

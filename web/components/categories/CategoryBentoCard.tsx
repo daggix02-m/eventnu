@@ -1,15 +1,15 @@
-import Link from "next/link";
-import { cn } from "@/lib/utils";
-import { getCategoryIcon } from "@/lib/category-icons";
+import Link from 'next/link'
+import { cn } from '@/lib/utils'
+import { getCategoryIcon } from '@/lib/category-icons'
 
 interface CategoryBentoCardProps {
-  name: string;
-  slug: string;
-  description?: string | null;
-  icon?: string | null;
-  eventCount?: number;
-  imageUrl?: string;
-  span: string;
+  name: string
+  slug: string
+  description?: string | null
+  icon?: string | null
+  eventCount?: number
+  imageUrl?: string
+  span: string
 }
 
 export function CategoryBentoCard({
@@ -21,14 +21,14 @@ export function CategoryBentoCard({
   imageUrl,
   span,
 }: CategoryBentoCardProps) {
-  const Icon = getCategoryIcon(icon, slug);
+  const Icon = getCategoryIcon(icon, slug)
 
   return (
     <Link
       href={`/categories/${slug}`}
       className={cn(
-        "relative overflow-hidden rounded-xl group bento-hover cursor-pointer border border-outline-variant",
-        span
+        'relative overflow-hidden rounded-xl group bento-hover cursor-pointer border border-outline-variant',
+        span,
       )}
     >
       {imageUrl ? (
@@ -52,7 +52,7 @@ export function CategoryBentoCard({
           </span>
           {eventCount > 0 && (
             <span className="px-sm py-1 rounded-full bg-black/40 backdrop-blur-md border border-white/10 font-mono text-label-sm text-on-surface">
-              {eventCount} event{eventCount !== 1 ? "s" : ""}
+              {eventCount} event{eventCount !== 1 ? 's' : ''}
             </span>
           )}
         </div>
@@ -67,5 +67,5 @@ export function CategoryBentoCard({
         )}
       </div>
     </Link>
-  );
+  )
 }

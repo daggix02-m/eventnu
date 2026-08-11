@@ -1,48 +1,44 @@
-import { notFound } from "next/navigation";
-import type { Metadata } from "next";
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
-import { Container } from "@/components/layout/Container";
-import { EventList } from "@/components/events/EventList";
-import {
-  getCategoryBySlug,
-  getEventsByCategory,
-  getCategoriesWithCounts,
-} from "@/lib/api/events";
-import { getCategoryIcon } from "@/lib/category-icons";
+import { notFound } from 'next/navigation'
+import type { Metadata } from 'next'
+import Link from 'next/link'
+import { ArrowLeft } from 'lucide-react'
+import { Container } from '@/components/layout/Container'
+import { EventList } from '@/components/events/EventList'
+import { getCategoryBySlug, getEventsByCategory, getCategoriesWithCounts } from '@/lib/api/events'
+import { getCategoryIcon } from '@/lib/category-icons'
 
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic'
 
 interface CategoryPageProps {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ slug: string }>
 }
 
 export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {
-  const { slug } = await params;
-  const category = await getCategoryBySlug(slug);
-  if (!category) return { title: "Category | Event Nu" };
+  const { slug } = await params
+  const category = await getCategoryBySlug(slug)
+  if (!category) return { title: 'Category | Event Nu' }
   return {
     title: `${category.name} Events | Event Nu`,
     description:
       category.description ??
       `Discover ${category.name} events in Addis Ababa — concerts, experiences, and more.`,
-  };
+  }
 }
 
 export default async function CategoryPage({ params }: CategoryPageProps) {
-  const { slug } = await params;
+  const { slug } = await params
   const [category, categories] = await Promise.all([
     getCategoryBySlug(slug),
     getCategoriesWithCounts(),
-  ]);
+  ])
 
   if (!category) {
-    notFound();
+    notFound()
   }
 
-  const events = await getEventsByCategory(category.id);
-  const subCategories = categories.filter((c) => c.parent_id === category.id);
-  const Icon = getCategoryIcon(category.icon, category.slug);
+  const events = await getEventsByCategory(category.id)
+  const subCategories = categories.filter((c) => c.parent_id === category.id)
+  const Icon = getCategoryIcon(category.icon, category.slug)
 
   return (
     <Container className="py-xl space-y-xl">
@@ -64,7 +60,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
               {category.name} Events
             </h1>
             <p className="font-mono text-label-sm text-on-surface-variant uppercase tracking-wider">
-              {events.length} event{events.length !== 1 ? "s" : ""} listed
+              {events.length} event{events.length !== 1 ? 's' : ''} listed
             </p>
           </div>
         </div>
@@ -75,10 +71,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
       </div>
 
       {subCategories.length > 0 && (
-        <nav
-          className="flex flex-wrap gap-xs"
-          aria-label="Subcategories"
-        >
+        <nav className="flex flex-wrap gap-xs" aria-label="Subcategories">
           {subCategories.map((sub) => (
             <Link
               key={sub.id}
@@ -96,5 +89,5 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
         emptyMessage="No events listed in this category yet. Check back soon."
       />
     </Container>
-  );
+  )
 }

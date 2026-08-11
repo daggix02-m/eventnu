@@ -28,13 +28,7 @@ import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import { fadeUp } from '@/lib/motion'
-import {
-  suspendUser,
-  unsuspendUser,
-  banUser,
-  promoteUser,
-  demoteUser,
-} from '@/lib/actions/users'
+import { suspendUser, unsuspendUser, banUser, promoteUser, demoteUser } from '@/lib/actions/users'
 import { sendNotification } from '@/lib/actions/notifications'
 import { getOrganizerRecentEvents } from '@/lib/actions/events'
 
@@ -213,7 +207,14 @@ export function UserDetailClient({ profile, stats, currentAdminId }: UserDetailC
         <div className="flex items-center gap-4">
           <Avatar className="w-16 h-16">
             {profile.avatar_url ? (
-              <img src={profile.avatar_url} alt="" width={64} height={64} loading="lazy" className="w-full h-full object-cover" />
+              <img
+                src={profile.avatar_url}
+                alt=""
+                width={64}
+                height={64}
+                loading="lazy"
+                className="w-full h-full object-cover"
+              />
             ) : (
               <div className="w-full h-full bg-surface-container-high flex items-center justify-center text-muted-foreground font-bold text-2xl">
                 {(profile.full_name || profile.username || 'U').charAt(0)}
@@ -221,13 +222,17 @@ export function UserDetailClient({ profile, stats, currentAdminId }: UserDetailC
             )}
           </Avatar>
           <div>
-            <h1 className="font-headline text-3xl font-semibold text-foreground tracking-tight">{profile.full_name}</h1>
+            <h1 className="font-headline text-3xl font-semibold text-foreground tracking-tight">
+              {profile.full_name}
+            </h1>
             <p className="text-muted-foreground">@{profile.username}</p>
             <div className="flex items-center gap-2 mt-1">
               <Mail size={14} className="text-muted-foreground" />
               <span className="text-sm text-muted-foreground">{profile.email}</span>
               {!profile.has_profile && (
-                <Badge variant="warning" className="text-xs ml-2">No Profile</Badge>
+                <Badge variant="warning" className="text-xs ml-2">
+                  No Profile
+                </Badge>
               )}
             </div>
           </div>
@@ -243,7 +248,9 @@ export function UserDetailClient({ profile, stats, currentAdminId }: UserDetailC
                 <XCircle size={20} className="text-destructive" />
               </div>
               <div>
-                <Badge variant="destructive" className="text-xs">Suspended</Badge>
+                <Badge variant="destructive" className="text-xs">
+                  Suspended
+                </Badge>
                 <p className="text-xs text-muted-foreground mt-1">Status</p>
               </div>
             </>
@@ -276,7 +283,9 @@ export function UserDetailClient({ profile, stats, currentAdminId }: UserDetailC
             <Calendar size={20} className="text-muted-foreground" />
           </div>
           <div>
-            <p className="font-bold text-foreground text-sm">{format(new Date(profile.created_at), 'MMM d, yyyy')}</p>
+            <p className="font-bold text-foreground text-sm">
+              {format(new Date(profile.created_at), 'MMM d, yyyy')}
+            </p>
             <p className="text-xs text-muted-foreground">Joined</p>
           </div>
         </Card>
@@ -331,29 +340,41 @@ export function UserDetailClient({ profile, stats, currentAdminId }: UserDetailC
           <h2 className="text-lg font-bold text-foreground mb-4">Profile Information</h2>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-xs text-muted-foreground uppercase tracking-tight font-semibold">Full Name</p>
+              <p className="text-xs text-muted-foreground uppercase tracking-tight font-semibold">
+                Full Name
+              </p>
               <p className="text-sm text-foreground">{profile.full_name}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground uppercase tracking-tight font-semibold">Email</p>
+              <p className="text-xs text-muted-foreground uppercase tracking-tight font-semibold">
+                Email
+              </p>
               <p className="text-sm text-foreground">{profile.email}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground uppercase tracking-tight font-semibold">Username</p>
+              <p className="text-xs text-muted-foreground uppercase tracking-tight font-semibold">
+                Username
+              </p>
               <p className="text-sm text-foreground">@{profile.username}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground uppercase tracking-tight font-semibold">User ID</p>
+              <p className="text-xs text-muted-foreground uppercase tracking-tight font-semibold">
+                User ID
+              </p>
               <p className="text-sm text-muted-foreground font-mono text-xs">{profile.id}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground uppercase tracking-tight font-semibold">Profile</p>
+              <p className="text-xs text-muted-foreground uppercase tracking-tight font-semibold">
+                Profile
+              </p>
               <p className="text-sm text-foreground">
                 {profile.has_profile ? 'Complete' : 'Not created yet'}
               </p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground uppercase tracking-tight font-semibold">Role</p>
+              <p className="text-xs text-muted-foreground uppercase tracking-tight font-semibold">
+                Role
+              </p>
               <p className="text-sm text-foreground capitalize">{profile.role || 'user'}</p>
             </div>
           </div>
@@ -406,8 +427,8 @@ export function UserDetailClient({ profile, stats, currentAdminId }: UserDetailC
                     </Button>
                   </>
                 )}
-                {profile.has_profile && (
-                  profile.role === 'admin' ? (
+                {profile.has_profile &&
+                  (profile.role === 'admin' ? (
                     <Button
                       onClick={() => setShowRoleDialog(true)}
                       disabled={isLoading}
@@ -426,8 +447,7 @@ export function UserDetailClient({ profile, stats, currentAdminId }: UserDetailC
                       <ShieldPlus size={16} className="mr-2" />
                       Make Admin
                     </Button>
-                  )
-                )}
+                  ))}
               </>
             )}
             <Button
@@ -482,7 +502,9 @@ export function UserDetailClient({ profile, stats, currentAdminId }: UserDetailC
         <Card className="p-6">
           <h2 className="text-lg font-bold text-foreground mb-4">Organized Events</h2>
           {!profile.has_profile ? (
-            <p className="text-sm text-muted-foreground">This user has not created a profile yet.</p>
+            <p className="text-sm text-muted-foreground">
+              This user has not created a profile yet.
+            </p>
           ) : eventsLoading ? (
             <p className="text-sm text-muted-foreground">Loading...</p>
           ) : recentEvents.length === 0 ? (
@@ -502,8 +524,8 @@ export function UserDetailClient({ profile, stats, currentAdminId }: UserDetailC
                       event.status === 'published'
                         ? 'success'
                         : event.status === 'pending_review'
-                        ? 'warning'
-                        : 'outline'
+                          ? 'warning'
+                          : 'outline'
                     }
                     className="text-xs"
                   >
@@ -519,11 +541,15 @@ export function UserDetailClient({ profile, stats, currentAdminId }: UserDetailC
       {/* Suspend Dialog */}
       {showSuspendDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setShowSuspendDialog(false)} />
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setShowSuspendDialog(false)}
+          />
           <div className="relative bg-card rounded-2xl shadow-sm border border-outline-variant p-6 max-w-md w-full mx-4">
             <h3 className="text-lg font-bold text-foreground mb-2">Suspend User</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Are you sure you want to suspend <strong>{profile.full_name}</strong>? They will be unable to access the platform.
+              Are you sure you want to suspend <strong>{profile.full_name}</strong>? They will be
+              unable to access the platform.
             </p>
             <div className="flex items-center gap-3">
               <Button

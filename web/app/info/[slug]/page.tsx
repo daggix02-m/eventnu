@@ -1,54 +1,47 @@
-import Link from "next/link";
-import { notFound } from "next/navigation";
-import type { Metadata } from "next";
-import Image from "next/image";
-import { Container } from "@/components/layout/Container";
-import { getPageBySlug } from "@/lib/api/events";
-import { sanitizeHtml } from "@/lib/sanitize";
-import { LEGAL_PAGES, LEGAL_PAGE_SLUGS } from "../legal";
+import Link from 'next/link'
+import { notFound } from 'next/navigation'
+import type { Metadata } from 'next'
+import Image from 'next/image'
+import { Container } from '@/components/layout/Container'
+import { getPageBySlug } from '@/lib/api/events'
+import { sanitizeHtml } from '@/lib/sanitize'
+import { LEGAL_PAGES, LEGAL_PAGE_SLUGS } from '../legal'
 
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic'
 
 interface InfoPageProps {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ slug: string }>
 }
 
 export async function generateMetadata({ params }: InfoPageProps): Promise<Metadata> {
-  const { slug } = await params;
-  const page = await getPageBySlug(slug);
-  const legal = LEGAL_PAGES[slug];
-  const title = page?.title ?? legal?.title;
+  const { slug } = await params
+  const page = await getPageBySlug(slug)
+  const legal = LEGAL_PAGES[slug]
+  const title = page?.title ?? legal?.title
   return {
-    title: title ? `${title} | Event Nu` : "Page Not Found | Event Nu",
-  };
+    title: title ? `${title} | Event Nu` : 'Page Not Found | Event Nu',
+  }
 }
 
 export default async function InfoPage({ params }: InfoPageProps) {
-  const { slug } = await params;
-  const page = await getPageBySlug(slug);
-  const legal = LEGAL_PAGES[slug];
+  const { slug } = await params
+  const page = await getPageBySlug(slug)
+  const legal = LEGAL_PAGES[slug]
 
   if (!page && !legal) {
-    notFound();
+    notFound()
   }
 
-  const title = page?.title ?? legal!.title;
-  const subtitle = page?.subtitle ?? legal!.subtitle;
-  const bodyHtml = page?.body_html ?? legal!.bodyHtml;
-  const heroImage = page?.hero_image_url ?? null;
+  const title = page?.title ?? legal!.title
+  const subtitle = page?.subtitle ?? legal!.subtitle
+  const bodyHtml = page?.body_html ?? legal!.bodyHtml
+  const heroImage = page?.hero_image_url ?? null
 
   return (
     <>
       {heroImage && (
         <section className="relative h-[320px] md:h-[400px] w-full overflow-hidden">
-          <Image
-            src={heroImage}
-            alt={title}
-            fill
-            className="object-cover"
-            sizes="100vw"
-            priority
-          />
+          <Image src={heroImage} alt={title} fill className="object-cover" sizes="100vw" priority />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
         </section>
       )}
@@ -60,15 +53,16 @@ export default async function InfoPage({ params }: InfoPageProps) {
           <span aria-hidden="true">←</span> Back to home
         </Link>
         <h1 className="font-display text-display-lg-mobile md:text-display-lg">{title}</h1>
-        {subtitle && (
-          <p className="text-on-surface-variant text-body-lg">{subtitle}</p>
-        )}
+        {subtitle && <p className="text-on-surface-variant text-body-lg">{subtitle}</p>}
         <div
           className="prose prose-invert prose-lg max-w-none font-body-lg text-on-surface-variant leading-relaxed"
-          dangerouslySetInnerHTML={{ __html: sanitizeHtml(bodyHtml ?? "") }}
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(bodyHtml ?? '') }}
         />
         {LEGAL_PAGE_SLUGS.length > 0 && (
-          <nav className="pt-lg mt-lg border-t border-outline-variant/30" aria-label="Related pages">
+          <nav
+            className="pt-lg mt-lg border-t border-outline-variant/30"
+            aria-label="Related pages"
+          >
             <h2 className="font-display text-headline-md text-on-surface mb-sm">Also read</h2>
             <ul className="flex flex-wrap gap-xs">
               {LEGAL_PAGE_SLUGS.filter((s) => s !== slug).map((s) => (
@@ -86,5 +80,5 @@ export default async function InfoPage({ params }: InfoPageProps) {
         )}
       </Container>
     </>
-  );
+  )
 }

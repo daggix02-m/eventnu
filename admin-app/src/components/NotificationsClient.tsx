@@ -61,7 +61,10 @@ export function NotificationsClient({
     defaults: { page: 1, search: '', type: 'all', read: 'all' },
   })
 
-  const { data, isFetching } = useNotifications(filters, { notifications: initialNotifications, count: initialCount })
+  const { data, isFetching } = useNotifications(filters, {
+    notifications: initialNotifications,
+    count: initialCount,
+  })
   const notifications = data?.items ?? []
   const count = data?.total ?? 0
   const totalPages = Math.ceil(count / 20)
@@ -232,14 +235,22 @@ export function NotificationsClient({
           onChange={(e) => update('type', e.target.value)}
           className="w-auto min-w-[140px]"
         >
-          {typeOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+          {typeOptions.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
         </Select>
         <Select
           value={filters.read ?? 'all'}
           onChange={(e) => update('read', e.target.value)}
           className="w-auto min-w-[120px]"
         >
-          {readOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+          {readOptions.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
         </Select>
       </div>
 
@@ -251,7 +262,11 @@ export function NotificationsClient({
         <div className={isFetching ? 'opacity-60 transition-opacity' : 'transition-opacity'}>
           <div className="divide-y divide-outline-variant">
             {notifications.length === 0 ? (
-              <EmptyState icon={Bell} title="No notifications found." description="Try adjusting your filters." />
+              <EmptyState
+                icon={Bell}
+                title="No notifications found."
+                description="Try adjusting your filters."
+              />
             ) : (
               notifications.map((notification) => {
                 const TypeIcon = typeIcons[notification.type] || Info
@@ -265,7 +280,9 @@ export function NotificationsClient({
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <p className="font-semibold text-sm text-foreground">{notification.title}</p>
+                        <p className="font-semibold text-sm text-foreground">
+                          {notification.title}
+                        </p>
                         <Badge variant="outline" className="text-[10px] uppercase">
                           {notification.type}
                         </Badge>
@@ -274,7 +291,11 @@ export function NotificationsClient({
                       <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
                         <span>{formatDateTime(notification.created_at)}</span>
                         {notification.profiles && notification.profiles.length > 0 ? (
-                          <span>To: {notification.profiles[0].full_name || notification.profiles[0].username}</span>
+                          <span>
+                            To:{' '}
+                            {notification.profiles[0].full_name ||
+                              notification.profiles[0].username}
+                          </span>
                         ) : (
                           <span className="flex items-center gap-1">
                             <Users size={10} />
@@ -301,7 +322,12 @@ export function NotificationsClient({
             )}
           </div>
         </div>
-        <Pagination page={filters.page ?? 1} totalPages={totalPages} count={count} onPageChange={setPage} />
+        <Pagination
+          page={filters.page ?? 1}
+          totalPages={totalPages}
+          count={count}
+          onPageChange={setPage}
+        />
       </Card>
     </div>
   )

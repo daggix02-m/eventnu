@@ -67,7 +67,9 @@ export async function hideEventFromReport(eventId: string, reportId: string) {
 }
 
 export async function deleteCommentFromReport(commentId: string, reportId: string) {
-  await fetchMutation(api.reports.deleteCommentFromReport, { commentId: commentId as Id<'eventComments'> })
+  await fetchMutation(api.reports.deleteCommentFromReport, {
+    commentId: commentId as Id<'eventComments'>,
+  })
   await actionReport(reportId, 'delete_comment')
 }
 

@@ -8,7 +8,12 @@ import { Input } from '@/components/ui'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui'
 import { Loader2, Mail } from 'lucide-react'
 import { getErrorMessage } from '@/lib/errors'
-import { redeemVerificationCode, AUTH_EMAIL_KEY, getStoredEmail, clearStoredEmail } from '@/lib/auth'
+import {
+  redeemVerificationCode,
+  AUTH_EMAIL_KEY,
+  getStoredEmail,
+  clearStoredEmail,
+} from '@/lib/auth'
 
 function AuthCallbackInner() {
   const router = useRouter()
@@ -25,7 +30,11 @@ function AuthCallbackInner() {
       setStatus('loading')
       setError('')
       try {
-        await redeemVerificationCode(signIn, mail.trim().toLowerCase(), verificationCode.trim().toUpperCase())
+        await redeemVerificationCode(
+          signIn,
+          mail.trim().toLowerCase(),
+          verificationCode.trim().toUpperCase(),
+        )
         clearStoredEmail(AUTH_EMAIL_KEY)
         router.replace('/')
         router.refresh()
@@ -77,14 +86,20 @@ function AuthCallbackInner() {
             En
           </div>
           <div className="text-left">
-            <h1 className="font-headline text-xl font-semibold text-foreground tracking-tight">Event Nu</h1>
-            <p className="font-mono text-[10px] text-muted-foreground uppercase tracking-[0.2em]">Admin · Addissuite</p>
+            <h1 className="font-headline text-xl font-semibold text-foreground tracking-tight">
+              Event Nu
+            </h1>
+            <p className="font-mono text-[10px] text-muted-foreground uppercase tracking-[0.2em]">
+              Admin · Addissuite
+            </p>
           </div>
         </div>
 
         <Card className="border-0 shadow-[0_2px_4px_rgba(30,20,10,0.04),0_8px_24px_rgba(30,20,10,0.08)] rounded-2xl overflow-hidden bg-card">
           <CardHeader className="space-y-1 pb-4 text-center">
-            <CardTitle className="text-2xl font-semibold tracking-tight text-foreground">Finishing sign in…</CardTitle>
+            <CardTitle className="text-2xl font-semibold tracking-tight text-foreground">
+              Finishing sign in…
+            </CardTitle>
             <CardDescription className="text-muted-foreground">
               Verifying your link and signing you in.
             </CardDescription>
@@ -118,8 +133,8 @@ function AuthCallbackInner() {
               <div className="flex items-start gap-2 rounded-lg bg-muted/50 p-3 text-sm text-muted-foreground">
                 <Mail size={16} className="mt-0.5 shrink-0 text-primary" />
                 <p>
-                  Your email wasn’t saved in this browser. Enter the email you used and the code from the email to
-                  sign in.
+                  Your email wasn’t saved in this browser. Enter the email you used and the code
+                  from the email to sign in.
                 </p>
               </div>
               <form onSubmit={handleManualSubmit} className="space-y-4" noValidate>
@@ -130,7 +145,7 @@ function AuthCallbackInner() {
                     autoComplete="email"
                     placeholder="admin@eventnu.et"
                     value={email}
-                    onChange={e => setEmail(e.target.value)}
+                    onChange={(e) => setEmail(e.target.value)}
                     className="h-11"
                   />
                 </div>
@@ -141,7 +156,7 @@ function AuthCallbackInner() {
                     autoComplete="one-time-code"
                     placeholder="e.g. 8AB2K9DX"
                     value={code}
-                    onChange={e => setCode(e.target.value.toUpperCase())}
+                    onChange={(e) => setCode(e.target.value.toUpperCase())}
                     className="h-11 font-mono tracking-[0.2em] text-center"
                   />
                 </div>

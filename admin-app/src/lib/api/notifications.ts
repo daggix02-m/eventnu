@@ -32,7 +32,9 @@ export function useNotifications(
       })
       return { items: notifications, total: count, all: notifications }
     },
-    initialData: initial ? { items: initial.notifications, total: initial.count, all: initial.notifications } : undefined,
+    initialData: initial
+      ? { items: initial.notifications, total: initial.count, all: initial.notifications }
+      : undefined,
     placeholderData: keepPreviousData,
     staleTime: 30_000,
   })

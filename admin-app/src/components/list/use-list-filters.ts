@@ -27,7 +27,7 @@ export function useListFilters<T extends object>({
     const current = filters[searchKey]
     if (searchInput === (current ?? '')) return
     const timer = setTimeout(() => {
-      setFilters((prev) => ({ ...prev, [searchKey]: searchInput || undefined, page: 1 } as T))
+      setFilters((prev) => ({ ...prev, [searchKey]: searchInput || undefined, page: 1 }) as T)
     }, 400)
     return () => clearTimeout(timer)
   }, [searchInput, filters, searchKey])
@@ -48,11 +48,11 @@ export function useListFilters<T extends object>({
   }, [filters, basePath, defaults])
 
   const update = useCallback((key: keyof T, value: FilterValue) => {
-    setFilters((prev) => ({ ...prev, [key]: value, ...(key === 'page' ? {} : { page: 1 }) } as T))
+    setFilters((prev) => ({ ...prev, [key]: value, ...(key === 'page' ? {} : { page: 1 }) }) as T)
   }, [])
 
   const setPage = useCallback((page: number) => {
-    setFilters((prev) => ({ ...prev, page } as T))
+    setFilters((prev) => ({ ...prev, page }) as T)
   }, [])
 
   return { filters, update, setPage, searchInput, setSearchInput }

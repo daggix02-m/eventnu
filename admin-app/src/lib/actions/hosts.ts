@@ -27,19 +27,17 @@ export async function getHosts(params: {
   }
 }
 
-export async function createHost(
-  host: {
-    name: string
-    slug: string
-    host_type: string
-    description?: string
-    contact_email?: string
-    contact_phone?: string
-    website?: string
-    location_text?: string
-    logo_url?: string
-  }
-) {
+export async function createHost(host: {
+  name: string
+  slug: string
+  host_type: string
+  description?: string
+  contact_email?: string
+  contact_phone?: string
+  website?: string
+  location_text?: string
+  logo_url?: string
+}) {
   const result = await fetchMutation(api.hosts.create, {
     name: host.name,
     slug: host.slug,
@@ -67,7 +65,7 @@ export async function updateHost(
     website?: string
     location_text?: string
     logo_url?: string
-  }
+  },
 ) {
   await fetchMutation(api.hosts.update, {
     hostId: hostId as Id<'hosts'>,
@@ -84,11 +82,7 @@ export async function updateHost(
   revalidatePath('/hosts')
 }
 
-export async function updateHostStatus(
-  hostId: string,
-  status: string,
-  action: string
-) {
+export async function updateHostStatus(hostId: string, status: string, action: string) {
   await fetchMutation(api.hosts.updateStatus, {
     hostId: hostId as Id<'hosts'>,
     status,

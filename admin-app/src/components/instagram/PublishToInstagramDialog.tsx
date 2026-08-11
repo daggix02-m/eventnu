@@ -14,10 +14,7 @@ import {
 import { Button } from '@/components/ui'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/errors'
-import {
-  getInstagramStatus,
-  publishEventToInstagram,
-} from '@/lib/actions/instagram'
+import { getInstagramStatus, publishEventToInstagram } from '@/lib/actions/instagram'
 import { Instagram, Loader2, ExternalLink, CheckCircle2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -91,9 +88,7 @@ export function PublishToInstagramDialog({
           disabled={!canPublish}
           className="gap-2 border-outline-variant"
           title={
-            !canPublish
-              ? 'Add at least one image to publish to Instagram'
-              : 'Publish to Instagram'
+            !canPublish ? 'Add at least one image to publish to Instagram' : 'Publish to Instagram'
           }
         >
           <Instagram size={16} />
@@ -107,8 +102,8 @@ export function PublishToInstagramDialog({
             Publish to Instagram
           </DialogTitle>
           <DialogDescription>
-            This post will appear on the connected Instagram account with up to
-            10 images as a carousel.
+            This post will appear on the connected Instagram account with up to 10 images as a
+            carousel.
           </DialogDescription>
         </DialogHeader>
 
@@ -182,11 +177,7 @@ export function PublishToInstagramDialog({
               disabled={loading || !connected || overLimit}
               className="gap-2 bg-gradient-to-tr from-[#F77737] to-[#E1306C] hover:opacity-90 text-white"
             >
-              {loading ? (
-                <Loader2 size={16} className="animate-spin" />
-              ) : (
-                <Instagram size={16} />
-              )}
+              {loading ? <Loader2 size={16} className="animate-spin" /> : <Instagram size={16} />}
               {loading ? 'Publishing…' : 'Publish now'}
             </Button>
           </DialogFooter>

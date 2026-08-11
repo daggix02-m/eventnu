@@ -16,13 +16,17 @@ export async function getCategories() {
   }
 }
 
-export async function createCategory(
-  category: { name: string; slug: string; parent_id?: string | null; icon?: string | null; sort_order?: number }
-) {
+export async function createCategory(category: {
+  name: string
+  slug: string
+  parent_id?: string | null
+  icon?: string | null
+  sort_order?: number
+}) {
   const result = await fetchMutation(api.categories.create, {
     name: category.name,
     slug: category.slug,
-    parentId: category.parent_id as Id<'categories'> ?? undefined,
+    parentId: (category.parent_id as Id<'categories'>) ?? undefined,
     icon: category.icon ?? undefined,
     sortOrder: category.sort_order ?? 0,
   })
@@ -32,13 +36,19 @@ export async function createCategory(
 
 export async function updateCategory(
   categoryId: string,
-  updates: { name?: string; slug?: string; parent_id?: string | null; icon?: string | null; sort_order?: number }
+  updates: {
+    name?: string
+    slug?: string
+    parent_id?: string | null
+    icon?: string | null
+    sort_order?: number
+  },
 ) {
   await fetchMutation(api.categories.update, {
     categoryId: categoryId as Id<'categories'>,
     name: updates.name,
     slug: updates.slug,
-    parentId: updates.parent_id as Id<'categories'> ?? undefined,
+    parentId: (updates.parent_id as Id<'categories'>) ?? undefined,
     icon: updates.icon ?? undefined,
     sortOrder: updates.sort_order,
   })
@@ -50,9 +60,7 @@ export async function deleteCategory(categoryId: string) {
   revalidatePath('/categories')
 }
 
-export async function reorderCategories(
-  updates: { id: string; sort_order: number }[]
-) {
+export async function reorderCategories(updates: { id: string; sort_order: number }[]) {
   await fetchMutation(api.categories.reorder, {
     categoryIds: updates.map((u) => u.id as Id<'categories'>),
     startOrder: Math.min(...updates.map((u) => u.sort_order)),

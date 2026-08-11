@@ -1,103 +1,119 @@
-"use client";
+'use client'
 
-import { useRef } from "react";
-import { useGSAP } from "@gsap/react";
-import { gsap } from "@/lib/gsap";
-import { Calendar, PenLine, Rocket, Scan, Banknote } from "lucide-react";
-import { Container } from "@/components/layout/Container";
+import { useRef } from 'react'
+import { useGSAP } from '@gsap/react'
+import { gsap } from '@/lib/gsap'
+import { Calendar, PenLine, Rocket, Scan, Banknote } from 'lucide-react'
+import { Container } from '@/components/layout/Container'
 
 const STEPS = [
   {
     icon: PenLine,
-    title: "Draft & Customize",
-    body: "Fill in your event details, select categories, upload high-res poster flyers, and configure your ticket tiers in minutes.",
-    time: "~2 min",
-    accent: "text-primary",
-    accentBg: "bg-primary/10 border-primary/30",
-    accentGlow: "shadow-primary/20",
+    title: 'Draft & Customize',
+    body: 'Fill in your event details, select categories, upload high-res poster flyers, and configure your ticket tiers in minutes.',
+    time: '~2 min',
+    accent: 'text-primary',
+    accentBg: 'bg-primary/10 border-primary/30',
+    accentGlow: 'shadow-primary/20',
   },
   {
     icon: Rocket,
-    title: "Publish & Promote",
+    title: 'Publish & Promote',
     body: "Go live in the Event Nu marketplace. Active buyers matching your event's profile are notified via push notifications and digest emails automatically.",
-    time: "instant",
-    accent: "text-secondary",
-    accentBg: "bg-secondary/10 border-secondary/30",
-    accentGlow: "shadow-secondary/20",
+    time: 'instant',
+    accent: 'text-secondary',
+    accentBg: 'bg-secondary/10 border-secondary/30',
+    accentGlow: 'shadow-secondary/20',
   },
   {
     icon: Scan,
-    title: "Scan & Validate",
-    body: "Download the Event Nu Organizer App. Scan QR codes at the gate, validate entries in real-time, and sync across multiple devices even offline.",
-    time: "door-time",
-    accent: "text-tertiary",
-    accentBg: "bg-tertiary/10 border-tertiary/30",
-    accentGlow: "shadow-tertiary/20",
+    title: 'Scan & Validate',
+    body: 'Download the Event Nu Organizer App. Scan QR codes at the gate, validate entries in real-time, and sync across multiple devices even offline.',
+    time: 'door-time',
+    accent: 'text-tertiary',
+    accentBg: 'bg-tertiary/10 border-tertiary/30',
+    accentGlow: 'shadow-tertiary/20',
   },
   {
     icon: Banknote,
-    title: "Request Payout",
-    body: "After your event, request your settlement with a single tap. Revenue is deposited directly to your CBE or Telebirr account within 24–48 hours.",
-    time: "24–48 hrs",
-    accent: "text-primary",
-    accentBg: "bg-primary/10 border-primary/30",
-    accentGlow: "shadow-primary/20",
+    title: 'Request Payout',
+    body: 'After your event, request your settlement with a single tap. Revenue is deposited directly to your CBE or Telebirr account within 24–48 hours.',
+    time: '24–48 hrs',
+    accent: 'text-primary',
+    accentBg: 'bg-primary/10 border-primary/30',
+    accentGlow: 'shadow-primary/20',
   },
-] as const;
+] as const
 
 export function OrganizersHowItWorks() {
-  const sectionRef = useRef<HTMLElement>(null);
-  const headerRef = useRef<HTMLDivElement>(null);
-  const timelineRef = useRef<HTMLDivElement>(null);
-  const lineRef = useRef<HTMLDivElement>(null);
+  const sectionRef = useRef<HTMLElement>(null)
+  const headerRef = useRef<HTMLDivElement>(null)
+  const timelineRef = useRef<HTMLDivElement>(null)
+  const lineRef = useRef<HTMLDivElement>(null)
 
-  useGSAP(() => {
-    if (headerRef.current) {
-      gsap.fromTo(
-        headerRef.current.children,
-        { opacity: 0, y: 20 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.5,
-          stagger: 0.1,
-          ease: "power2.out",
-          scrollTrigger: { trigger: headerRef.current, start: "top 85%", toggleActions: "play none none none" },
-        }
-      );
-    }
-
-    if (lineRef.current) {
-      gsap.fromTo(
-        lineRef.current,
-        { scaleY: 0 },
-        {
-          scaleY: 1,
-          duration: 1.2,
-          ease: "power2.inOut",
-          scrollTrigger: { trigger: timelineRef.current, start: "top 75%", end: "bottom 60%", scrub: 1.5 },
-        }
-      );
-    }
-
-    if (timelineRef.current) {
-      const stepItems = timelineRef.current.querySelectorAll(".step-item");
-      if (stepItems.length) {
+  useGSAP(
+    () => {
+      if (headerRef.current) {
         gsap.fromTo(
-          stepItems,
-          { opacity: 0, x: -20 },
+          headerRef.current.children,
+          { opacity: 0, y: 20 },
           {
             opacity: 1,
-            x: 0,
-            duration: 0.45,
-            stagger: 0.15,
-            ease: "power2.out",
-            scrollTrigger: { trigger: timelineRef.current, start: "top 70%", toggleActions: "play none none none" },
-          }
-        );
+            y: 0,
+            duration: 0.5,
+            stagger: 0.1,
+            ease: 'power2.out',
+            scrollTrigger: {
+              trigger: headerRef.current,
+              start: 'top 85%',
+              toggleActions: 'play none none none',
+            },
+          },
+        )
       }
-    }
-  }, { scope: sectionRef });
+
+      if (lineRef.current) {
+        gsap.fromTo(
+          lineRef.current,
+          { scaleY: 0 },
+          {
+            scaleY: 1,
+            duration: 1.2,
+            ease: 'power2.inOut',
+            scrollTrigger: {
+              trigger: timelineRef.current,
+              start: 'top 75%',
+              end: 'bottom 60%',
+              scrub: 1.5,
+            },
+          },
+        )
+      }
+
+      if (timelineRef.current) {
+        const stepItems = timelineRef.current.querySelectorAll('.step-item')
+        if (stepItems.length) {
+          gsap.fromTo(
+            stepItems,
+            { opacity: 0, x: -20 },
+            {
+              opacity: 1,
+              x: 0,
+              duration: 0.45,
+              stagger: 0.15,
+              ease: 'power2.out',
+              scrollTrigger: {
+                trigger: timelineRef.current,
+                start: 'top 70%',
+                toggleActions: 'play none none none',
+              },
+            },
+          )
+        }
+      }
+    },
+    { scope: sectionRef },
+  )
 
   return (
     <section
@@ -106,7 +122,10 @@ export function OrganizersHowItWorks() {
       className="relative z-10 py-xl md:py-2xl border-t border-outline-variant/30 scroll-mt-16"
     >
       <Container>
-        <div ref={headerRef} className="max-w-[48rem] mx-auto text-center space-y-md mb-lg md:mb-xl">
+        <div
+          ref={headerRef}
+          className="max-w-[48rem] mx-auto text-center space-y-md mb-lg md:mb-xl"
+        >
           <div>
             <div className="inline-flex items-center gap-xs text-primary font-mono text-label-sm uppercase tracking-wider">
               <Calendar className="w-4 h-4" aria-hidden="true" /> Steps to Launch
@@ -116,7 +135,8 @@ export function OrganizersHowItWorks() {
             From idea to sold-out in four steps
           </h2>
           <p className="text-on-surface text-body-lg leading-relaxed opacity-0">
-            Our streamlined organizer flow makes listing fast, promotion automatic, and settlement reliable.
+            Our streamlined organizer flow makes listing fast, promotion automatic, and settlement
+            reliable.
           </p>
         </div>
 
@@ -130,17 +150,16 @@ export function OrganizersHowItWorks() {
 
           <div className="space-y-md">
             {STEPS.map((step, idx) => (
-              <div
-                key={idx}
-                className="step-item relative flex items-start gap-lg opacity-0"
-              >
+              <div key={idx} className="step-item relative flex items-start gap-lg opacity-0">
                 {/* Step number node */}
                 <div
                   className={`relative z-10 w-14 h-14 rounded-xl border flex-col items-center justify-center shrink-0 flex shadow-lg ${step.accentBg} ${step.accentGlow}`}
                   aria-hidden="true"
                 >
-                  <span className={`font-display text-[11px] font-bold ${step.accent} leading-none mb-0.5 opacity-60`}>
-                    {String(idx + 1).padStart(2, "0")}
+                  <span
+                    className={`font-display text-[11px] font-bold ${step.accent} leading-none mb-0.5 opacity-60`}
+                  >
+                    {String(idx + 1).padStart(2, '0')}
                   </span>
                   <step.icon className={`w-5 h-5 ${step.accent}`} />
                 </div>
@@ -151,13 +170,13 @@ export function OrganizersHowItWorks() {
                     <h3 className="font-display text-[18px] md:text-[20px] font-bold text-white">
                       {step.title}
                     </h3>
-                    <span className={`ml-md shrink-0 px-xs py-0.5 rounded-full border font-mono text-[10px] font-semibold ${step.accentBg} ${step.accent}`}>
+                    <span
+                      className={`ml-md shrink-0 px-xs py-0.5 rounded-full border font-mono text-[10px] font-semibold ${step.accentBg} ${step.accent}`}
+                    >
                       {step.time}
                     </span>
                   </div>
-                  <p className="text-on-surface text-body-md leading-relaxed">
-                    {step.body}
-                  </p>
+                  <p className="text-on-surface text-body-md leading-relaxed">{step.body}</p>
                 </div>
               </div>
             ))}
@@ -165,5 +184,5 @@ export function OrganizersHowItWorks() {
         </div>
       </Container>
     </section>
-  );
+  )
 }

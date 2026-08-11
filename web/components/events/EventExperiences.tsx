@@ -1,14 +1,14 @@
-"use client";
+'use client'
 
-import { useQuery } from "convex/react";
-import { api } from "@eventnu/convex/_generated/api";
-import { MessagesSquare } from "lucide-react";
-import { ExperiencePostCard } from "@/components/experiences/ExperiencePostCard";
-import { Skeleton } from "@/components/ui/skeleton";
+import { useQuery } from 'convex/react'
+import { api } from '@eventnu/convex/_generated/api'
+import { MessagesSquare } from 'lucide-react'
+import { ExperiencePostCard } from '@/components/experiences/ExperiencePostCard'
+import { Skeleton } from '@/components/ui/skeleton'
 
 export function EventExperiences({ eventId }: { eventId: string }) {
-  const posts = useQuery(api.experiencePosts.listByEvent, { eventId: eventId as any, limit: 3 });
-  const me = useQuery(api.profiles.getMe);
+  const posts = useQuery(api.experiencePosts.listByEvent, { eventId: eventId as any, limit: 3 })
+  const me = useQuery(api.profiles.getMe)
 
   return (
     <section className="space-y-md" aria-label="Experiences from this event">
@@ -37,5 +37,5 @@ export function EventExperiences({ eventId }: { eventId: string }) {
         </ul>
       )}
     </section>
-  );
+  )
 }

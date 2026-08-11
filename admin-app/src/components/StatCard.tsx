@@ -15,7 +15,7 @@ export function StatCard({ label, value, icon: Icon, highlight, trend, delay = 0
     <div
       className={cn(
         'bg-card p-6 rounded-2xl shadow-sm border border-outline-variant hover:shadow-md transition-shadow animate-ink-in',
-        highlight && 'border-warning/50 ring-1 ring-warning/20'
+        highlight && 'border-warning/50 ring-1 ring-warning/20',
       )}
       style={{ animationDelay: `${delay}s`, animationFillMode: 'both' }}
     >
@@ -35,7 +35,9 @@ export function StatCard({ label, value, icon: Icon, highlight, trend, delay = 0
           </span>
         )}
       </div>
-      <p className="text-muted-foreground text-xs font-semibold uppercase tracking-wider mb-1.5">{label}</p>
+      <p className="text-muted-foreground text-xs font-semibold uppercase tracking-wider mb-1.5">
+        {label}
+      </p>
       <p className="font-headline text-3xl font-semibold tracking-tight text-foreground tabular-nums">
         {value.toLocaleString()}
       </p>

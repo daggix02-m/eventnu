@@ -1,38 +1,38 @@
-import { notFound } from "next/navigation";
-import type { Metadata } from "next";
-import { EventHero } from "@/components/events/EventHero";
-import { EventStickyCTA } from "@/components/events/EventStickyCTA";
-import { EventDetails } from "@/components/events/EventDetails";
-import { EventPhotoGrid } from "@/components/events/EventPhotoGrid";
-import { EventInfoCard } from "@/components/events/EventInfoCard";
-import { EventExperiences } from "@/components/events/EventExperiences";
-import { ReservationForm } from "@/components/events/ReservationForm";
-import { OrganizerCard } from "@/components/events/OrganizerCard";
-import { SimilarEvents } from "@/components/events/SimilarEvents";
-import { Container } from "@/components/layout/Container";
-import { getEventBySlug, getSimilarEvents } from "@/lib/api/events";
-import { absoluteUrl } from "@/lib/site";
+import { notFound } from 'next/navigation'
+import type { Metadata } from 'next'
+import { EventHero } from '@/components/events/EventHero'
+import { EventStickyCTA } from '@/components/events/EventStickyCTA'
+import { EventDetails } from '@/components/events/EventDetails'
+import { EventPhotoGrid } from '@/components/events/EventPhotoGrid'
+import { EventInfoCard } from '@/components/events/EventInfoCard'
+import { EventExperiences } from '@/components/events/EventExperiences'
+import { ReservationForm } from '@/components/events/ReservationForm'
+import { OrganizerCard } from '@/components/events/OrganizerCard'
+import { SimilarEvents } from '@/components/events/SimilarEvents'
+import { Container } from '@/components/layout/Container'
+import { getEventBySlug, getSimilarEvents } from '@/lib/api/events'
+import { absoluteUrl } from '@/lib/site'
 
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic'
 
 interface EventPageProps {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ slug: string }>
 }
 
 function toAbsolute(image?: string | null): string | undefined {
-  if (!image) return undefined;
-  return image.startsWith("/") ? absoluteUrl(image) : image;
+  if (!image) return undefined
+  return image.startsWith('/') ? absoluteUrl(image) : image
 }
 
 export async function generateMetadata({ params }: EventPageProps): Promise<Metadata> {
-  const { slug } = await params;
-  const event = await getEventBySlug(slug);
+  const { slug } = await params
+  const event = await getEventBySlug(slug)
 
   if (!event) {
-    return { title: "Event Not Found | Event Nu" };
+    return { title: 'Event Not Found | Event Nu' }
   }
 
-  const description = event.subtitle ?? event.description.slice(0, 160);
+  const description = event.subtitle ?? event.description.slice(0, 160)
 
   return {
     title: `${event.title} | Event Nu`,
@@ -42,25 +42,25 @@ export async function generateMetadata({ params }: EventPageProps): Promise<Meta
       description,
       images: toAbsolute(event.poster_url) ? [toAbsolute(event.poster_url)!] : [],
       url: absoluteUrl(`/events/${event.slug}`),
-      type: "website",
+      type: 'website',
     },
-  };
+  }
 }
 
 export default async function EventPage({ params }: EventPageProps) {
-  const { slug } = await params;
-  const event = await getEventBySlug(slug);
+  const { slug } = await params
+  const event = await getEventBySlug(slug)
 
   if (!event) {
-    notFound();
+    notFound()
   }
 
-  const similarEvents = await getSimilarEvents(event, 3);
+  const similarEvents = await getSimilarEvents(event, 3)
 
-  const hasEnded = new Date(event.start_date).getTime() < Date.now();
+  const hasEnded = new Date(event.start_date).getTime() < Date.now()
   const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Event",
+    '@context': 'https://schema.org',
+    '@type': 'Event',
     name: event.title,
     description: event.subtitle ?? event.description.slice(0, 500),
     startDate: event.start_date,
@@ -68,18 +68,16 @@ export default async function EventPage({ params }: EventPageProps) {
     url: absoluteUrl(`/events/${event.slug}`),
     image: toAbsolute(event.poster_url ?? event.images?.[0]?.url),
     location: {
-      "@type": "Place",
+      '@type': 'Place',
       name: event.venue_name,
       address: event.venue_address ?? undefined,
     },
     organizer: event.organizer
-      ? { "@type": "Organization", name: event.organizer.full_name ?? "Event Organizer" }
+      ? { '@type': 'Organization', name: event.organizer.full_name ?? 'Event Organizer' }
       : undefined,
-    eventStatus: hasEnded
-      ? "https://schema.org/EventEnded"
-      : "https://schema.org/EventScheduled",
-    eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
-  };
+    eventStatus: hasEnded ? 'https://schema.org/EventEnded' : 'https://schema.org/EventScheduled',
+    eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+  }
 
   return (
     <>
@@ -103,7 +101,7 @@ export default async function EventPage({ params }: EventPageProps) {
           </div>
           <div className="md:col-span-4 space-y-md">
             <EventInfoCard event={event} />
-            {event.action_type === "reservation" && (
+            {event.action_type === 'reservation' && (
               <div id="reserve" className="scroll-mt-24">
                 <ReservationForm event={event} />
               </div>
@@ -114,5 +112,5 @@ export default async function EventPage({ params }: EventPageProps) {
       <SimilarEvents events={similarEvents} />
       <EventStickyCTA event={event} />
     </>
-  );
+  )
 }

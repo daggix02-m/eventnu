@@ -23,7 +23,12 @@ import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import { fadeUp } from '@/lib/motion'
-import { verifyOrganizer, unverifyOrganizer, suspendOrganizer, unsuspendOrganizer } from '@/lib/actions/organizers'
+import {
+  verifyOrganizer,
+  unverifyOrganizer,
+  suspendOrganizer,
+  unsuspendOrganizer,
+} from '@/lib/actions/organizers'
 import { getOrganizerRecentEvents } from '@/lib/actions/events'
 import type { MappedOrganizer } from '@/lib/mappers'
 
@@ -142,7 +147,14 @@ export function OrganizerDetailClient({ organizer, eventCount }: OrganizerDetail
         <div className="flex items-center gap-4">
           <Avatar className="w-16 h-16">
             {organizer.logo_url ? (
-              <img src={organizer.logo_url} alt="" width={64} height={64} loading="lazy" className="w-full h-full object-cover" />
+              <img
+                src={organizer.logo_url}
+                alt=""
+                width={64}
+                height={64}
+                loading="lazy"
+                className="w-full h-full object-cover"
+              />
             ) : (
               <div className="w-full h-full bg-surface-container-high flex items-center justify-center text-muted-foreground font-bold text-2xl">
                 {(organizer.organizer_name || 'O').charAt(0)}
@@ -150,7 +162,9 @@ export function OrganizerDetailClient({ organizer, eventCount }: OrganizerDetail
             )}
           </Avatar>
           <div>
-            <h1 className="font-headline text-3xl font-semibold text-foreground tracking-tight">{organizer.organizer_name}</h1>
+            <h1 className="font-headline text-3xl font-semibold text-foreground tracking-tight">
+              {organizer.organizer_name}
+            </h1>
             <p className="text-muted-foreground">@{organizer.organizer_handle}</p>
           </div>
         </div>
@@ -174,7 +188,9 @@ export function OrganizerDetailClient({ organizer, eventCount }: OrganizerDetail
         </Card>
         <Card className="p-4">
           {profile?.suspended ? (
-            <Badge className="text-xs bg-destructive/10 text-destructive border-destructive/20">Suspended</Badge>
+            <Badge className="text-xs bg-destructive/10 text-destructive border-destructive/20">
+              Suspended
+            </Badge>
           ) : (
             <Badge className="text-xs bg-success/10 text-success border-success/20">
               <CheckCircle size={10} className="mr-1" />
@@ -209,12 +225,16 @@ export function OrganizerDetailClient({ organizer, eventCount }: OrganizerDetail
           <h2 className="text-lg font-bold text-foreground mb-4">Profile Information</h2>
           <div className="space-y-4">
             <div>
-              <p className="text-xs text-muted-foreground uppercase tracking-tight font-semibold">Bio</p>
+              <p className="text-xs text-muted-foreground uppercase tracking-tight font-semibold">
+                Bio
+              </p>
               <p className="text-sm text-foreground mt-1">{organizer.bio || 'No bio provided.'}</p>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-xs text-muted-foreground uppercase tracking-tight font-semibold">Contact Email</p>
+                <p className="text-xs text-muted-foreground uppercase tracking-tight font-semibold">
+                  Contact Email
+                </p>
                 <div className="flex items-center gap-1 mt-1">
                   <Mail size={14} className="text-muted-foreground" />
                   <span className="text-sm text-foreground">
@@ -223,7 +243,9 @@ export function OrganizerDetailClient({ organizer, eventCount }: OrganizerDetail
                 </div>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground uppercase tracking-tight font-semibold">Website</p>
+                <p className="text-xs text-muted-foreground uppercase tracking-tight font-semibold">
+                  Website
+                </p>
                 <div className="flex items-center gap-1 mt-1">
                   <Globe size={14} className="text-muted-foreground" />
                   <span className="text-sm text-foreground">{organizer.website || 'N/A'}</span>
@@ -232,7 +254,9 @@ export function OrganizerDetailClient({ organizer, eventCount }: OrganizerDetail
             </div>
             {socialLinks && (
               <div>
-                <p className="text-xs text-muted-foreground uppercase tracking-tight font-semibold mb-2">Social Links</p>
+                <p className="text-xs text-muted-foreground uppercase tracking-tight font-semibold mb-2">
+                  Social Links
+                </p>
                 <div className="flex flex-wrap gap-2">
                   {Object.entries(socialLinks).map(([platform, url]) => (
                     <a
@@ -280,8 +304,8 @@ export function OrganizerDetailClient({ organizer, eventCount }: OrganizerDetail
                       event.status === 'published'
                         ? 'bg-success/10 text-success border-success/20'
                         : event.status === 'pending_review'
-                        ? 'bg-warning/10 text-warning border-warning/20'
-                        : 'bg-muted text-muted-foreground'
+                          ? 'bg-warning/10 text-warning border-warning/20'
+                          : 'bg-muted text-muted-foreground'
                     }`}
                   >
                     {event.status}

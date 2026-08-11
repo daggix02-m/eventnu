@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from 'next/link'
 
 export function SkipLink() {
   return (
@@ -8,5 +8,5 @@ export function SkipLink() {
     >
       Skip to main content
     </Link>
-  );
+  )
 }
