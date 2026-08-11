@@ -4,5 +4,5 @@
   // (they are a public API, so their exports look unused). Dependencies that
   // are consumed exclusively by those ignored files must be listed here.
   "ignoreDependencies": ["@radix-ui/react-separator"],
-  "ignore": ["components/ui/**"]
+  "ignore": ["components/ui/**"],
 }

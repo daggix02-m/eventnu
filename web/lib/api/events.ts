@@ -1,8 +1,15 @@
 import { fetchQuery } from 'convex/nextjs'
+import type { FunctionReturnType } from 'convex/server'
 import { api } from '@eventnu/convex/_generated/api'
+import type { Id } from '@eventnu/convex/_generated/dataModel'
 import type { Event, Category, Page } from '@/types'
 
-export function mapEvent(raw: any): Event {
+type RawEvent = FunctionReturnType<typeof api.events.getPublished>[number]
+type RawCategory = FunctionReturnType<typeof api.categories.getRoot>[number]
+type RawCategoryWithCount = FunctionReturnType<typeof api.categories.getWithEventCounts>[number]
+type RawPage = FunctionReturnType<typeof api.cms.getPublishedPages>[number]
+
+export function mapEvent(raw: RawEvent): Event {
   return {
     id: raw._id,
     title: raw.title,
@@ -11,7 +18,7 @@ export function mapEvent(raw: any): Event {
     description: raw.description,
     poster_url: raw.posterUrl,
     image_aspect_ratio: raw.imageAspectRatio,
-    images: (raw.images ?? []).map((img: any) => ({
+    images: (raw.images ?? []).map((img) => ({
       id: img._id,
       url: img.url,
       storage_id: img.storageId,
@@ -42,7 +49,7 @@ export function mapEvent(raw: any): Event {
     start_date: new Date(raw.startDate).toISOString(),
     end_date: raw.endDate ? new Date(raw.endDate).toISOString() : null,
     created_at: new Date(raw._creationTime).toISOString(),
-    event_categories: (raw.categories ?? []).map((cat: any) => ({
+    event_categories: (raw.categories ?? []).map((cat) => ({
       category_id: cat._id,
       event_id: raw._id,
       is_primary: true,
@@ -106,7 +113,7 @@ export async function getEventBySlug(slug: string): Promise<Event | null> {
 export async function getSimilarEvents(event: Event, limit = 3): Promise<Event[]> {
   try {
     const events = await fetchQuery(api.events.getSimilar, {
-      eventId: event.id as any,
+      eventId: event.id as Id<'events'>,
       limit,
     })
     return (events ?? []).map(mapEvent)
@@ -119,7 +126,7 @@ export async function getSimilarEvents(event: Event, limit = 3): Promise<Event[]
 export async function getCategories(): Promise<Category[]> {
   try {
     const categories = await fetchQuery(api.categories.getRoot)
-    return (categories ?? []).map((raw: any) => ({
+    return (categories ?? []).map((raw: RawCategory) => ({
       id: raw._id,
       slug: raw.slug,
       name: raw.name,
@@ -160,7 +167,7 @@ export interface CategoryWithCount extends Category {
 export async function getCategoriesWithCounts(): Promise<CategoryWithCount[]> {
   try {
     const categories = await fetchQuery(api.categories.getWithEventCounts)
-    return (categories ?? []).map((raw: any) => ({
+    return (categories ?? []).map((raw: RawCategoryWithCount) => ({
       id: raw._id,
       slug: raw.slug,
       name: raw.name,
@@ -179,7 +186,7 @@ export async function getCategoriesWithCounts(): Promise<CategoryWithCount[]> {
 export async function getEventsByCategory(categoryId: string): Promise<Event[]> {
   try {
     const events = await fetchQuery(api.events.getByCategory, {
-      categoryId: categoryId as any,
+      categoryId: categoryId as Id<'categories'>,
     })
     return (events ?? []).map(mapEvent)
   } catch (err) {
@@ -191,7 +198,7 @@ export async function getEventsByCategory(categoryId: string): Promise<Event[]> 
 export async function getPublishedPages(): Promise<Page[]> {
   try {
     const pages = await fetchQuery(api.cms.getPublishedPages)
-    return (pages ?? []).map((raw: any) => ({
+    return (pages ?? []).map((raw: RawPage) => ({
       id: raw._id,
       slug: raw.slug,
       title: raw.title,

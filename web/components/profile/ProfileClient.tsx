@@ -24,7 +24,7 @@ export function ProfileClient() {
   )
   const me = useQuery(api.profiles.getMe)
   const bookmarks = useQuery(api.bookmarks.listByUser)
-  const posts = useQuery(api.experiencePosts.listByUser, me ? { profileId: me._id as any } : 'skip')
+  const posts = useQuery(api.experiencePosts.listByUser, me ? { profileId: me._id } : 'skip')
 
   useEffect(() => {
     const param = searchParams.get('tab')

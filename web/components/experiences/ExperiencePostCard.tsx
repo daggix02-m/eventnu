@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useState } from 'react'
 import { useMutation } from 'convex/react'
 import { api } from '@eventnu/convex/_generated/api'
+import type { Id } from '@eventnu/convex/_generated/dataModel'
 import { CalendarDays, Trash2 } from 'lucide-react'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 
@@ -58,7 +59,7 @@ export function ExperiencePostCard({
     setDeleting(true)
     setError(null)
     try {
-      await remove({ postId: post.id as any })
+      await remove({ postId: post.id as Id<'experiencePosts'> })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete post')
       setDeleting(false)

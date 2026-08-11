@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useMutation } from 'convex/react'
 import { api } from '@eventnu/convex/_generated/api'
+import type { Id } from '@eventnu/convex/_generated/dataModel'
 import { Button } from '@/components/ui/button'
 import { Ticket, Loader2 } from 'lucide-react'
 import type { Event } from '@/types'
@@ -36,7 +37,7 @@ export function ReservationForm({ event }: ReservationFormProps) {
     setError('')
     try {
       await createReservation({
-        eventId: event.id as any,
+        eventId: event.id as Id<'events'>,
         name: name.trim(),
         email: email.trim(),
         message: message.trim() || undefined,

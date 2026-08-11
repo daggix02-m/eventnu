@@ -59,7 +59,7 @@ export async function enrichEvent(ctx: QueryCtx, event: Doc<'events'>, includeOr
     includeOrganizer && event.organizerId ? await ctx.db.get('profiles', event.organizerId) : null
   return {
     ...event,
-    categories: categories.filter(Boolean),
+    categories: categories.filter((c): c is Doc<'categories'> => c !== null),
     images,
     organizer,
     posterUrl: images[0]?.url ?? event.posterUrl,
@@ -179,7 +179,7 @@ export const list = query({
     const results = filters.status
       ? await ctx.db
           .query('events')
-          .withIndex('by_status', (q) => q.eq('status', filters.status as any))
+          .withIndex('by_status', (q) => q.eq('status', filters.status as Doc<'events'>['status']))
           .order('desc')
           .take(1000)
       : await ctx.db.query('events').order('desc').take(1000)
@@ -357,11 +357,11 @@ export const create = mutation({
       venueAddress: args.venueAddress ?? undefined,
       isFree: args.isFree ?? false,
       priceDisplay: args.priceDisplay ?? undefined,
-      actionType: (args.actionType as any) ?? 'open_entry',
+      actionType: (args.actionType as Doc<'events'>['actionType']) ?? 'open_entry',
       externalLink: args.externalLink ?? undefined,
       externalLinkLabel: args.externalLinkLabel ?? undefined,
       contactEmail: args.contactEmail ?? undefined,
-      status: (args.status as any) ?? 'draft',
+      status: (args.status as Doc<'events'>['status']) ?? 'draft',
       hostId: args.hostId ?? undefined,
       organizerId: args.organizerId ?? undefined,
       isStandalone: args.isStandalone ?? false,
@@ -542,7 +542,7 @@ export const updateStatus = mutation({
   handler: async (ctx, args) => {
     await requireAdmin(ctx)
     await ctx.db.patch('events', args.eventId, {
-      status: args.status as any,
+      status: args.status as Doc<'events'>['status'],
       ...(args.note ? { adminNote: args.note } : {}),
     })
   },
@@ -557,7 +557,7 @@ export const bulkUpdateStatus = mutation({
     await requireAdmin(ctx)
     for (const eventId of args.eventIds) {
       await ctx.db.patch('events', eventId, {
-        status: args.status as any,
+        status: args.status as Doc<'events'>['status'],
       })
     }
   },

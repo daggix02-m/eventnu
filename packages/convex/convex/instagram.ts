@@ -77,11 +77,39 @@ async function decryptToken(payload: string, keyStr: string): Promise<string> {
   return new TextDecoder().decode(plain)
 }
 
-async function graphFetch(
+interface GraphTokenResponse {
+  access_token?: string
+  expires_in?: number
+}
+
+interface GraphPage {
+  id: string
+  name?: string
+  instagram_business_account?: { id: string }
+}
+
+interface GraphMedia {
+  id: string
+  media_type?: string
+  media_url?: string
+  thumbnail_url?: string
+  caption?: string
+  permalink?: string
+  timestamp?: string
+  children?: { data?: GraphMedia[] }
+}
+
+interface GraphWebhookEntry {
+  changes?: { field?: string; value?: { id?: string } }[]
+  field?: string
+  value?: { id?: string }
+}
+
+async function graphFetch<T = unknown>(
   path: string,
   params: Record<string, string>,
   method: 'GET' | 'POST' = 'GET',
-): Promise<any> {
+): Promise<T> {
   const url = new URL(`${GRAPH_BASE}/${path}`)
   const init: RequestInit = { method }
   if (method === 'POST') {
@@ -93,14 +121,15 @@ async function graphFetch(
     }
   }
   const res = await fetch(url, init)
-  let json: any = null
+  let json: T
   try {
-    json = await res.json()
+    json = (await res.json()) as T
   } catch {
-    // ignore parse errors
+    throw new Error(`Graph API error ${res.status}`)
   }
-  if (!res.ok || json?.error) {
-    throw new Error(json?.error?.message ?? `Graph API error ${res.status}`)
+  const error = (json as { error?: { message?: string } })?.error
+  if (!res.ok || error) {
+    throw new Error(error?.message ?? `Graph API error ${res.status}`)
   }
   return json
 }
@@ -245,7 +274,7 @@ export const completeConnect = action({
     })
     const redirectUri = `${getSiteUrl()}/api/webhooks/instagram/connect-callback`
 
-    const tokenRes = await graphFetch('oauth/access_token', {
+    const tokenRes = await graphFetch<GraphTokenResponse>('oauth/access_token', {
       client_id: env.FACEBOOK_APP_ID!,
       client_secret: env.FACEBOOK_APP_SECRET!,
       redirect_uri: redirectUri,
@@ -253,7 +282,7 @@ export const completeConnect = action({
     })
     const shortToken = tokenRes.access_token as string
 
-    const longRes = await graphFetch('oauth/access_token', {
+    const longRes = await graphFetch<GraphTokenResponse>('oauth/access_token', {
       grant_type: 'fb_exchange_token',
       client_id: env.FACEBOOK_APP_ID!,
       client_secret: env.FACEBOOK_APP_SECRET!,
@@ -262,26 +291,26 @@ export const completeConnect = action({
     const longToken = longRes.access_token as string
     const expiresIn = (longRes.expires_in as number) ?? 60 * 24 * 60 * 60
 
-    const accounts = await graphFetch('me/accounts', {
+    const accounts = await graphFetch<{ data?: GraphPage[] }>('me/accounts', {
       access_token: longToken,
       fields: 'id,name,instagram_business_account',
     })
-    const pages: any[] = accounts.data ?? []
+    const pages = accounts.data ?? []
     const page = pages.find((p) => p.instagram_business_account)
-    if (!page) {
+    if (!page?.instagram_business_account) {
       throw new Error(
         'No Facebook Page linked to an Instagram Business/Creator account found. Connect the Instagram account to a Facebook Page first.',
       )
     }
     const igUserId = String(page.instagram_business_account.id)
 
-    const igInfo = await graphFetch(igUserId, {
+    const igInfo = await graphFetch<{ username?: string }>(igUserId, {
       access_token: longToken,
       fields: 'id,username',
     })
     const igUsername = String(igInfo.username)
 
-    await graphFetch(
+    await graphFetch<{ success?: boolean }>(
       `${igUserId}/subscribed_apps`,
       {
         access_token: longToken,
@@ -332,12 +361,12 @@ export const publishToInstagram = action({
     let publishedId: string
     try {
       if (event.images.length === 1) {
-        const container = await graphFetch(
+        const container = await graphFetch<{ id?: string }>(
           `${igUserId}/media`,
           { access_token: token, image_url: event.images[0].url, caption },
           'POST',
         )
-        const publish = await graphFetch(
+        const publish = await graphFetch<{ id?: string }>(
           `${igUserId}/media_publish`,
           { access_token: token, creation_id: String(container.id) },
           'POST',
@@ -346,14 +375,14 @@ export const publishToInstagram = action({
       } else {
         const children: string[] = []
         for (const img of event.images.slice(0, MAX_EVENT_IMAGES)) {
-          const c = await graphFetch(
+          const c = await graphFetch<{ id?: string }>(
             `${igUserId}/media`,
             { access_token: token, image_url: img.url, is_carousel_item: 'true' },
             'POST',
           )
           children.push(String(c.id))
         }
-        const container = await graphFetch(
+        const container = await graphFetch<{ id?: string }>(
           `${igUserId}/media`,
           {
             access_token: token,
@@ -363,7 +392,7 @@ export const publishToInstagram = action({
           },
           'POST',
         )
-        const publish = await graphFetch(
+        const publish = await graphFetch<{ id?: string }>(
           `${igUserId}/media_publish`,
           { access_token: token, creation_id: String(container.id) },
           'POST',
@@ -382,11 +411,11 @@ export const publishToInstagram = action({
 
     let permalink = ''
     try {
-      const mediaInfo = await graphFetch(publishedId, {
+      const mediaInfo = await graphFetch<{ permalink?: string }>(publishedId, {
         access_token: token,
         fields: 'permalink',
       })
-      permalink = (mediaInfo.permalink as string) ?? ''
+      permalink = mediaInfo.permalink ?? ''
     } catch {
       // permalink fetch failed, keep empty
     }
@@ -414,8 +443,8 @@ export const processWebhook = internalAction({
     if (!conn || !conn.syncEnabled) return
 
     const token = await decryptToken(conn.accessTokenEncrypted, env.INSTAGRAM_ENCRYPTION_KEY!)
-    const entry: any = args.entry
-    const mediaRefs: any[] = []
+    const entry = args.entry as GraphWebhookEntry
+    const mediaRefs: { id?: string }[] = []
     if (Array.isArray(entry.changes)) {
       for (const ch of entry.changes) {
         if (ch.field === 'media' && ch.value?.id) mediaRefs.push(ch.value)
@@ -430,9 +459,9 @@ export const processWebhook = internalAction({
       })
       if (existing) continue
 
-      let media: any
+      let media: GraphMedia
       try {
-        media = await graphFetch(mediaId, {
+        media = await graphFetch<GraphMedia>(mediaId, {
           access_token: token,
           fields:
             'id,media_type,media_url,thumbnail_url,caption,permalink,timestamp,children{media_type,media_url,thumbnail_url}',
@@ -447,9 +476,9 @@ export const processWebhook = internalAction({
         continue
       }
 
-      const rawItems: any[] = []
+      const rawItems: GraphMedia[] = []
       if (media.media_type === 'CAROUSEL_ALBUM') {
-        rawItems.push(...((media.children?.data as any[]) ?? []))
+        rawItems.push(...(media.children?.data ?? []))
       } else {
         rawItems.push(media)
       }
@@ -476,8 +505,8 @@ export const processWebhook = internalAction({
       try {
         await ctx.runMutation(internal.instagram.createImportedEvent, {
           instaPostId: mediaId,
-          instaPermalink: (media.permalink as string) ?? '',
-          caption: (media.caption as string) ?? '',
+          instaPermalink: media.permalink ?? '',
+          caption: media.caption ?? '',
           timestamp: media.timestamp ? Math.round(new Date(media.timestamp).getTime()) : Date.now(),
           images: urls,
         })

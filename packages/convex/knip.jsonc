@@ -1,4 +1,4 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
-  "ignore": ["convex/_generated/**", "convex/seed.ts"]
+  "ignore": ["convex/_generated/**", "convex/seed.ts"],
 }

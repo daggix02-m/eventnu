@@ -1,6 +1,6 @@
 import { v } from 'convex/values'
 import { query, mutation, QueryCtx } from './_generated/server'
-import { Doc } from './_generated/dataModel'
+import { Doc, Id } from './_generated/dataModel'
 import { requireUser } from './helpers'
 import { rateLimiter } from './rateLimiter'
 
@@ -10,7 +10,7 @@ async function enrichPost(ctx: QueryCtx, post: Doc<'experiencePosts'>) {
   const author = await ctx.db.get('profiles', post.userId)
   let imageUrl = post.imageUrl
   if (!imageUrl && post.imageStorageId) {
-    imageUrl = (await ctx.storage.getUrl(post.imageStorageId as any)) ?? undefined
+    imageUrl = (await ctx.storage.getUrl(post.imageStorageId as Id<'_storage'>)) ?? undefined
   }
   let event: Doc<'events'> | null = null
   if (post.eventId) {
@@ -108,7 +108,7 @@ export const create = mutation({
 
     let imageUrl: string | undefined
     if (args.imageStorageId) {
-      imageUrl = (await ctx.storage.getUrl(args.imageStorageId as any)) ?? undefined
+      imageUrl = (await ctx.storage.getUrl(args.imageStorageId as Id<'_storage'>)) ?? undefined
     }
 
     return await ctx.db.insert('experiencePosts', {

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '@eventnu/convex/_generated/api'
+import type { Id } from '@eventnu/convex/_generated/dataModel'
 import { ImagePlus, Loader2, Send } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -64,7 +65,7 @@ export function CreateExperienceForm({
     try {
       await createPost({
         content,
-        eventId: eventId ? (eventId as any) : undefined,
+        eventId: eventId ? (eventId as Id<'events'>) : undefined,
         imageStorageId,
       })
       resetForm()

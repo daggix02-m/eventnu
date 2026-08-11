@@ -56,7 +56,7 @@ http.route({
     if (!(await validSignature(signature, raw, env.FACEBOOK_APP_SECRET))) {
       return new Response('Invalid signature', { status: 401 })
     }
-    let body: any
+    let body: { object?: string; entry?: unknown[] } | undefined
     try {
       body = JSON.parse(raw)
     } catch {

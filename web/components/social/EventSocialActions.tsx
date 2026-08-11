@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '@eventnu/convex/_generated/api'
+import type { Id } from '@eventnu/convex/_generated/dataModel'
 import { useConvexAuth } from '@convex-dev/auth/react'
 import { Heart, Bookmark, Share2, Check, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -25,8 +26,8 @@ function LikeButton({
 }) {
   const { isAuthenticated, isLoading, openAuth } = useAuthGate()
   const toggle = useMutation(api.likes.toggle)
-  const liked = useQuery(api.likes.hasLiked, { eventId: eventId as any })
-  const count = useQuery(api.likes.countByEvent, { eventId: eventId as any })
+  const liked = useQuery(api.likes.hasLiked, { eventId: eventId as Id<'events'> })
+  const count = useQuery(api.likes.countByEvent, { eventId: eventId as Id<'events'> })
   const [pending, setPending] = useState(false)
 
   const handleClick = async () => {
@@ -36,7 +37,7 @@ function LikeButton({
     }
     setPending(true)
     try {
-      await toggle({ eventId: eventId as any })
+      await toggle({ eventId: eventId as Id<'events'> })
     } catch {
       /* swallow */
     } finally {
@@ -86,7 +87,7 @@ function BookmarkButton({
 }) {
   const { isAuthenticated, isLoading, openAuth } = useAuthGate()
   const toggle = useMutation(api.bookmarks.toggle)
-  const saved = useQuery(api.bookmarks.hasBookmarked, { eventId: eventId as any })
+  const saved = useQuery(api.bookmarks.hasBookmarked, { eventId: eventId as Id<'events'> })
   const [pending, setPending] = useState(false)
 
   const handleClick = async () => {
@@ -96,7 +97,7 @@ function BookmarkButton({
     }
     setPending(true)
     try {
-      await toggle({ eventId: eventId as any })
+      await toggle({ eventId: eventId as Id<'events'> })
     } catch {
       /* swallow */
     } finally {
@@ -155,7 +156,7 @@ function ShareButton({
   const share = async () => {
     const url = window.location.href
     try {
-      await track({ eventId: eventId as any, platform: 'native' })
+      await track({ eventId: eventId as Id<'events'>, platform: 'native' })
     } catch {
       /* share tracking is best-effort */
     }
@@ -223,8 +224,8 @@ export function CardQuickActions({ eventId, className }: { eventId: string; clas
   const { isAuthenticated, isLoading, openAuth } = useAuthGate()
   const toggleLike = useMutation(api.likes.toggle)
   const toggleBookmark = useMutation(api.bookmarks.toggle)
-  const liked = useQuery(api.likes.hasLiked, { eventId: eventId as any })
-  const saved = useQuery(api.bookmarks.hasBookmarked, { eventId: eventId as any })
+  const liked = useQuery(api.likes.hasLiked, { eventId: eventId as Id<'events'> })
+  const saved = useQuery(api.bookmarks.hasBookmarked, { eventId: eventId as Id<'events'> })
 
   const guard = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -254,7 +255,7 @@ export function CardQuickActions({ eventId, className }: { eventId: string; clas
     >
       <button
         type="button"
-        onClick={(e) => handle(e, () => toggleLike({ eventId: eventId as any }))}
+        onClick={(e) => handle(e, () => toggleLike({ eventId: eventId as Id<'events'> }))}
         disabled={isLoading}
         aria-pressed={!!liked}
         aria-label={liked ? 'Unlike this event' : 'Like this event'}
@@ -264,7 +265,7 @@ export function CardQuickActions({ eventId, className }: { eventId: string; clas
       </button>
       <button
         type="button"
-        onClick={(e) => handle(e, () => toggleBookmark({ eventId: eventId as any }))}
+        onClick={(e) => handle(e, () => toggleBookmark({ eventId: eventId as Id<'events'> }))}
         disabled={isLoading}
         aria-pressed={!!saved}
         aria-label={saved ? 'Remove from saved events' : 'Save this event'}

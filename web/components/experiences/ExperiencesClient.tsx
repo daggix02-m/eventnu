@@ -14,7 +14,7 @@ export function ExperiencesClient({ eventSlug }: { eventSlug?: string }) {
   const events = useQuery(api.events.getPublished)
 
   const preselectedEvent = events?.find((e) => e.slug === eventSlug)
-  const initialEventId = preselectedEvent?._id as any
+  const initialEventId = preselectedEvent?._id
 
   return (
     <div className="mx-auto w-full max-w-[42rem] space-y-xl">

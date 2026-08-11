@@ -1,5 +1,6 @@
 import { v } from 'convex/values'
 import { query, mutation } from './_generated/server'
+import { Doc, Id } from './_generated/dataModel'
 import { insertModerationLog, insertNotification, requireAdmin } from './helpers'
 
 export const list = query({
@@ -13,7 +14,7 @@ export const list = query({
     if (args.status && args.status !== 'all') {
       reports = await ctx.db
         .query('reports')
-        .withIndex('by_status', (q) => q.eq('status', args.status as any))
+        .withIndex('by_status', (q) => q.eq('status', args.status as Doc<'reports'>['status']))
         .order('desc')
         .take(100)
     } else {
@@ -38,16 +39,16 @@ export const getTargetPreview = query({
   handler: async (ctx, args) => {
     await requireAdmin(ctx)
     if (args.targetType === 'event') {
-      return await ctx.db.get('events', args.targetId as any)
+      return await ctx.db.get('events', args.targetId as Id<'events'>)
     }
     if (args.targetType === 'host') {
-      return await ctx.db.get('hosts', args.targetId as any)
+      return await ctx.db.get('hosts', args.targetId as Id<'hosts'>)
     }
     if (args.targetType === 'user') {
-      return await ctx.db.get('profiles', args.targetId as any)
+      return await ctx.db.get('profiles', args.targetId as Id<'profiles'>)
     }
     if (args.targetType === 'comment') {
-      return await ctx.db.get('eventComments', args.targetId as any)
+      return await ctx.db.get('eventComments', args.targetId as Id<'eventComments'>)
     }
     return null
   },

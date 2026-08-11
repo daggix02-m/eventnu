@@ -49,7 +49,7 @@ export interface Event {
   is_free: boolean
   action_type?: string | null
   status: string
-  organizer_id: string
+  organizer_id: string | undefined
   venue_name: string
   venue_address?: string | null
   venue_map_link?: string | null
