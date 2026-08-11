@@ -65,7 +65,7 @@ Living register for the phased refactor (see `REFACTORING.md` for the roadmap an
 
 | Class | Item | Where |
 |---|---|---|
-| I | Fake pagination: `events.list` offset-over-`.take(1000)`, dummy `continueCursor` | `web/convex/events.ts` |
+| I | Fake pagination: `events.list` offset-over-`.take(1000)`, dummy `continueCursor` | `web/convex/events/read.ts` |
 | I | Fetch-all-then-slice list actions | `lib/actions/{users,hosts,organizers,reports,notifications}.ts` |
 | I | Unbounded scans (`.take(1000)` counts, `email.ts` `.collect()`) | `web/convex/` |
 | I | Missing indexes (`hosts`, `categories.parentId`) | `web/convex/schema.ts` |

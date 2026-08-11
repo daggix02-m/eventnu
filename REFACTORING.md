@@ -88,8 +88,8 @@ Root cause of ~90% of the `any` casts: `admin-app` imports `../../../web/convex/
 - [ ] Centralize error handling through `lib/errors.ts` `getErrorMessage`; remove per-action `try/catch → console.error` boilerplate and silent `catch → null` swallows (`getInstagramStatus`, `SettingsClient`).
 
 ### 2.3 Backend modularization (`web/convex`)
-- [ ] Split `events.ts` (635 lines, 20 exports) → `events/read|write|moderation|enrichment`.
-- [ ] Split `instagram.ts` (786 lines) → `instagram/connect|import|publish|crypto`.
+- [x] Split `events.ts` (592 lines, 20 exports) → `events/enrichment|read|write|moderation`. New `api.events.read|write|moderation.*` namespaces; shared image/category resolution + `enrichEvent` in `enrichment.ts` (consumed by `bookmarks.ts`). Per-module sizes: read 180, write 250, moderation 55, enrichment 70.
+- [x] Split `instagram.ts` (770 lines) → `instagram/crypto|shared|connect|publish|import`. New `api.instagram.connect.*`, `api.instagram.publish.*`, `internal.instagram.connect|publish|import.*` namespaces; env+crypto helpers in `crypto.ts`, graph client in `shared.ts`. Per-module sizes: connect 300, publish 155, import 150, crypto/shared ~75 each.
 - [x] Extract duplicated primitives into a shared module (`convex/helpers.ts` + `convex/constants.ts`):
   - `patchDefined` filter-undefined patch (repeated 8× across categories/cms/events/features/hosts/organizers/profiles)
   - slugify (3 implementations: `events.ts`, `instagram.ts` ×2)
@@ -99,7 +99,7 @@ Root cause of ~90% of the `any` casts: `admin-app` imports `../../../web/convex/
 - [x] Break `instagram.ts → events.ts` import tangle (`MAX_EVENT_IMAGES`) into a shared constants module.
 - [ ] Split `cms.ts` (pages / announcements / contact, 210 lines) into 2–3 files.
 - [ ] Standardize compound index names to `by_field1_and_field2` (`schema.ts` currently uses `by_organizer_status`, `by_user_event`, `by_user_read`, `by_event`, `by_category`, …).
-- [ ] Gate `hosts.getStats` with `requireAdmin` (move from 1.2 to here if deferred).
+- [x] Gate `hosts.getStats` with `requireAdmin` (done in Phase 1.2; tracked in tech-debt register).
 
 ### 2.4 Admin-app component decomposition
 - [x] Extract shared data-table primitives from the six copy-pasted list clients: `DataTable`, `FilterBar`, `StatusBadge` maps, `Pagination`, `EmptyState`, `ConfirmDialog`, toast-on-error. Adopted by `HostsClient`, `UsersClient`, `OrganizersClient` (Phase 2.2) and `EventsClient`/`CategoriesClient` (2.4). Intentional exceptions documented in the tracker: `NotificationsClient` (card feed) and `ReportsClient` (master-detail with sticky headers).
