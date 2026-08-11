@@ -9,7 +9,7 @@ import { getUsers } from './users'
 
 export async function getPages() {
   try {
-    const pages = await fetchQuery(api.cms.getPages)
+    const pages = await fetchQuery(api.cms.pages.getPages)
     return pages.map(mapPage)
   } catch (err) {
     console.error('Failed to load pages:', err)
@@ -19,7 +19,7 @@ export async function getPages() {
 
 export async function getPageById(id: string) {
   try {
-    const page = await fetchQuery(api.cms.getPageById, { pageId: id as Id<'pages'> })
+    const page = await fetchQuery(api.cms.pages.getPageById, { pageId: id as Id<'pages'> })
     return page ? mapPage(page) : null
   } catch (err) {
     console.error('Failed to load page:', err)
@@ -37,7 +37,7 @@ export async function createPage(data: {
   is_published?: boolean
   sort_order?: number
 }) {
-  await fetchMutation(api.cms.createPage, {
+  await fetchMutation(api.cms.pages.createPage, {
     slug: data.slug,
     title: data.title,
     subtitle: data.subtitle ?? undefined,
@@ -64,7 +64,7 @@ export async function updatePage(
     sort_order?: number
   },
 ) {
-  await fetchMutation(api.cms.updatePage, {
+  await fetchMutation(api.cms.pages.updatePage, {
     pageId: id as Id<'pages'>,
     slug: data.slug,
     title: data.title,
@@ -80,14 +80,14 @@ export async function updatePage(
 }
 
 export async function deletePage(id: string) {
-  await fetchMutation(api.cms.deletePage, { pageId: id as Id<'pages'> })
+  await fetchMutation(api.cms.pages.deletePage, { pageId: id as Id<'pages'> })
   revalidatePath('/cms/pages')
   revalidatePath('/cms')
 }
 
 export async function getAnnouncements() {
   try {
-    const announcements = await fetchQuery(api.cms.getAnnouncements)
+    const announcements = await fetchQuery(api.cms.announcements.getAnnouncements)
     const { users } = await getUsers({ status: 'all' })
     const byId = new Map(users.filter((u) => u.profileId).map((u) => [u.profileId, u]))
     return announcements.map((a) => {
@@ -114,7 +114,7 @@ export async function createAnnouncement(data: {
   ends_at?: string | null
   target_user_id?: string | null
 }) {
-  await fetchMutation(api.cms.createAnnouncement, {
+  await fetchMutation(api.cms.announcements.createAnnouncement, {
     title: data.title,
     message: data.message ?? undefined,
     linkUrl: data.link_url ?? undefined,
@@ -142,7 +142,7 @@ export async function updateAnnouncement(
     target_user_id?: string | null
   },
 ) {
-  await fetchMutation(api.cms.updateAnnouncement, {
+  await fetchMutation(api.cms.announcements.updateAnnouncement, {
     announcementId: id as Id<'announcements'>,
     title: data.title,
     message: data.message ?? undefined,
@@ -159,7 +159,9 @@ export async function updateAnnouncement(
 }
 
 export async function deleteAnnouncement(id: string) {
-  await fetchMutation(api.cms.deleteAnnouncement, { announcementId: id as Id<'announcements'> })
+  await fetchMutation(api.cms.announcements.deleteAnnouncement, {
+    announcementId: id as Id<'announcements'>,
+  })
   revalidatePath('/cms/announcements')
   revalidatePath('/cms')
   revalidatePath('/')
@@ -167,7 +169,7 @@ export async function deleteAnnouncement(id: string) {
 
 export async function getContactSubmissions() {
   try {
-    const submissions = await fetchQuery(api.cms.getContactSubmissions)
+    const submissions = await fetchQuery(api.cms.contact.getContactSubmissions)
     return submissions.map(mapContactSubmission)
   } catch (err) {
     console.error('Failed to load contact submissions:', err)
@@ -176,7 +178,7 @@ export async function getContactSubmissions() {
 }
 
 export async function markContactResolved(id: string, resolved: boolean) {
-  await fetchMutation(api.cms.markContactResolved, {
+  await fetchMutation(api.cms.contact.markContactResolved, {
     submissionId: id as Id<'contactSubmissions'>,
     resolved,
   })

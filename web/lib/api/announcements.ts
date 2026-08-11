@@ -5,13 +5,15 @@ import { convexAuthNextjsToken } from '@convex-dev/auth/nextjs/server'
 import { api } from '@eventnu/convex/_generated/api'
 import type { Announcement } from '@/types'
 
-type RawAnnouncement = FunctionReturnType<typeof api.cms.getActiveAnnouncements>[number]
+type RawAnnouncement = FunctionReturnType<
+  typeof api.cms.announcements.getActiveAnnouncements
+>[number]
 
 export async function getActiveAnnouncements(): Promise<Announcement[]> {
   try {
     const token = await convexAuthNextjsToken()
     const announcements = await fetchQuery(
-      api.cms.getActiveAnnouncements,
+      api.cms.announcements.getActiveAnnouncements,
       { now: Date.now() },
       token ? { token } : undefined,
     )

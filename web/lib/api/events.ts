@@ -7,7 +7,7 @@ import type { Event, Category, Page } from '@/types'
 type RawEvent = FunctionReturnType<typeof api.events.read.getPublished>[number]
 type RawCategory = FunctionReturnType<typeof api.categories.getRoot>[number]
 type RawCategoryWithCount = FunctionReturnType<typeof api.categories.getWithEventCounts>[number]
-type RawPage = FunctionReturnType<typeof api.cms.getPublishedPages>[number]
+type RawPage = FunctionReturnType<typeof api.cms.pages.getPublishedPages>[number]
 
 export function mapEvent(raw: RawEvent): Event {
   return {
@@ -197,7 +197,7 @@ export async function getEventsByCategory(categoryId: string): Promise<Event[]> 
 
 export async function getPublishedPages(): Promise<Page[]> {
   try {
-    const pages = await fetchQuery(api.cms.getPublishedPages)
+    const pages = await fetchQuery(api.cms.pages.getPublishedPages)
     return (pages ?? []).map((raw: RawPage) => ({
       id: raw._id,
       slug: raw.slug,
@@ -218,7 +218,7 @@ export async function getPublishedPages(): Promise<Page[]> {
 
 export async function getPageBySlug(slug: string): Promise<Page | null> {
   try {
-    const raw = await fetchQuery(api.cms.getPageBySlug, { slug })
+    const raw = await fetchQuery(api.cms.pages.getPageBySlug, { slug })
     if (!raw) return null
     return {
       id: raw._id,

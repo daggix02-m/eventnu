@@ -30,7 +30,7 @@ export async function submitContactForm(
   }
 
   try {
-    await fetchMutation(api.cms.submitContact, {
+    await fetchMutation(api.cms.contact.submitContact, {
       name: parsed.data.name,
       email: parsed.data.email,
       message: parsed.data.message,
