@@ -41,14 +41,14 @@ import {
 import { PickedImage } from '@/components/media/ImagePicker'
 import { PublishToInstagramDialog } from '@/components/instagram/PublishToInstagramDialog'
 import { Instagram } from 'lucide-react'
-import {
-  EventForm,
+import { EventForm } from '@/components/events/EventForm'
+import type {
   Category,
+  FeaturedSection,
   Host,
   Organizer,
-  FeaturedSection,
   EventFormValues,
-} from '@/components/events/EventForm'
+} from '@/components/events/event-form/types'
 import type { MappedEvent, MappedModerationLog } from '@/lib/mappers'
 import Link from 'next/link'
 
