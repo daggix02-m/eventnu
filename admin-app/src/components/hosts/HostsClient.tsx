@@ -26,7 +26,7 @@ import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
-import { PageHeader } from '@/components/Page'
+import { PageHeader } from '@/components/shared/PageLayout'
 import {
   DataTable,
   FilterSelect,

@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
-import { AppShell } from '@/components/AppShell'
-import { IdleTimeout } from '@/components/IdleTimeout'
-import { AccountRestrictedScreen } from '@/components/AccountRestrictedScreen'
+import { AppShell } from '@/components/layout/AppShell'
+import { IdleTimeout } from '@/components/layout/IdleTimeout'
+import { AccountRestrictedScreen } from '@/components/layout/AccountRestrictedScreen'
 import { getCurrentAdminProfile } from '@/lib/actions/session'
 
 export const dynamic = 'force-dynamic'

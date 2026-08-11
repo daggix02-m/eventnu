@@ -1,5 +1,5 @@
 import { getOrganizerById } from '@/lib/actions/organizers'
-import { OrganizerDetailClient } from '@/components/OrganizerDetailClient'
+import { OrganizerDetailClient } from '@/components/organizers/OrganizerDetailClient'
 
 export default async function OrganizerDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params

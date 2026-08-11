@@ -1,4 +1,4 @@
-import { HeaderSkeleton, CardGridSkeleton } from '@/components/skeletons'
+import { HeaderSkeleton, CardGridSkeleton } from '@/components/shared/skeletons'
 
 export default function AnalyticsLoading() {
   return (

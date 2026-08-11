@@ -1,4 +1,4 @@
-import { ListSkeleton } from '@/components/skeletons'
+import { ListSkeleton } from '@/components/shared/skeletons'
 
 export default function HostsLoading() {
   return <ListSkeleton rows={6} />

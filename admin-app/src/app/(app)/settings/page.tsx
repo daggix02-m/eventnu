@@ -1,4 +1,4 @@
-import { SettingsClient } from '@/components/SettingsClient'
+import { SettingsClient } from '@/components/settings/SettingsClient'
 import { getFeaturedSections, getAdminStats } from '@/lib/actions/settings'
 import { getInstagramStatus } from '@/lib/actions/instagram'
 

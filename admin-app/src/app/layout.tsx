@@ -2,9 +2,9 @@ import type { Metadata } from 'next'
 import { Space_Grotesk, Inter, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
 import { Toaster } from '@/components/ui/sonner'
-import { Providers } from '@/components/Providers'
-import { ThemeProvider } from '@/components/ThemeProvider'
-import { ConvexAuthClientProvider } from './ConvexAuthClientProvider'
+import { Providers } from '@/components/providers/Providers'
+import { ThemeProvider } from '@/components/providers/ThemeProvider'
+import { ConvexAuthClientProvider } from '@/components/providers/ConvexAuthClientProvider'
 import { ConvexAuthNextjsServerProvider } from '@convex-dev/auth/nextjs/server'
 
 const spaceGrotesk = Space_Grotesk({

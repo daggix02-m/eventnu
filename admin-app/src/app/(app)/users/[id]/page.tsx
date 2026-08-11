@@ -1,6 +1,6 @@
 import { getUserById } from '@/lib/actions/users'
 import { getCurrentAdminProfile } from '@/lib/actions/session'
-import { UserDetailClient } from '@/components/UserDetailClient'
+import { UserDetailClient } from '@/components/users/UserDetailClient'
 
 export default async function UserDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params

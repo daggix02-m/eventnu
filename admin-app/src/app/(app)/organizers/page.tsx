@@ -1,5 +1,5 @@
 import { getOrganizers } from '@/lib/actions/organizers'
-import { OrganizersClient } from '@/components/OrganizersClient'
+import { OrganizersClient } from '@/components/organizers/OrganizersClient'
 
 export default async function OrganizersPage({
   searchParams,

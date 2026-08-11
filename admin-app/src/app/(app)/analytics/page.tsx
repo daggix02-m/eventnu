@@ -1,5 +1,5 @@
 import { getAnalytics } from '@/lib/actions/analytics'
-import { AnalyticsClient } from '@/components/AnalyticsClient'
+import { AnalyticsClient } from '@/components/analytics/AnalyticsClient'
 
 export default async function AnalyticsPage() {
   let data: Awaited<ReturnType<typeof getAnalytics>> = {

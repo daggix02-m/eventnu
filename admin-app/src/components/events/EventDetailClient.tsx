@@ -47,7 +47,7 @@ import {
   Organizer,
   FeaturedSection,
   EventFormValues,
-} from '@/components/event/EventForm'
+} from '@/components/events/EventForm'
 import type { MappedEvent, MappedModerationLog } from '@/lib/mappers'
 import Link from 'next/link'
 

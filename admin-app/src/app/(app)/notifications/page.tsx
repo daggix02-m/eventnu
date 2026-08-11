@@ -1,5 +1,5 @@
 import { getNotifications } from '@/lib/actions/notifications'
-import { NotificationsClient } from '@/components/NotificationsClient'
+import { NotificationsClient } from '@/components/notifications/NotificationsClient'
 
 export default async function NotificationsPage({
   searchParams,

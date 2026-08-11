@@ -1,5 +1,5 @@
 import { getCategories } from '@/lib/actions/categories'
-import { CategoriesClient } from '@/components/CategoriesClient'
+import { CategoriesClient } from '@/components/categories/CategoriesClient'
 
 export default async function CategoriesPage() {
   let categories: Awaited<ReturnType<typeof getCategories>> = []

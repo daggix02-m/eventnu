@@ -1,5 +1,5 @@
 import { getReports } from '@/lib/actions/reports'
-import { ReportsClient } from '@/components/ReportsClient'
+import { ReportsClient } from '@/components/reports/ReportsClient'
 
 export default async function ReportsPage({
   searchParams,

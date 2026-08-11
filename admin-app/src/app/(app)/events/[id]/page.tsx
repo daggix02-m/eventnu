@@ -4,7 +4,7 @@ import { getHosts } from '@/lib/actions/hosts'
 import { getOrganizers } from '@/lib/actions/organizers'
 import { getFeaturedSections } from '@/lib/actions/settings'
 import { getModerationLogsByTarget } from '@/lib/actions/dashboard'
-import { EventDetailClient } from '@/components/EventDetailClient'
+import { EventDetailClient } from '@/components/events/EventDetailClient'
 import { notFound } from 'next/navigation'
 
 export default async function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {

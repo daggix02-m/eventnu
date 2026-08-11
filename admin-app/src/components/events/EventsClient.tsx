@@ -25,7 +25,7 @@ import { Button } from '@/components/ui'
 import { Badge } from '@/components/ui'
 import { Select } from '@/components/ui'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
-import { PageHeader } from '@/components/Page'
+import { PageHeader } from '@/components/shared/PageLayout'
 import { toast } from 'sonner'
 import {
   getEvents,

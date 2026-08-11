@@ -1,5 +1,5 @@
 import { getEvents } from '@/lib/actions/events'
-import { EventsClient } from '@/components/EventsClient'
+import { EventsClient } from '@/components/events/EventsClient'
 
 export default async function EventsPage({
   searchParams,

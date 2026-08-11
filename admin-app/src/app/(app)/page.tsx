@@ -3,8 +3,8 @@ import {
   getPendingReviewEvents,
   getRecentModerationLogs,
 } from '@/lib/actions/dashboard'
-import { StatCard } from '@/components/StatCard'
-import { PageWrapper, PageHeader } from '@/components/Page'
+import { StatCard } from '@/components/shared/StatCard'
+import { PageWrapper, PageHeader } from '@/components/shared/PageLayout'
 import { Button } from '@/components/ui'
 import { Badge } from '@/components/ui'
 import { Avatar } from '@/components/ui'

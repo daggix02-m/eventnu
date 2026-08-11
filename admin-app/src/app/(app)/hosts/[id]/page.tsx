@@ -1,5 +1,5 @@
 import { getHostById } from '@/lib/actions/hosts'
-import { HostDetailClient } from '@/components/HostDetailClient'
+import { HostDetailClient } from '@/components/hosts/HostDetailClient'
 
 export default async function HostDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params

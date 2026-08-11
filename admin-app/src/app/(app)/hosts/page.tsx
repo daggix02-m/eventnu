@@ -1,5 +1,5 @@
 import { getHosts } from '@/lib/actions/hosts'
-import { HostsClient } from '@/components/HostsClient'
+import { HostsClient } from '@/components/hosts/HostsClient'
 
 export default async function HostsPage({
   searchParams,

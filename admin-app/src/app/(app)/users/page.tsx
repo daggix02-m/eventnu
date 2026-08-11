@@ -1,6 +1,6 @@
 import { getUsers } from '@/lib/actions/users'
 import { getCurrentAdminProfile } from '@/lib/actions/session'
-import { UsersClient } from '@/components/UsersClient'
+import { UsersClient } from '@/components/users/UsersClient'
 
 export default async function UsersPage({
   searchParams,

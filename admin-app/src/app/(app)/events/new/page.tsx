@@ -2,7 +2,7 @@ import { getCategories } from '@/lib/actions/categories'
 import { getHosts } from '@/lib/actions/hosts'
 import { getOrganizers } from '@/lib/actions/organizers'
 import { getFeaturedSections } from '@/lib/actions/settings'
-import { EventForm } from '@/components/event/EventForm'
+import { EventForm } from '@/components/events/EventForm'
 
 export default async function CreateEventPage() {
   let allCategories: Awaited<ReturnType<typeof getCategories>> = []

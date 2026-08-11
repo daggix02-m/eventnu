@@ -16,7 +16,7 @@ import {
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { PageHeader } from '@/components/Page'
+import { PageHeader } from '@/components/shared/PageLayout'
 import {
   DataTable,
   FilterSelect,

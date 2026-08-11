@@ -19,7 +19,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { Button, Badge } from '@/components/ui'
-import { PageHeader, StatsCard } from '@/components/Page'
+import { PageHeader, StatsCard } from '@/components/shared/PageLayout'
 import { FilterSelect, UserAvatar, useListFilters, EmptyState } from '@/components/list'
 import { formatDateTime } from '@/lib/format'
 import { toast } from 'sonner'
