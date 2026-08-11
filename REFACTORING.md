@@ -77,7 +77,7 @@ Root cause of ~90% of the `any` casts: `admin-app` imports `../../../web/convex/
   - Configs: eslint ignores now `packages/convex/**`; `web/AGENTS.md`/`CLAUDE.md` guidelines path → `packages/convex/convex/_generated/ai/guidelines.md`.
   - Convex CLI workflow: `npm -w @eventnu/convex run dev|deploy|codegen` (root convenience scripts `convex:dev`/`convex:deploy`/`convex:codegen`).
   - Verified: admin + web + convex package all `typecheck` clean; admin lint 0, web lint 0 errors (4 pre-existing consumer warnings); knip clean; **both `next build`s succeed**.
-- [ ] Re-enable `@typescript-eslint/no-explicit-any` progressively (file-by-file, API boundary first); target **0 `any`** in `src/lib` and `src/app`.
+- [x] Re-enable `@typescript-eslint/no-explicit-any` progressively (file-by-file, API boundary first); target **0 `any`** in `src/lib` and `src/app`. **Resolved 2026-08-11:** `no-explicit-any` is `error` in both app configs and there are **0 `any`** casts repo-wide (web, admin-app, `@eventnu/convex`). Web/convex mappers now use `FunctionReturnType<typeof api.*>` and `Id<'…'>` casts.
 
 ### 2.2 One data-fetching pattern
 - [ ] TanStack Query is configured but used *only* in `EventsClient`. Adopt it as **the** client data layer for all list pages. Kill the three parallel systems:
@@ -90,13 +90,13 @@ Root cause of ~90% of the `any` casts: `admin-app` imports `../../../web/convex/
 ### 2.3 Backend modularization (`web/convex`)
 - [ ] Split `events.ts` (635 lines, 20 exports) → `events/read|write|moderation|enrichment`.
 - [ ] Split `instagram.ts` (786 lines) → `instagram/connect|import|publish|crypto`.
-- [ ] Extract duplicated primitives into a shared module:
+- [x] Extract duplicated primitives into a shared module (`convex/helpers.ts` + `convex/constants.ts`):
   - `patchDefined` filter-undefined patch (repeated 8× across categories/cms/events/features/hosts/organizers/profiles)
   - slugify (3 implementations: `events.ts`, `instagram.ts` ×2)
   - event-image batch insert + storage cleanup (events.ts + instagram.ts `createImportedEvent`)
   - notification insert (notifications.ts ×2, instagram.ts `notifyAdmin`, reports.ts `warnUserFromReport`)
   - moderation-log insert + admin-name enrichment (moderation.ts ×3, reports.ts `actionReport`)
-- [ ] Break `instagram.ts → events.ts` import tangle (`MAX_EVENT_IMAGES`) into a shared constants module.
+- [x] Break `instagram.ts → events.ts` import tangle (`MAX_EVENT_IMAGES`) into a shared constants module.
 - [ ] Split `cms.ts` (pages / announcements / contact, 210 lines) into 2–3 files.
 - [ ] Standardize compound index names to `by_field1_and_field2` (`schema.ts` currently uses `by_organizer_status`, `by_user_event`, `by_user_read`, `by_event`, `by_category`, …).
 - [ ] Gate `hosts.getStats` with `requireAdmin` (move from 1.2 to here if deferred).
@@ -107,8 +107,8 @@ Root cause of ~90% of the `any` casts: `admin-app` imports `../../../web/convex/
   - `EventForm.tsx` (793) → sectioned field groups
   - `CategoriesClient.tsx` (751) → dialog/table/panel components
   - `SettingsClient.tsx` (733) → tabs extracted into their own components
-- [ ] Consolidate motion: one `motionPresets.ts` (kills duplicated `fadeUp`).
-- [ ] Unify date formatting through one `lib/format.ts` (kill mixed `date-fns format` vs `toLocaleDateString` vs `toDateTimeLocal`).
+- [x] Consolidate motion: one `motion.ts` (kills duplicated `fadeUp`).
+- [x] Unify date formatting through one `lib/format.ts` (kill mixed `date-fns format` vs `toLocaleDateString` vs `toDateTimeLocal`). Also routed all static `toast.error('Failed to X')` through `lib/errors.ts` `getErrorMessage`. Deliberately left chart labels and the dashboard activity-log format (`MMM d, HH:mm`) on their own formats.
 - [ ] **Single design system:** declare `src/components/ui` the only system; run the impeccable `extract` pass to tokenize remaining inline styles (`cms/PageFormClient` raw `<textarea>` classes).
 
 **Exit criteria:** both apps typecheck with `no-explicit-any` on; all list pages share one table + query stack; backend modules <400 lines; no cross-module tangle.
@@ -117,11 +117,11 @@ Root cause of ~90% of the `any` casts: `admin-app` imports `../../../web/convex/
 
 ## Phase 3 — Coding Standards, Linting & Formatting
 
-- [ ] **Prettier** at repo root (both apps); `format` + `format:check` scripts.
-- [ ] **ESLint** (`admin-app/eslint.config.mjs`): `no-explicit-any` → error, `no-unused-vars` → error, add `eslint-plugin-tailwindcss` and `jsx-a11y`. Align `web/eslint.config.mjs` (it already bans named `max-w-*` classes via a custom rule).
-- [ ] **TypeScript**: `typecheck` scripts (`tsc --noEmit`); consider `noUncheckedIndexedAccess` for new table code.
-- [ ] **Pre-commit**: husky + lint-staged (lint + format on staged files).
-- [ ] **CI** (GitHub Actions): `lint → typecheck → test → build` on every PR; `convex typegen` freshness check.
+- [x] **Prettier** at repo root (both apps); `format` + `format:check` scripts.
+- [x] **ESLint** (`admin-app/eslint.config.mjs`): `no-explicit-any` → error, `no-unused-vars` → error. `jsx-a11y` ships with `eslint-config-next/core-web-vitals`; `eslint-plugin-tailwindcss` deferred (Tailwind v4 support is noisy — revisit before adding).
+- [x] **TypeScript**: `typecheck` scripts (`tsc --noEmit`) across all three workspaces; root `npm run typecheck`.
+- [x] **Pre-commit**: husky + lint-staged (lint + format on staged files, per-workspace ESLint via `--config`).
+- [x] **CI** (GitHub Actions): `lint → typecheck → format → test → build` on every PR; conditional `convex typegen` freshness check + build gated on repo secrets.
 - [ ] **Convex-specific rules** into `admin-app/AGENTS.md`: compound-index naming, no unbounded arrays, validators on all args, `.paginate()` not `.take(1000)`, `helpers.requireAdmin` not hand-rolled checks.
 
 **Exit criteria:** `lint` + `typecheck` + `format:check` green on both apps; enforced in CI and pre-commit.

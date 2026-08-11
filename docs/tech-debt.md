@@ -18,9 +18,9 @@ Living register for the phased refactor (see `REFACTORING.md` for the roadmap an
 | [x] | D | Stale `convex/_generated` eslint-disable warnings | `admin-app/eslint.config.mjs` | Ignore pattern fixed to `convex/_generated/` |
 | [x] | D | Missing `typecheck` scripts | `admin-app`, `web` | Added `tsc --noEmit`; both pass |
 | [x] | I | knip dead-code gate | `admin-app` | Installed + configured (`knip.jsonc`), script `npm run knip` |
-| [ ] | I | Prettier + format scripts | repo | Phase 3 |
-| [ ] | I | husky + lint-staged pre-commit | repo | Phase 3 |
-| [ ] | I | CI (lint → typecheck → test → build) | repo | Phase 3 |
+| [x] | I | Prettier + format scripts | repo | Phase 3 |
+| [x] | I | husky + lint-staged pre-commit | repo | Phase 3 |
+| [x] | I | CI (lint → typecheck → test → build) | repo | Phase 3 |
 
 ## Dead code (admin-app)
 
