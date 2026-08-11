@@ -1,10 +1,9 @@
 'use client'
 
-import { useQuery } from 'convex/react'
-import { api } from '@eventnu/convex/_generated/api'
 import { Card } from '@/components/ui'
 import { AlertTriangle } from 'lucide-react'
 import { usernameFromEmail } from '@/lib/mappers'
+import type { Doc } from '@eventnu/convex/_generated/dataModel'
 import {
   InstagramSettingsCard,
   type InstagramStatus,
@@ -16,24 +15,27 @@ import { DangerZoneSection } from './DangerZoneSection'
 import { NotificationsSection } from './NotificationsSection'
 import { AdminStatsSection } from './AdminStatsSection'
 import { AccountInfoSection } from './AccountInfoSection'
-import type { AdminProfile, FeaturedSection, AdminStats } from './types'
+import type { AdminProfile, FeaturedSection, AdminStats, NotificationPrefs } from './types'
 
 interface SettingsClientProps {
+  profile: Doc<'profiles'> | null
   featuredSections: FeaturedSection[]
   adminStats: AdminStats
+  notificationPrefs: NotificationPrefs
   instagramStatus?: InstagramStatus | null
   instagramNotice?: string | null
   instagramErrorNotice?: string | null
 }
 
 export function SettingsClient({
+  profile: profileData,
   featuredSections = [],
   adminStats,
+  notificationPrefs,
   instagramStatus,
   instagramNotice,
   instagramErrorNotice,
 }: SettingsClientProps) {
-  const profileData = useQuery(api.profiles.getMe)
   const profile: AdminProfile | null = profileData
     ? {
         id: profileData._id,
@@ -76,7 +78,7 @@ export function SettingsClient({
 
           {/* Right Column - Preferences & Stats */}
           <div className="space-y-6">
-            <NotificationsSection profileId={profile.id} />
+            <NotificationsSection profileId={profile.id} prefs={notificationPrefs} />
             <AdminStatsSection stats={adminStats} />
             <InstagramSettingsCard
               initialStatus={instagramStatus ?? null}

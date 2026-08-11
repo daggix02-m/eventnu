@@ -24,3 +24,10 @@ export interface AdminStats {
   openReports: number
   moderationCount: number
 }
+
+export interface NotificationPrefs {
+  emailReports: boolean
+  emailEvents: boolean
+  emailUsers: boolean
+  pushEnabled: boolean
+}

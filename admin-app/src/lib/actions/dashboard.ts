@@ -4,6 +4,10 @@ import { fetchQuery } from '@/lib/actions/authedFetch'
 import { api } from '@eventnu/convex/_generated/api'
 import { mapModerationLog } from '../mappers'
 
+export async function getNavCounts() {
+  return fetchQuery(api.dashboard.getNavCounts)
+}
+
 export async function getDashboardStats() {
   try {
     const eventStats = await fetchQuery(api.events.read.getStats, { now: Date.now() })

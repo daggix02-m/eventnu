@@ -52,6 +52,18 @@ export async function getAdminStats() {
   }
 }
 
+export async function getAdminNotificationPrefs(adminId: string) {
+  const prefs = await fetchQuery(api.adminSettings.getByAdmin, {
+    adminId: adminId as Id<'profiles'>,
+  })
+  return {
+    emailReports: prefs?.emailReports ?? true,
+    emailEvents: prefs?.emailEvents ?? true,
+    emailUsers: prefs?.emailUsers ?? true,
+    pushEnabled: false,
+  }
+}
+
 export async function updateAdminNotificationPrefs(
   adminId: string,
   prefs: {

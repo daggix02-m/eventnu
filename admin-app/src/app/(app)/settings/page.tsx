@@ -1,6 +1,13 @@
 import { SettingsClient } from '@/components/settings/SettingsClient'
-import { getFeaturedSections, getAdminStats } from '@/lib/actions/settings'
+import {
+  getFeaturedSections,
+  getAdminStats,
+  getAdminNotificationPrefs,
+} from '@/lib/actions/settings'
 import { getInstagramStatus } from '@/lib/actions/instagram'
+import { getCurrentAdminProfile } from '@/lib/actions/session'
+import type { Doc } from '@eventnu/convex/_generated/dataModel'
+import type { NotificationPrefs } from '@/components/settings/types'
 
 export default async function SettingsPage({
   searchParams,
@@ -9,6 +16,7 @@ export default async function SettingsPage({
 }) {
   const params = await searchParams
 
+  let profile: Doc<'profiles'> | null = null
   let featuredSections: Awaited<ReturnType<typeof getFeaturedSections>> = []
   let adminStats: Awaited<ReturnType<typeof getAdminStats>> = {
     totalEvents: 0,
@@ -19,12 +27,22 @@ export default async function SettingsPage({
     moderationCount: 0,
   }
   let instagramStatus: Awaited<ReturnType<typeof getInstagramStatus>> = null
+  let notificationPrefs: NotificationPrefs = {
+    emailReports: true,
+    emailEvents: true,
+    emailUsers: true,
+    pushEnabled: false,
+  }
   try {
-    ;[featuredSections, adminStats, instagramStatus] = await Promise.all([
+    ;[profile, featuredSections, adminStats, instagramStatus] = await Promise.all([
+      getCurrentAdminProfile(),
       getFeaturedSections(),
       getAdminStats(),
       getInstagramStatus(),
     ])
+    if (profile) {
+      notificationPrefs = await getAdminNotificationPrefs(profile._id)
+    }
   } catch (err) {
     console.error('Failed to load settings:', err)
   }
@@ -40,8 +58,10 @@ export default async function SettingsPage({
 
   return (
     <SettingsClient
+      profile={profile}
       featuredSections={featuredSections}
       adminStats={adminStats}
+      notificationPrefs={notificationPrefs}
       instagramStatus={instagramStatus}
       instagramNotice={notice}
       instagramErrorNotice={errorNotice}

@@ -27,9 +27,8 @@ import {
 import { useState } from 'react'
 import { useAuthActions } from '@convex-dev/auth/react'
 import { useRouter } from 'next/navigation'
-import { useQuery } from 'convex/react'
-import { api } from '@eventnu/convex/_generated/api'
 import { useSidebar } from './sidebar-context'
+import { useNavCounts, type NavCounts } from '@/lib/api/dashboard'
 
 const navGroups = [
   {
@@ -59,13 +58,13 @@ const bottomNavItems = [
   { label: 'Support', href: '/support', icon: HelpCircle },
 ]
 
-export function Sidebar() {
+export function Sidebar({ navCounts: initialNavCounts }: { navCounts: NavCounts }) {
   const pathname = usePathname()
   const router = useRouter()
   const { signOut } = useAuthActions()
   const [mobileOpen, setMobileOpen] = useState(false)
   const { collapsed, toggleCollapsed } = useSidebar()
-  const navCounts = useQuery(api.dashboard.getNavCounts)
+  const { data: navCounts } = useNavCounts(initialNavCounts)
 
   const handleSignOut = async () => {
     await signOut()

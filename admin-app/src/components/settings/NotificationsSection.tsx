@@ -1,40 +1,24 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useQuery } from 'convex/react'
-import { api } from '@eventnu/convex/_generated/api'
-import type { Id } from '@eventnu/convex/_generated/dataModel'
 import { Switch } from '@/components/ui/switch'
 import { toast } from 'sonner'
 import { updateAdminNotificationPrefs } from '@/lib/actions/settings'
 import { Bell, Mail, Globe, User } from 'lucide-react'
 import { SettingsCard } from './SettingsCard'
+import type { NotificationPrefs } from './types'
 
 interface NotificationsSectionProps {
   profileId: string
+  prefs: NotificationPrefs
 }
 
-export function NotificationsSection({ profileId }: NotificationsSectionProps) {
-  const notificationPrefs = useQuery(api.adminSettings.getByAdmin, {
-    adminId: profileId as Id<'profiles'>,
-  })
-  const [notifications, setNotifications] = useState({
-    emailReports: true,
-    emailEvents: true,
-    emailUsers: true,
-    pushEnabled: false,
-  })
+export function NotificationsSection({ profileId, prefs }: NotificationsSectionProps) {
+  const [notifications, setNotifications] = useState(prefs)
 
   useEffect(() => {
-    if (notificationPrefs) {
-      setNotifications({
-        emailReports: notificationPrefs.emailReports,
-        emailEvents: notificationPrefs.emailEvents,
-        emailUsers: notificationPrefs.emailUsers,
-        pushEnabled: false,
-      })
-    }
-  }, [notificationPrefs])
+    setNotifications(prefs)
+  }, [prefs])
 
   const handleToggleNotification = async (
     key: 'emailReports' | 'emailEvents' | 'emailUsers',

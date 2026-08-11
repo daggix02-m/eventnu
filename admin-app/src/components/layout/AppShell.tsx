@@ -4,21 +4,28 @@ import { cn } from '@/lib/utils'
 import { SidebarProvider, useSidebar } from './sidebar-context'
 import { Sidebar } from './Sidebar'
 import { TopHeader } from './TopHeader'
+import type { NavCounts } from '@/lib/api/dashboard'
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+export function AppShell({
+  children,
+  navCounts,
+}: {
+  children: React.ReactNode
+  navCounts: NavCounts
+}) {
   return (
     <SidebarProvider>
-      <Shell>{children}</Shell>
+      <Shell navCounts={navCounts}>{children}</Shell>
     </SidebarProvider>
   )
 }
 
-function Shell({ children }: { children: React.ReactNode }) {
+function Shell({ children, navCounts }: { children: React.ReactNode; navCounts: NavCounts }) {
   const { collapsed } = useSidebar()
 
   return (
     <>
-      <Sidebar />
+      <Sidebar navCounts={navCounts} />
       <div
         className={cn(
           'flex flex-col min-h-screen transition-[margin-left] duration-300',
