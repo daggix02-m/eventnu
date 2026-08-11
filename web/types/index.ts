@@ -1,4 +1,4 @@
-export interface Profile {
+interface Profile {
   id: string
   email?: string | null
   full_name?: string | null
@@ -16,7 +16,7 @@ export interface Category {
   sort_order?: number
 }
 
-export interface EventCategory {
+interface EventCategory {
   category_id: string
   event_id: string
   is_primary: boolean
@@ -97,14 +97,3 @@ export interface Announcement {
   ends_at?: string | null
   created_at?: string
 }
-
-export interface ContactSubmission {
-  id: string
-  name: string
-  email: string
-  message: string
-  is_resolved: boolean
-  created_at?: string
-}
-
-export type DateFilter = 'all' | 'today' | 'tomorrow' | 'weekend' | 'week' | 'month'

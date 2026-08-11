@@ -1,0 +1,8 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  // Design-system primitives under components/ui/** are intentionally ignored
+  // (they are a public API, so their exports look unused). Dependencies that
+  // are consumed exclusively by those ignored files must be listed here.
+  "ignoreDependencies": ["@radix-ui/react-separator"],
+  "ignore": ["components/ui/**"]
+}

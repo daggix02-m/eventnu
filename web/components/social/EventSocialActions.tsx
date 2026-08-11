@@ -14,7 +14,7 @@ function useAuthGate() {
   return { isAuthenticated, isLoading, openAuth }
 }
 
-export function LikeButton({
+function LikeButton({
   eventId,
   className,
   variant = 'outline',
@@ -73,7 +73,7 @@ export function LikeButton({
   )
 }
 
-export function BookmarkButton({
+function BookmarkButton({
   eventId,
   className,
   variant = 'outline',
@@ -138,7 +138,7 @@ export function BookmarkButton({
   )
 }
 
-export function ShareButton({
+function ShareButton({
   eventId,
   title,
   className,

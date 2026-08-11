@@ -33,24 +33,6 @@ export function formatEventDateShort(dateString: string): string {
     .toUpperCase()
 }
 
-export function formatEventTime(dateString: string): string {
-  const date = new Date(dateString)
-  return date.toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  })
-}
-
 export function isEventPast(startDate: string): boolean {
   return new Date(startDate) < new Date()
-}
-
-export function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .trim()
-    .replace(/[^\w\s-]/g, '')
-    .replace(/[\s_-]+/g, '-')
-    .replace(/^-+|-+$/g, '')
 }
