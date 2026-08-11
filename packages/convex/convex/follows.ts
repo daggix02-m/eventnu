@@ -63,7 +63,7 @@ export const toggle = mutation({
     await rateLimiter.limit(ctx, 'followToggle', { key: profile._id, throws: true })
     const existing = await ctx.db
       .query('follows')
-      .withIndex('by_follower_following', (q) =>
+      .withIndex('by_followerId_and_followingId', (q) =>
         q.eq('followerId', profile._id).eq('followingId', args.followingId),
       )
       .take(10)

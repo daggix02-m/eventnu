@@ -74,9 +74,9 @@ const schema = defineSchema({
     .index('by_slug', ['slug'])
     .index('by_organizer', ['organizerId'])
     .index('by_host', ['hostId'])
-    .index('by_organizer_status', ['organizerId', 'status'])
-    .index('by_host_status', ['hostId', 'status'])
-    .index('by_featured', ['isFeatured', 'startDate'])
+    .index('by_organizerId_and_status', ['organizerId', 'status'])
+    .index('by_hostId_and_status', ['hostId', 'status'])
+    .index('by_isFeatured_and_startDate', ['isFeatured', 'startDate'])
     .index('by_insta_post', ['instaPostId']),
 
   eventCategories: defineTable({
@@ -84,8 +84,8 @@ const schema = defineSchema({
     categoryId: v.id('categories'),
     isPrimary: v.boolean(),
   })
-    .index('by_event', ['eventId', 'categoryId'])
-    .index('by_category', ['categoryId', 'eventId']),
+    .index('by_eventId_and_categoryId', ['eventId', 'categoryId'])
+    .index('by_categoryId_and_eventId', ['categoryId', 'eventId']),
 
   eventImages: defineTable({
     eventId: v.id('events'),
@@ -93,7 +93,7 @@ const schema = defineSchema({
     url: v.string(),
     filter: v.optional(v.string()),
     sortOrder: v.number(),
-  }).index('by_event', ['eventId', 'sortOrder']),
+  }).index('by_eventId_and_sortOrder', ['eventId', 'sortOrder']),
 
   instagramConnections: defineTable({
     igUserId: v.string(),
@@ -164,7 +164,7 @@ const schema = defineSchema({
   })
     .index('by_user', ['userId'])
     .index('by_event', ['eventId'])
-    .index('by_user_event', ['userId', 'eventId']),
+    .index('by_userId_and_eventId', ['userId', 'eventId']),
 
   eventComments: defineTable({
     eventId: v.id('events'),
@@ -181,7 +181,7 @@ const schema = defineSchema({
     followType: v.string(),
   })
     .index('by_follower', ['followerId'])
-    .index('by_follower_following', ['followerId', 'followingId']),
+    .index('by_followerId_and_followingId', ['followerId', 'followingId']),
 
   eventBookmarks: defineTable({
     userId: v.id('profiles'),
@@ -189,7 +189,7 @@ const schema = defineSchema({
   })
     .index('by_user', ['userId'])
     .index('by_event', ['eventId'])
-    .index('by_user_event', ['userId', 'eventId']),
+    .index('by_userId_and_eventId', ['userId', 'eventId']),
 
   eventShares: defineTable({
     eventId: v.id('events'),
@@ -221,7 +221,7 @@ const schema = defineSchema({
     sortOrder: v.number(),
   })
     .index('by_slug', ['slug'])
-    .index('by_published', ['isPublished', 'sortOrder']),
+    .index('by_isPublished_and_sortOrder', ['isPublished', 'sortOrder']),
 
   announcements: defineTable({
     title: v.string(),
@@ -250,7 +250,7 @@ const schema = defineSchema({
     read: v.boolean(),
   })
     .index('by_user', ['userId'])
-    .index('by_user_read', ['userId', 'read']),
+    .index('by_userId_and_read', ['userId', 'read']),
 
   reports: defineTable({
     reporterId: v.id('profiles'),
@@ -269,7 +269,7 @@ const schema = defineSchema({
     note: v.optional(v.string()),
   })
     .index('by_admin', ['adminId'])
-    .index('by_target', ['targetType', 'targetId']),
+    .index('by_targetType_and_targetId', ['targetType', 'targetId']),
 
   reservationRequests: defineTable({
     eventId: v.id('events'),

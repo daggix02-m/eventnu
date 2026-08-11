@@ -44,7 +44,7 @@ export const getWithEventCounts = query({
       categories.map(async (cat) => {
         const rows = await ctx.db
           .query('eventCategories')
-          .withIndex('by_category', (q) => q.eq('categoryId', cat._id))
+          .withIndex('by_categoryId_and_eventId', (q) => q.eq('categoryId', cat._id))
           .take(500)
         return {
           ...cat,

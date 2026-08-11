@@ -116,7 +116,7 @@ export const getEventForPublish = internalQuery({
     if (!event) return null
     const images = await ctx.db
       .query('eventImages')
-      .withIndex('by_event', (q) => q.eq('eventId', args.eventId))
+      .withIndex('by_eventId_and_sortOrder', (q) => q.eq('eventId', args.eventId))
       .order('asc')
       .take(MAX_EVENT_IMAGES)
     return {

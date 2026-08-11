@@ -18,7 +18,9 @@ export const hasLiked = query({
     if (!profile) return false
     const like = await ctx.db
       .query('eventLikes')
-      .withIndex('by_user_event', (q) => q.eq('userId', profile._id).eq('eventId', args.eventId))
+      .withIndex('by_userId_and_eventId', (q) =>
+        q.eq('userId', profile._id).eq('eventId', args.eventId),
+      )
       .first()
     return !!like
   },
@@ -32,7 +34,7 @@ export const toggle = mutation({
     await rateLimiter.limit(ctx, 'likeToggle', { key: userId, throws: true })
     const existing = await ctx.db
       .query('eventLikes')
-      .withIndex('by_user_event', (q) => q.eq('userId', userId).eq('eventId', args.eventId))
+      .withIndex('by_userId_and_eventId', (q) => q.eq('userId', userId).eq('eventId', args.eventId))
       .first()
     if (existing) {
       await ctx.db.delete('eventLikes', existing._id)

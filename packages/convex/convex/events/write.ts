@@ -181,7 +181,7 @@ export const update = mutation({
     if (categoryIds) {
       const existing = await ctx.db
         .query('eventCategories')
-        .withIndex('by_event', (q) => q.eq('eventId', eventId))
+        .withIndex('by_eventId_and_categoryId', (q) => q.eq('eventId', eventId))
         .take(50)
       for (const row of existing) {
         await ctx.db.delete('eventCategories', row._id)
@@ -241,7 +241,7 @@ export const deleteEvent = mutation({
     }
     for await (const row of ctx.db
       .query('eventCategories')
-      .withIndex('by_event', (q) => q.eq('eventId', args.eventId))) {
+      .withIndex('by_eventId_and_categoryId', (q) => q.eq('eventId', args.eventId))) {
       await ctx.db.delete('eventCategories', row._id)
     }
     for await (const row of ctx.db

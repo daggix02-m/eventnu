@@ -160,7 +160,7 @@ export const backfillEventCategories = internalMutation({
       if (legacy && legacy.length > 0) {
         const existing = await ctx.db
           .query('eventCategories')
-          .withIndex('by_event', (q) => q.eq('eventId', event._id))
+          .withIndex('by_eventId_and_categoryId', (q) => q.eq('eventId', event._id))
           .first()
         if (!existing) {
           for (const [i, categoryId] of legacy.entries()) {

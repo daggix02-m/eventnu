@@ -7,7 +7,7 @@ export const getPublishedPages = query({
   handler: async (ctx) => {
     return await ctx.db
       .query('pages')
-      .withIndex('by_published', (q) => q.eq('isPublished', true))
+      .withIndex('by_isPublished_and_sortOrder', (q) => q.eq('isPublished', true))
       .take(100)
   },
 })

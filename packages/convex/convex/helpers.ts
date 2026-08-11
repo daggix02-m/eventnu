@@ -57,7 +57,7 @@ export async function replaceEventImages(
 ): Promise<void> {
   const existing = await ctx.db
     .query('eventImages')
-    .withIndex('by_event', (q) => q.eq('eventId', eventId))
+    .withIndex('by_eventId_and_sortOrder', (q) => q.eq('eventId', eventId))
     .take(100)
   const keepStorageIds = new Set(
     images.map((img) => img.storageId).filter((id): id is string => Boolean(id)),

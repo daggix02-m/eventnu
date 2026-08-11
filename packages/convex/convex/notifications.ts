@@ -68,7 +68,7 @@ export const getUnreadCount = query({
     const userId = await resolveTargetUserId(ctx, args.userId)
     const notifications = await ctx.db
       .query('notifications')
-      .withIndex('by_user_read', (q) => q.eq('userId', userId).eq('read', false))
+      .withIndex('by_userId_and_read', (q) => q.eq('userId', userId).eq('read', false))
       .take(500)
     return notifications.length
   },
@@ -116,7 +116,7 @@ export const markAllRead = mutation({
     const userId = await resolveTargetUserId(ctx, args.userId)
     for await (const n of ctx.db
       .query('notifications')
-      .withIndex('by_user_read', (q) => q.eq('userId', userId).eq('read', false))) {
+      .withIndex('by_userId_and_read', (q) => q.eq('userId', userId).eq('read', false))) {
       await ctx.db.patch('notifications', n._id, { read: true })
     }
   },

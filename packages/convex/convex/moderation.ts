@@ -46,7 +46,7 @@ export const getByTarget = query({
     await requireAdmin(ctx)
     const logs = await ctx.db
       .query('moderationLogs')
-      .withIndex('by_target', (q) =>
+      .withIndex('by_targetType_and_targetId', (q) =>
         q.eq('targetType', args.targetType).eq('targetId', args.targetId),
       )
       .order('desc')

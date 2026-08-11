@@ -12,7 +12,7 @@ export const eventImageValidator = v.object({
 export async function getEventImages(ctx: QueryCtx | MutationCtx, eventId: Id<'events'>) {
   return await ctx.db
     .query('eventImages')
-    .withIndex('by_event', (q) => q.eq('eventId', eventId))
+    .withIndex('by_eventId_and_sortOrder', (q) => q.eq('eventId', eventId))
     .take(MAX_EVENT_IMAGES)
 }
 
@@ -34,7 +34,7 @@ export async function resolveImageUrls(
 export async function getEventCategoryLinks(ctx: QueryCtx | MutationCtx, eventId: Id<'events'>) {
   const rows = await ctx.db
     .query('eventCategories')
-    .withIndex('by_event', (q) => q.eq('eventId', eventId))
+    .withIndex('by_eventId_and_categoryId', (q) => q.eq('eventId', eventId))
     .take(20)
   return rows.sort((a, b) =>
     a.isPrimary === b.isPrimary ? a._creationTime - b._creationTime : a.isPrimary ? -1 : 1,

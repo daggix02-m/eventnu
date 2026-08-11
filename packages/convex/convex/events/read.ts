@@ -23,7 +23,7 @@ export const getFeatured = query({
     const limit = args.limit ?? 5
     const events = await ctx.db
       .query('events')
-      .withIndex('by_featured', (q) => q.eq('isFeatured', true))
+      .withIndex('by_isFeatured_and_startDate', (q) => q.eq('isFeatured', true))
       .order('desc')
       .take(limit * 2)
     const upcoming = events
@@ -59,7 +59,7 @@ export const getSimilar = query({
     for (const categoryId of myCategoryIds) {
       const rows = await ctx.db
         .query('eventCategories')
-        .withIndex('by_category', (q) => q.eq('categoryId', categoryId))
+        .withIndex('by_categoryId_and_eventId', (q) => q.eq('categoryId', categoryId))
         .take(50)
       for (const row of rows) {
         if (row.eventId === args.eventId) continue
@@ -83,7 +83,7 @@ export const getByCategory = query({
   handler: async (ctx, args) => {
     const rows = await ctx.db
       .query('eventCategories')
-      .withIndex('by_category', (q) => q.eq('categoryId', args.categoryId))
+      .withIndex('by_categoryId_and_eventId', (q) => q.eq('categoryId', args.categoryId))
       .take(200)
     const events = await Promise.all(rows.map((row) => ctx.db.get('events', row.eventId)))
     const published = events

@@ -20,7 +20,9 @@ export const hasBookmarked = query({
     if (!profile) return false
     const bookmark = await ctx.db
       .query('eventBookmarks')
-      .withIndex('by_user_event', (q) => q.eq('userId', profile._id).eq('eventId', args.eventId))
+      .withIndex('by_userId_and_eventId', (q) =>
+        q.eq('userId', profile._id).eq('eventId', args.eventId),
+      )
       .first()
     return !!bookmark
   },
@@ -57,7 +59,7 @@ export const toggle = mutation({
 
     const existing = await ctx.db
       .query('eventBookmarks')
-      .withIndex('by_user_event', (q) => q.eq('userId', userId).eq('eventId', args.eventId))
+      .withIndex('by_userId_and_eventId', (q) => q.eq('userId', userId).eq('eventId', args.eventId))
       .first()
     if (existing) {
       await ctx.db.delete('eventBookmarks', existing._id)
