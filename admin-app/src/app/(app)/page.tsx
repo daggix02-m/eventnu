@@ -9,6 +9,7 @@ import { Button } from '@/components/ui'
 import { Badge } from '@/components/ui'
 import { Avatar } from '@/components/ui'
 import { format } from 'date-fns'
+import { formatDate } from '@/lib/format'
 import Link from 'next/link'
 import {
   Calendar,
@@ -193,7 +194,7 @@ export default async function DashboardPage() {
                       </p>
                       <p className="font-mono text-xs text-muted-foreground">
                         by {event.organizer_id ? 'Organizer' : 'Unknown'} ·{' '}
-                        {format(new Date(event.created_at), 'MMM d, yyyy')}
+                        {formatDate(event.created_at)}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">

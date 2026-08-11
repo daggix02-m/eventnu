@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
+import { formatDate } from '@/lib/format'
 import { useRouter } from 'next/navigation'
 import { getErrorMessage } from '@/lib/errors'
 import {
@@ -299,7 +300,7 @@ export function SupportClient({ initialTickets = [] }: SupportClientProps) {
                             </td>
                             <td className="py-2.5 px-3">
                               <span className="text-xs text-muted-foreground">
-                                {format(new Date(ticket.created_at), 'MMM d, yyyy')}
+                                {formatDate(ticket.created_at)}
                               </span>
                             </td>
                             <td className="py-2.5 px-3 text-right">

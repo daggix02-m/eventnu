@@ -23,7 +23,7 @@ import {
   Bell,
   Send,
 } from 'lucide-react'
-import { format } from 'date-fns'
+import { formatDate } from '@/lib/format'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
@@ -283,9 +283,7 @@ export function UserDetailClient({ profile, stats, currentAdminId }: UserDetailC
             <Calendar size={20} className="text-muted-foreground" />
           </div>
           <div>
-            <p className="font-bold text-foreground text-sm">
-              {format(new Date(profile.created_at), 'MMM d, yyyy')}
-            </p>
+            <p className="font-bold text-foreground text-sm">{formatDate(profile.created_at)}</p>
             <p className="text-xs text-muted-foreground">Joined</p>
           </div>
         </Card>
@@ -515,9 +513,7 @@ export function UserDetailClient({ profile, stats, currentAdminId }: UserDetailC
                 <div key={event.id} className="py-3 flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-foreground">{event.title}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {format(new Date(event.start_date), 'MMM d, yyyy')}
-                    </p>
+                    <p className="text-xs text-muted-foreground">{formatDate(event.start_date)}</p>
                   </div>
                   <Badge
                     variant={

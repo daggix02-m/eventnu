@@ -3,6 +3,7 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import { getErrorMessage } from '@/lib/errors'
+import { formatDateTime } from '@/lib/format'
 import {
   ArrowLeft,
   Calendar,
@@ -418,12 +419,12 @@ export function EventDetailClient({
                 <div className="space-y-3">
                   <FieldGroup label="Start">
                     <p className="text-sm text-foreground">
-                      {event.start_date ? new Date(event.start_date).toLocaleString() : '—'}
+                      {event.start_date ? formatDateTime(event.start_date) : '—'}
                     </p>
                   </FieldGroup>
                   <FieldGroup label="End">
                     <p className="text-sm text-foreground">
-                      {event.end_date ? new Date(event.end_date).toLocaleString() : '—'}
+                      {event.end_date ? formatDateTime(event.end_date) : '—'}
                     </p>
                   </FieldGroup>
                   <FieldGroup label="Timezone">
@@ -545,12 +546,12 @@ export function EventDetailClient({
                   </FieldGroup>
                   <FieldGroup label="Created">
                     <p className="text-sm text-muted-foreground">
-                      {new Date(event.created_at).toLocaleString()}
+                      {formatDateTime(event.created_at)}
                     </p>
                   </FieldGroup>
                   <FieldGroup label="Updated">
                     <p className="text-sm text-muted-foreground">
-                      {new Date(event.updated_at).toLocaleString()}
+                      {formatDateTime(event.updated_at)}
                     </p>
                   </FieldGroup>
                   <FieldGroup label="Likes">
@@ -702,7 +703,7 @@ export function EventDetailClient({
                           {(Array.isArray(log.profiles)
                             ? log.profiles[0]?.full_name
                             : log.profiles?.full_name) || 'System'}{' '}
-                          · {new Date(log.created_at).toLocaleString()}
+                          · {formatDateTime(log.created_at)}
                         </p>
                       </div>
                     </div>

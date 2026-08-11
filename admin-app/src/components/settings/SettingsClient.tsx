@@ -14,6 +14,7 @@ import { useRouter } from 'next/navigation'
 import { getUploadUrl, resolveStorageUrls } from '@/lib/actions/events'
 import { updateFeaturedSection, updateAdminNotificationPrefs } from '@/lib/actions/settings'
 import { getErrorMessage } from '@/lib/errors'
+import { formatDate } from '@/lib/format'
 import {
   User,
   Lock,
@@ -741,9 +742,7 @@ export function SettingsClient({
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Joined</span>
-                <span className="text-foreground">
-                  {new Date(profile.created_at).toLocaleDateString()}
-                </span>
+                <span className="text-foreground">{formatDate(profile.created_at)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Status</span>

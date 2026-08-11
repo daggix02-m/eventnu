@@ -18,7 +18,8 @@ import {
   Building2,
   Link as LinkIcon,
 } from 'lucide-react'
-import { format } from 'date-fns'
+import { formatDate } from '@/lib/format'
+import { getErrorMessage } from '@/lib/errors'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
@@ -76,7 +77,7 @@ export function OrganizerDetailClient({ organizer, eventCount }: OrganizerDetail
       router.refresh()
     } catch (err) {
       console.error('Verify error:', err)
-      toast.error('Failed to verify organizer')
+      toast.error(getErrorMessage(err, 'Failed to verify organizer'))
     } finally {
       setIsLoading(false)
     }
@@ -90,7 +91,7 @@ export function OrganizerDetailClient({ organizer, eventCount }: OrganizerDetail
       router.refresh()
     } catch (err) {
       console.error('Unverify error:', err)
-      toast.error('Failed to unverify organizer')
+      toast.error(getErrorMessage(err, 'Failed to unverify organizer'))
     } finally {
       setIsLoading(false)
     }
@@ -104,7 +105,7 @@ export function OrganizerDetailClient({ organizer, eventCount }: OrganizerDetail
       router.refresh()
     } catch (err) {
       console.error('Suspend error:', err)
-      toast.error('Failed to suspend organizer')
+      toast.error(getErrorMessage(err, 'Failed to suspend organizer'))
     } finally {
       setIsLoading(false)
     }
@@ -118,7 +119,7 @@ export function OrganizerDetailClient({ organizer, eventCount }: OrganizerDetail
       router.refresh()
     } catch (err) {
       console.error('Unsuspend error:', err)
-      toast.error('Failed to unsuspend organizer')
+      toast.error(getErrorMessage(err, 'Failed to unsuspend organizer'))
     } finally {
       setIsLoading(false)
     }
@@ -295,9 +296,7 @@ export function OrganizerDetailClient({ organizer, eventCount }: OrganizerDetail
                 <div key={event.id} className="py-3 flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-foreground">{event.title}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {format(new Date(event.start_date), 'MMM d, yyyy')}
-                    </p>
+                    <p className="text-xs text-muted-foreground">{formatDate(event.start_date)}</p>
                   </div>
                   <Badge
                     className={`text-xs ${

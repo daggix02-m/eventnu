@@ -20,7 +20,8 @@ import {
   Trash2,
   Users,
 } from 'lucide-react'
-import { format } from 'date-fns'
+import { formatDate } from '@/lib/format'
+import { getErrorMessage } from '@/lib/errors'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
@@ -110,7 +111,7 @@ export function HostDetailClient({ host, eventCount }: HostDetailClientProps) {
       router.refresh()
     } catch (err) {
       console.error('Suspend error:', err)
-      toast.error('Failed to suspend host')
+      toast.error(getErrorMessage(err, 'Failed to suspend host'))
     } finally {
       setIsLoading(false)
     }
@@ -124,7 +125,7 @@ export function HostDetailClient({ host, eventCount }: HostDetailClientProps) {
       router.refresh()
     } catch (err) {
       console.error('Unsuspend error:', err)
-      toast.error('Failed to activate host')
+      toast.error(getErrorMessage(err, 'Failed to activate host'))
     } finally {
       setIsLoading(false)
     }
@@ -139,7 +140,7 @@ export function HostDetailClient({ host, eventCount }: HostDetailClientProps) {
       router.push('/hosts')
     } catch (err) {
       console.error('Delete error:', err)
-      toast.error('Failed to delete host')
+      toast.error(getErrorMessage(err, 'Failed to delete host'))
     } finally {
       setIsLoading(false)
     }
@@ -165,7 +166,7 @@ export function HostDetailClient({ host, eventCount }: HostDetailClientProps) {
       router.refresh()
     } catch (err) {
       console.error('Update error:', err)
-      toast.error('Failed to update host')
+      toast.error(getErrorMessage(err, 'Failed to update host'))
     } finally {
       setIsLoading(false)
     }
@@ -273,9 +274,7 @@ export function HostDetailClient({ host, eventCount }: HostDetailClientProps) {
                 <p className="text-xs text-muted-foreground uppercase tracking-tight font-semibold">
                   Created
                 </p>
-                <p className="text-sm text-foreground">
-                  {format(new Date(host.created_at), 'MMM d, yyyy')}
-                </p>
+                <p className="text-sm text-foreground">{formatDate(host.created_at)}</p>
               </div>
               <div className="col-span-2">
                 <p className="text-xs text-muted-foreground uppercase tracking-tight font-semibold">
@@ -355,7 +354,7 @@ export function HostDetailClient({ host, eventCount }: HostDetailClientProps) {
                     <div>
                       <p className="text-sm font-medium text-foreground">{event.title}</p>
                       <p className="text-xs text-muted-foreground">
-                        {format(new Date(event.start_date), 'MMM d, yyyy')}
+                        {formatDate(event.start_date)}
                       </p>
                     </div>
                     <Badge

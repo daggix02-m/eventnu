@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { cn } from '@/lib/utils'
 import { getErrorMessage } from '@/lib/errors'
+import { formatDate } from '@/lib/format'
 import {
   Search,
   ChevronLeft,
@@ -445,7 +446,7 @@ export function EventsClient({
                       </td>
                       <td className="px-4 py-4">
                         <p className="font-mono text-xs text-muted-foreground tabular-nums">
-                          {event.start_date ? new Date(event.start_date).toLocaleDateString() : '—'}
+                          {event.start_date ? formatDate(event.start_date) : '—'}
                         </p>
                       </td>
                       <td className="px-4 py-4">

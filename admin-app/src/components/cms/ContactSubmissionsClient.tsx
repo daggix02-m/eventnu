@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { markContactResolved } from '@/lib/actions/cms'
 import { getErrorMessage } from '@/lib/errors'
 import { toast } from 'sonner'
-import { format } from 'date-fns'
+import { formatDate } from '@/lib/format'
 
 interface ContactSubmission {
   id: string
@@ -72,9 +72,7 @@ export function ContactSubmissionsClient({ submissions }: { submissions: Contact
                     <Badge variant="secondary">Open</Badge>
                   )}
                 </td>
-                <td className="px-4 py-3 text-muted-foreground">
-                  {format(new Date(sub.created_at), 'MMM d, yyyy')}
-                </td>
+                <td className="px-4 py-3 text-muted-foreground">{formatDate(sub.created_at)}</td>
                 <td className="px-4 py-3 text-right">
                   <Button
                     variant="ghost"

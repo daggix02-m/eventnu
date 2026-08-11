@@ -7,6 +7,7 @@ import { Switch } from '@/components/ui/switch'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/errors'
+import { formatDate, formatDateTime } from '@/lib/format'
 import {
   getInstagramStatus,
   startInstagramConnect,
@@ -111,7 +112,7 @@ export function InstagramSettingsCard({
     if (status) setExpired(status.tokenExpiresAt < Date.now())
   }, [status])
 
-  const expiresLabel = status ? new Date(status.tokenExpiresAt).toLocaleDateString() : ''
+  const expiresLabel = status ? formatDate(status.tokenExpiresAt) : ''
 
   return (
     <Card className="bg-card rounded-2xl border border-outline-variant shadow-sm p-6">
@@ -226,7 +227,7 @@ export function InstagramSettingsCard({
             </a>
             {status.lastSyncedAt && (
               <span className="text-[11px] text-muted-foreground">
-                Last synced {new Date(status.lastSyncedAt).toLocaleString()}
+                Last synced {formatDateTime(status.lastSyncedAt)}
               </span>
             )}
           </div>
