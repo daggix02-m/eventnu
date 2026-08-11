@@ -1,7 +1,7 @@
 import { v } from 'convex/values'
 import { query, mutation } from './_generated/server'
 import { getAuthUserId } from '@convex-dev/auth/server'
-import { getUserProfile, requireAdmin, requireUser } from './helpers'
+import { patchDefined, getUserProfile, requireAdmin, requireUser } from './helpers'
 import type { Doc, Id } from './_generated/dataModel'
 import type { QueryCtx, MutationCtx } from './_generated/server'
 
@@ -193,10 +193,7 @@ export const updateProfile = mutation({
       throw new Error('Not authorized')
     }
     const { profileId, ...fields } = args
-    const updates: Record<string, any> = {}
-    for (const [key, value] of Object.entries(fields)) {
-      if (value !== undefined) updates[key] = value
-    }
+    const updates = patchDefined(fields)
     await ctx.db.patch('profiles', profileId, updates)
   },
 })

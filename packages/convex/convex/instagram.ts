@@ -10,8 +10,8 @@ import {
 } from './_generated/server'
 import { ActionCtx, MutationCtx } from './_generated/server'
 import { api, internal } from './_generated/api'
-import { MAX_EVENT_IMAGES } from './events'
-import { requireAdmin } from './helpers'
+import { MAX_EVENT_IMAGES } from './constants'
+import { insertEventImages, insertNotification, requireAdmin, uniqueSlug } from './helpers'
 
 const GRAPH_BASE = 'https://graph.facebook.com/v21.0'
 
@@ -103,13 +103,6 @@ async function graphFetch(
     throw new Error(json?.error?.message ?? `Graph API error ${res.status}`)
   }
   return json
-}
-
-function slugify(s: string): string {
-  return s
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '')
 }
 
 function captionParts(caption: string): { title: string; description: string } {
@@ -678,7 +671,7 @@ export const createImportedEvent = internalMutation({
   },
   handler: async (ctx, args) => {
     const { title, description } = captionParts(args.caption)
-    const slug = slugify(title) + '-' + Math.random().toString(36).substring(2, 7)
+    const slug = uniqueSlug(title)
     const eventId = await ctx.db.insert('events', {
       title,
       description,
@@ -717,15 +710,7 @@ export const createImportedEvent = internalMutation({
       venueLng: undefined,
       adminNote: undefined,
     })
-    for (const [i, img] of args.images.entries()) {
-      await ctx.db.insert('eventImages', {
-        eventId,
-        storageId: img.storageId ?? undefined,
-        url: img.url,
-        filter: undefined,
-        sortOrder: i,
-      })
-    }
+    await insertEventImages(ctx, eventId, args.images)
     const conn = await ctx.db.query('instagramConnections').first()
     if (conn) await ctx.db.patch(conn._id, { lastSyncedAt: Date.now() })
     await ctx.db.insert('instagramSyncLogs', {
@@ -746,12 +731,11 @@ export const notifyAdmin = internalMutation({
     body: v.string(),
   },
   handler: async (ctx, args) => {
-    await ctx.db.insert('notifications', {
+    await insertNotification(ctx, {
       userId: args.profileId,
       type: args.type,
       title: args.title,
       body: args.body,
-      read: false,
     })
   },
 })

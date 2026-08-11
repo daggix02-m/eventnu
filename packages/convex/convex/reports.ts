@@ -1,6 +1,6 @@
 import { v } from 'convex/values'
 import { query, mutation } from './_generated/server'
-import { requireAdmin } from './helpers'
+import { insertModerationLog, insertNotification, requireAdmin } from './helpers'
 
 export const list = query({
   args: {
@@ -70,7 +70,7 @@ export const actionReport = mutation({
   handler: async (ctx, args) => {
     const admin = await requireAdmin(ctx)
     await ctx.db.patch('reports', args.reportId, { status: 'actioned' })
-    await ctx.db.insert('moderationLogs', {
+    await insertModerationLog(ctx, {
       adminId: admin._id,
       action: args.action ?? 'actioned',
       targetType: 'report',
@@ -84,12 +84,11 @@ export const warnUserFromReport = mutation({
   args: { profileId: v.id('profiles') },
   handler: async (ctx, args) => {
     await requireAdmin(ctx)
-    await ctx.db.insert('notifications', {
+    await insertNotification(ctx, {
       userId: args.profileId,
       type: 'warning',
       title: 'Moderation Warning',
       body: 'You have received a warning regarding your recent activity.',
-      read: false,
     })
   },
 })

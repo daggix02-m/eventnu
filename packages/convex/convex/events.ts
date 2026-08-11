@@ -2,10 +2,17 @@ import { v } from 'convex/values'
 import { query, mutation, QueryCtx, MutationCtx } from './_generated/server'
 import { Doc, Id } from './_generated/dataModel'
 import { paginationOptsValidator } from 'convex/server'
-import { requireAdmin, requireUser } from './helpers'
+import {
+  insertEventImages,
+  insertModerationLog,
+  patchDefined,
+  replaceEventImages,
+  requireAdmin,
+  requireUser,
+  uniqueSlug,
+} from './helpers'
 import { rateLimiter } from './rateLimiter'
-
-export const MAX_EVENT_IMAGES = 10
+import { MAX_EVENT_IMAGES } from './constants'
 
 export const eventImageValidator = v.object({
   url: v.string(),
@@ -337,14 +344,7 @@ export const create = mutation({
     }
     const images = (args.images ?? []).slice(0, MAX_EVENT_IMAGES)
 
-    const slug =
-      args.slug ??
-      args.title
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-|-$/g, '') +
-        '-' +
-        Math.random().toString(36).substring(2, 7)
+    const slug = args.slug ?? uniqueSlug(args.title)
 
     const eventId = await ctx.db.insert('events', {
       title: args.title,
@@ -394,22 +394,13 @@ export const create = mutation({
       })
     }
 
-    for (const [i, img] of images.entries()) {
-      await ctx.db.insert('eventImages', {
-        eventId,
-        storageId: img.storageId ?? undefined,
-        url: img.url,
-        filter: img.filter ?? undefined,
-        sortOrder: i,
-      })
-    }
+    await insertEventImages(ctx, eventId, images)
 
-    await ctx.db.insert('moderationLogs', {
+    await insertModerationLog(ctx, {
       adminId: admin._id,
       action: 'create_event',
       targetType: 'event',
       targetId: eventId,
-      note: undefined,
     })
 
     return eventId
@@ -455,18 +446,15 @@ export const update = mutation({
     await requireAdmin(ctx)
 
     const { eventId, images, categoryIds, ...fields } = args
-    const updates: Record<string, any> = {}
-    for (const [key, value] of Object.entries(fields)) {
-      if (value !== undefined) updates[key] = value
-    }
-    if (fields.actionType !== undefined) {
-      updates.reservationEnabled = fields.actionType === 'reservation'
-    }
-    if (images) {
-      if (images.length > MAX_EVENT_IMAGES) {
-        throw new Error(`Maximum ${MAX_EVENT_IMAGES} images allowed`)
-      }
-      updates.posterUrl = images[0]?.url ?? null
+    const updates = {
+      ...patchDefined(fields),
+      ...(fields.actionType !== undefined
+        ? { reservationEnabled: fields.actionType === 'reservation' }
+        : {}),
+      ...(images ? { posterUrl: images[0]?.url ?? null } : {}),
+    } as Partial<Doc<'events'>>
+    if (images && images.length > MAX_EVENT_IMAGES) {
+      throw new Error(`Maximum ${MAX_EVENT_IMAGES} images allowed`)
     }
     await ctx.db.patch('events', eventId, updates)
 
@@ -488,23 +476,7 @@ export const update = mutation({
     }
 
     if (images) {
-      const existing = await getEventImages(ctx, eventId)
-      const keepStorageIds = new Set(images.map((img) => img.storageId).filter(Boolean) as string[])
-      for (const img of existing) {
-        await ctx.db.delete('eventImages', img._id)
-        if (img.storageId && !keepStorageIds.has(img.storageId)) {
-          await ctx.storage.delete(img.storageId)
-        }
-      }
-      for (const [i, img] of images.entries()) {
-        await ctx.db.insert('eventImages', {
-          eventId,
-          storageId: img.storageId ?? undefined,
-          url: img.url,
-          filter: img.filter ?? undefined,
-          sortOrder: i,
-        })
-      }
+      await replaceEventImages(ctx, eventId, images)
     }
     return eventId
   },

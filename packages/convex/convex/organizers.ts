@@ -1,6 +1,6 @@
 import { v } from 'convex/values'
 import { query, mutation } from './_generated/server'
-import { requireAdmin } from './helpers'
+import { patchDefined, requireAdmin } from './helpers'
 
 export const list = query({
   args: { search: v.optional(v.string()) },
@@ -90,10 +90,7 @@ export const update = mutation({
   handler: async (ctx, args) => {
     await requireAdmin(ctx)
     const { profileId, ...fields } = args
-    const updates: Record<string, any> = {}
-    for (const [key, value] of Object.entries(fields)) {
-      if (value !== undefined) updates[key] = value
-    }
+    const updates = patchDefined(fields)
     const existing = await ctx.db
       .query('organizerProfiles')
       .withIndex('by_profile', (q) => q.eq('profileId', profileId))

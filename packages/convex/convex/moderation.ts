@@ -1,19 +1,13 @@
 import { v } from 'convex/values'
 import { query, mutation } from './_generated/server'
-import { requireAdmin } from './helpers'
+import { insertModerationLog, requireAdmin, withAdminName } from './helpers'
 
 export const list = query({
   args: {},
   handler: async (ctx) => {
     await requireAdmin(ctx)
     const logs = await ctx.db.query('moderationLogs').order('desc').take(100)
-    const enriched = await Promise.all(
-      logs.map(async (log) => {
-        const admin = await ctx.db.get('profiles', log.adminId)
-        return { ...log, adminName: admin?.fullName ?? 'Unknown' }
-      }),
-    )
-    return enriched
+    return await withAdminName(ctx, logs)
   },
 })
 
@@ -26,7 +20,7 @@ export const logModerationAction = mutation({
   },
   handler: async (ctx, args) => {
     const admin = await requireAdmin(ctx)
-    await ctx.db.insert('moderationLogs', {
+    await insertModerationLog(ctx, {
       adminId: admin._id,
       action: args.action,
       targetType: args.targetType,
@@ -42,13 +36,7 @@ export const getRecent = query({
     await requireAdmin(ctx)
     const limit = args.limit ?? 20
     const logs = await ctx.db.query('moderationLogs').order('desc').take(limit)
-    const enriched = await Promise.all(
-      logs.map(async (log) => {
-        const admin = await ctx.db.get('profiles', log.adminId)
-        return { ...log, adminName: admin?.fullName ?? 'Unknown' }
-      }),
-    )
-    return enriched
+    return await withAdminName(ctx, logs)
   },
 })
 
@@ -63,12 +51,6 @@ export const getByTarget = query({
       )
       .order('desc')
       .take(100)
-    const enriched = await Promise.all(
-      logs.map(async (log) => {
-        const admin = await ctx.db.get('profiles', log.adminId)
-        return { ...log, adminName: admin?.fullName ?? 'Unknown' }
-      }),
-    )
-    return enriched
+    return await withAdminName(ctx, logs)
   },
 })

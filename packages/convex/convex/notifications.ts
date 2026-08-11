@@ -1,7 +1,7 @@
 import { v } from 'convex/values'
 import { query, mutation, QueryCtx, MutationCtx } from './_generated/server'
 import { Doc, Id } from './_generated/dataModel'
-import { requireAdmin, requireUser } from './helpers'
+import { insertNotification, requireAdmin, requireUser } from './helpers'
 
 async function resolveTargetUserId(
   ctx: QueryCtx | MutationCtx,
@@ -84,14 +84,7 @@ export const send = mutation({
   },
   handler: async (ctx, args) => {
     await requireAdmin(ctx)
-    return await ctx.db.insert('notifications', {
-      userId: args.userId,
-      type: args.type,
-      title: args.title,
-      body: args.body,
-      data: args.data ?? undefined,
-      read: false,
-    })
+    return await insertNotification(ctx, args)
   },
 })
 
@@ -106,13 +99,12 @@ export const sendBatch = mutation({
   handler: async (ctx, args) => {
     await requireAdmin(ctx)
     for (const userId of args.userIds) {
-      await ctx.db.insert('notifications', {
+      await insertNotification(ctx, {
         userId,
         type: args.type,
         title: args.title,
         body: args.body,
         data: args.data ?? undefined,
-        read: false,
       })
     }
   },

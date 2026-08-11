@@ -1,6 +1,6 @@
 import { v } from 'convex/values'
 import { query, mutation } from './_generated/server'
-import { getUserProfile, requireAdmin } from './helpers'
+import { patchDefined, getUserProfile, requireAdmin } from './helpers'
 import { rateLimiter } from './rateLimiter'
 
 export const getPublishedPages = query({
@@ -81,10 +81,7 @@ export const updatePage = mutation({
   handler: async (ctx, args) => {
     await requireAdmin(ctx)
     const { pageId, ...fields } = args
-    const updates: Record<string, any> = {}
-    for (const [key, value] of Object.entries(fields)) {
-      if (value !== undefined) updates[key] = value
-    }
+    const updates = patchDefined(fields)
     await ctx.db.patch('pages', pageId, updates)
   },
 })
@@ -164,10 +161,7 @@ export const updateAnnouncement = mutation({
   handler: async (ctx, args) => {
     await requireAdmin(ctx)
     const { announcementId, ...fields } = args
-    const updates: Record<string, any> = {}
-    for (const [key, value] of Object.entries(fields)) {
-      if (value !== undefined) updates[key] = value
-    }
+    const updates = patchDefined(fields)
     await ctx.db.patch('announcements', announcementId, updates)
   },
 })
