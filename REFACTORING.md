@@ -133,7 +133,11 @@ Root cause of ~90% of the `any` casts: `admin-app` imports `../../../web/convex/
 **Stack:** Vitest + `@testing-library/react` + `jsdom` + `user-event`.
 
 - [ ] **1. Pure logic:** `lib/mappers.ts`, `lib/validations/*`, `lib/errors.ts`, `lib/format.ts`, `lib/utils.ts`; extracted slugify / `patchDefined` / status + date maps.
+  - [x] `lib/format.ts`, `lib/errors.ts`, `lib/utils.ts`, `lib/pagination.ts`, `lib/mappers.ts` (incl. `usernameFromEmail`, `mapReportTargetPreview` discrimination, `map*` defaults).
+  - [ ] `lib/validations/*` still uncovered.
 - [ ] **2. Convex helpers:** `helpers.ts` auth resolution (fake identity), `patchDefined`, moderation-log insert.
+  - [x] `patchDefined`, `slugify`, `uniqueSlug` (via vitest in `packages/convex`).
+  - [ ] Auth resolution + moderation-log insert deferred — need Convex's in-memory test runner (`convex/_generated/test`), revisit after Phase 6 pagination.
 - [ ] **3. Component tests** for the shared primitives from Phase 2.4 (DataTable sorting/filtering/empty state, StatusBadge, ConfirmDialog, Pagination). Enforce the a11y contract here (labels, focus, keyboard nav, `aria-sort`).
 - [ ] **4. Key flows:** `EventForm` validation + submit, `EventsClient` query + bulk-action wiring (mock `api`), `ImagePicker` upload/limit behavior.
 - [ ] Coverage gate on **new code** (e.g., 80% statements), not a global threshold.

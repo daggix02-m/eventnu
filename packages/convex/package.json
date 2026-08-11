@@ -8,6 +8,7 @@
     "codegen": "convex codegen",
     "deploy": "convex deploy",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
     "knip": "knip"
   },
   "dependencies": {
@@ -18,7 +19,8 @@
   "devDependencies": {
     "@types/node": "^20",
     "knip": "^6.32.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.10"
   },
   "exports": {
     "./_generated/*.js": {
