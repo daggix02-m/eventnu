@@ -14,12 +14,13 @@ const schema = defineSchema({
     suspended: v.boolean(),
     acceptedTermsAt: v.optional(v.number()),
     acceptedTermsVersion: v.optional(v.string()),
-  }).index('by_auth_user', ['authUserId']),
+  })
+    .index('by_auth_user', ['authUserId'])
+    .index('by_role', ['role']),
 
   events: defineTable({
     title: v.string(),
     slug: v.optional(v.string()),
-    categoryIds: v.optional(v.array(v.id('categories'))),
     description: v.string(),
     subtitle: v.optional(v.string()),
     startDate: v.number(),
@@ -128,7 +129,9 @@ const schema = defineSchema({
     icon: v.optional(v.string()),
     parentId: v.optional(v.id('categories')),
     sortOrder: v.number(),
-  }).index('by_slug', ['slug']),
+  })
+    .index('by_slug', ['slug'])
+    .index('by_parent', ['parentId']),
 
   hosts: defineTable({
     name: v.string(),
@@ -143,7 +146,9 @@ const schema = defineSchema({
     verified: v.boolean(),
     status: v.string(),
     followerCount: v.number(),
-  }),
+  })
+    .index('by_slug', ['slug'])
+    .index('by_status', ['status']),
 
   organizerProfiles: defineTable({
     profileId: v.id('profiles'),

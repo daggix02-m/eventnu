@@ -91,7 +91,6 @@ export function mapEvent(e: Doc<'events'> | null | undefined) {
     venue_address: e?.venueAddress,
     venue_map_link: e?.venueMapLink,
     admin_note: e?.adminNote,
-    categoryIds: e?.categoryIds ?? [],
     created_at: iso(e?._creationTime),
     updated_at: iso(e?._creationTime),
   }

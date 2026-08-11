@@ -107,47 +107,38 @@ export const list = query({
     featured: v.optional(v.boolean()),
     frequency: v.optional(v.string()),
     search: v.optional(v.string()),
-    page: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     await requireAdmin(ctx)
-    const { paginationOpts, page, ...filters } = args
-    const numItems = Math.min(Math.max(1, paginationOpts.numItems || 20), 50)
-    const offset = Math.max(0, (page ?? 1) - 1) * numItems
+    const { paginationOpts, ...filters } = args
+    const q = filters.search?.trim().toLowerCase()
 
-    const results = filters.status
+    const page = filters.status
       ? await ctx.db
           .query('events')
           .withIndex('by_status', (q) => q.eq('status', filters.status as Doc<'events'>['status']))
           .order('desc')
-          .take(1000)
-      : await ctx.db.query('events').order('desc').take(1000)
-    let filtered = results
+          .paginate(paginationOpts)
+      : await ctx.db.query('events').order('desc').paginate(paginationOpts)
+
+    let pageItems = page.page
     if (filters.source) {
-      filtered = filtered.filter((e) => e.source === filters.source)
+      pageItems = pageItems.filter((e) => e.source === filters.source)
     }
     if (filters.featured !== undefined) {
-      filtered = filtered.filter((e) => e.isFeatured === filters.featured)
+      pageItems = pageItems.filter((e) => e.isFeatured === filters.featured)
     }
     if (filters.frequency) {
-      filtered = filtered.filter((e) => e.frequencyType === filters.frequency)
+      pageItems = pageItems.filter((e) => e.frequencyType === filters.frequency)
     }
-    if (filters.search) {
-      const q = filters.search.toLowerCase()
-      filtered = filtered.filter(
+    if (q) {
+      pageItems = pageItems.filter(
         (e) =>
           e.title.toLowerCase().includes(q) ||
           (e.description && e.description.toLowerCase().includes(q)),
       )
     }
-    const start = Math.min(offset, filtered.length)
-    const pageItems = filtered.slice(start, start + numItems)
-    return {
-      page: pageItems,
-      continueCursor: '',
-      isDone: start + numItems >= filtered.length,
-      totalCount: filtered.length,
-    }
+    return { ...page, page: pageItems }
   },
 })
 
@@ -223,12 +214,22 @@ export const getStats = query({
   args: { now: v.number() },
   handler: async (ctx, args) => {
     await requireAdmin(ctx)
-    const all = await ctx.db.query('events').take(1000)
-    return {
-      total: all.length,
-      totalPublished: all.filter((e) => e.status === 'published').length,
-      upcoming: all.filter((e) => e.startDate >= args.now).length,
-      pending: all.filter((e) => e.status === 'pending_review').length,
+    let total = 0
+    let totalPublished = 0
+    let upcoming = 0
+    let pending = 0
+    let cursor: string | null = null
+    for (let i = 0; i < 20; i++) {
+      const page = await ctx.db.query('events').order('desc').paginate({ cursor, numItems: 500 })
+      for (const e of page.page) {
+        total++
+        if (e.status === 'published') totalPublished++
+        if (e.startDate >= args.now) upcoming++
+        if (e.status === 'pending_review') pending++
+      }
+      if (page.isDone) break
+      cursor = page.continueCursor
     }
+    return { total, totalPublished, upcoming, pending }
   },
 })

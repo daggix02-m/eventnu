@@ -1,20 +1,26 @@
 import { v } from 'convex/values'
 import { query, mutation } from './_generated/server'
 import { patchDefined, requireAdmin } from './helpers'
+import { paginationOptsValidator } from 'convex/server'
 
 export const list = query({
   args: {
+    paginationOpts: paginationOptsValidator,
     search: v.optional(v.string()),
     status: v.optional(v.string()),
     hostType: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     await requireAdmin(ctx)
-    const hosts = await ctx.db.query('hosts').take(200)
-    let filtered = hosts
-    if (args.status && args.status !== 'all') {
-      filtered = filtered.filter((h) => h.status === args.status)
-    }
+    const status = args.status && args.status !== 'all' ? args.status : null
+    const page = status
+      ? await ctx.db
+          .query('hosts')
+          .withIndex('by_status', (q) => q.eq('status', status))
+          .order('desc')
+          .paginate(args.paginationOpts)
+      : await ctx.db.query('hosts').order('desc').paginate(args.paginationOpts)
+    let filtered = page.page
     if (args.hostType && args.hostType !== 'all') {
       filtered = filtered.filter((h) => h.hostType === args.hostType)
     }
@@ -22,7 +28,7 @@ export const list = query({
       const q = args.search.toLowerCase()
       filtered = filtered.filter((h) => h.name.toLowerCase().includes(q))
     }
-    return filtered
+    return { ...page, page: filtered }
   },
 })
 

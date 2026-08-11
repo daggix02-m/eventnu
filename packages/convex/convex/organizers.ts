@@ -1,17 +1,22 @@
 import { v } from 'convex/values'
 import { query, mutation } from './_generated/server'
 import { patchDefined, requireAdmin } from './helpers'
+import { paginationOptsValidator } from 'convex/server'
 
 export const list = query({
-  args: { search: v.optional(v.string()) },
+  args: {
+    paginationOpts: paginationOptsValidator,
+    search: v.optional(v.string()),
+  },
   handler: async (ctx, args) => {
     await requireAdmin(ctx)
-    const organizers = await ctx.db.query('organizerProfiles').take(200)
+    const page = await ctx.db.query('organizerProfiles').order('desc').paginate(args.paginationOpts)
+    let rows = page.page
     if (args.search) {
       const q = args.search.toLowerCase()
-      return organizers.filter((o) => o.organizerName.toLowerCase().includes(q))
+      rows = rows.filter((o) => o.organizerName.toLowerCase().includes(q))
     }
-    return organizers
+    return { ...page, page: rows }
   },
 })
 

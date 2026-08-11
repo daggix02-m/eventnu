@@ -2,35 +2,60 @@ import { v } from 'convex/values'
 import { query, mutation } from './_generated/server'
 import { Doc, Id } from './_generated/dataModel'
 import { insertModerationLog, insertNotification, requireAdmin } from './helpers'
+import { paginationOptsValidator } from 'convex/server'
 
 export const list = query({
   args: {
+    paginationOpts: paginationOptsValidator,
     status: v.optional(v.string()),
     targetType: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     await requireAdmin(ctx)
-    let reports
-    if (args.status && args.status !== 'all') {
-      reports = await ctx.db
-        .query('reports')
-        .withIndex('by_status', (q) => q.eq('status', args.status as Doc<'reports'>['status']))
-        .order('desc')
-        .take(100)
-    } else {
-      reports = await ctx.db.query('reports').order('desc').take(100)
-    }
-    let filtered = reports
+    const page =
+      args.status && args.status !== 'all'
+        ? await ctx.db
+            .query('reports')
+            .withIndex('by_status', (q) => q.eq('status', args.status as Doc<'reports'>['status']))
+            .order('desc')
+            .paginate(args.paginationOpts)
+        : await ctx.db.query('reports').order('desc').paginate(args.paginationOpts)
+    let rows = page.page
     if (args.targetType && args.targetType !== 'all') {
-      filtered = filtered.filter((r) => r.targetType === args.targetType)
+      rows = rows.filter((r) => r.targetType === args.targetType)
     }
     const enriched = await Promise.all(
-      filtered.map(async (r) => {
+      rows.map(async (r) => {
         const reporter = await ctx.db.get('profiles', r.reporterId)
         return { ...r, reporter: reporter ?? null }
       }),
     )
-    return enriched
+    return { ...page, page: enriched }
+  },
+})
+
+export const getStats = query({
+  args: {},
+  handler: async (ctx) => {
+    await requireAdmin(ctx)
+    const byStatus = new Map<Doc<'reports'>['status'], number>()
+    let total = 0
+    let cursor: string | null = null
+    for (let i = 0; i < 20; i++) {
+      const page = await ctx.db.query('reports').order('desc').paginate({ cursor, numItems: 500 })
+      for (const report of page.page) {
+        total++
+        byStatus.set(report.status, (byStatus.get(report.status) ?? 0) + 1)
+      }
+      if (page.isDone) break
+      cursor = page.continueCursor
+    }
+    return {
+      total,
+      pending: byStatus.get('pending') ?? 0,
+      actioned: byStatus.get('actioned') ?? 0,
+      dismissed: byStatus.get('dismissed') ?? 0,
+    }
   },
 })
 

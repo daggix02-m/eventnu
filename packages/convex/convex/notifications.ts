@@ -2,6 +2,7 @@ import { v } from 'convex/values'
 import { query, mutation, QueryCtx, MutationCtx } from './_generated/server'
 import { Doc, Id } from './_generated/dataModel'
 import { insertNotification, requireAdmin, requireUser } from './helpers'
+import { paginationOptsValidator } from 'convex/server'
 
 async function resolveTargetUserId(
   ctx: QueryCtx | MutationCtx,
@@ -27,38 +28,41 @@ export const list = query({
 
 export const listAll = query({
   args: {
+    paginationOpts: paginationOptsValidator,
     search: v.optional(v.string()),
     type: v.optional(v.string()),
     read: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     await requireAdmin(ctx)
-    let notifications = await ctx.db.query('notifications').order('desc').take(300)
+    const q = args.search?.toLowerCase()
+    const page = await ctx.db.query('notifications').order('desc').paginate(args.paginationOpts)
 
-    if (args.search) {
-      const q = args.search.toLowerCase()
-      notifications = notifications.filter(
+    let rows = page.page
+    if (args.type && args.type !== 'all') {
+      rows = rows.filter((n) => n.type === args.type)
+    }
+    if (args.read !== undefined) {
+      rows = rows.filter((n) => n.read === args.read)
+    }
+    if (q) {
+      rows = rows.filter(
         (n) => n.title.toLowerCase().includes(q) || n.body.toLowerCase().includes(q),
       )
     }
 
-    if (args.type && args.type !== 'all') {
-      notifications = notifications.filter((n) => n.type === args.type)
-    }
-
-    if (args.read !== undefined) {
-      notifications = notifications.filter((n) => n.read === args.read)
-    }
-
-    const userIds = [...new Set(notifications.map((n) => n.userId))]
+    const userIds = [...new Set(rows.map((n) => n.userId))]
     const profiles = await Promise.all(userIds.map((userId) => ctx.db.get('profiles', userId)))
     const profileMap = new Map(
       profiles.filter((p): p is Doc<'profiles'> => p !== null).map((p) => [p._id, p]),
     )
-    return notifications.map((n) => ({
-      ...n,
-      profile: profileMap.get(n.userId) ?? null,
-    }))
+    return {
+      ...page,
+      page: rows.map((n) => ({
+        ...n,
+        profile: profileMap.get(n.userId) ?? null,
+      })),
+    }
   },
 })
 

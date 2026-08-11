@@ -2,6 +2,7 @@ import { v } from 'convex/values'
 import { query, mutation } from './_generated/server'
 import { getAuthUserId } from '@convex-dev/auth/server'
 import { patchDefined, getUserProfile, requireAdmin, requireUser } from './helpers'
+import { paginationOptsValidator } from 'convex/server'
 import type { Doc, Id } from './_generated/dataModel'
 import type { QueryCtx, MutationCtx } from './_generated/server'
 
@@ -119,20 +120,20 @@ export const list = query({
 
 export const listUsers = query({
   args: {
+    paginationOpts: paginationOptsValidator,
     search: v.optional(v.string()),
     status: v.optional(USER_STATUS),
   },
   handler: async (ctx, args) => {
     await requireAdmin(ctx)
-    const users = await ctx.db.query('users').take(1000)
-    const profiles = await ctx.db.query('profiles').take(1000)
-    const profileByAuth = new Map(
-      profiles
-        .filter((p) => p.authUserId !== undefined)
-        .map((p) => [p.authUserId as Id<'users'>, p] as const),
-    )
+    const page = await ctx.db.query('users').order('desc').paginate(args.paginationOpts)
+    const profileByAuth = new Map<Id<'users'>, Doc<'profiles'>>()
+    for (const user of page.page) {
+      const profile = await getProfileByAuthUserId(ctx, user._id)
+      if (profile) profileByAuth.set(user._id, profile)
+    }
 
-    let rows = users.map((user) => toUserRow(user, profileByAuth.get(user._id)))
+    let rows = page.page.map((user) => toUserRow(user, profileByAuth.get(user._id)))
 
     if (args.status === 'active') {
       rows = rows.filter((r) => r.hasProfile && !r.suspended)
@@ -152,7 +153,26 @@ export const listUsers = query({
       )
     }
 
-    return rows
+    return { ...page, page: rows }
+  },
+})
+
+export const listProfileIds = query({
+  args: {},
+  handler: async (ctx) => {
+    await requireAdmin(ctx)
+    const ids: Id<'profiles'>[] = []
+    let cursor: string | null = null
+    for (let i = 0; i < 20; i++) {
+      const page = await ctx.db
+        .query('profiles')
+        .withIndex('by_role')
+        .paginate({ cursor, numItems: 500 })
+      ids.push(...page.page.map((p) => p._id))
+      if (page.isDone || page.continueCursor === null) break
+      cursor = page.continueCursor
+    }
+    return ids
   },
 })
 
@@ -177,6 +197,46 @@ export const getStats = query({
       suspended: profiles.filter((p) => p.suspended).length,
       admins: profiles.filter((p) => p.role === 'admin').length,
     }
+  },
+})
+
+export const getAdminStats = query({
+  args: {},
+  handler: async (ctx) => {
+    await requireAdmin(ctx)
+    const suspendedByUser = new Map<Id<'users'>, boolean>()
+    let cursor: string | null = null
+    for (let i = 0; i < 20; i++) {
+      const page = await ctx.db
+        .query('profiles')
+        .withIndex('by_role')
+        .paginate({ cursor, numItems: 500 })
+      for (const profile of page.page) {
+        if (profile.authUserId) suspendedByUser.set(profile.authUserId, profile.suspended)
+      }
+      if (page.isDone) break
+      cursor = page.continueCursor
+    }
+
+    let total = 0
+    let suspended = 0
+    let noProfile = 0
+    cursor = null
+    for (let i = 0; i < 20; i++) {
+      const page = await ctx.db.query('users').order('desc').paginate({ cursor, numItems: 500 })
+      for (const user of page.page) {
+        total++
+        if (!suspendedByUser.has(user._id)) {
+          noProfile++
+        } else if (suspendedByUser.get(user._id)) {
+          suspended++
+        }
+      }
+      if (page.isDone) break
+      cursor = page.continueCursor
+    }
+
+    return { total, active: total - suspended - noProfile, suspended, noProfile }
   },
 })
 

@@ -49,8 +49,9 @@ export const getAdminEmails = internalQuery({
   handler: async (ctx) => {
     const admins = await ctx.db
       .query('profiles')
-      .collect()
-      .then((profiles) => profiles.filter((p) => p.role === 'admin' && p.email))
+      .withIndex('by_role', (q) => q.eq('role', 'admin'))
+      .filter((q) => q.neq(q.field('email'), undefined))
+      .take(200)
     return admins.map((a) => a.email as string)
   },
 })
