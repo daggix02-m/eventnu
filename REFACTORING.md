@@ -109,7 +109,7 @@ Root cause of ~90% of the `any` casts: `admin-app` imports `../../../web/convex/
   - `SettingsClient.tsx` (733 → 118) → `SettingsCard` wrapper + `ProfileSection`, `SecuritySection`, `FeaturedSectionsSection`, `DangerZoneSection`, `NotificationsSection`, `AdminStatsSection`, `AccountInfoSection`, shared `types.ts`; orchestrator keeps the `getMe` query + no-profile fallback
 - [x] Consolidate motion: one `motion.ts` (kills duplicated `fadeUp`).
 - [x] Unify date formatting through one `lib/format.ts` (kill mixed `date-fns format` vs `toLocaleDateString` vs `toDateTimeLocal`). Also routed all static `toast.error('Failed to X')` through `lib/errors.ts` `getErrorMessage`. Deliberately left chart labels and the dashboard activity-log format (`MMM d, HH:mm`) on their own formats.
-- [ ] **Single design system:** declare `src/components/ui` the only system; run the impeccable `extract` pass to tokenize remaining inline styles (`cms/PageFormClient` raw `<textarea>` classes).
+- [x] **Single design system:** declare `src/components/ui` the only system; run the impeccable `extract` pass to tokenize remaining inline styles (`cms/PageFormClient` raw `<textarea>` classes). Replaced all 8 remaining raw `<textarea>` elements (PageFormClient, HostDetailClient, UserDetailClient, NotificationsClient, EventDetailClient, PublishToInstagramDialog, ReportsClient, SupportClient) with the shared `Textarea` primitive, carrying per-field size overrides via `className`.
 
 **Exit criteria:** both apps typecheck with `no-explicit-any` on; all list pages share one table + query stack; backend modules <400 lines; no cross-module tangle.
 
