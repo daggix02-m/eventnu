@@ -316,6 +316,7 @@ export function mapReportTargetPreview(
 export type MappedUser = ReturnType<typeof mapAdminUser>
 export type MappedEvent = ReturnType<typeof mapEvent>
 export type MappedHost = ReturnType<typeof mapHost>
+export type MappedCategory = ReturnType<typeof mapCategory>
 export type MappedOrganizer = ReturnType<typeof mapOrganizer>
 export type MappedReport = ReturnType<typeof mapReport>
 export type MappedNotification = ReturnType<typeof mapNotification>
