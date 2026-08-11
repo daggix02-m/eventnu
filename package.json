@@ -12,8 +12,15 @@
     "convex:deploy": "npm -w @eventnu/convex run deploy",
     "convex:codegen": "npm -w @eventnu/convex run codegen",
     "test": "npm -w admin-app run test",
+    "lint": "npm -w admin-app run lint && npm -w web run lint",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{js,mjs,cjs,ts,tsx,json,jsonc,css,md}": "prettier --write",
+    "admin-app/src/**/*.{ts,tsx}": "eslint --fix --config admin-app/eslint.config.mjs",
+    "web/**/*.{ts,tsx}": "eslint --fix --config web/eslint.config.mjs"
   },
   "allowScripts": {
     "esbuild@0.27.0": true
@@ -21,6 +28,9 @@
   "devDependencies": {
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
+    "eslint": "^9",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.3.0",
     "prettier": "^3.9.6"
   }
 }

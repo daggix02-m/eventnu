@@ -14,7 +14,7 @@ const eslintConfig = [
       'react-hooks/static-components': 'off',
       '@next/next/no-img-element': 'off',
       '@typescript-eslint/no-unused-vars': [
-        'warn',
+        'error',
         { args: 'none', caughtErrors: 'none', ignoreRestSiblings: true },
       ],
     },

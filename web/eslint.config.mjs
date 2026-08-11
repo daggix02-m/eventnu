@@ -46,13 +46,13 @@ const eslintConfig = [
   ...nextTs,
   {
     rules: {
-      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-explicit-any': 'error',
       '@next/next/no-img-element': 'off',
       'react-hooks/set-state-in-effect': 'off',
       'react-hooks/static-components': 'off',
       'react-hooks/purity': 'off',
       '@typescript-eslint/no-unused-vars': [
-        'warn',
+        'error',
         { args: 'none', caughtErrors: 'none', ignoreRestSiblings: true },
       ],
     },
