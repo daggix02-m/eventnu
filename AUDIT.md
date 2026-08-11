@@ -119,7 +119,7 @@ Identity lookup also uses `identity.subject` with an `as any` cast (`profiles.ts
 - `FeaturedCarousel.tsx` mounts all slides' `<Image fill>` simultaneously with two `setInterval`s + global keydown. **PARTIAL (2026-08-04):** global keydown scoped to the carousel element (focus-only); hidden-dots a11y bug fixed. Auto-advance intervals remain (they pause on reduced-motion / user pause).
 - `OrganizersHero/Testimonials` auto-rotate — **FIXED (2026-08-03):** now respect `prefers-reduced-motion` via new `web/lib/usePrefersReducedMotion.ts` (FeaturedCarousel already checked). `StatBand`/`AnimatedCounter` are gsap-driven, not re-audited this pass.
 - `EventGallery.tsx:30-37`, `EventPhotoGrid.tsx:39-48` attach global `window` keydown handlers. **FIXED (2026-08-04):** `EventGallery` keydown scoped to the gallery element (and disabled when ≤1 image); `EventPhotoGrid` already scoped to the open lightbox.
-- Per-keystroke server round-trips on admin search (`EventsClient.tsx:90-94`) — no debounce. **TanStack React Query configured (`admin-app/src/components/Providers.tsx:8-15`) but never used.**
+- Per-keystroke server round-trips on admin search (`EventsClient.tsx:90-94`) — no debounce. **FIXED (2026-08-03/11):** TanStack Query + 400ms debounce in `EventsClient`; all list pages now read through `src/lib/api/*` hooks (Phase 2.2).
 - `web/app/about/AboutContent.tsx` and `CategoryBentoCard.tsx` are `"use client"` with zero interactivity (needless client runtime).
 - `CategoryBentoCard` uses CSS `backgroundImage` instead of `next/image` (no caching/LCP hints).
 

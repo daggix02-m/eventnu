@@ -80,12 +80,13 @@ Root cause of ~90% of the `any` casts: `admin-app` imports `../../../web/convex/
 - [x] Re-enable `@typescript-eslint/no-explicit-any` progressively (file-by-file, API boundary first); target **0 `any`** in `src/lib` and `src/app`. **Resolved 2026-08-11:** `no-explicit-any` is `error` in both app configs and there are **0 `any`** casts repo-wide (web, admin-app, `@eventnu/convex`). Web/convex mappers now use `FunctionReturnType<typeof api.*>` and `Id<'…'>` casts.
 
 ### 2.2 One data-fetching pattern
-- [ ] TanStack Query is configured but used *only* in `EventsClient`. Adopt it as **the** client data layer for all list pages. Kill the three parallel systems:
+- [x] TanStack Query is configured but used *only* in `EventsClient`. Adopt it as **the** client data layer for all list pages. Kill the three parallel systems:
   - server-actions + `revalidatePath` + `router.refresh()` (default on most list pages)
   - TanStack Query (EventsClient only)
   - direct `convex/react` `useQuery` (`Sidebar` badges, `SettingsClient` getMe/adminSettings)
-- [ ] Create `src/lib/api/` typed query-hook modules per resource (mirror of `lib/actions/*`).
-- [ ] Centralize error handling through `lib/errors.ts` `getErrorMessage`; remove per-action `try/catch → console.error` boilerplate and silent `catch → null` swallows (`getInstagramStatus`, `SettingsClient`).
+  **DONE 2026-08-11:** all list pages (`Events`, `Categories`, `Support`, CMS `Pages`/`Announcements`/`ContactSubmissions`) read through TanStack hooks (`src/lib/api/*`) seeded with server `initialData`; mutations `invalidateQueries` + keep `revalidatePath` for the SSR seed. `router.refresh()` removed from list/form clients (`PageFormClient`, `EventForm` keep `push` only). `convex/react` `useQuery` eliminated: `Sidebar` badges server-seeded via `getNavCounts` (layout) + `useNavCounts` (refetchInterval 120s); `SettingsClient` profile via `getCurrentAdminProfile` prop; `NotificationsSection` via `getAdminNotificationPrefs` prop. Only `@convex-dev/auth/react` (auth) remains on `convex/react`.
+- [x] Create `src/lib/api/` typed query-hook modules per resource (mirror of `lib/actions/*`). **DONE 2026-08-11:** `categories.ts`, `support.ts`, `cms.ts`, `events.ts`, `dashboard.ts` with per-resource `*Keys` consts + `useQuery({ initialData, staleTime: 30_000 })`; events keeps `keepPreviousData` + filter-aware `initialData`.
+- [x] Centralize error handling through `lib/errors.ts` `getErrorMessage`; remove per-action `try/catch → console.error` boilerplate and silent `catch → null` swallows (`getInstagramStatus`, `SettingsClient`). **DONE 2026-08-11:** stripped all `try/catch → console.error → throw` wrappers in `lib/actions/*`; `getInstagramStatus`/`getCurrentAdminProfile` no longer swallow (`null` → throw). Callers updated to handle: `(app)/layout.tsx` + `settings/page.tsx` guard the profile/status fetches, `ReportsClient.handleSelectReport` try/catch→null, `PublishToInstagramDialog` adds `.catch`. Intentional degradation kept: detail-page count lookups (`buildDetail`, `getOrganizerById`) still fall back to zero counts on secondary-query failure.
 
 ### 2.3 Backend modularization (`web/convex`)
 - [x] Split `events.ts` (592 lines, 20 exports) → `events/enrichment|read|write|moderation`. New `api.events.read|write|moderation.*` namespaces; shared image/category resolution + `enrichEvent` in `enrichment.ts` (consumed by `bookmarks.ts`). Per-module sizes: read 180, write 250, moderation 55, enrichment 70.
@@ -205,5 +206,5 @@ Root cause of ~90% of the `any` casts: `admin-app` imports `../../../web/convex/
 | 12 | `hosts.getStats` unguarded (needs `requireAdmin`) | `web/convex/hosts.ts` | 1.2/2.3 |
 | 13 | `mappers.mapModerationLog` unused; dashboard inlines it twice | `admin-app/src/lib/mappers.ts`, `lib/actions/dashboard.ts` | 1.1, 2.2 |
 | 14 | 27 identical `loading.tsx` stubs | `admin-app/src/app/(app)/**/loading.tsx` | 1.2 |
-| 15 | `SettingsClient` dead `profile={null}` prop; double profile fetch | `(app)/settings/page.tsx`, `SettingsClient.tsx` | 1.2, 2.2 |
+| 15 | `SettingsClient` double profile fetch | `(app)/layout.tsx` + `(app)/settings/page.tsx` both call `getCurrentAdminProfile()` (layout for the role gate, page for display) | 1.2, 2.2 |
 | 16 | `forgot/reset-password` hardcoded placeholders | `admin-app/src/app/auth/` | 1.2 |
