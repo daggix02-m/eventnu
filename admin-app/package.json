@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "knip": "knip"
+    "knip": "knip",
+    "test": "vitest run"
   },
   "dependencies": {
     "@auth/core": "^0.41.1",
@@ -42,8 +43,8 @@
     "zod": "^4.4.3"
   },
   "optionalDependencies": {
-    "lightningcss-linux-x64-gnu": "1.32.0",
-    "@tailwindcss/oxide-linux-x64-gnu": "4.3.3"
+    "@tailwindcss/oxide-linux-x64-gnu": "4.3.3",
+    "lightningcss-linux-x64-gnu": "1.32.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -54,6 +55,7 @@
     "eslint-config-next": "16.2.6",
     "knip": "^6.32.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.10"
   }
 }

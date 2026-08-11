@@ -11,6 +11,7 @@
     "convex:dev": "npm -w @eventnu/convex run dev",
     "convex:deploy": "npm -w @eventnu/convex run deploy",
     "convex:codegen": "npm -w @eventnu/convex run codegen",
+    "test": "npm -w admin-app run test",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
