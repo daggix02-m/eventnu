@@ -97,8 +97,8 @@ Root cause of ~90% of the `any` casts: `admin-app` imports `../../../web/convex/
   - notification insert (notifications.ts ×2, instagram.ts `notifyAdmin`, reports.ts `warnUserFromReport`)
   - moderation-log insert + admin-name enrichment (moderation.ts ×3, reports.ts `actionReport`)
 - [x] Break `instagram.ts → events.ts` import tangle (`MAX_EVENT_IMAGES`) into a shared constants module.
-- [ ] Split `cms.ts` (pages / announcements / contact, 210 lines) into 2–3 files.
-- [ ] Standardize compound index names to `by_field1_and_field2` (`schema.ts` currently uses `by_organizer_status`, `by_user_event`, `by_user_read`, `by_event`, `by_category`, …).
+- [x] Split `cms.ts` (pages / announcements / contact, 210 lines) → `cms/pages.ts` (95), `cms/announcements.ts` (78), `cms/contact.ts` (55). New `api.cms.pages.*`, `api.cms.announcements.*`, `api.cms.contact.*` namespaces.
+- [x] Standardize compound index names to `by_field1_and_field2` (`schema.ts` currently uses `by_organizer_status`, `by_user_event`, `by_user_read`, `by_event`, `by_category`, …).
 - [x] Gate `hosts.getStats` with `requireAdmin` (done in Phase 1.2; tracked in tech-debt register).
 
 ### 2.4 Admin-app component decomposition
@@ -198,7 +198,7 @@ Root cause of ~90% of the `any` casts: `admin-app` imports `../../../web/convex/
 | 5 | `events.list` offset-over-`.take(1000)`, dummy `continueCursor` | `web/convex/events.ts` | 6 |
 | 6 | `events.ts` (635) / `instagram.ts` (786) oversized, tangled | `web/convex/` | 2.3 |
 | 7 | Duplicated helpers: `patchDefined` ×8, slugify ×3, image batch ×2, notification ×3, moderation-log ×2 | `web/convex/` | 2.3 |
-| 8 | Legacy `events.categoryIds` array + compound index naming violations | `web/convex/schema.ts`, `migrations.ts` | 1.2, 2.3, 6 |
+| 8 | Legacy `events.categoryIds` array (join table exists; array left on schema) | `web/convex/schema.ts`, `migrations.ts` | 1.2, 6 |
 | 9 | Six copy-pasted list clients; `fadeUp` ×3; mixed date formatting | `admin-app/src/components/` | 2.4 |
 | 10 | No formatter, no tests, no CI, no hooks | repo-wide | 3, 4 |
 | 11 | `react-hook-form` + `@hookform/resolvers` installed, unused | `admin-app/package.json` | 1.1, 6 |
