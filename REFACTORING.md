@@ -102,11 +102,11 @@ Root cause of ~90% of the `any` casts: `admin-app` imports `../../../web/convex/
 - [ ] Gate `hosts.getStats` with `requireAdmin` (move from 1.2 to here if deferred).
 
 ### 2.4 Admin-app component decomposition
-- [ ] Extract shared data-table primitives from the six copy-pasted list clients (`EventsClient`, `HostsClient`, `UsersClient`, `OrganizersClient`, `NotificationsClient`, `ReportsClient`, `CategoriesClient`): `DataTable`, `FilterBar`, `StatusBadge` maps, `Pagination`, `EmptyState`, `ConfirmDialog`, toast-on-error.
-- [ ] Split the giants:
-  - `EventForm.tsx` (793) → sectioned field groups
-  - `CategoriesClient.tsx` (751) → dialog/table/panel components
-  - `SettingsClient.tsx` (733) → tabs extracted into their own components
+- [x] Extract shared data-table primitives from the six copy-pasted list clients: `DataTable`, `FilterBar`, `StatusBadge` maps, `Pagination`, `EmptyState`, `ConfirmDialog`, toast-on-error. Adopted by `HostsClient`, `UsersClient`, `OrganizersClient` (Phase 2.2) and `EventsClient`/`CategoriesClient` (2.4). Intentional exceptions documented in the tracker: `NotificationsClient` (card feed) and `ReportsClient` (master-detail with sticky headers).
+- [x] Split the giants:
+  - `EventForm.tsx` (873 → 187) → sectioned field groups in `event-form/` (`fields.tsx`, `EventFormHeader`, `EventMediaSection`, `EventDetailsSection`, `EventScheduleSection`, `EventVenueSection`, `EventCategorySection`, `EventMoreOptions`, shared `types.ts`)
+  - `CategoriesClient.tsx` (806 → 295) → `CategoryIcon`, `CategoryList`, `CategoryGrid`, `CategoryDialog`, `CategoriesEmptyState`
+  - `SettingsClient.tsx` (733 → 118) → `SettingsCard` wrapper + `ProfileSection`, `SecuritySection`, `FeaturedSectionsSection`, `DangerZoneSection`, `NotificationsSection`, `AdminStatsSection`, `AccountInfoSection`, shared `types.ts`; orchestrator keeps the `getMe` query + no-profile fallback
 - [x] Consolidate motion: one `motion.ts` (kills duplicated `fadeUp`).
 - [x] Unify date formatting through one `lib/format.ts` (kill mixed `date-fns format` vs `toLocaleDateString` vs `toDateTimeLocal`). Also routed all static `toast.error('Failed to X')` through `lib/errors.ts` `getErrorMessage`. Deliberately left chart labels and the dashboard activity-log format (`MMM d, HH:mm`) on their own formats.
 - [ ] **Single design system:** declare `src/components/ui` the only system; run the impeccable `extract` pass to tokenize remaining inline styles (`cms/PageFormClient` raw `<textarea>` classes).

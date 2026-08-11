@@ -46,7 +46,7 @@ Living register for the phased refactor (see `REFACTORING.md` for the roadmap an
 | Status | Class | Item | Where | Note |
 |---|---|---|---|---|
 | [ ] | C | Unused primitive exports (`Sheet`, `Tabs`, `Toggle`, `Separator`, `CardFooter`, `Avatar*`, `ButtonProps`, …) | `src/components/ui/*` | Public API of the consolidated single design system; knip ignores `src/components/ui/**` |
-| [ ] | I | Split `EventForm.tsx` (793) / `CategoriesClient.tsx` (751) / `SettingsClient.tsx` (733) | `admin-app/src/components/` | Phase 2.4 |
+| [x] | I | Split `EventForm.tsx` (873) / `CategoriesClient.tsx` (806) / `SettingsClient.tsx` (733) | `admin-app/src/components/` | Phase 2.4 — `event-form/` section components; `categories/` dialog/list/grid/icon; `settings/` card sections + shared `SettingsCard`/`types` |
 
 ## Dependencies
 
