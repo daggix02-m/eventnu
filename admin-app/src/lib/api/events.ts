@@ -1,7 +1,8 @@
 'use client'
 
-import { useQuery, keepPreviousData } from '@tanstack/react-query'
 import { getEvents } from '@/lib/actions/events'
+import { useCursorPaginatedList } from './use-paginated-list'
+import type { CursorPage } from './use-paginated-list'
 import type { MappedEvent } from '@/lib/mappers'
 
 export const eventsKeys = ['events'] as const
@@ -12,40 +13,30 @@ export interface EventsListFilters {
   source?: string
   frequency?: string
   featured?: boolean
-  page?: number
-}
-
-export interface EventsPageData {
-  events: MappedEvent[]
-  count: number
 }
 
 export function useEvents({
   filters,
-  initialEvents,
-  initialCount,
+  initial,
   initialFilters,
 }: {
   filters: EventsListFilters
-  initialEvents: MappedEvent[]
-  initialCount: number
+  initial: CursorPage<MappedEvent>
   initialFilters: EventsListFilters
 }) {
-  const matchesInitial = JSON.stringify(filters) === JSON.stringify(initialFilters)
-  return useQuery<EventsPageData>({
-    queryKey: [...eventsKeys, filters],
-    queryFn: () =>
+  return useCursorPaginatedList<MappedEvent, EventsListFilters>({
+    queryKey: eventsKeys,
+    filters,
+    initialFilters,
+    initial,
+    queryFn: (cursor) =>
       getEvents({
         status: filters.status !== 'all' ? filters.status : undefined,
         source: filters.source !== 'all' ? filters.source : undefined,
         featured: filters.featured,
         frequency: filters.frequency !== 'all' ? filters.frequency : undefined,
         search: filters.search || undefined,
-        page: filters.page ?? 1,
-        perPage: 20,
+        cursor,
       }),
-    initialData: matchesInitial ? { events: initialEvents, count: initialCount } : undefined,
-    placeholderData: keepPreviousData,
-    staleTime: 30_000,
   })
 }

@@ -13,29 +13,18 @@ export default async function EventsPage({
     params.featured === 'true' ? true : params.featured === 'false' ? false : undefined
   const frequency = typeof params.frequency === 'string' ? params.frequency : 'all'
   const search = typeof params.search === 'string' ? params.search : ''
-  const page = typeof params.page === 'string' ? parseInt(params.page) : 1
 
-  let events: Awaited<ReturnType<typeof getEvents>>['events'] = []
-  let count = 0
+  let initial: Awaited<ReturnType<typeof getEvents>> = { items: [], nextCursor: null, isDone: true }
   try {
-    ;({ events, count } = await getEvents({
-      status,
-      source,
-      featured,
-      frequency,
-      search,
-      page,
-      perPage: 20,
-    }))
+    initial = await getEvents({ status, source, featured, frequency, search })
   } catch (err) {
     console.error('Failed to load events:', err)
   }
 
   return (
     <EventsClient
-      initialEvents={events}
-      initialCount={count}
-      initialFilters={{ status, source, featured, frequency, search, page }}
+      initial={initial}
+      initialFilters={{ status, source, featured, frequency, search }}
     />
   )
 }

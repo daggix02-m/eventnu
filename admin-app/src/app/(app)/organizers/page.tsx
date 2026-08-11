@@ -9,21 +9,22 @@ export default async function OrganizersPage({
   const params = await searchParams
   const verified = typeof params.verified === 'string' ? params.verified === 'true' : undefined
   const search = typeof params.search === 'string' ? params.search : ''
-  const page = typeof params.page === 'string' ? parseInt(params.page) : 1
 
-  let organizers: Awaited<ReturnType<typeof getOrganizers>>['organizers'] = []
-  let count = 0
+  let initial: Awaited<ReturnType<typeof getOrganizers>> = {
+    items: [],
+    nextCursor: null,
+    isDone: true,
+  }
   try {
-    ;({ organizers, count } = await getOrganizers({ verified, search, page, perPage: 20 }))
+    initial = await getOrganizers({ verified, search })
   } catch (err) {
     console.error('Failed to load organizers:', err)
   }
 
   return (
     <OrganizersClient
-      initialOrganizers={organizers}
-      initialCount={count}
-      initialFilters={{ verified: verified !== undefined ? String(verified) : 'all', search, page }}
+      initial={initial}
+      initialFilters={{ verified: verified !== undefined ? String(verified) : 'all', search }}
     />
   )
 }

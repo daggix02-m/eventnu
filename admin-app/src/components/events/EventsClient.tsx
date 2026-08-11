@@ -40,6 +40,7 @@ import {
 } from '@/lib/actions/events'
 import { eventsKeys, useEvents } from '@/lib/api/events'
 import type { EventsListFilters } from '@/lib/api/events'
+import type { CursorPage } from '@/lib/api/use-paginated-list'
 import type { MappedEvent } from '@/lib/mappers'
 import Link from 'next/link'
 
@@ -89,21 +90,18 @@ const statusVariantMap: Record<
 }
 
 export function EventsClient({
-  initialEvents,
-  initialCount,
+  initial,
   initialFilters,
 }: {
-  initialEvents: MappedEvent[]
-  initialCount: number
+  initial: CursorPage<MappedEvent>
   initialFilters: EventsListFilters
 }) {
   const queryClient = useQueryClient()
-  const { filters, update, setPage, searchInput, setSearchInput } =
-    useListFilters<EventsListFilters>({
-      basePath: '/events',
-      initial: initialFilters,
-      defaults: { page: 1, search: '', status: 'all', source: 'all', frequency: 'all' },
-    })
+  const { filters, update, searchInput, setSearchInput } = useListFilters<EventsListFilters>({
+    basePath: '/events',
+    initial: initialFilters,
+    defaults: { search: '', status: 'all', source: 'all', frequency: 'all' },
+  })
   const [loading, setLoading] = useState(false)
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [actionMenuOpen, setActionMenuOpen] = useState<string | null>(null)
@@ -121,15 +119,14 @@ export function EventsClient({
     return () => document.removeEventListener('click', handleOutsideClick)
   }, [actionMenuOpen])
 
-  const { data, isFetching } = useEvents({
+  const { data, isFetching, hasPrev, hasNext, next, prev, pageIndex } = useEvents({
     filters,
-    initialEvents,
-    initialCount,
+    initial,
     initialFilters,
   })
 
-  const events = data?.events ?? []
-  const count = data?.count ?? 0
+  const events = data?.items ?? []
+  const count = events.length
 
   const refreshEvents = () => queryClient.invalidateQueries({ queryKey: eventsKeys })
 
@@ -192,8 +189,6 @@ export function EventsClient({
       setLoading(false)
     }
   }
-
-  const totalPages = Math.ceil(count / 20)
 
   return (
     <>
@@ -297,10 +292,12 @@ export function EventsClient({
           }
           footer={
             <Pagination
-              page={filters.page ?? 1}
-              totalPages={totalPages}
-              count={count}
-              onPageChange={setPage}
+              hasPrev={hasPrev}
+              hasNext={hasNext}
+              onPrev={prev}
+              onNext={next}
+              pageIndex={pageIndex}
+              disabled={isFetching}
             />
           }
           columns={[

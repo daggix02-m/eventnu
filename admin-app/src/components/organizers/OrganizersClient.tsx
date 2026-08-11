@@ -37,6 +37,7 @@ import {
   unsuspendOrganizer,
 } from '@/lib/actions/organizers'
 import type { MappedOrganizer } from '@/lib/mappers'
+import type { CursorPage } from '@/lib/api/use-paginated-list'
 
 const verifiedOptions = [
   { value: 'all', label: 'All' },
@@ -45,31 +46,24 @@ const verifiedOptions = [
 ]
 
 interface OrganizersClientProps {
-  initialOrganizers: MappedOrganizer[]
-  initialCount: number
+  initial: CursorPage<MappedOrganizer>
   initialFilters: OrganizerListFilters
 }
 
-export function OrganizersClient({
-  initialOrganizers,
-  initialCount,
-  initialFilters,
-}: OrganizersClientProps) {
+export function OrganizersClient({ initial, initialFilters }: OrganizersClientProps) {
   const queryClient = useQueryClient()
-  const { filters, update, setPage, searchInput, setSearchInput } = useListFilters({
+  const { filters, update, searchInput, setSearchInput } = useListFilters({
     basePath: '/organizers',
     initial: initialFilters,
-    defaults: { verified: 'all', page: 1 },
+    defaults: { verified: 'all' },
   })
 
-  const { data, isFetching } = useOrganizers(
+  const { data, isFetching, hasPrev, hasNext, next, prev, pageIndex } = useOrganizers(
     filters,
-    { organizers: initialOrganizers, count: initialCount },
+    initial,
     initialFilters,
   )
   const organizers = data?.items ?? []
-  const count = data?.total ?? 0
-  const totalPages = Math.ceil(count / 20)
 
   const [selectedOrganizer, setSelectedOrganizer] = useState<MappedOrganizer | null>(null)
   const [isDetailOpen, setIsDetailOpen] = useState(false)
@@ -133,10 +127,12 @@ export function OrganizersClient({
           }
           footer={
             <Pagination
-              page={filters.page ?? 1}
-              totalPages={totalPages}
-              count={count}
-              onPageChange={setPage}
+              hasPrev={hasPrev}
+              hasNext={hasNext}
+              onPrev={prev}
+              onNext={next}
+              pageIndex={pageIndex}
+              disabled={isFetching}
             />
           }
           columns={[

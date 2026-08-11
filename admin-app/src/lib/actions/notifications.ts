@@ -5,23 +5,25 @@ import type { Id } from '@eventnu/convex/_generated/dataModel'
 import { api } from '@eventnu/convex/_generated/api'
 import { revalidatePath } from 'next/cache'
 import { mapNotification } from '../mappers'
+import { DEFAULT_PAGE_SIZE } from '@/lib/pagination'
 
 export async function getNotifications(params: {
-  page?: number
-  perPage?: number
   search?: string
   type?: string
   read?: boolean
+  cursor?: string | null
 }) {
-  const all = await fetchQuery(api.notifications.listAll, {
+  const result = await fetchQuery(api.notifications.listAll, {
+    paginationOpts: { numItems: DEFAULT_PAGE_SIZE, cursor: params.cursor ?? null },
     search: params.search,
     type: params.type,
     read: params.read,
   })
-  const from = ((params.page ?? 1) - 1) * (params.perPage ?? 20)
-  const to = from + (params.perPage ?? 20)
-  const notifications = all.slice(from, to).map((n) => mapNotification(n, n.profile))
-  return { notifications, count: all.length }
+  return {
+    items: (result.page ?? []).map((n) => mapNotification(n, n.profile)),
+    nextCursor: (result.continueCursor ?? null) as string | null,
+    isDone: result.isDone,
+  }
 }
 
 export async function sendNotification(params: {
@@ -40,8 +42,7 @@ export async function sendNotification(params: {
       data: params.data,
     })
   } else {
-    const users = await fetchQuery(api.profiles.listUsers, {})
-    const userIds = users.filter((u) => u.profileId).map((u) => u.profileId as Id<'profiles'>)
+    const userIds = await fetchQuery(api.profiles.listProfileIds)
     await fetchMutation(api.notifications.sendBatch, {
       userIds,
       type: params.type,

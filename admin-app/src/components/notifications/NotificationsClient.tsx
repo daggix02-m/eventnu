@@ -24,6 +24,7 @@ import { sendNotification } from '@/lib/actions/notifications'
 import { UserCombobox } from '@/components/shared/UserCombobox'
 import { toast } from 'sonner'
 import type { MappedNotification } from '@/lib/mappers'
+import type { CursorPage } from '@/lib/api/use-paginated-list'
 
 const typeOptions = [
   { value: 'all', label: 'All Types' },
@@ -42,32 +43,24 @@ const readOptions = [
 ]
 
 interface NotificationsClientProps {
-  initialNotifications: MappedNotification[]
-  initialCount: number
-  initialPage: number
+  initial: CursorPage<MappedNotification>
   initialFilters?: { search?: string; type?: string; read?: string }
 }
 
-export function NotificationsClient({
-  initialNotifications,
-  initialCount,
-  initialPage,
-  initialFilters = {},
-}: NotificationsClientProps) {
+export function NotificationsClient({ initial, initialFilters = {} }: NotificationsClientProps) {
   const queryClient = useQueryClient()
-  const { filters, update, setPage, searchInput, setSearchInput } = useListFilters({
+  const { filters, update, searchInput, setSearchInput } = useListFilters({
     basePath: '/notifications',
-    initial: { page: initialPage, ...initialFilters },
-    defaults: { page: 1, search: '', type: 'all', read: 'all' },
+    initial: initialFilters,
+    defaults: { search: '', type: 'all', read: 'all' },
   })
 
-  const { data, isFetching } = useNotifications(filters, {
-    notifications: initialNotifications,
-    count: initialCount,
-  })
+  const { data, isFetching, hasPrev, hasNext, next, prev, pageIndex } = useNotifications(
+    filters,
+    initial,
+    initialFilters,
+  )
   const notifications = data?.items ?? []
-  const count = data?.total ?? 0
-  const totalPages = Math.ceil(count / 20)
 
   const [isLoading, setIsLoading] = useState(false)
   const [composeMode, setComposeMode] = useState(false)
@@ -323,10 +316,12 @@ export function NotificationsClient({
           </div>
         </div>
         <Pagination
-          page={filters.page ?? 1}
-          totalPages={totalPages}
-          count={count}
-          onPageChange={setPage}
+          hasPrev={hasPrev}
+          hasNext={hasNext}
+          onPrev={prev}
+          onNext={next}
+          pageIndex={pageIndex}
+          disabled={isFetching}
         />
       </Card>
     </div>

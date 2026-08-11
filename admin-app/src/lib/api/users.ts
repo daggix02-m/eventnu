@@ -1,33 +1,44 @@
 'use client'
 
-import { getUsers } from '@/lib/actions/users'
-import { usePaginatedList } from './use-paginated-list'
+import { useQuery } from '@tanstack/react-query'
+import { getUsers, getAdminStats } from '@/lib/actions/users'
+import { useCursorPaginatedList } from './use-paginated-list'
+import type { CursorPage } from './use-paginated-list'
 import type { MappedUser } from '@/lib/mappers'
 
 export const usersKeys = ['users'] as const
+export const userStatsKeys = ['users', 'stats'] as const
 
 export interface UserListFilters {
   status?: string
   search?: string
-  page?: number
 }
 
 export function useUsers(
   filters: UserListFilters,
-  initial: { users: MappedUser[]; count: number },
+  initial: CursorPage<MappedUser>,
   initialFilters: UserListFilters,
 ) {
-  return usePaginatedList<MappedUser, UserListFilters>({
+  return useCursorPaginatedList<MappedUser, UserListFilters>({
     queryKey: usersKeys,
     filters,
     initialFilters,
-    initial: initial
-      ? { items: initial.users, total: initial.count, all: initial.users }
-      : undefined,
-    page: filters.page ?? 1,
-    fetchAll: async () => {
-      const { users } = await getUsers({ search: filters.search, status: filters.status })
-      return users
-    },
+    initial,
+    queryFn: (cursor) => getUsers({ status: filters.status, search: filters.search, cursor }),
+  })
+}
+
+export interface AdminStats {
+  total: number
+  active: number
+  suspended: number
+  noProfile: number
+}
+
+export function useAdminStats() {
+  return useQuery<AdminStats>({
+    queryKey: userStatsKeys,
+    queryFn: () => getAdminStats(),
+    staleTime: 30_000,
   })
 }

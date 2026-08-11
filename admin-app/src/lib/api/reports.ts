@@ -1,36 +1,49 @@
 'use client'
 
-import { getReports } from '@/lib/actions/reports'
-import { usePaginatedList } from './use-paginated-list'
+import { useQuery } from '@tanstack/react-query'
+import { getReports, getReportsStats } from '@/lib/actions/reports'
+import { useCursorPaginatedList } from './use-paginated-list'
+import type { CursorPage } from './use-paginated-list'
 import type { MappedReport } from '@/lib/mappers'
 
 export const reportsKeys = ['reports'] as const
+export const reportStatsKeys = ['reports', 'stats'] as const
 
 export interface ReportListFilters {
   status?: string
   targetType?: string
-  page?: number
 }
 
 export function useReports(
   filters: ReportListFilters,
-  initial: { reports: MappedReport[]; count: number },
+  initial: CursorPage<MappedReport>,
   initialFilters: ReportListFilters,
 ) {
-  return usePaginatedList<MappedReport, ReportListFilters>({
+  return useCursorPaginatedList<MappedReport, ReportListFilters>({
     queryKey: reportsKeys,
     filters,
     initialFilters,
-    initial: initial
-      ? { items: initial.reports, total: initial.count, all: initial.reports }
-      : undefined,
-    page: filters.page ?? 1,
-    fetchAll: async () => {
-      const { reports } = await getReports({
+    initial,
+    queryFn: (cursor) =>
+      getReports({
         status: filters.status !== 'all' ? filters.status : undefined,
         targetType: filters.targetType !== 'all' ? filters.targetType : undefined,
-      })
-      return reports
-    },
+        cursor,
+      }),
+  })
+}
+
+export interface ReportStats {
+  total: number
+  pending: number
+  actioned: number
+  dismissed: number
+}
+
+export function useReportsStats() {
+  return useQuery<ReportStats>({
+    queryKey: reportStatsKeys,
+    queryFn: () => getReportsStats(),
+    staleTime: 30_000,
   })
 }

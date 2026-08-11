@@ -5,24 +5,46 @@ import type { Doc, Id } from '@eventnu/convex/_generated/dataModel'
 import { api } from '@eventnu/convex/_generated/api'
 import { revalidatePath } from 'next/cache'
 import { mapOrganizer } from '../mappers'
+import { DEFAULT_PAGE_SIZE } from '@/lib/pagination'
 
 export async function getOrganizers(params: {
-  status?: string
   verified?: boolean
   search?: string
-  page?: number
-  perPage?: number
+  cursor?: string | null
 }) {
-  const organizers = await fetchQuery(api.organizers.list, {
+  const result = await fetchQuery(api.organizers.list, {
+    paginationOpts: { numItems: DEFAULT_PAGE_SIZE, cursor: params.cursor ?? null },
     search: params.search,
   })
-  const profiles = await fetchQuery(api.profiles.list, {})
-  const profileById = new Map(profiles.map((p) => [p._id, p]))
-  let filtered = organizers.map((o) => mapOrganizer(o, profileById.get(o.profileId)))
+  const rows = result.page ?? []
+  const profileIds = [...new Set(rows.map((o) => o.profileId))]
+  const profiles = await Promise.all(
+    profileIds.map((profileId) =>
+      fetchQuery(api.profiles.getById, { profileId: profileId as Id<'profiles'> }),
+    ),
+  )
+  const profileById = new Map(profiles.filter((p) => p !== null).map((p) => [p._id, p]))
+  let items = rows.map((o) => mapOrganizer(o, profileById.get(o.profileId)))
   if (params.verified !== undefined) {
-    filtered = filtered.filter((o) => o.verified === params.verified)
+    items = items.filter((o) => o.verified === params.verified)
   }
-  return { organizers: filtered, count: filtered.length }
+  return {
+    items,
+    nextCursor: (result.continueCursor ?? null) as string | null,
+    isDone: result.isDone,
+  }
+}
+
+export async function getAllOrganizers() {
+  const items: Awaited<ReturnType<typeof getOrganizers>>['items'] = []
+  let cursor: string | null = null
+  for (let i = 0; i < 50; i++) {
+    const page = await getOrganizers({ cursor })
+    items.push(...page.items)
+    if (page.isDone || !page.nextCursor) break
+    cursor = page.nextCursor
+  }
+  return items
 }
 
 export async function verifyOrganizer(profileId: string) {

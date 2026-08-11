@@ -5,21 +5,27 @@ import type { Id } from '@eventnu/convex/_generated/dataModel'
 import { api } from '@eventnu/convex/_generated/api'
 import { revalidatePath } from 'next/cache'
 import { mapReport, mapReportTargetPreview } from '../mappers'
+import { DEFAULT_PAGE_SIZE } from '@/lib/pagination'
 
 export async function getReports(params: {
   status?: string
   targetType?: string
-  page?: number
-  perPage?: number
+  cursor?: string | null
 }) {
-  const reports = await fetchQuery(api.reports.list, {
+  const result = await fetchQuery(api.reports.list, {
+    paginationOpts: { numItems: DEFAULT_PAGE_SIZE, cursor: params.cursor ?? null },
     status: params.status !== 'all' ? params.status : undefined,
+    targetType: params.targetType !== 'all' ? params.targetType : undefined,
   })
-  let filtered = reports.map(mapReport)
-  if (params.targetType && params.targetType !== 'all') {
-    filtered = filtered.filter((r) => r.target_type === params.targetType)
+  return {
+    items: (result.page ?? []).map(mapReport),
+    nextCursor: (result.continueCursor ?? null) as string | null,
+    isDone: result.isDone,
   }
-  return { reports: filtered, count: filtered.length }
+}
+
+export async function getReportsStats() {
+  return await fetchQuery(api.reports.getStats)
 }
 
 export async function getReportTargetPreview(targetType: string, targetId: string) {

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Check, ChevronsUpDown, Search, UserX } from 'lucide-react'
-import { getUsers } from '@/lib/actions/users'
+import { getAllUsers } from '@/lib/actions/users'
 import type { MappedUser } from '@/lib/mappers'
 import { UserAvatar } from '@/components/list/UserAvatar'
 import { cn } from '@/lib/utils'
@@ -32,8 +32,7 @@ export function UserCombobox({
     if (users === null) {
       setLoading(true)
       try {
-        const res = await getUsers({ status: 'all' })
-        setUsers(res.users)
+        setUsers(await getAllUsers({ status: 'all' }))
       } catch {
         setUsers([])
       } finally {

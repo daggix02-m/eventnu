@@ -5,22 +5,43 @@ import type { Id } from '@eventnu/convex/_generated/dataModel'
 import { api } from '@eventnu/convex/_generated/api'
 import { revalidatePath } from 'next/cache'
 import { mapAdminUser, mapProfile } from '../mappers'
+import { DEFAULT_PAGE_SIZE } from '@/lib/pagination'
 
 export async function getUsers(params: {
   status?: string
   search?: string
-  page?: number
-  perPage?: number
+  cursor?: string | null
 }) {
   const status =
     params.status === 'active' || params.status === 'suspended' || params.status === 'no_profile'
       ? params.status
-      : 'all'
-  const users = await fetchQuery(api.profiles.listUsers, {
+      : undefined
+  const result = await fetchQuery(api.profiles.listUsers, {
+    paginationOpts: { numItems: DEFAULT_PAGE_SIZE, cursor: params.cursor ?? null },
     search: params.search,
     status,
   })
-  return { users: users.map(mapAdminUser), count: users.length }
+  return {
+    items: (result.page ?? []).map(mapAdminUser),
+    nextCursor: (result.continueCursor ?? null) as string | null,
+    isDone: result.isDone,
+  }
+}
+
+export async function getAllUsers(params: { status?: string } = {}) {
+  const items: Awaited<ReturnType<typeof getUsers>>['items'] = []
+  let cursor: string | null = null
+  for (let i = 0; i < 50; i++) {
+    const page = await getUsers({ status: params.status, cursor })
+    items.push(...page.items)
+    if (page.isDone || !page.nextCursor) break
+    cursor = page.nextCursor
+  }
+  return items
+}
+
+export async function getAdminStats() {
+  return await fetchQuery(api.profiles.getAdminStats)
 }
 
 export async function suspendUser(userId: string) {

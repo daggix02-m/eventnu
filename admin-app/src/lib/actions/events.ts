@@ -7,6 +7,7 @@ import type { FunctionReference } from 'convex/server'
 import { revalidatePath } from 'next/cache'
 import { mapEvent, mapEventCategory } from '../mappers'
 import { toDateTimeLocal } from '@/lib/format'
+import { DEFAULT_PAGE_SIZE } from '@/lib/pagination'
 
 export async function getEvents(params: {
   status?: string
@@ -14,19 +15,21 @@ export async function getEvents(params: {
   featured?: boolean
   frequency?: string
   search?: string
-  page?: number
-  perPage?: number
+  cursor?: string | null
 }) {
   const result = await fetchQuery(api.events.read.list, {
-    paginationOpts: { numItems: params.perPage ?? 20, cursor: null },
+    paginationOpts: { numItems: DEFAULT_PAGE_SIZE, cursor: params.cursor ?? null },
     status: params.status !== 'all' ? params.status : undefined,
     source: params.source !== 'all' ? params.source : undefined,
     featured: params.featured,
     frequency: params.frequency !== 'all' ? params.frequency : undefined,
     search: params.search,
-    page: params.page ?? 1,
   })
-  return { events: (result.page ?? []).map(mapEvent), count: result.totalCount ?? 0 }
+  return {
+    items: (result.page ?? []).map(mapEvent),
+    nextCursor: (result.continueCursor ?? null) as string | null,
+    isDone: result.isDone,
+  }
 }
 
 export async function updateEventStatus(eventId: string, status: string, note?: string) {

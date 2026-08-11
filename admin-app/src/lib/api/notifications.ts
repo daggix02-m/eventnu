@@ -1,14 +1,13 @@
 'use client'
 
-import { useQuery, keepPreviousData } from '@tanstack/react-query'
 import { getNotifications } from '@/lib/actions/notifications'
-import type { PageData } from './use-paginated-list'
+import { useCursorPaginatedList } from './use-paginated-list'
+import type { CursorPage } from './use-paginated-list'
 import type { MappedNotification } from '@/lib/mappers'
 
 export const notificationsKeys = ['notifications'] as const
 
 export interface NotificationListFilters {
-  page?: number
   search?: string
   type?: string
   read?: string
@@ -16,26 +15,20 @@ export interface NotificationListFilters {
 
 export function useNotifications(
   filters: NotificationListFilters,
-  initial: { notifications: MappedNotification[]; count: number },
+  initial: CursorPage<MappedNotification>,
+  initialFilters: NotificationListFilters,
 ) {
-  const page = filters.page ?? 1
-
-  return useQuery<PageData<MappedNotification>>({
-    queryKey: [...notificationsKeys, filters],
-    queryFn: async () => {
-      const { notifications, count } = await getNotifications({
-        page,
-        perPage: 20,
+  return useCursorPaginatedList<MappedNotification, NotificationListFilters>({
+    queryKey: notificationsKeys,
+    filters,
+    initialFilters,
+    initial,
+    queryFn: (cursor) =>
+      getNotifications({
         search: filters.search || undefined,
         type: filters.type !== 'all' ? filters.type : undefined,
         read: filters.read !== 'all' ? filters.read === 'true' : undefined,
-      })
-      return { items: notifications, total: count, all: notifications }
-    },
-    initialData: initial
-      ? { items: initial.notifications, total: initial.count, all: initial.notifications }
-      : undefined,
-    placeholderData: keepPreviousData,
-    staleTime: 30_000,
+        cursor,
+      }),
   })
 }

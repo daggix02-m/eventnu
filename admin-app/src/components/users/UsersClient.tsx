@@ -30,10 +30,11 @@ import {
 } from '@/components/list'
 import { formatDate } from '@/lib/format'
 import { getErrorMessage } from '@/lib/errors'
-import { useUsers, usersKeys } from '@/lib/api/users'
+import { useUsers, useAdminStats, usersKeys } from '@/lib/api/users'
 import type { UserListFilters } from '@/lib/api/users'
 import { suspendUser, unsuspendUser, banUser, promoteUser, demoteUser } from '@/lib/actions/users'
 import type { MappedUser } from '@/lib/mappers'
+import type { CursorPage } from '@/lib/api/use-paginated-list'
 
 const statusOptions = [
   { value: 'all', label: 'All Users' },
@@ -55,34 +56,27 @@ const roleVariants = {
 type ActionType = 'suspend' | 'unsuspend' | 'ban' | 'promote' | 'demote'
 
 interface UsersClientProps {
-  initialUsers: MappedUser[]
-  initialCount: number
+  initial: CursorPage<MappedUser>
   initialFilters: UserListFilters
   currentAdminId: string | null
 }
 
-export function UsersClient({
-  initialUsers,
-  initialCount,
-  initialFilters,
-  currentAdminId,
-}: UsersClientProps) {
+export function UsersClient({ initial, initialFilters, currentAdminId }: UsersClientProps) {
   const queryClient = useQueryClient()
-  const { filters, update, setPage, searchInput, setSearchInput } = useListFilters({
+  const { filters, update, searchInput, setSearchInput } = useListFilters({
     basePath: '/users',
     initial: initialFilters,
-    defaults: { status: 'all', page: 1 },
+    defaults: { status: 'all' },
   })
 
-  const { data, isFetching } = useUsers(
+  const { data, isFetching, hasPrev, hasNext, next, prev, pageIndex } = useUsers(
     filters,
-    { users: initialUsers, count: initialCount },
+    initial,
     initialFilters,
   )
   const users = data?.items ?? []
-  const all = data?.all ?? users
-  const count = data?.total ?? 0
-  const totalPages = Math.ceil(count / 20)
+  const stats = useAdminStats()
+  const s = stats.data ?? { total: 0, active: 0, suspended: 0, noProfile: 0 }
 
   const [confirmTarget, setConfirmTarget] = useState<{ type: ActionType; id: string } | null>(null)
   const [mutating, setMutating] = useState(false)
@@ -156,22 +150,10 @@ export function UsersClient({
         <PageHeader title="Users" description="Manage platform users." />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatsCard icon={Users} label="Total Users" value={count} />
-          <StatsCard
-            icon={CheckCircle}
-            label="Active"
-            value={all.filter((u) => u.has_profile && !u.suspended).length}
-          />
-          <StatsCard
-            icon={Shield}
-            label="Suspended"
-            value={all.filter((u) => u.suspended).length}
-          />
-          <StatsCard
-            icon={UserX}
-            label="No Profile"
-            value={all.filter((u) => !u.has_profile).length}
-          />
+          <StatsCard icon={Users} label="Total Users" value={s.total} />
+          <StatsCard icon={CheckCircle} label="Active" value={s.active} />
+          <StatsCard icon={Shield} label="Suspended" value={s.suspended} />
+          <StatsCard icon={UserX} label="No Profile" value={s.noProfile} />
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
@@ -201,10 +183,12 @@ export function UsersClient({
           }
           footer={
             <Pagination
-              page={filters.page ?? 1}
-              totalPages={totalPages}
-              count={count}
-              onPageChange={setPage}
+              hasPrev={hasPrev}
+              hasNext={hasNext}
+              onPrev={prev}
+              onNext={next}
+              pageIndex={pageIndex}
+              disabled={isFetching}
             />
           }
           columns={[

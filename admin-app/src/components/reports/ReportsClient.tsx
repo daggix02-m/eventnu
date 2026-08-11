@@ -20,7 +20,7 @@ import {
 } from 'lucide-react'
 import { Button, Badge, Textarea } from '@/components/ui'
 import { PageHeader, StatsCard } from '@/components/shared/PageLayout'
-import { FilterSelect, UserAvatar, useListFilters, EmptyState } from '@/components/list'
+import { FilterSelect, Pagination, UserAvatar, useListFilters, EmptyState } from '@/components/list'
 import { formatDateTime } from '@/lib/format'
 import { toast } from 'sonner'
 import {
@@ -32,8 +32,9 @@ import {
   saveReportNote,
   getReportTargetPreview,
 } from '@/lib/actions/reports'
-import { useReports, reportsKeys } from '@/lib/api/reports'
+import { useReports, useReportsStats, reportsKeys } from '@/lib/api/reports'
 import type { ReportListFilters } from '@/lib/api/reports'
+import type { CursorPage } from '@/lib/api/use-paginated-list'
 
 const statusOptions = [
   { value: 'all', label: 'All Statuses' },
@@ -66,12 +67,10 @@ const targetTypeIcons: Record<string, LucideIcon> = {
 }
 
 export function ReportsClient({
-  initialReports,
-  initialCount,
+  initial,
   initialFilters,
 }: {
-  initialReports: MappedReport[]
-  initialCount: number
+  initial: CursorPage<MappedReport>
   initialFilters: ReportListFilters
 }) {
   const queryClient = useQueryClient()
@@ -81,13 +80,14 @@ export function ReportsClient({
     defaults: { status: 'all', targetType: 'all' },
   })
 
-  const { data, isFetching } = useReports(
+  const { data, isFetching, hasPrev, hasNext, next, prev, pageIndex } = useReports(
     filters,
-    { reports: initialReports, count: initialCount },
+    initial,
     initialFilters,
   )
-  const reports = data?.all ?? []
-  const count = data?.total ?? 0
+  const reports = data?.items ?? []
+  const stats = useReportsStats()
+  const s = stats.data ?? { total: 0, pending: 0, actioned: 0, dismissed: 0 }
 
   const [selectedReport, setSelectedReport] = useState<MappedReport | null>(null)
   const [loading, setLoading] = useState(false)
@@ -173,26 +173,14 @@ export function ReportsClient({
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatsCard icon={Flag} label="Total Reports" value={count} />
-        <StatsCard
-          icon={AlertTriangle}
-          label="Pending"
-          value={reports.filter((r) => r.status === 'pending').length}
-        />
-        <StatsCard
-          icon={EyeOff}
-          label="Actioned"
-          value={reports.filter((r) => r.status === 'actioned').length}
-        />
-        <StatsCard
-          icon={X}
-          label="Dismissed"
-          value={reports.filter((r) => r.status === 'dismissed').length}
-        />
+        <StatsCard icon={Flag} label="Total Reports" value={s.total} />
+        <StatsCard icon={AlertTriangle} label="Pending" value={s.pending} />
+        <StatsCard icon={EyeOff} label="Actioned" value={s.actioned} />
+        <StatsCard icon={X} label="Dismissed" value={s.dismissed} />
       </div>
 
       <div className="bg-card rounded-3xl border border-outline-variant overflow-hidden shadow-sm flex flex-col lg:flex-row h-[700px]">
-        <div className="flex-1 overflow-auto border-r border-outline-variant">
+        <div className="flex-1 flex flex-col min-w-0 border-r border-outline-variant">
           <div className="sticky top-0 bg-surface-container-lowest z-10 px-6 py-4 border-b border-outline-variant flex flex-wrap gap-3 items-center">
             <div className="flex gap-2">
               {statusOptions.map((o) => (
@@ -220,7 +208,9 @@ export function ReportsClient({
             </div>
           </div>
 
-          <div className={cn('transition-opacity', isFetching && 'opacity-60')}>
+          <div
+            className={cn('flex-1 overflow-auto transition-opacity', isFetching && 'opacity-60')}
+          >
             <table className="w-full text-left">
               <thead className="sticky top-[73px] bg-card z-10">
                 <tr className="text-muted-foreground border-b border-outline-variant">
@@ -312,6 +302,14 @@ export function ReportsClient({
               </tbody>
             </table>
           </div>
+          <Pagination
+            hasPrev={hasPrev}
+            hasNext={hasNext}
+            onPrev={prev}
+            onNext={next}
+            pageIndex={pageIndex}
+            disabled={isFetching}
+          />
         </div>
 
         <div

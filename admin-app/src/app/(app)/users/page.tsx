@@ -10,12 +10,10 @@ export default async function UsersPage({
   const params = await searchParams
   const status = typeof params.status === 'string' ? params.status : 'all'
   const search = typeof params.search === 'string' ? params.search : ''
-  const page = typeof params.page === 'string' ? parseInt(params.page) : 1
 
-  let users: Awaited<ReturnType<typeof getUsers>>['users'] = []
-  let count = 0
+  let initial: Awaited<ReturnType<typeof getUsers>> = { items: [], nextCursor: null, isDone: true }
   try {
-    ;({ users, count } = await getUsers({ status, search, page, perPage: 20 }))
+    initial = await getUsers({ status, search })
   } catch (err) {
     console.error('Failed to load users:', err)
   }
@@ -29,9 +27,8 @@ export default async function UsersPage({
 
   return (
     <UsersClient
-      initialUsers={users}
-      initialCount={count}
-      initialFilters={{ status, search, page }}
+      initial={initial}
+      initialFilters={{ status, search }}
       currentAdminId={currentAdmin?.authUserId ?? null}
     />
   )

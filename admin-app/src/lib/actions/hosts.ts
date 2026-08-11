@@ -5,21 +5,37 @@ import type { Id } from '@eventnu/convex/_generated/dataModel'
 import { api } from '@eventnu/convex/_generated/api'
 import { revalidatePath } from 'next/cache'
 import { mapHost } from '../mappers'
+import { DEFAULT_PAGE_SIZE } from '@/lib/pagination'
 
 export async function getHosts(params: {
   status?: string
   type?: string
   search?: string
-  page?: number
-  perPage?: number
+  cursor?: string | null
 }) {
-  const hosts = await fetchQuery(api.hosts.list, {
+  const result = await fetchQuery(api.hosts.list, {
+    paginationOpts: { numItems: DEFAULT_PAGE_SIZE, cursor: params.cursor ?? null },
     search: params.search,
-    status: params.status,
-    hostType: params.type,
+    status: params.status !== 'all' ? params.status : undefined,
+    hostType: params.type !== 'all' ? params.type : undefined,
   })
-  const count = hosts.length
-  return { hosts: hosts.map(mapHost), count }
+  return {
+    items: (result.page ?? []).map(mapHost),
+    nextCursor: (result.continueCursor ?? null) as string | null,
+    isDone: result.isDone,
+  }
+}
+
+export async function getAllHosts(params: { status?: string; type?: string } = {}) {
+  const items: Awaited<ReturnType<typeof getHosts>>['items'] = []
+  let cursor: string | null = null
+  for (let i = 0; i < 50; i++) {
+    const page = await getHosts({ status: params.status, type: params.type, cursor })
+    items.push(...page.items)
+    if (page.isDone || !page.nextCursor) break
+    cursor = page.nextCursor
+  }
+  return items
 }
 
 export async function createHost(host: {

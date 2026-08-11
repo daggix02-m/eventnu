@@ -41,6 +41,7 @@ import { getErrorMessage } from '@/lib/errors'
 import { useHosts, hostsKeys } from '@/lib/api/hosts'
 import { createHost, updateHost, updateHostStatus, deleteHost } from '@/lib/actions/hosts'
 import type { MappedHost } from '@/lib/mappers'
+import type { CursorPage } from '@/lib/api/use-paginated-list'
 
 const statusOptions = [
   { value: 'all', label: 'All Status' },
@@ -87,27 +88,24 @@ const emptyForm: HostForm = {
 }
 
 interface HostsClientProps {
-  initialHosts: MappedHost[]
-  initialCount: number
-  initialFilters: { status?: string; type?: string; search?: string; page?: number }
+  initial: CursorPage<MappedHost>
+  initialFilters: { status?: string; type?: string; search?: string }
 }
 
-export function HostsClient({ initialHosts, initialCount, initialFilters }: HostsClientProps) {
+export function HostsClient({ initial, initialFilters }: HostsClientProps) {
   const queryClient = useQueryClient()
-  const { filters, update, setPage, searchInput, setSearchInput } = useListFilters({
+  const { filters, update, searchInput, setSearchInput } = useListFilters({
     basePath: '/hosts',
     initial: initialFilters,
-    defaults: { status: 'all', type: 'all', page: 1 },
+    defaults: { status: 'all', type: 'all' },
   })
 
-  const { data, isFetching } = useHosts(
+  const { data, isFetching, hasPrev, hasNext, next, prev, pageIndex } = useHosts(
     filters,
-    { hosts: initialHosts, count: initialCount },
+    initial,
     initialFilters,
   )
   const hosts = data?.items ?? []
-  const count = data?.total ?? 0
-  const totalPages = Math.ceil(count / 20)
 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingHost, setEditingHost] = useState<MappedHost | null>(null)
@@ -246,10 +244,12 @@ export function HostsClient({ initialHosts, initialCount, initialFilters }: Host
           }
           footer={
             <Pagination
-              page={filters.page ?? 1}
-              totalPages={totalPages}
-              count={count}
-              onPageChange={setPage}
+              hasPrev={hasPrev}
+              hasNext={hasNext}
+              onPrev={prev}
+              onNext={next}
+              pageIndex={pageIndex}
+              disabled={isFetching}
             />
           }
           columns={[
