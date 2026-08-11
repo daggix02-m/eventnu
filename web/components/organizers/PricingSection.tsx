@@ -6,7 +6,7 @@ import { useGSAP } from '@gsap/react'
 import { gsap } from '@/lib/gsap'
 import { Banknote, Ticket, CheckCircle2, ArrowRight, ShieldCheck } from 'lucide-react'
 import { Container } from '@/components/layout/Container'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 
 interface OrganizersPricingProps {
   contactUrl?: string

@@ -15,7 +15,7 @@ import {
 } from 'lucide-react'
 import { cn, formatEventDate, isEventPast } from '@/lib/utils'
 import { filterStyle, sortedImages } from '@/lib/media'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 import type { Event } from '@/types'
 
 interface FeaturedCarouselProps {

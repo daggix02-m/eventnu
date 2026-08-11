@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { Calendar, Banknote, MapPin, ExternalLink, Download, MessageSquarePlus } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 import { SITE } from '@/lib/site'
 import { EventSocialActions } from '@/components/social/EventSocialActions'
 import { formatPrice, formatEventDate, isEventPast } from '@/lib/utils'

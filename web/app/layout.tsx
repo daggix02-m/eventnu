@@ -5,7 +5,7 @@ import { TopNav } from '@/components/layout/TopNav'
 import { BottomTabBar } from '@/components/layout/BottomTabBar'
 import { Footer } from '@/components/layout/Footer'
 import { SkipLink } from '@/components/layout/SkipLink'
-import { ConvexAuthClientProvider } from './ConvexAuthClientProvider'
+import { ConvexAuthClientProvider } from '@/components/providers/ConvexAuthClientProvider'
 import { ConvexAuthNextjsServerProvider } from '@convex-dev/auth/nextjs/server'
 import { AuthModalProvider } from '@/components/auth/AuthModalContext'
 

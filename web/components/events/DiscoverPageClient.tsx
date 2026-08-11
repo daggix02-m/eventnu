@@ -5,7 +5,7 @@ import { Container } from '@/components/layout/Container'
 import { EventList } from '@/components/events/EventList'
 import { PulseEqualizer } from '@/components/events/PulseEqualizer'
 import { SearchBar, CategoryPills, DateFilter } from '@/components/events/SearchBar'
-import { useScrollReveal } from '@/hooks/useScrollReveal'
+import { useScrollReveal } from '@/lib/hooks/useScrollReveal'
 import type { Event, Category } from '@/types'
 
 interface DiscoverPageClientProps {

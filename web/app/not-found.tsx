@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { Container } from '@/components/layout/Container'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 
 export const metadata = {
   title: 'Page Not Found | Event Nu',

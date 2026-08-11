@@ -5,7 +5,7 @@ import { useGSAP } from '@gsap/react'
 import { gsap } from '@/lib/gsap'
 import { QrCode, Wifi, Shield, Zap, ArrowDownToLine } from 'lucide-react'
 import { Container } from '@/components/layout/Container'
-import { usePrefersReducedMotion } from '@/lib/usePrefersReducedMotion'
+import { usePrefersReducedMotion } from '@/lib/hooks/usePrefersReducedMotion'
 
 const FEATURES = [
   {

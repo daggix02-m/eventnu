@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Megaphone, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { usePrefersReducedMotion } from '@/lib/usePrefersReducedMotion'
+import { usePrefersReducedMotion } from '@/lib/hooks/usePrefersReducedMotion'
 import type { Announcement } from '@/types'
 
 interface AnnouncementBannerProps {

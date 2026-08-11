@@ -5,7 +5,7 @@ import Image from 'next/image'
 import { Container } from '@/components/layout/Container'
 import { getPageBySlug } from '@/lib/api/events'
 import { sanitizeHtml } from '@/lib/sanitize'
-import { LEGAL_PAGES, LEGAL_PAGE_SLUGS } from '../legal'
+import { LEGAL_PAGES, LEGAL_PAGE_SLUGS } from '@/lib/legal'
 
 export const dynamic = 'force-dynamic'
 

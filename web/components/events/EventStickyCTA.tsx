@@ -1,5 +1,5 @@
 import { ExternalLink, Ticket } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 import { formatPrice, formatEventDateShort, isEventPast } from '@/lib/utils'
 import type { Event } from '@/types'
 

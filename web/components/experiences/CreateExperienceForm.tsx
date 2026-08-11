@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '@eventnu/convex/_generated/api'
 import { ImagePlus, Loader2, Send } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
 const MAX_CONTENT_LENGTH = 2000

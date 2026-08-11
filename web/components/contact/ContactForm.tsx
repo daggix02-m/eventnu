@@ -2,7 +2,7 @@
 
 import { useActionState } from 'react'
 import { submitContactForm } from '@/lib/actions/contact'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 
 export function ContactForm() {
   const [state, formAction, pending] = useActionState(submitContactForm, null)

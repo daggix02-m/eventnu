@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
 
-const PixelBlast = dynamic(() => import('@/components/ui/PixelBlast'), { ssr: false })
+const PixelBlast = dynamic(() => import('@/components/effects/PixelBlast'), { ssr: false })
 
 export function SiteBackground() {
   const [mounted, setMounted] = useState(false)

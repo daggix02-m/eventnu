@@ -8,7 +8,7 @@ import { useAuthActions } from '@convex-dev/auth/react'
 import { Loader2 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 import { Container } from '@/components/layout/Container'
 import { redeemVerificationCode } from '@/lib/auth'
 
