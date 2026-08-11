@@ -54,9 +54,13 @@ export function PublishToInstagramDialog({
     setCaption(buildCaption(title, description, venueName))
     setPublishedLink(null)
     let active = true
-    getInstagramStatus().then((s) => {
-      if (active) setConnected(Boolean(s))
-    })
+    getInstagramStatus()
+      .then((s) => {
+        if (active) setConnected(Boolean(s))
+      })
+      .catch(() => {
+        if (active) setConnected(false)
+      })
     return () => {
       active = false
     }

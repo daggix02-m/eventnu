@@ -13,20 +13,15 @@ export async function getNotifications(params: {
   type?: string
   read?: boolean
 }) {
-  try {
-    const all = await fetchQuery(api.notifications.listAll, {
-      search: params.search,
-      type: params.type,
-      read: params.read,
-    })
-    const from = ((params.page ?? 1) - 1) * (params.perPage ?? 20)
-    const to = from + (params.perPage ?? 20)
-    const notifications = all.slice(from, to).map((n) => mapNotification(n, n.profile))
-    return { notifications, count: all.length }
-  } catch (err) {
-    console.error('Failed to load notifications:', err)
-    throw err
-  }
+  const all = await fetchQuery(api.notifications.listAll, {
+    search: params.search,
+    type: params.type,
+    read: params.read,
+  })
+  const from = ((params.page ?? 1) - 1) * (params.perPage ?? 20)
+  const to = from + (params.perPage ?? 20)
+  const notifications = all.slice(from, to).map((n) => mapNotification(n, n.profile))
+  return { notifications, count: all.length }
 }
 
 export async function sendNotification(params: {

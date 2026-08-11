@@ -12,29 +12,19 @@ export async function getReports(params: {
   page?: number
   perPage?: number
 }) {
-  try {
-    const reports = await fetchQuery(api.reports.list, {
-      status: params.status !== 'all' ? params.status : undefined,
-    })
-    let filtered = reports.map(mapReport)
-    if (params.targetType && params.targetType !== 'all') {
-      filtered = filtered.filter((r) => r.target_type === params.targetType)
-    }
-    return { reports: filtered, count: filtered.length }
-  } catch (err) {
-    console.error('Failed to load reports:', err)
-    throw err
+  const reports = await fetchQuery(api.reports.list, {
+    status: params.status !== 'all' ? params.status : undefined,
+  })
+  let filtered = reports.map(mapReport)
+  if (params.targetType && params.targetType !== 'all') {
+    filtered = filtered.filter((r) => r.target_type === params.targetType)
   }
+  return { reports: filtered, count: filtered.length }
 }
 
 export async function getReportTargetPreview(targetType: string, targetId: string) {
-  try {
-    const preview = await fetchQuery(api.reports.getTargetPreview, { targetType, targetId })
-    return mapReportTargetPreview(preview)
-  } catch (err) {
-    console.error('Failed to load report target preview:', err)
-    return null
-  }
+  const preview = await fetchQuery(api.reports.getTargetPreview, { targetType, targetId })
+  return mapReportTargetPreview(preview)
 }
 
 export async function dismissReport(reportId: string) {

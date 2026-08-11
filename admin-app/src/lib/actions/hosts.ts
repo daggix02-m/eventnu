@@ -13,18 +13,13 @@ export async function getHosts(params: {
   page?: number
   perPage?: number
 }) {
-  try {
-    const hosts = await fetchQuery(api.hosts.list, {
-      search: params.search,
-      status: params.status,
-      hostType: params.type,
-    })
-    const count = hosts.length
-    return { hosts: hosts.map(mapHost), count }
-  } catch (err) {
-    console.error('Failed to load hosts:', err)
-    throw err
-  }
+  const hosts = await fetchQuery(api.hosts.list, {
+    search: params.search,
+    status: params.status,
+    hostType: params.type,
+  })
+  const count = hosts.length
+  return { hosts: hosts.map(mapHost), count }
 }
 
 export async function createHost(host: {
@@ -96,13 +91,8 @@ export async function deleteHost(hostId: string) {
 }
 
 export async function getHostById(hostId: string) {
-  try {
-    const host = await fetchQuery(api.hosts.getById, { hostId: hostId as Id<'hosts'> })
-    if (!host) return { host: null, eventCount: 0 }
-    const stats = await fetchQuery(api.hosts.getStats, { hostId: hostId as Id<'hosts'> })
-    return { host: mapHost(host), eventCount: stats.eventCount }
-  } catch (err) {
-    console.error('Failed to load host details:', err)
-    throw err
-  }
+  const host = await fetchQuery(api.hosts.getById, { hostId: hostId as Id<'hosts'> })
+  if (!host) return { host: null, eventCount: 0 }
+  const stats = await fetchQuery(api.hosts.getStats, { hostId: hostId as Id<'hosts'> })
+  return { host: mapHost(host), eventCount: stats.eventCount }
 }

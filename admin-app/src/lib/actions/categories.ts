@@ -7,13 +7,8 @@ import { revalidatePath } from 'next/cache'
 import { mapCategory } from '../mappers'
 
 export async function getCategories() {
-  try {
-    const categories = await fetchQuery(api.categories.getWithEventCounts)
-    return categories.map((c) => mapCategory(c, c.eventCount))
-  } catch (err) {
-    console.error('Failed to load categories:', err)
-    throw err
-  }
+  const categories = await fetchQuery(api.categories.getWithEventCounts)
+  return categories.map((c) => mapCategory(c, c.eventCount))
 }
 
 export async function createCategory(category: {

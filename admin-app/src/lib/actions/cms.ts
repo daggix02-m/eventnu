@@ -8,23 +8,13 @@ import { mapAnnouncement, mapContactSubmission, mapPage } from '../mappers'
 import { getUsers } from './users'
 
 export async function getPages() {
-  try {
-    const pages = await fetchQuery(api.cms.pages.getPages)
-    return pages.map(mapPage)
-  } catch (err) {
-    console.error('Failed to load pages:', err)
-    throw err
-  }
+  const pages = await fetchQuery(api.cms.pages.getPages)
+  return pages.map(mapPage)
 }
 
 export async function getPageById(id: string) {
-  try {
-    const page = await fetchQuery(api.cms.pages.getPageById, { pageId: id as Id<'pages'> })
-    return page ? mapPage(page) : null
-  } catch (err) {
-    console.error('Failed to load page:', err)
-    throw err
-  }
+  const page = await fetchQuery(api.cms.pages.getPageById, { pageId: id as Id<'pages'> })
+  return page ? mapPage(page) : null
 }
 
 export async function createPage(data: {
@@ -86,22 +76,17 @@ export async function deletePage(id: string) {
 }
 
 export async function getAnnouncements() {
-  try {
-    const announcements = await fetchQuery(api.cms.announcements.getAnnouncements)
-    const { users } = await getUsers({ status: 'all' })
-    const byId = new Map(users.filter((u) => u.profileId).map((u) => [u.profileId, u]))
-    return announcements.map((a) => {
-      const mapped = mapAnnouncement(a)
-      const target = mapped.target_user_id ? byId.get(mapped.target_user_id) : null
-      return {
-        ...mapped,
-        target_user_name: target ? target.full_name || target.username : null,
-      }
-    })
-  } catch (err) {
-    console.error('Failed to load announcements:', err)
-    throw err
-  }
+  const announcements = await fetchQuery(api.cms.announcements.getAnnouncements)
+  const { users } = await getUsers({ status: 'all' })
+  const byId = new Map(users.filter((u) => u.profileId).map((u) => [u.profileId, u]))
+  return announcements.map((a) => {
+    const mapped = mapAnnouncement(a)
+    const target = mapped.target_user_id ? byId.get(mapped.target_user_id) : null
+    return {
+      ...mapped,
+      target_user_name: target ? target.full_name || target.username : null,
+    }
+  })
 }
 
 export async function createAnnouncement(data: {
@@ -168,13 +153,8 @@ export async function deleteAnnouncement(id: string) {
 }
 
 export async function getContactSubmissions() {
-  try {
-    const submissions = await fetchQuery(api.cms.contact.getContactSubmissions)
-    return submissions.map(mapContactSubmission)
-  } catch (err) {
-    console.error('Failed to load contact submissions:', err)
-    throw err
-  }
+  const submissions = await fetchQuery(api.cms.contact.getContactSubmissions)
+  return submissions.map(mapContactSubmission)
 }
 
 export async function markContactResolved(id: string, resolved: boolean) {

@@ -104,8 +104,12 @@ export function ReportsClient({
     setSelectedReport(report)
     setNoteDraft(report.admin_note || '')
     setTargetPreview(null)
-    const preview = await getReportTargetPreview(report.target_type, report.target_id)
-    setTargetPreview(preview)
+    try {
+      const preview = await getReportTargetPreview(report.target_type, report.target_id)
+      setTargetPreview(preview)
+    } catch {
+      setTargetPreview(null)
+    }
   }
 
   const handleSaveNote = async () => {

@@ -5,30 +5,25 @@ import { api } from '@eventnu/convex/_generated/api'
 import { mapTopEvent } from '../mappers'
 
 export async function getAnalytics() {
-  try {
-    const [stats, weekly, topEvents] = await Promise.all([
-      fetchQuery(api.analytics.getStats),
-      fetchQuery(api.analytics.getWeekly, { weeks: 12, now: Date.now() }),
-      fetchQuery(api.analytics.getTopEvents, { limit: 10 }),
-    ])
+  const [stats, weekly, topEvents] = await Promise.all([
+    fetchQuery(api.analytics.getStats),
+    fetchQuery(api.analytics.getWeekly, { weeks: 12, now: Date.now() }),
+    fetchQuery(api.analytics.getTopEvents, { limit: 10 }),
+  ])
 
-    return {
-      eventsPerWeek: (weekly.eventsPerWeek ?? []).map((w) => ({
-        week_start: w.week ? `${w.week}-01` : '',
-        event_count: w.count ?? 0,
-      })),
-      usersPerWeek: (weekly.usersPerWeek ?? []).map((w) => ({
-        week_start: w.week ? `${w.week}-01` : '',
-        user_count: w.count ?? 0,
-      })),
-      totalEvents: stats.totalEvents,
-      totalUsers: stats.totalUsers,
-      totalHosts: stats.totalHosts,
-      totalOrganizers: stats.totalOrganizers,
-      topEvents: (topEvents ?? []).map(mapTopEvent),
-    }
-  } catch (err) {
-    console.error('Failed to load analytics:', err)
-    throw err
+  return {
+    eventsPerWeek: (weekly.eventsPerWeek ?? []).map((w) => ({
+      week_start: w.week ? `${w.week}-01` : '',
+      event_count: w.count ?? 0,
+    })),
+    usersPerWeek: (weekly.usersPerWeek ?? []).map((w) => ({
+      week_start: w.week ? `${w.week}-01` : '',
+      user_count: w.count ?? 0,
+    })),
+    totalEvents: stats.totalEvents,
+    totalUsers: stats.totalUsers,
+    totalHosts: stats.totalHosts,
+    totalOrganizers: stats.totalOrganizers,
+    topEvents: (topEvents ?? []).map(mapTopEvent),
   }
 }

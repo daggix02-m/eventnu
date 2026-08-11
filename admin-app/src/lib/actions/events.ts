@@ -17,21 +17,16 @@ export async function getEvents(params: {
   page?: number
   perPage?: number
 }) {
-  try {
-    const result = await fetchQuery(api.events.read.list, {
-      paginationOpts: { numItems: params.perPage ?? 20, cursor: null },
-      status: params.status !== 'all' ? params.status : undefined,
-      source: params.source !== 'all' ? params.source : undefined,
-      featured: params.featured,
-      frequency: params.frequency !== 'all' ? params.frequency : undefined,
-      search: params.search,
-      page: params.page ?? 1,
-    })
-    return { events: (result.page ?? []).map(mapEvent), count: result.totalCount ?? 0 }
-  } catch (err) {
-    console.error('Failed to load events:', err)
-    throw err
-  }
+  const result = await fetchQuery(api.events.read.list, {
+    paginationOpts: { numItems: params.perPage ?? 20, cursor: null },
+    status: params.status !== 'all' ? params.status : undefined,
+    source: params.source !== 'all' ? params.source : undefined,
+    featured: params.featured,
+    frequency: params.frequency !== 'all' ? params.frequency : undefined,
+    search: params.search,
+    page: params.page ?? 1,
+  })
+  return { events: (result.page ?? []).map(mapEvent), count: result.totalCount ?? 0 }
 }
 
 export async function updateEventStatus(eventId: string, status: string, note?: string) {
@@ -74,20 +69,15 @@ export async function deleteEvent(eventId: string) {
 }
 
 export async function getEventById(eventId: string) {
-  try {
-    const result = await fetchQuery(api.events.read.getById, { eventId: eventId as Id<'events'> })
-    return {
-      event: result.event ? mapEvent(result.event) : null,
-      categories: (result.categories ?? []).map((c, i) => mapEventCategory(c, i)),
-      images: (result.images ?? []).map((img) => ({
-        url: img.url,
-        storageId: img.storageId ?? null,
-        filter: img.filter ?? '',
-      })),
-    }
-  } catch (err) {
-    console.error('Failed to load event details:', err)
-    throw err
+  const result = await fetchQuery(api.events.read.getById, { eventId: eventId as Id<'events'> })
+  return {
+    event: result.event ? mapEvent(result.event) : null,
+    categories: (result.categories ?? []).map((c, i) => mapEventCategory(c, i)),
+    images: (result.images ?? []).map((img) => ({
+      url: img.url,
+      storageId: img.storageId ?? null,
+      filter: img.filter ?? '',
+    })),
   }
 }
 

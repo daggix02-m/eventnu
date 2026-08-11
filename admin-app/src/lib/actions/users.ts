@@ -12,20 +12,15 @@ export async function getUsers(params: {
   page?: number
   perPage?: number
 }) {
-  try {
-    const status =
-      params.status === 'active' || params.status === 'suspended' || params.status === 'no_profile'
-        ? params.status
-        : 'all'
-    const users = await fetchQuery(api.profiles.listUsers, {
-      search: params.search,
-      status,
-    })
-    return { users: users.map(mapAdminUser), count: users.length }
-  } catch (err) {
-    console.error('Failed to load users:', err)
-    throw err
-  }
+  const status =
+    params.status === 'active' || params.status === 'suspended' || params.status === 'no_profile'
+      ? params.status
+      : 'all'
+  const users = await fetchQuery(api.profiles.listUsers, {
+    search: params.search,
+    status,
+  })
+  return { users: users.map(mapAdminUser), count: users.length }
 }
 
 export async function suspendUser(userId: string) {
@@ -110,42 +105,37 @@ async function buildDetail(
 }
 
 export async function getUserById(userId: string) {
+  let row: Awaited<ReturnType<typeof fetchQuery<typeof api.profiles.getUserByAuthId>>> = null
   try {
-    let row: Awaited<ReturnType<typeof fetchQuery<typeof api.profiles.getUserByAuthId>>> = null
-    try {
-      row = await fetchQuery(api.profiles.getUserByAuthId, {
-        userId: userId as Id<'users'>,
-      })
-    } catch {
-      row = null
-    }
-    if (row) return await buildDetail(row)
-
-    const profile = await fetchQuery(api.profiles.getById, {
-      profileId: userId as Id<'profiles'>,
+    row = await fetchQuery(api.profiles.getUserByAuthId, {
+      userId: userId as Id<'users'>,
     })
-    if (!profile) return { profile: null, role: null, stats: null }
+  } catch {
+    row = null
+  }
+  if (row) return await buildDetail(row)
 
-    if (profile.authUserId) {
-      const row = await fetchQuery(api.profiles.getUserByAuthId, {
-        userId: profile.authUserId,
-      })
-      if (row) return await buildDetail(row)
-    }
+  const profile = await fetchQuery(api.profiles.getById, {
+    profileId: userId as Id<'profiles'>,
+  })
+  if (!profile) return { profile: null, role: null, stats: null }
 
-    return {
-      profile: {
-        ...mapProfile(profile),
-        authUserId: profile.authUserId ?? '',
-        profileId: profile._id,
-        role: profile.role,
-        has_profile: true,
-      },
+  if (profile.authUserId) {
+    const row = await fetchQuery(api.profiles.getUserByAuthId, {
+      userId: profile.authUserId,
+    })
+    if (row) return await buildDetail(row)
+  }
+
+  return {
+    profile: {
+      ...mapProfile(profile),
+      authUserId: profile.authUserId ?? '',
+      profileId: profile._id,
       role: profile.role,
-      stats: EMPTY_STATS,
-    }
-  } catch (err) {
-    console.error('Failed to load user details:', err)
-    throw err
+      has_profile: true,
+    },
+    role: profile.role,
+    stats: EMPTY_STATS,
   }
 }

@@ -6,12 +6,7 @@ import { api } from '@eventnu/convex/_generated/api'
 import { revalidatePath } from 'next/cache'
 
 export async function getInstagramStatus() {
-  try {
-    const result = await fetchQuery(api.instagram.connect.getConnectionStatus)
-    return result
-  } catch {
-    return null
-  }
+  return fetchQuery(api.instagram.connect.getConnectionStatus)
 }
 
 export async function startInstagramConnect() {

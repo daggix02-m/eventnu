@@ -7,13 +7,8 @@ import { revalidatePath } from 'next/cache'
 import { mapFeaturedSection } from '../mappers'
 
 export async function getFeaturedSections() {
-  try {
-    const sections = await fetchQuery(api.features.list)
-    return sections.map(mapFeaturedSection)
-  } catch (err) {
-    console.error('Failed to load featured sections:', err)
-    throw err
-  }
+  const sections = await fetchQuery(api.features.list)
+  return sections.map(mapFeaturedSection)
 }
 
 export async function updateFeaturedSection(
@@ -36,19 +31,14 @@ export async function updateFeaturedSection(
 }
 
 export async function getAdminStats() {
-  try {
-    const stats = await fetchQuery(api.analytics.getStats)
-    return {
-      totalEvents: stats.totalEvents,
-      totalUsers: stats.totalUsers,
-      totalHosts: stats.totalHosts,
-      totalOrganizers: stats.totalOrganizers,
-      openReports: stats.totalReports,
-      moderationCount: stats.totalModerationLogs,
-    }
-  } catch (err) {
-    console.error('Failed to load admin stats:', err)
-    throw err
+  const stats = await fetchQuery(api.analytics.getStats)
+  return {
+    totalEvents: stats.totalEvents,
+    totalUsers: stats.totalUsers,
+    totalHosts: stats.totalHosts,
+    totalOrganizers: stats.totalOrganizers,
+    openReports: stats.totalReports,
+    moderationCount: stats.totalModerationLogs,
   }
 }
 
