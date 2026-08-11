@@ -2,8 +2,9 @@
 
 Coding, structure, and workflow conventions for the EventNu monorepo. Applies to
 `admin-app/`, `web/`, and `packages/convex/`. See `REFACTORING.md` for the roadmap,
-`AUDIT.md` for the technical/security audit, `PRODUCT.md` for product truth, and
-`docs/decisions/` for ADRs.
+`AUDIT.md` for the technical/security audit, `PRODUCT.md` for product truth,
+`ARCHITECTURE.md` for the module map, `DESIGN.md` for the admin-app design spec,
+`CONTRIBUTING.md` for PR/commit workflow, and `docs/decisions/` for ADRs.
 
 ## Repo layout
 
@@ -26,10 +27,22 @@ Every package and change must pass all of:
 2. `typecheck` — `tsc --noEmit`
 3. `knip` — dead-code / unused-dep detection
 4. `format:check` — Prettier (`--check` from repo root)
-5. `build` — `next build` (both apps)
+5. `test` — Vitest (`admin-app` logic + components, `packages/convex` helpers)
+6. `build` — `next build` (both apps)
 
 Run from the package directory (`npm run <gate>`) or workspace (`npm -w <pkg> run <gate>`).
-All five must be green before merge; CI enforces them on every PR.
+All six must be green before merge; CI enforces them on every PR.
+
+### Tests
+
+- Vitest + Testing Library + jsdom (`admin-app`), plain Vitest (`packages/convex`).
+- Pure logic (`admin-app/src/lib/*.ts`) is unit-tested, including mappers, date
+  formatting, error messages, pagination, and utils.
+- Coverage gate in `admin-app` covers the pure-logic layer only: ≥85% statements,
+  ≥80% branches (`npm run test:coverage`). Not a global threshold — presentational
+  components are exercised via integration tests instead.
+- Server/Convex auth flows are deferred until Convex's in-memory test runner is wired
+  (`packages/convex`, see `REFACTORING.md` Phase 4.2).
 
 ### knip
 
@@ -67,11 +80,24 @@ trailing commas on multiline. Do not hand-format; run `npm run format`.
 ## Data fetching
 
 - **Consumer web app** uses `convex/react` hooks (`useQuery`, `useMutation`) plus
+  `@convex-dev/auth/react` for auth; server-only API modules are guarded with
+  `server-only`.
+- **Admin app** list pages read through TanStack Query hooks in
+  `admin-app/src/lib/api/*` (one module per resource), seeded with server
+  `initialData` and a consistent `staleTime: 30_000`. Mutations live in server actions
+  (`admin-app/src/lib/actions/*`), call `invalidateQueries`, and keep `revalidatePath`
+  for the SSR seed. Do **not** add `convex/react` `useQuery` in admin-app — only
   `@convex-dev/auth/react` for auth.
-- **Admin app** fetches through server actions in `admin-app/src/lib/actions/` and is
-  standardizing on TanStack Query for list pages (see `REFACTORING.md` Phase 2.2 — the
-  three parallel systems are being consolidated into one).
-- List search inputs use a ~400ms debounce; set a consistent TanStack Query `staleTime`.
+- List search inputs use a ~400ms debounce.
+
+### Admin-app module naming (`admin-app/src/lib`)
+
+- `actions/*` — server actions that call Convex (mutations + list reads).
+- `api/*` — TanStack Query hook modules, one per resource, mirroring `actions/*`.
+- Top level — pure, framework-free helpers (`errors.ts`, `format.ts`, `mappers.ts`,
+  `pagination.ts`, `motion.ts`, `utils.ts`). These are unit-tested and covered by the
+  statement gate.
+- Errors flow through `errors.ts` `getErrorMessage`; never `console.log` in prod paths.
 
 ## Components
 

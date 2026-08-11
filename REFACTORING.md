@@ -55,7 +55,7 @@ Much is already known from `AUDIT.md` and exploration. Formalize it into a livin
 - [x] Backend:
   - `hosts.getStats` now calls `requireAdmin` (was unguarded while `hosts.list`/`getById` require admin).
   - Legacy `events.categoryIds` array: **deferred to Phase 6** — the field is only *written* via the `events.create/update` join-table path (the `categoryIds` arg is the API contract, not the array field), but removing the schema field touches mappers, migrations, and the admin form contract, so it ships with the Phase 6 data-layer cleanup.
-- [ ] Duplicated `fadeUp` framer-motion const in `HostDetailClient` / `OrganizerDetailClient` / `UserDetailClient` (→ Phase 2.4 motion consolidation).
+- [x] Duplicated `fadeUp` framer-motion const in `HostDetailClient` / `OrganizerDetailClient` / `UserDetailClient` — all three now import `fadeUp` from `src/lib/motion.ts` (resolved in Phase 2.4 motion consolidation).
 
 ### 1.3 Debt register
 - [x] Classify every finding **D** (delete) / **I** (improve) / **C** (conserve-as-is) with owner + effort in a `docs/tech-debt.md` register.
@@ -123,7 +123,7 @@ Root cause of ~90% of the `any` casts: `admin-app` imports `../../../web/convex/
 - [x] **TypeScript**: `typecheck` scripts (`tsc --noEmit`) across all three workspaces; root `npm run typecheck`.
 - [x] **Pre-commit**: husky + lint-staged (lint + format on staged files, per-workspace ESLint via `--config`).
 - [x] **CI** (GitHub Actions): `lint → typecheck → format → test → build` on every PR; conditional `convex typegen` freshness check + build gated on repo secrets.
-- [ ] **Convex-specific rules** into `admin-app/AGENTS.md`: compound-index naming, no unbounded arrays, validators on all args, `.paginate()` not `.take(1000)`, `helpers.requireAdmin` not hand-rolled checks.
+- [x] **Convex-specific rules** into `admin-app/AGENTS.md`: compound-index naming, no unbounded arrays, validators on all args, `.paginate()` not `.take(1000)`, `helpers.requireAdmin` not hand-rolled checks.
 
 **Exit criteria:** `lint` + `typecheck` + `format:check` green on both apps; enforced in CI and pre-commit.
 
@@ -149,12 +149,12 @@ Root cause of ~90% of the `any` casts: `admin-app` imports `../../../web/convex/
 
 ## Phase 5 — Documentation
 
-- [ ] `admin-app/README.md`: env vars (incl. `NEXT_PUBLIC_WEB_URL`, `CONVEX_SITE_URL`), the cross-app Convex import + codegen prerequisite, scripts.
-- [ ] Root `docs/ARCHITECTURE.md`: module map + the admin ↔ web ↔ Convex coupling diagram.
-- [ ] `docs/CONVENTIONS.md`: code style, server/client boundary, TanStack Query pattern, naming, and the **content-truth list** from `PRODUCT.md`.
-- [ ] `docs/CONTRIBUTING.md`: PR/commit conventions (from Phase 0), review checklist.
-- [ ] `admin-app/AGENTS.md`: Convex boilerplate + app conventions (mirror `web/AGENTS.md`).
-- [ ] Keep `AUDIT.md` current; add `DESIGN.md` for the admin app (impeccable `init`/`document` pass — tokens currently live only in `globals.css`).
+- [x] `admin-app/README.md`: env vars (incl. `NEXT_PUBLIC_CONVEX_URL`, `NEXT_PUBLIC_CONVEX_SITE_URL`, `CONVEX_DEPLOYMENT`), the cross-app Convex import + codegen prerequisite, scripts. **DONE 2026-08-11.** Note: the env keys documented are the real ones in `admin-app/.env.local`/`.env.production` — the older tracker names (`NEXT_PUBLIC_WEB_URL`, `CONVEX_SITE_URL`) don't exist in code.
+- [x] Root `docs/ARCHITECTURE.md`: module map + the admin ↔ web ↔ Convex coupling diagram (mermaid: workspace topology, admin list-page data flow, admin + convex module maps).
+- [x] `docs/CONVENTIONS.md`: code style, server/client boundary, TanStack Query pattern (now the settled standard — Phase 2.2 is complete), naming (`lib/actions` vs `lib/api` vs pure top-level modules), and the **content-truth list** from `PRODUCT.md`. Test gate + coverage threshold added to the quality-gates section.
+- [x] `docs/CONTRIBUTING.md`: PR/commit conventions (from Phase 0), six-gate review checklist, incremental-PR workflow.
+- [x] `admin-app/AGENTS.md`: Convex boilerplate (existing) + app conventions added (data fetching, `src/lib` boundaries, error handling, design system, server/client boundary).
+- [x] Keep `AUDIT.md` current; add `DESIGN.md` for the admin app. `DESIGN.md` added (Fidäl direction, color/typography tokens, motion, interaction contract). Full `AUDIT.md` re-verification is tracked in Phase 7.
 
 **Exit criteria:** a new dev can boot, find, and modify each layer in <30 minutes without asking.
 
