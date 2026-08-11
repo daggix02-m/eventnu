@@ -1,4 +1,5 @@
-import { mutation, MutationCtx } from './_generated/server'
+import { mutation, internalMutation, MutationCtx } from './_generated/server'
+import { internal } from './_generated/api'
 import { requireAdmin } from './helpers'
 
 const CATEGORIES = [
@@ -92,11 +93,34 @@ async function ensureBaseData(ctx: MutationCtx) {
   }
 }
 
+export const insertBaseData = internalMutation({
+  args: {},
+  handler: async (ctx): Promise<{ categoriesSeeded: boolean; sectionsSeeded: boolean }> => {
+    let categoriesSeeded = false
+    const existingCategories = await ctx.db.query('categories').take(1)
+    if (existingCategories.length === 0) {
+      for (const c of CATEGORIES) {
+        await ctx.db.insert('categories', c)
+      }
+      categoriesSeeded = true
+    }
+    let sectionsSeeded = false
+    const existingSections = await ctx.db.query('featuredSections').take(1)
+    if (existingSections.length === 0) {
+      for (const s of FEATURED_SECTIONS) {
+        await ctx.db.insert('featuredSections', s)
+      }
+      sectionsSeeded = true
+    }
+    return { categoriesSeeded, sectionsSeeded }
+  },
+})
+
 export const seed = mutation({
   args: {},
   handler: async (ctx) => {
     await requireAdmin(ctx)
-    await ensureBaseData(ctx)
+    await ctx.runMutation(internal.seed.insertBaseData, {})
     return { seeded: true }
   },
 })
@@ -576,13 +600,12 @@ const EVENTS: SeedEvent[] = [
   },
 ]
 
-export const seedEvents = mutation({
+export const insertSeedEvents = internalMutation({
   args: {},
   handler: async (ctx) => {
-    await requireAdmin(ctx)
     await ensureBaseData(ctx)
 
-    const categories = await ctx.db.query('categories').collect()
+    const categories = await ctx.db.query('categories').take(200)
     const catBySlug = new Map(categories.map((c) => [c.slug, c._id]))
 
     let created = 0
@@ -653,5 +676,17 @@ export const seedEvents = mutation({
     }
 
     return { created, skipped }
+  },
+})
+
+export const seedEvents = mutation({
+  args: {},
+  handler: async (ctx): Promise<{ created: number; skipped: number }> => {
+    await requireAdmin(ctx)
+    const result: { created: number; skipped: number } = await ctx.runMutation(
+      internal.seed.insertSeedEvents,
+      {},
+    )
+    return result
   },
 })

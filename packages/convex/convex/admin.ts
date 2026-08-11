@@ -210,3 +210,26 @@ export const resetAdmins = action({
     return { deleted, adminProfileId, email: ADMIN_EMAIL }
   },
 })
+
+export const seedBaseData = action({
+  args: { key: v.string() },
+  handler: async (
+    ctx,
+    args,
+  ): Promise<{
+    categoriesSeeded: boolean
+    sectionsSeeded: boolean
+    events: { created: number; skipped: number }
+  }> => {
+    validateBootstrapKey(args.key)
+
+    const base = await ctx.runMutation(internal.seed.insertBaseData, {})
+    const events = await ctx.runMutation(internal.seed.insertSeedEvents, {})
+
+    return {
+      categoriesSeeded: base.categoriesSeeded,
+      sectionsSeeded: base.sectionsSeeded,
+      events,
+    }
+  },
+})
