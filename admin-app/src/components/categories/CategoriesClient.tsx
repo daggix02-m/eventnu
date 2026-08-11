@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui'
 import { Input } from '@/components/ui/input'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
@@ -14,7 +15,9 @@ import {
   deleteCategory,
   reorderCategories,
 } from '@/lib/actions/categories'
-import { useRouter } from 'next/navigation'
+import { categoriesKeys, useCategories } from '@/lib/api/categories'
+import { getErrorMessage } from '@/lib/errors'
+import { toast } from 'sonner'
 import type { MappedCategory } from '@/lib/mappers'
 
 interface CategoriesClientProps {
@@ -22,7 +25,10 @@ interface CategoriesClientProps {
 }
 
 export function CategoriesClient({ initialCategories }: CategoriesClientProps) {
-  const [categories, setCategories] = useState(initialCategories)
+  const queryClient = useQueryClient()
+  const { data } = useCategories(initialCategories)
+  const categories = data ?? []
+  const refreshCategories = () => queryClient.invalidateQueries({ queryKey: categoriesKeys })
   const [search, setSearch] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -32,7 +38,6 @@ export function CategoriesClient({ initialCategories }: CategoriesClientProps) {
   const [draggingId, setDraggingId] = useState<string | null>(null)
   const [dragOverId, setDragOverId] = useState<string | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
-  const router = useRouter()
 
   const filteredCategories = search
     ? categories.filter(
@@ -117,7 +122,8 @@ export function CategoriesClient({ initialCategories }: CategoriesClientProps) {
       sort_order: (index + 1) * 10,
     }))
 
-    setCategories(
+    queryClient.setQueryData<MappedCategory[]>(
+      categoriesKeys,
       categories.map((cat) => {
         const update = updates.find((u) => u.id === cat.id)
         return update ? { ...cat, sort_order: update.sort_order } : cat
@@ -127,10 +133,10 @@ export function CategoriesClient({ initialCategories }: CategoriesClientProps) {
     setIsLoading(true)
     try {
       await reorderCategories(updates)
-      router.refresh()
+      await refreshCategories()
     } catch (err) {
-      console.error('Reorder error:', err)
-      setCategories(initialCategories)
+      toast.error(getErrorMessage(err, 'Failed to reorder categories'))
+      await refreshCategories()
     } finally {
       setIsLoading(false)
       setDraggingId(null)
@@ -173,9 +179,9 @@ export function CategoriesClient({ initialCategories }: CategoriesClientProps) {
         })
       }
       setIsDialogOpen(false)
-      router.refresh()
+      await refreshCategories()
     } catch (err) {
-      console.error('Category save error:', err)
+      toast.error(getErrorMessage(err, 'Failed to save category'))
     } finally {
       setIsLoading(false)
     }
@@ -186,9 +192,9 @@ export function CategoriesClient({ initialCategories }: CategoriesClientProps) {
     setIsLoading(true)
     try {
       await deleteCategory(categoryId)
-      router.refresh()
+      await refreshCategories()
     } catch (err) {
-      console.error('Category delete error:', err)
+      toast.error(getErrorMessage(err, 'Failed to delete category'))
     } finally {
       setIsLoading(false)
     }

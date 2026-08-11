@@ -56,7 +56,6 @@ export function PageFormClient({ initialData }: PageFormClientProps) {
         toast.success('Page created')
       }
       router.push('/cms/pages')
-      router.refresh()
     } catch (err) {
       toast.error(getErrorMessage(err, 'Failed to save page'))
     } finally {

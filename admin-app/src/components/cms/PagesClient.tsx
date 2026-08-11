@@ -2,27 +2,23 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useQueryClient } from '@tanstack/react-query'
 import { Plus, Pencil, Trash2, Eye, EyeOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
-import { deletePage } from '@/lib/actions/cms'
+import { deletePage, getPages } from '@/lib/actions/cms'
+import { pagesKeys, usePages } from '@/lib/api/cms'
 import { getErrorMessage } from '@/lib/errors'
 import { toast } from 'sonner'
 
-interface Page {
-  id: string
-  slug: string
-  title: string
-  subtitle?: string | null
-  is_published: boolean
-  sort_order: number
-  created_at: string
-}
+type Page = Awaited<ReturnType<typeof getPages>>[number]
 
 export function PagesClient({ pages }: { pages: Page[] }) {
-  const router = useRouter()
+  const queryClient = useQueryClient()
+  const { data } = usePages(pages)
+  const pageList = data ?? []
+  const refreshPages = () => queryClient.invalidateQueries({ queryKey: pagesKeys })
   const [deleting, setDeleting] = useState<string | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
 
@@ -32,7 +28,7 @@ export function PagesClient({ pages }: { pages: Page[] }) {
     try {
       await deletePage(id)
       toast.success('Page deleted')
-      router.refresh()
+      await refreshPages()
     } catch (err) {
       toast.error(getErrorMessage(err, 'Failed to delete page'))
     } finally {
@@ -67,14 +63,14 @@ export function PagesClient({ pages }: { pages: Page[] }) {
             </tr>
           </thead>
           <tbody>
-            {pages.length === 0 && (
+            {pageList.length === 0 && (
               <tr>
                 <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
                   No pages yet. Create your first page.
                 </td>
               </tr>
             )}
-            {pages.map((page) => (
+            {pageList.map((page) => (
               <tr
                 key={page.id}
                 className="border-b border-outline-variant last:border-0 hover:bg-surface-container-high/50"

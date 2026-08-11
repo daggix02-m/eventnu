@@ -1,31 +1,29 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
+import { useQueryClient } from '@tanstack/react-query'
 import { Check, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { markContactResolved } from '@/lib/actions/cms'
+import { markContactResolved, getContactSubmissions } from '@/lib/actions/cms'
+import { contactSubmissionsKeys, useContactSubmissions } from '@/lib/api/cms'
 import { getErrorMessage } from '@/lib/errors'
 import { toast } from 'sonner'
 import { formatDate } from '@/lib/format'
 
-interface ContactSubmission {
-  id: string
-  name: string
-  email: string
-  message: string
-  is_resolved: boolean
-  created_at: string
-}
+type ContactSubmission = Awaited<ReturnType<typeof getContactSubmissions>>[number]
 
 export function ContactSubmissionsClient({ submissions }: { submissions: ContactSubmission[] }) {
-  const router = useRouter()
+  const queryClient = useQueryClient()
+  const { data } = useContactSubmissions(submissions)
+  const list = data ?? []
+  const refreshSubmissions = () =>
+    queryClient.invalidateQueries({ queryKey: contactSubmissionsKeys })
 
   const toggleResolved = async (id: string, resolved: boolean) => {
     try {
       await markContactResolved(id, resolved)
       toast.success('Submission updated')
-      router.refresh()
+      await refreshSubmissions()
     } catch (err) {
       toast.error(getErrorMessage(err, 'Failed to update submission'))
     }
@@ -51,14 +49,14 @@ export function ContactSubmissionsClient({ submissions }: { submissions: Contact
             </tr>
           </thead>
           <tbody>
-            {submissions.length === 0 && (
+            {list.length === 0 && (
               <tr>
                 <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
                   No submissions yet.
                 </td>
               </tr>
             )}
-            {submissions.map((sub) => (
+            {list.map((sub) => (
               <tr key={sub.id} className="border-b border-outline-variant last:border-0">
                 <td className="px-4 py-3 font-medium">{sub.name}</td>
                 <td className="px-4 py-3 text-muted-foreground">{sub.email}</td>

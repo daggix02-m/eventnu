@@ -111,7 +111,6 @@ export function EventForm({
       await createEvent({ ...buildPayload(), status })
       toast.success(status === 'published' ? 'Event published!' : 'Event saved as draft')
       router.push('/events')
-      router.refresh()
     } catch (err) {
       toast.error(getErrorMessage(err, 'Failed to create event'))
     } finally {

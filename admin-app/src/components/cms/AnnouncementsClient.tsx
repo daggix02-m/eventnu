@@ -1,31 +1,30 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useQueryClient } from '@tanstack/react-query'
 import { Plus, Trash2, Check, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { UserCombobox } from '@/components/shared/UserCombobox'
-import { createAnnouncement, updateAnnouncement, deleteAnnouncement } from '@/lib/actions/cms'
+import {
+  createAnnouncement,
+  updateAnnouncement,
+  deleteAnnouncement,
+  getAnnouncements,
+} from '@/lib/actions/cms'
+import { announcementsKeys, useAnnouncements } from '@/lib/api/cms'
 import { getErrorMessage } from '@/lib/errors'
 import { toast } from 'sonner'
 
-interface Announcement {
-  id: string
-  title: string
-  message?: string | null
-  link_url?: string | null
-  link_text?: string | null
-  is_active: boolean
-  target_user_id?: string | null
-  target_user_name?: string | null
-  created_at: string
-}
+type Announcement = Awaited<ReturnType<typeof getAnnouncements>>[number]
 
 export function AnnouncementsClient({ announcements }: { announcements: Announcement[] }) {
-  const router = useRouter()
+  const queryClient = useQueryClient()
+  const { data } = useAnnouncements(announcements)
+  const list = data ?? []
+  const refreshAnnouncements = () => queryClient.invalidateQueries({ queryKey: announcementsKeys })
   const [form, setForm] = useState({
     title: '',
     message: '',
@@ -68,7 +67,7 @@ export function AnnouncementsClient({ announcements }: { announcements: Announce
         targeted: false,
         target_user_id: '',
       })
-      router.refresh()
+      await refreshAnnouncements()
     } catch (err) {
       toast.error(getErrorMessage(err, 'Failed to create announcement'))
     } finally {
@@ -80,7 +79,7 @@ export function AnnouncementsClient({ announcements }: { announcements: Announce
     try {
       await updateAnnouncement(item.id, { is_active: !item.is_active })
       toast.success('Announcement updated')
-      router.refresh()
+      await refreshAnnouncements()
     } catch (err) {
       toast.error(getErrorMessage(err, 'Failed to update announcement'))
     }
@@ -91,7 +90,7 @@ export function AnnouncementsClient({ announcements }: { announcements: Announce
     try {
       await deleteAnnouncement(id)
       toast.success('Announcement deleted')
-      router.refresh()
+      await refreshAnnouncements()
     } catch (err) {
       toast.error(getErrorMessage(err, 'Failed to delete announcement'))
     }
@@ -179,14 +178,14 @@ export function AnnouncementsClient({ announcements }: { announcements: Announce
             </tr>
           </thead>
           <tbody>
-            {announcements.length === 0 && (
+            {list.length === 0 && (
               <tr>
                 <td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">
                   No announcements yet.
                 </td>
               </tr>
             )}
-            {announcements.map((item) => (
+            {list.map((item) => (
               <tr key={item.id} className="border-b border-outline-variant last:border-0">
                 <td className="px-4 py-3">
                   <p className="font-medium">{item.title}</p>

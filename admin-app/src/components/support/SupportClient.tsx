@@ -1,14 +1,15 @@
 'use client'
 
 import { useState, Fragment } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { Button, Card, Textarea } from '@/components/ui'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
 import { formatDate } from '@/lib/format'
-import { useRouter } from 'next/navigation'
 import { getErrorMessage } from '@/lib/errors'
+import { supportKeys, useSupportTickets } from '@/lib/api/support'
 import {
   HelpCircle,
   MessageSquare,
@@ -98,7 +99,10 @@ const statusColors: Record<string, 'default' | 'secondary' | 'destructive'> = {
 }
 
 export function SupportClient({ initialTickets = [] }: SupportClientProps) {
-  const router = useRouter()
+  const queryClient = useQueryClient()
+  const { data } = useSupportTickets(initialTickets)
+  const tickets = data ?? []
+  const refreshTickets = () => queryClient.invalidateQueries({ queryKey: supportKeys })
   const [expandedFaq, setExpandedFaq] = useState<number | null>(0)
   const [contactForm, setContactForm] = useState({
     subject: '',
@@ -106,7 +110,6 @@ export function SupportClient({ initialTickets = [] }: SupportClientProps) {
     priority: 'medium',
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [tickets, setTickets] = useState<Ticket[]>(initialTickets)
   const [expandedTicket, setExpandedTicket] = useState<string | null>(null)
   const [isClosingTicket, setIsClosingTicket] = useState<string | null>(null)
 
@@ -125,7 +128,7 @@ export function SupportClient({ initialTickets = [] }: SupportClientProps) {
       })
       toast.success('Support ticket submitted!')
       setContactForm({ subject: '', message: '', priority: 'medium' })
-      router.refresh()
+      await refreshTickets()
     } catch (err) {
       toast.error(getErrorMessage(err, 'Failed to submit ticket'))
     } finally {
@@ -138,8 +141,7 @@ export function SupportClient({ initialTickets = [] }: SupportClientProps) {
     try {
       await closeSupportTicket(ticketId)
       toast.success('Ticket closed')
-      setTickets((prev) => prev.map((t) => (t.id === ticketId ? { ...t, status: 'closed' } : t)))
-      router.refresh()
+      await refreshTickets()
     } catch (err) {
       toast.error(getErrorMessage(err, 'Failed to close ticket'))
     } finally {
