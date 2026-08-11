@@ -9,3 +9,4 @@ datas/
 Thumbs.db
 *.log
 *.tsbuildinfo
+coverage/
