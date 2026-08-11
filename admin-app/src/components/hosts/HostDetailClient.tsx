@@ -2,9 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Button } from '@/components/ui'
-import { Card } from '@/components/ui'
-import { Badge } from '@/components/ui'
+import { Button, Card, Badge, Textarea } from '@/components/ui'
 import { Input } from '@/components/ui/input'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import {
@@ -459,10 +457,10 @@ export function HostDetailClient({ host, eventCount }: HostDetailClientProps) {
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Description</label>
-                  <textarea
+                  <Textarea
                     value={form.description}
                     onChange={(e) => setForm({ ...form, description: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg border border-outline-variant bg-background text-sm min-h-[80px] resize-none"
+                    className="min-h-[80px] resize-none"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">

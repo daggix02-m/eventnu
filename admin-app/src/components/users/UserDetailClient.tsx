@@ -2,10 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Button } from '@/components/ui'
-import { Card } from '@/components/ui'
-import { Badge } from '@/components/ui'
-import { Avatar } from '@/components/ui'
+import { Button, Card, Badge, Avatar, Textarea } from '@/components/ui'
 import { Input } from '@/components/ui/input'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import {
@@ -471,10 +468,10 @@ export function UserDetailClient({ profile, stats, currentAdminId }: UserDetailC
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Body</label>
-                <textarea
+                <Textarea
                   value={notificationBody}
                   onChange={(e) => setNotificationBody(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-outline-variant bg-background text-sm min-h-[80px] resize-none"
+                  className="min-h-[80px] resize-none"
                   placeholder="Notification message..."
                 />
               </div>

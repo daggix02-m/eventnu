@@ -26,9 +26,7 @@ import {
   Info,
   type LucideIcon,
 } from 'lucide-react'
-import { Button } from '@/components/ui'
-import { Badge } from '@/components/ui'
-import { Card } from '@/components/ui'
+import { Button, Badge, Card, Textarea } from '@/components/ui'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { toast } from 'sonner'
 import {
@@ -660,12 +658,12 @@ export function EventDetailClient({
             <Card className="p-6">
               <SectionHeader icon={StickyNote} title="Admin Notes" />
               <div className="space-y-3">
-                <textarea
+                <Textarea
                   rows={3}
                   placeholder="Internal admin notes..."
                   value={adminNote}
                   onChange={(e) => setAdminNote(e.target.value)}
-                  className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 resize-none"
+                  className="resize-none"
                 />
                 <div className="flex justify-end">
                   <Button size="sm" onClick={handleSaveNote} disabled={loading} className="gap-1.5">

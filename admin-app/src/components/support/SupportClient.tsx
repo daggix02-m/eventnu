@@ -1,8 +1,7 @@
 'use client'
 
 import { useState, Fragment } from 'react'
-import { Button } from '@/components/ui'
-import { Card } from '@/components/ui'
+import { Button, Card, Textarea } from '@/components/ui'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
@@ -378,12 +377,12 @@ export function SupportClient({ initialTickets = [] }: SupportClientProps) {
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium text-muted-foreground">Message</label>
-                <textarea
+                <Textarea
                   value={contactForm.message}
                   onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
                   placeholder="Describe your issue in detail..."
                   required
-                  className="w-full px-3 py-2 rounded-lg border border-outline-variant bg-surface text-sm min-h-[120px] resize-none outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  className="min-h-[120px] resize-none"
                 />
               </div>
               <div className="flex items-center gap-3 pt-2">

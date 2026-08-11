@@ -11,7 +11,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { Button } from '@/components/ui'
+import { Button, Textarea } from '@/components/ui'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/errors'
 import { getInstagramStatus, publishEventToInstagram } from '@/lib/actions/instagram'
@@ -123,13 +123,13 @@ export function PublishToInstagramDialog({
           <label className="block text-xs font-medium text-muted-foreground" htmlFor="ig-caption">
             Caption
           </label>
-          <textarea
+          <Textarea
             id="ig-caption"
             rows={6}
             value={caption}
             onChange={(e) => setCaption(e.target.value.slice(0, MAX_CAPTION + 200))}
             aria-invalid={overLimit}
-            className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none resize-none"
+            className="resize-none"
           />
           <div className="flex items-center justify-between text-[11px] text-muted-foreground">
             <span>Edit the caption before publishing</span>

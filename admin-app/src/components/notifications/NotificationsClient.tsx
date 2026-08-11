@@ -14,7 +14,7 @@ import {
   Search,
   type LucideIcon,
 } from 'lucide-react'
-import { Button, Card, Badge, Input, Select } from '@/components/ui'
+import { Button, Card, Badge, Input, Select, Textarea } from '@/components/ui'
 import { PageHeader } from '@/components/shared/PageLayout'
 import { Pagination, EmptyState, useListFilters } from '@/components/list'
 import { formatDateTime } from '@/lib/format'
@@ -196,10 +196,10 @@ export function NotificationsClient({
 
             <div className="space-y-2">
               <label className="text-sm font-medium">Message</label>
-              <textarea
+              <Textarea
                 value={form.body}
                 onChange={(e) => setForm({ ...form, body: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg border border-outline-variant bg-background text-sm min-h-[100px] resize-none"
+                className="min-h-[100px] resize-none"
                 placeholder="Enter your message..."
                 required
               />

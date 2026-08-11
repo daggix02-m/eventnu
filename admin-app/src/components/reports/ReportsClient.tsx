@@ -18,7 +18,7 @@ import {
   TriangleAlert,
   type LucideIcon,
 } from 'lucide-react'
-import { Button, Badge } from '@/components/ui'
+import { Button, Badge, Textarea } from '@/components/ui'
 import { PageHeader, StatsCard } from '@/components/shared/PageLayout'
 import { FilterSelect, UserAvatar, useListFilters, EmptyState } from '@/components/list'
 import { formatDateTime } from '@/lib/format'
@@ -460,8 +460,8 @@ export function ReportsClient({
                   <p className="text-[10px] uppercase font-bold text-muted-foreground mb-3 tracking-widest">
                     Moderator Notes
                   </p>
-                  <textarea
-                    className="w-full bg-background border border-outline-variant rounded-xl p-3 text-sm focus:ring-primary focus:border-primary min-h-[80px] outline-none"
+                  <Textarea
+                    className="min-h-[80px] rounded-xl"
                     placeholder="Add a note about this decision..."
                     value={noteDraft}
                     onChange={(e) => setNoteDraft(e.target.value)}
