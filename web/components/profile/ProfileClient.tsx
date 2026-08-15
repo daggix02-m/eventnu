@@ -49,7 +49,7 @@ export function ProfileClient() {
 
   if (!isAuthenticated) {
     return (
-      <div className="mx-auto w-full max-w-[28rem] rounded-xl border border-outline-variant bg-surface-container-low p-xl text-center">
+      <div className="mx-auto w-full max-w-[28rem] rounded-2xl border border-outline-variant bg-surface-container-low p-6 sm:p-8 md:p-xl text-center">
         <User className="mx-auto h-12 w-12 text-primary" aria-hidden="true" />
         <h1 className="mt-sm font-display text-headline-md text-on-surface">
           Sign in to see your profile
@@ -67,7 +67,7 @@ export function ProfileClient() {
 
   return (
     <div className="mx-auto w-full max-w-[52rem] space-y-lg">
-      <header className="flex flex-wrap items-center gap-md rounded-xl border border-outline-variant bg-surface-container-low p-lg">
+      <header className="flex flex-wrap items-center gap-md rounded-2xl border border-outline-variant bg-surface-container-low p-4 sm:p-6 md:p-lg">
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/15 font-display text-headline-md text-primary">
           {(me?.fullName ?? 'U')
             .split(' ')
@@ -107,7 +107,7 @@ export function ProfileClient() {
               <Skeleton className="h-72 w-full rounded-xl" />
             </div>
           ) : bookmarks.length === 0 ? (
-            <div className="rounded-xl border border-outline-variant bg-surface-container-low p-xl text-center">
+            <div className="w-full rounded-2xl border border-outline-variant bg-surface-container-low p-6 sm:p-8 md:p-xl text-center">
               <p className="font-display text-headline-md text-on-surface">No saved events yet</p>
               <p className="mt-xs font-body-md text-on-surface-variant">
                 Tap the bookmark icon on any event to save it here.
@@ -128,7 +128,7 @@ export function ProfileClient() {
               <Skeleton className="h-40 w-full rounded-xl" />
             </div>
           ) : posts.length === 0 ? (
-            <div className="rounded-xl border border-outline-variant bg-surface-container-low p-xl text-center">
+            <div className="w-full rounded-2xl border border-outline-variant bg-surface-container-low p-6 sm:p-8 md:p-xl text-center">
               <p className="font-display text-headline-md text-on-surface">No experiences yet</p>
               <p className="mt-xs font-body-md text-on-surface-variant">
                 Share what it was like at a recent event — the community wants to know.

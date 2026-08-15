@@ -83,22 +83,25 @@ export function OrganizersCheckinShowcase() {
         )
       }
       if (textRef.current) {
-        gsap.fromTo(
-          textRef.current.children,
-          { opacity: 0, x: 24 },
-          {
-            opacity: 1,
-            x: 0,
-            duration: 0.5,
-            stagger: 0.1,
-            ease: 'power2.out',
-            scrollTrigger: {
-              trigger: textRef.current,
-              start: 'top 80%',
-              toggleActions: 'play none none none',
+        const textEls = textRef.current.querySelectorAll('h2, p, .text-feature-grid')
+        if (textEls.length) {
+          gsap.fromTo(
+            textEls,
+            { opacity: 0, x: 24 },
+            {
+              opacity: 1,
+              x: 0,
+              duration: 0.5,
+              stagger: 0.1,
+              ease: 'power2.out',
+              scrollTrigger: {
+                trigger: textRef.current,
+                start: 'top 80%',
+                toggleActions: 'play none none none',
+              },
             },
-          },
-        )
+          )
+        }
       }
     },
     { scope: sectionRef },
@@ -138,7 +141,7 @@ export function OrganizersCheckinShowcase() {
                     {/* Scan line */}
                     {scanState === 'scanning' && (
                       <div
-                        className="absolute inset-x-2 h-[2px] bg-green-400/80 shadow-[0_0_8px_rgba(74,222,128,0.8)]"
+                        className="absolute inset-x-2 h-[2px] bg-emerald-400"
                         style={{
                           animation: prefersReducedMotion
                             ? 'none'
@@ -206,23 +209,17 @@ export function OrganizersCheckinShowcase() {
 
           {/* RIGHT — Text */}
           <div ref={textRef} className="flex-1 space-y-md text-left">
-            <div>
-              <div className="inline-flex items-center gap-xs px-sm py-1 rounded-full bg-tertiary/10 text-tertiary border border-tertiary/20 font-mono text-[11px] uppercase tracking-wider">
-                <QrCode className="w-4 h-4" aria-hidden="true" />
-                Door Management
-              </div>
-            </div>
-            <h2 className="font-display text-[28px] md:text-[40px] font-extrabold text-white leading-tight opacity-0">
+            <h2 className="font-display text-[28px] md:text-[40px] font-extrabold text-white leading-tight">
               Zero bottlenecks.
               <br />
               Fast, reliable entry scanning.
             </h2>
-            <p className="text-on-surface text-body-lg leading-relaxed opacity-0">
+            <p className="text-on-surface text-body-lg leading-relaxed">
               Scan tickets in seconds with the Event Nu Organizer App. Works offline, syncs in
               real-time across multiple devices, and handles gate lookup effortlessly.
             </p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-sm pt-sm opacity-0">
+            <div className="text-feature-grid grid grid-cols-1 sm:grid-cols-2 gap-sm pt-sm">
               {FEATURES.map((f) => (
                 <div
                   key={f.title}

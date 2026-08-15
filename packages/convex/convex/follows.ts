@@ -56,7 +56,7 @@ async function adjustFollowerCount(
 export const toggle = mutation({
   args: {
     followingId: v.id('profiles'),
-    followType: v.string(),
+    followType: v.union(v.literal('host'), v.literal('organizer')),
   },
   handler: async (ctx, args) => {
     const profile = await requireUser(ctx)

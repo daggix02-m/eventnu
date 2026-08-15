@@ -1,6 +1,7 @@
 import { v } from 'convex/values'
-import { action, internalQuery, env } from './_generated/server'
+import { internalAction, internalQuery, env } from './_generated/server'
 import { internal } from './_generated/api'
+import { escapeHtml } from './helpers'
 
 const RESEND_BASE = 'https://api.resend.com'
 const FROM = 'eventnu <hello@eventnu.et>'
@@ -68,7 +69,7 @@ function formatDate(ts: number, tz: string): string {
   })
 }
 
-export const sendReservationConfirmation = action({
+export const sendReservationConfirmation = internalAction({
   args: { reservationId: v.id('reservationRequests') },
   handler: async (ctx, args) => {
     const reservation = await ctx.runQuery(internal.email.getReservation, {
@@ -81,20 +82,20 @@ export const sendReservationConfirmation = action({
 
     const eventDate = formatDate(event.startDate, event.timezone)
     const location = event.venueName
-      ? `${event.venueName}${event.venueAddress ? `, ${event.venueAddress}` : ''}`
+      ? `${escapeHtml(event.venueName)}${event.venueAddress ? `, ${escapeHtml(event.venueAddress)}` : ''}`
       : 'Online'
 
     const html = `
       <div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:24px">
         <h2 style="margin:0 0 16px">Reservation Confirmed</h2>
-        <p>Hi ${reservation.name},</p>
-        <p>Your reservation for <strong>${event.title}</strong> has been received.</p>
+        <p>Hi ${escapeHtml(reservation.name)},</p>
+        <p>Your reservation for <strong>${escapeHtml(event.title)}</strong> has been received.</p>
         <div style="background:#f5f5f5;border-radius:8px;padding:16px;margin:16px 0">
           <p style="margin:0 0 8px"><strong>Date:</strong> ${eventDate}</p>
           <p style="margin:0 0 8px"><strong>Location:</strong> ${location}</p>
-          <p style="margin:0"><strong>Status:</strong> ${reservation.status}</p>
+          <p style="margin:0"><strong>Status:</strong> ${escapeHtml(reservation.status)}</p>
         </div>
-        ${event.venueMapLink ? `<p><a href="${event.venueMapLink}" style="color:#2563eb">View on map</a></p>` : ''}
+        ${event.venueMapLink ? `<p><a href="${escapeHtml(event.venueMapLink)}" style="color:#2563eb">View on map</a></p>` : ''}
         <p style="color:#666;font-size:14px;margin-top:24px">You'll receive updates as the event approaches.</p>
       </div>
     `
@@ -108,7 +109,7 @@ export const sendReservationConfirmation = action({
   },
 })
 
-export const sendAdminAlert = action({
+export const sendAdminAlert = internalAction({
   args: { reservationId: v.id('reservationRequests') },
   handler: async (ctx, args) => {
     const reservation = await ctx.runQuery(internal.email.getReservation, {
@@ -127,13 +128,13 @@ export const sendAdminAlert = action({
     const html = `
       <div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:24px">
         <h2 style="margin:0 0 16px">New Reservation</h2>
-        <p>A new reservation was made for <strong>${event.title}</strong>.</p>
+        <p>A new reservation was made for <strong>${escapeHtml(event.title)}</strong>.</p>
         <div style="background:#f5f5f5;border-radius:8px;padding:16px;margin:16px 0">
-          <p style="margin:0 0 8px"><strong>Name:</strong> ${reservation.name}</p>
-          <p style="margin:0 0 8px"><strong>Email:</strong> ${reservation.email}</p>
-          <p style="margin:0 0 8px"><strong>Event:</strong> ${event.title}</p>
+          <p style="margin:0 0 8px"><strong>Name:</strong> ${escapeHtml(reservation.name)}</p>
+          <p style="margin:0 0 8px"><strong>Email:</strong> ${escapeHtml(reservation.email)}</p>
+          <p style="margin:0 0 8px"><strong>Event:</strong> ${escapeHtml(event.title)}</p>
           <p style="margin:0 0 8px"><strong>Date:</strong> ${eventDate}</p>
-          ${reservation.message ? `<p style="margin:0"><strong>Message:</strong> ${reservation.message}</p>` : ''}
+          ${reservation.message ? `<p style="margin:0"><strong>Message:</strong> ${escapeHtml(reservation.message)}</p>` : ''}
         </div>
       </div>
     `

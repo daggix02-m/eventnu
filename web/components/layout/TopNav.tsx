@@ -9,7 +9,7 @@ import { AuthButton } from '@/components/auth/AuthButton'
 
 const navItems = [
   { href: '/', label: 'Find Events' },
-  { href: '/categories', label: 'Categories' },
+  { href: '/schedule', label: 'Schedule' },
   { href: '/organizers', label: 'For Organizers' },
   { href: '/about', label: 'About' },
   { href: '/contact', label: 'Contact' },
@@ -25,7 +25,7 @@ export function TopNav() {
       if (ticking) return
       ticking = true
       requestAnimationFrame(() => {
-        setScrolled(window.scrollY > 100)
+        setScrolled(window.scrollY > 10)
         ticking = false
       })
     }
@@ -36,50 +36,56 @@ export function TopNav() {
   return (
     <header
       className={cn(
-        'w-full sticky top-0 z-50 border-b border-outline-variant bg-background/80 backdrop-blur-md transition-shadow duration-200',
-        scrolled && 'sticky-nav-active',
+        'w-full sticky top-0 z-40 border-b border-outline-variant/40 bg-background/85 backdrop-blur-xl transition-all duration-200',
+        scrolled && 'sticky-nav-active shadow-md bg-background/95',
       )}
     >
-      <div className="flex justify-between items-center h-16 px-gutter max-w-container-max mx-auto">
-        <div className="flex items-center gap-lg">
-          <Link href="/" className="flex items-center">
-            <Image
-              src="/logo.png"
-              alt="Event Nu"
-              width={794}
-              height={672}
-              style={{ height: '44px', width: 'auto' }}
-              className="transition-opacity duration-200 hover:opacity-80"
-              loading="eager"
-            />
-            <span className="sr-only">Event Nu</span>
-          </Link>
-          <nav className="hidden md:flex items-center gap-md">
-            {navItems.map((item) => {
-              const isActive =
-                item.href === '/'
-                  ? pathname === '/'
-                  : pathname === item.href || pathname.startsWith(`${item.href}/`)
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    'font-body-md text-body-md transition-colors duration-200',
-                    isActive
-                      ? 'text-primary font-bold border-b-2 border-primary pb-1'
-                      : 'text-on-surface-variant hover:text-primary',
-                  )}
-                >
-                  {item.label}
-                </Link>
-              )
-            })}
-          </nav>
-        </div>
+      {/* Safe area top padding container for notch / Dynamic Island / status bar */}
+      <div className="pt-[max(0.5rem,env(safe-area-inset-top))] pb-1 md:py-0">
+        <div className="flex justify-between items-center h-13 md:h-16 px-4 md:px-gutter max-w-container-max mx-auto">
+          <div className="flex items-center gap-lg">
+            <Link href="/" className="flex items-center gap-2.5 group">
+              <Image
+                src="/logo.png"
+                alt="Event Nu"
+                width={794}
+                height={672}
+                style={{ height: '36px', width: 'auto' }}
+                className="transition-transform duration-200 group-hover:scale-105"
+                priority
+              />
+              <span className="font-bold text-lg text-primary tracking-tight md:hidden">Event Nu</span>
+              <span className="sr-only">Event Nu</span>
+            </Link>
 
-        <div className="hidden md:block">
-          <AuthButton />
+            {/* Desktop Navigation */}
+            <nav className="hidden md:flex items-center gap-md" aria-label="Desktop Navigation">
+              {navItems.map((item) => {
+                const isActive =
+                  item.href === '/'
+                    ? pathname === '/'
+                    : pathname === item.href || pathname.startsWith(`${item.href}/`)
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={cn(
+                      'font-body-md text-body-md transition-colors duration-200',
+                      isActive
+                        ? 'text-primary font-bold border-b-2 border-primary pb-1'
+                        : 'text-on-surface-variant hover:text-primary',
+                    )}
+                  >
+                    {item.label}
+                  </Link>
+                )
+              })}
+            </nav>
+          </div>
+
+          <div className="flex items-center">
+            <AuthButton />
+          </div>
         </div>
       </div>
     </header>

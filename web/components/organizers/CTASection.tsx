@@ -52,26 +52,10 @@ export function OrganizersCTA({ contactUrl }: OrganizersCTAProps) {
       ref={sectionRef}
       className="relative z-10 py-3xl border-t border-outline-variant/30 overflow-hidden bg-[#0e0c10]"
     >
-      {/* Dynamic colorful blur blobs */}
-      <div
-        className="absolute top-1/2 left-1/4 w-[500px] h-[500px] bg-primary/20 rounded-full blur-[140px] pointer-events-none -translate-y-1/2 -translate-x-1/2"
-        aria-hidden="true"
-      />
-      <div
-        className="absolute top-1/2 right-1/4 w-[450px] h-[450px] bg-secondary/10 rounded-full blur-[130px] pointer-events-none -translate-y-1/2 translate-x-1/2"
-        aria-hidden="true"
-      />
-
-      {/* Grid Pattern overlay */}
-      <div
-        className="absolute inset-0 grid-pattern opacity-40 pointer-events-none"
-        aria-hidden="true"
-      />
-
       <Container>
         <div
           ref={wrapperRef}
-          className="text-center max-w-4xl mx-auto space-y-xl relative z-10 opacity-0"
+          className="text-center max-w-[56rem] mx-auto space-y-xl relative z-10 opacity-0"
         >
           {/* Logo badge */}
           <div className="flex justify-center select-none">
@@ -94,7 +78,7 @@ export function OrganizersCTA({ contactUrl }: OrganizersCTAProps) {
               className="font-display text-[36px] md:text-[54px] lg:text-[64px] font-extrabold text-white leading-tight"
             >
               Addis Ababa&apos;s Next Sold-Out Event &mdash;{' '}
-              <span className="premium-gradient">Yours.</span>
+              <span className="text-primary">Yours.</span>
             </h2>
             <p
               ref={bodyRef}

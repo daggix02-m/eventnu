@@ -42,10 +42,8 @@ export async function getAdminStats() {
   }
 }
 
-export async function getAdminNotificationPrefs(adminId: string) {
-  const prefs = await fetchQuery(api.adminSettings.getByAdmin, {
-    adminId: adminId as Id<'profiles'>,
-  })
+export async function getAdminNotificationPrefs() {
+  const prefs = await fetchQuery(api.adminSettings.getByAdmin)
   return {
     emailReports: prefs?.emailReports ?? true,
     emailEvents: prefs?.emailEvents ?? true,
@@ -54,16 +52,12 @@ export async function getAdminNotificationPrefs(adminId: string) {
   }
 }
 
-export async function updateAdminNotificationPrefs(
-  adminId: string,
-  prefs: {
-    email_reports: boolean
-    email_events: boolean
-    email_users: boolean
-  },
-) {
+export async function updateAdminNotificationPrefs(prefs: {
+  email_reports: boolean
+  email_events: boolean
+  email_users: boolean
+}) {
   await fetchMutation(api.adminSettings.upsert, {
-    adminId: adminId as Id<'profiles'>,
     emailReports: prefs.email_reports,
     emailEvents: prefs.email_events,
     emailUsers: prefs.email_users,

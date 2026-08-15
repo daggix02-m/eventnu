@@ -5,7 +5,6 @@ import { useGSAP } from '@gsap/react'
 import { gsap } from '@/lib/gsap'
 import {
   ChevronDown,
-  HelpCircle,
   DollarSign,
   Shield,
   CreditCard,
@@ -112,11 +111,8 @@ export function OrganizersFAQ() {
       <Container>
         <div className="max-w-[48rem] mx-auto space-y-lg">
           {/* Header */}
-          <div className="text-center space-y-sm">
-            <div className="inline-flex items-center gap-xs text-tertiary font-mono text-label-sm uppercase tracking-wider">
-              <HelpCircle className="w-4 h-4" /> Help Center
-            </div>
-            <h2 className="font-display text-[32px] md:text-[44px] font-extrabold text-white leading-tight">
+          <div className="text-center max-w-[48rem] mx-auto mb-12 space-y-3">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white tracking-tight leading-tight">
               Frequently Asked Questions
             </h2>
           </div>
@@ -136,7 +132,7 @@ export function OrganizersFAQ() {
                   }}
                   className={`px-sm py-1.5 rounded-full font-mono text-label-sm font-semibold transition-all flex items-center gap-xs cursor-pointer ${
                     isActive
-                      ? 'bg-primary text-on-primary shadow-md shadow-primary/20'
+                      ? 'bg-primary text-on-primary shadow-sm font-bold'
                       : 'bg-surface-container/30 border border-outline-variant/35 text-on-surface-variant hover:text-white'
                   }`}
                 >

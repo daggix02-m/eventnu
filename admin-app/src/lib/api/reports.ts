@@ -6,12 +6,14 @@ import { useCursorPaginatedList } from './use-paginated-list'
 import type { CursorPage } from './use-paginated-list'
 import type { MappedReport } from '@/lib/mappers'
 
+import type { ReportTargetType } from '@/lib/actions/reports'
+
 export const reportsKeys = ['reports'] as const
-export const reportStatsKeys = ['reports', 'stats'] as const
+const reportStatsKeys = ['reports', 'stats'] as const
 
 export interface ReportListFilters {
   status?: string
-  targetType?: string
+  targetType?: ReportTargetType | 'all'
 }
 
 export function useReports(

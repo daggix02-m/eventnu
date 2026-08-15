@@ -3,7 +3,7 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
-import { Compass, LayoutGrid, Bookmark, User, type LucideIcon } from 'lucide-react'
+import { Home, CalendarDays, Bookmark, User, type LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useConvexAuth } from '@convex-dev/auth/react'
 import { useAuthModal } from '@/components/auth/AuthModalContext'
@@ -17,8 +17,8 @@ interface TabDef {
 }
 
 const TABS: TabDef[] = [
-  { key: 'home', label: 'Home', href: '/', icon: Compass },
-  { key: 'categories', label: 'Categories', href: '/categories', icon: LayoutGrid },
+  { key: 'home', label: 'Home', href: '/', icon: Home },
+  { key: 'schedule', label: 'Schedule', href: '/schedule', icon: CalendarDays },
   {
     key: 'saved',
     label: 'Saved',
@@ -33,8 +33,13 @@ function isTabActive(tab: TabDef, pathname: string, tabParam: string | null): bo
   switch (tab.key) {
     case 'home':
       return pathname === '/'
-    case 'categories':
-      return pathname === '/categories' || pathname.startsWith('/categories/')
+    case 'schedule':
+      return (
+        pathname === '/schedule' ||
+        pathname.startsWith('/schedule/') ||
+        pathname === '/categories' ||
+        pathname.startsWith('/categories/')
+      )
     case 'saved':
       return pathname === '/profile' && tabParam === 'bookmarks'
     case 'profile':
@@ -53,8 +58,8 @@ function TabBarContent() {
 
   return (
     <nav
-      aria-label="Primary"
-      className="flex items-stretch justify-around h-[var(--spacing-tabbar)] px-sm pb-safe bg-surface-container-low/85 backdrop-blur-md border-t border-outline-variant"
+      aria-label="Primary Mobile Navigation"
+      className="pointer-events-auto flex items-center justify-around w-full max-w-[22rem] bg-surface-container-low/70 backdrop-blur-2xl backdrop-saturate-150 border border-white/[0.12] rounded-full shadow-[0_16px_40px_rgba(0,0,0,0.65),inset_0_1px_1px_rgba(255,255,255,0.2)] px-2 py-1.5 transition-all duration-300"
     >
       {TABS.map((tab) => {
         const isActive = isTabActive(tab, pathname, tabParam)
@@ -69,20 +74,32 @@ function TabBarContent() {
                 openAuth()
               }
             }}
+            aria-label={tab.label}
             aria-current={isActive ? 'page' : undefined}
-            className="tap-feedback flex flex-1 items-center justify-center h-full"
+            className="relative flex flex-1 items-center justify-center py-1 text-center select-none group min-w-0 transition-transform duration-150 active:scale-90"
           >
-            <span
+            <div
               className={cn(
-                'flex items-center gap-1.5 px-4 py-1.5 rounded-full transition-colors duration-200',
-                isActive ? 'bg-primary/20 text-primary' : 'text-on-surface-variant',
+                'relative flex flex-col items-center justify-center w-12 h-11 rounded-full transition-all duration-200',
+                isActive ? 'text-white' : 'text-white/45 hover:text-white/80 hover:bg-white/[0.05]',
               )}
             >
-              <Icon className="w-5 h-5" aria-hidden="true" />
-              <span className={cn('font-label-sm text-label-sm', isActive && 'font-bold')}>
-                {tab.label}
-              </span>
-            </span>
+              {/* Active glassy pill background */}
+              {isActive && (
+                <div className="absolute inset-0 rounded-full bg-white/[0.12] border border-white/[0.18] animate-in fade-in zoom-in-95 duration-200" />
+              )}
+              <Icon
+                className={cn(
+                  'w-5.5 h-5.5 transition-all duration-200 z-10',
+                  isActive ? 'stroke-[2.5] text-white scale-110' : 'stroke-[1.75]',
+                )}
+                aria-hidden="true"
+              />
+              {/* Active dot indicator */}
+              {isActive && (
+                <span className="absolute bottom-1.5 w-1 h-1 rounded-full bg-primary z-10" />
+              )}
+            </div>
           </Link>
         )
       })}
@@ -92,7 +109,7 @@ function TabBarContent() {
 
 export function BottomTabBar() {
   return (
-    <div className="fixed bottom-0 inset-x-0 z-50 md:hidden">
+    <div className="fixed bottom-[max(0.85rem,env(safe-area-inset-bottom))] inset-x-0 z-60 md:hidden flex justify-center px-4 pointer-events-none">
       <Suspense fallback={null}>
         <TabBarContent />
       </Suspense>

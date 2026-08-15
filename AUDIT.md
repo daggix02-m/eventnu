@@ -222,3 +222,35 @@ Identity lookup also uses `identity.subject` with an `as any` cast (`profiles.ts
 | Duplicate badge overlay | `web/components/events/EventHero.tsx:44-64` | **DONE (2026-08-03)** |
 | `guestStore` | `admin-app/src/store/guestStore.ts` | **DONE (2026-08-03)** |
 | `company-design-system` ships source TS | `admin-app/company-design-system/package.json:6` | Add build step or inline |
+
+---
+
+## 7. Updates — Completed items since initial audit (2026-08-03 → 2026-08-14)
+
+### Security
+- Internalized `email.ts` actions (`sendReservationConfirmation` / `sendAdminAlert`) and `getReservation`, `getEvent`, `getAdminEmails` queries (`internalAction` / `internalQuery`); `reservations.ts` schedules via `internal.email.*`.
+- Deleted `verifyPassword` oracle (`packages/convex/convex/verifyPassword.ts`); removed sign-in pre-check in `auth/sign-in/page.tsx`; mapped `InvalidSecret` in `describeSignInError`; fixed static import for `changePassword`.
+- Public event queries now return a filtered "public projection" (adminNote, email, etc. stripped). See `packages/convex/convex/events/enrichment.ts:enrichPublicEvent`.
+- `getPageBySlug` enforces `isPublished` guard for unauthenticated cms page requests.
+- Organizing user’s email and auth identifiers are **not exposed** in the public API.
+
+### Performance & Bootstrap Hardening (A4)
+- Added `eventShares` and `experiencePosts` to `ALL_TABLES` in `admin.ts:10-43` (32 total tables wiped cleanly).
+- `getAdminInfo` and `instagram.connect.listAdmins` now use `withIndex('by_role')` instead of full table scans.
+- `validateBootstrapKey` uses constant-time byte-by-byte comparison (`constantTimeEquals`) to prevent timing attacks.
+
+### Identity Scoping (A5)
+- `adminSettings.getByAdmin` and `adminSettings.upsert` derive `adminId` from the authenticated caller (`requireAdmin`). Client no longer passes identity as argument.
+- `profiles.updateProfile` enforces non-admin email patch guard (`if (profile.role !== 'admin' && fields.email !== undefined)`).
+- `reports.getTargetPreview` and `reports.list` validate `targetType` against literal unions (`'event' | 'host' | 'user' | 'comment'`).
+
+### Validator Hardening (A6)
+- `events.write.create/update`: `actionType` and `status` args now use union literals matching the schema, preventing invalid values.
+- `comments.create`: `content` length validated (1-5000 chars).
+- `reservations.create`: `name` (1-200), `email` (1-254), `message` (0-optional, trimmed) validated.
+- `reservations.updateStatus`: `status` is now a union literal.
+- `follows.toggle`: `followType` is now `'host' | 'organizer'` union with safe cross-table casts in `adjustFollowerCount`.
+- `cms/contact.ts/submitContact`: input length validation added.
+
+### Documentation (A7)
+- ADR-0003 created: **Backend stays on TypeScript/Convex** (no Go decision documented in `docs/decisions/ADR-0003-no-go.md`).

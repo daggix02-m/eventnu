@@ -21,24 +21,6 @@ export function OrganizersShowcase({ contactUrl, events }: OrganizersShowcasePro
 
   useGSAP(
     () => {
-      if (headerRef.current) {
-        gsap.fromTo(
-          headerRef.current.children,
-          { opacity: 0, y: 20 },
-          {
-            opacity: 1,
-            y: 0,
-            duration: 0.5,
-            stagger: 0.1,
-            ease: 'power2.out',
-            scrollTrigger: {
-              trigger: headerRef.current,
-              start: 'top 85%',
-              toggleActions: 'play none none none',
-            },
-          },
-        )
-      }
       if (gridRef.current) {
         gsap.fromTo(
           gridRef.current.children,
@@ -70,18 +52,16 @@ export function OrganizersShowcase({ contactUrl, events }: OrganizersShowcasePro
       ref={sectionRef}
       className="relative z-10 py-2xl border-t border-outline-variant/30 bg-surface-container-lowest/30 overflow-hidden"
     >
-      <div
-        className="absolute top-1/2 right-0 w-[400px] h-[400px] bg-secondary/5 rounded-full blur-[100px] pointer-events-none -translate-y-1/2 translate-x-1/2"
-        aria-hidden="true"
-      />
-
       <Container>
-        <div ref={headerRef} className="text-center max-w-[48rem] mx-auto space-y-sm mb-xl">
-          <h2 className="font-display text-[32px] md:text-[44px] font-extrabold text-white leading-tight">
+        <div
+          ref={headerRef}
+          className="text-center max-w-[48rem] mx-auto mb-12 space-y-3"
+        >
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white tracking-tight leading-tight">
             Your events, found across the city.
           </h2>
-          <p className="text-on-surface text-body-lg leading-relaxed">
-            Everything you publish appears on the homepage, category pages, and search &mdash;
+          <p className="text-on-surface-variant text-base sm:text-lg md:text-xl leading-relaxed">
+            Everything you publish appears on the homepage, category pages, and search —
             alongside the real events of Addis Ababa. This is where your listings live today.
           </p>
         </div>
@@ -89,7 +69,7 @@ export function OrganizersShowcase({ contactUrl, events }: OrganizersShowcasePro
         {showcaseEvents.length > 0 ? (
           <div
             ref={gridRef}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-md max-w-5xl mx-auto"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-md max-w-[64rem] mx-auto"
           >
             {showcaseEvents.map((event) => (
               <EventCard key={event.id} event={event} />

@@ -7,9 +7,11 @@ import { revalidatePath } from 'next/cache'
 import { mapReport, mapReportTargetPreview } from '../mappers'
 import { DEFAULT_PAGE_SIZE } from '@/lib/pagination'
 
+export type ReportTargetType = 'event' | 'host' | 'user' | 'comment'
+
 export async function getReports(params: {
   status?: string
-  targetType?: string
+  targetType?: ReportTargetType | 'all'
   cursor?: string | null
 }) {
   const result = await fetchQuery(api.reports.list, {
@@ -29,7 +31,10 @@ export async function getReportsStats() {
 }
 
 export async function getReportTargetPreview(targetType: string, targetId: string) {
-  const preview = await fetchQuery(api.reports.getTargetPreview, { targetType, targetId })
+  const preview = await fetchQuery(api.reports.getTargetPreview, {
+    targetType: targetType as ReportTargetType,
+    targetId,
+  })
   return mapReportTargetPreview(preview)
 }
 

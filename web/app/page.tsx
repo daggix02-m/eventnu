@@ -1,10 +1,10 @@
 import type { Metadata } from 'next'
 import { DiscoverPageClient } from '@/components/events/DiscoverPageClient'
 import { FeaturedCarousel } from '@/components/events/FeaturedCarousel'
+import { SiteBackground } from '@/components/layout/SiteBackground'
 import { getPublishedEvents, getFeaturedEvents, getCategories } from '@/lib/api/events'
 import { getActiveAnnouncements } from '@/lib/api/announcements'
 import { AnnouncementBanner } from '@/components/events/AnnouncementBanner'
-import { SiteBackground } from '@/components/layout/SiteBackground'
 
 export const dynamic = 'force-dynamic'
 

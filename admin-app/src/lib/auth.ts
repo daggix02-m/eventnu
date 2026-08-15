@@ -35,7 +35,7 @@ export function clearStoredEmail(key: string): void {
 }
 
 export const INVALID_CREDENTIALS = 'Invalid email or password'
-export const RATE_LIMITED = 'Too many failed sign-in attempts. Try again in about an hour.'
+const RATE_LIMITED = 'Too many failed sign-in attempts. Try again in about an hour.'
 const UNAVAILABLE = 'Unable to sign in right now. Please try again.'
 
 export function isNetworkError(err: unknown): boolean {
@@ -53,7 +53,11 @@ export function isNetworkError(err: unknown): boolean {
 export function describeSignInError(err: unknown, fallback: string): string {
   if (err instanceof Error) {
     const msg = err.message
-    if (msg.includes('Invalid credentials') || msg.includes('InvalidAccountId')) {
+    if (
+      msg.includes('Invalid credentials') ||
+      msg.includes('InvalidAccountId') ||
+      msg.includes('InvalidSecret')
+    ) {
       return INVALID_CREDENTIALS
     }
     if (msg.includes('TooManyFailedAttempts')) return RATE_LIMITED

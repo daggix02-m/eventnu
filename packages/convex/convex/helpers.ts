@@ -47,6 +47,16 @@ export function uniqueSlug(text: string): string {
   return `${slugify(text)}-${Math.random().toString(36).substring(2, 7)}`
 }
 
+/** Escape HTML-significant characters so user content can't break out of a template. */
+export function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
 export type EventImageInput = { url: string; storageId?: string | null; filter?: string | null }
 
 /** Insert event images in order, replacing any existing ones and cleaning up orphaned storage. */

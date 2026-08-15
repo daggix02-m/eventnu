@@ -31,6 +31,7 @@ import {
   downloadIcsFile,
 } from '@/lib/calendar'
 import { formatPrice, cn } from '@/lib/utils'
+import { formatEventTime } from '@/lib/dates'
 import type { Event } from '@/types'
 
 interface ScheduleEventCardProps {
@@ -40,24 +41,18 @@ interface ScheduleEventCardProps {
   isHighlighted?: boolean
 }
 
-function formatTime(isoString: string): string {
-  const d = new Date(isoString)
-  return d.toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  })
+function formatTime(isoString: string, timeZone?: string): string {
+  return formatEventTime(isoString, timeZone)
 }
 
 function getEventStatus(
   startDateStr: string,
-  endDateStr?: string | null,
+  endDateStr: string | null | undefined,
+  timeZone?: string,
 ): { label: string; isLive: boolean; isSoon: boolean; isPast: boolean } {
   const now = new Date().getTime()
   const start = new Date(startDateStr).getTime()
-  const end = endDateStr
-    ? new Date(endDateStr).getTime()
-    : start + 3 * 60 * 60 * 1000 // default 3h
+  const end = endDateStr ? new Date(endDateStr).getTime() : start + 3 * 60 * 60 * 1000 // default 3h
 
   if (now > end) {
     return { label: 'ENDED', isLive: false, isSoon: false, isPast: true }
@@ -85,8 +80,8 @@ export function ScheduleEventCard({
   isHighlighted = false,
 }: ScheduleEventCardProps) {
   const [downloaded, setDownloaded] = useState(false)
-  const status = getEventStatus(event.start_date, event.end_date)
-  const timeFormatted = formatTime(event.start_date)
+  const status = getEventStatus(event.start_date, event.end_date, event.timezone)
+  const timeFormatted = formatTime(event.start_date, event.timezone)
 
   const handleDownloadIcs = () => {
     const icsContent = buildIcs(event)
@@ -228,7 +223,10 @@ export function ScheduleEventCard({
                   <ChevronDown className="w-3 h-3 opacity-70" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48 bg-surface-container-high/95 backdrop-blur-xl border-outline-variant/60">
+              <DropdownMenuContent
+                align="end"
+                className="w-48 bg-surface-container-high/95 backdrop-blur-xl border-outline-variant/60"
+              >
                 <DropdownMenuLabel className="text-[11px] text-on-surface-variant font-mono">
                   Sync with your calendar
                 </DropdownMenuLabel>

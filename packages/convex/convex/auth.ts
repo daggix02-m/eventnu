@@ -1,7 +1,15 @@
-import { convexAuth } from '@convex-dev/auth/server'
+import { v } from 'convex/values'
+import {
+  convexAuth,
+  getAuthUserId,
+  modifyAccountCredentials,
+  retrieveAccount,
+} from '@convex-dev/auth/server'
 import { Password } from '@convex-dev/auth/providers/Password'
 import { Email } from '@convex-dev/auth/providers/Email'
-import { env } from './_generated/server'
+import { action, env } from './_generated/server'
+import { internal } from './_generated/api'
+import { escapeHtml } from './helpers'
 
 const RESEND_BASE = 'https://api.resend.com'
 const DEFAULT_FROM = 'EventNu <onboarding@resend.dev>'
@@ -41,13 +49,13 @@ const emailProvider = {
         <p>Hi there,</p>
         <p>Use the button below to securely sign in to EventNu. This link expires in one hour.</p>
         <p style="margin:24px 0">
-          <a href="${url}" style="background:#a078ff;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;display:inline-block;font-weight:bold">
+          <a href="${escapeHtml(url)}" style="background:#a078ff;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;display:inline-block;font-weight:bold">
             Sign in to EventNu
           </a>
         </p>
         <p>Or enter this code manually:</p>
         <div style="background:#f5f5f5;border-radius:8px;padding:16px;margin:16px 0;font-size:24px;font-weight:bold;letter-spacing:4px;text-align:center">
-          ${token}
+          ${escapeHtml(token)}
         </div>
         <p style="color:#666;font-size:14px">If you didn't request this, you can safely ignore this email.</p>
       </div>
@@ -95,4 +103,41 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
     }),
     Email(emailProvider),
   ],
+})
+
+export type ChangePasswordResult =
+  | { ok: true }
+  | { ok: false; reason: 'invalid_current_password' | 'rate_limited' | 'not_authenticated' }
+
+export const changePassword = action({
+  args: {
+    currentPassword: v.string(),
+    newPassword: v.string(),
+  },
+  handler: async (ctx, { currentPassword, newPassword }): Promise<ChangePasswordResult> => {
+    const userId = await getAuthUserId(ctx)
+    if (!userId) return { ok: false, reason: 'not_authenticated' }
+
+    const email = await ctx.runQuery(internal.profiles.getProfileEmail, { authUserId: userId })
+    if (!email) return { ok: false, reason: 'not_authenticated' }
+
+    try {
+      await retrieveAccount(ctx, {
+        provider: 'password',
+        account: { id: email, secret: currentPassword },
+      })
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      if (msg === 'InvalidSecret') return { ok: false, reason: 'invalid_current_password' }
+      if (msg === 'TooManyFailedAttempts') return { ok: false, reason: 'rate_limited' }
+      return { ok: false, reason: 'invalid_current_password' }
+    }
+
+    await modifyAccountCredentials(ctx, {
+      provider: 'password',
+      account: { id: email, secret: newPassword },
+    })
+
+    return { ok: true }
+  },
 })

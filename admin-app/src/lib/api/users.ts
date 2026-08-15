@@ -7,7 +7,7 @@ import type { CursorPage } from './use-paginated-list'
 import type { MappedUser } from '@/lib/mappers'
 
 export const usersKeys = ['users'] as const
-export const userStatsKeys = ['users', 'stats'] as const
+const userStatsKeys = ['users', 'stats'] as const
 
 export interface UserListFilters {
   status?: string

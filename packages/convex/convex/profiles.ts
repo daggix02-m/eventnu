@@ -1,5 +1,5 @@
 import { v } from 'convex/values'
-import { query, mutation } from './_generated/server'
+import { query, mutation, internalQuery } from './_generated/server'
 import { getAuthUserId } from '@convex-dev/auth/server'
 import { patchDefined, getUserProfile, requireAdmin, requireUser } from './helpers'
 import { paginationOptsValidator } from 'convex/server'
@@ -43,6 +43,14 @@ export const getMe = query({
   args: {},
   handler: async (ctx) => {
     return await getUserProfile(ctx)
+  },
+})
+
+export const getProfileEmail = internalQuery({
+  args: { authUserId: v.id('users') },
+  handler: async (ctx, args) => {
+    const profile = await getProfileByAuthUserId(ctx, args.authUserId)
+    return profile?.email ?? null
   },
 })
 
@@ -253,6 +261,9 @@ export const updateProfile = mutation({
       throw new Error('Not authorized')
     }
     const { profileId, ...fields } = args
+    if (profile.role !== 'admin' && fields.email !== undefined && fields.email !== profile.email) {
+      throw new Error('Non-admin users cannot change profile email directly')
+    }
     const updates = patchDefined(fields)
     await ctx.db.patch('profiles', profileId, updates)
   },

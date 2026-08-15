@@ -3,7 +3,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { getNavCounts } from '@/lib/actions/dashboard'
 
-export const dashboardKeys = {
+const dashboardKeys = {
   navCounts: ['dashboard', 'navCounts'] as const,
 }
 

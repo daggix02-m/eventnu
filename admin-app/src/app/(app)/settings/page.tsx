@@ -41,7 +41,7 @@ export default async function SettingsPage({
       getInstagramStatus(),
     ])
     if (profile) {
-      notificationPrefs = await getAdminNotificationPrefs(profile._id)
+      notificationPrefs = await getAdminNotificationPrefs()
     }
   } catch (err) {
     console.error('Failed to load settings:', err)

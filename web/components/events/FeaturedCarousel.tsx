@@ -132,7 +132,13 @@ export function FeaturedCarousel({ events }: FeaturedCarouselProps) {
 
   const currentEvent = events[current]
   const category = currentEvent ? getPrimaryCategory(currentEvent) : undefined
-  const externalLabel = currentEvent?.external_link_label?.trim() || 'RSVP Now'
+  const externalLabel =
+    currentEvent?.external_link_label?.trim() ||
+    (currentEvent?.action_type === 'reservation'
+      ? 'Reserve a Spot'
+      : currentEvent?.is_free
+        ? 'Explore Event'
+        : 'Get Tickets')
   const currentImages = sortedImages(currentEvent?.images)
   const currentImageCount = currentImages.length > 1 ? currentImages.length : 1
   const currentSlideTicks = slideTicks(current)
@@ -177,7 +183,7 @@ export function FeaturedCarousel({ events }: FeaturedCarouselProps) {
                 src={m.url}
                 alt={event.title}
                 fill
-                priority={index === 0}
+                priority={index === 0 && i === 0}
                 draggable={false}
                 className={cn(
                   'object-cover transition-opacity duration-1000',
@@ -238,12 +244,40 @@ export function FeaturedCarousel({ events }: FeaturedCarouselProps) {
         </div>
       </div>
 
-      <div className="absolute top-gutter right-gutter z-20 flex items-center gap-sm">
+      {/* Left/Right Tap Zones for quick click-to-change */}
+      {events.length > 1 && (
+        <div className="absolute inset-y-0 inset-x-0 z-10 flex pointer-events-none">
+          <div
+            onClick={(e) => {
+              e.stopPropagation()
+              prev()
+            }}
+            className="w-1/3 h-full pointer-events-auto cursor-pointer"
+            aria-label="Previous featured event"
+            role="button"
+            tabIndex={-1}
+          />
+          <div className="w-1/3 h-full pointer-events-none" />
+          <div
+            onClick={(e) => {
+              e.stopPropagation()
+              next()
+            }}
+            className="w-1/3 h-full pointer-events-auto cursor-pointer"
+            aria-label="Next featured event"
+            role="button"
+            tabIndex={-1}
+          />
+        </div>
+      )}
+
+      <div className="absolute top-gutter right-gutter z-30 flex items-center gap-sm">
         {currentEvent && currentEvent.insta_permalink && (
           <a
             href={currentEvent.insta_permalink}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
             className="flex items-center gap-xs px-sm py-1 rounded-full bg-black/50 backdrop-blur-md text-white font-label-sm text-label-sm hover:bg-[#E1306C]/80 transition-colors"
           >
             <Instagram className="w-3.5 h-3.5" />
@@ -260,32 +294,41 @@ export function FeaturedCarousel({ events }: FeaturedCarouselProps) {
         <>
           <button
             type="button"
-            onClick={prev}
-            className="absolute left-gutter top-1/2 -translate-y-1/2 z-20 p-sm rounded-full bg-background/60 backdrop-blur-md border border-outline-variant text-on-surface hover:text-primary hover:bg-background transition-colors"
+            onClick={(e) => {
+              e.stopPropagation()
+              prev()
+            }}
+            className="flex absolute left-2 sm:left-gutter top-1/2 -translate-y-1/2 z-30 p-2.5 sm:p-3 rounded-full bg-black/50 hover:bg-background/90 active:scale-90 backdrop-blur-md border border-outline-variant/60 text-on-surface hover:text-primary transition-all items-center justify-center cursor-pointer shadow-lg"
             aria-label="Previous featured event"
           >
-            <ChevronLeft className="w-6 h-6" />
+            <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
           <button
             type="button"
-            onClick={next}
-            className="absolute right-gutter top-1/2 -translate-y-1/2 z-20 p-sm rounded-full bg-background/60 backdrop-blur-md border border-outline-variant text-on-surface hover:text-primary hover:bg-background transition-colors"
+            onClick={(e) => {
+              e.stopPropagation()
+              next()
+            }}
+            className="flex absolute right-2 sm:right-gutter top-1/2 -translate-y-1/2 z-30 p-2.5 sm:p-3 rounded-full bg-black/50 hover:bg-background/90 active:scale-90 backdrop-blur-md border border-outline-variant/60 text-on-surface hover:text-primary transition-all items-center justify-center cursor-pointer shadow-lg"
             aria-label="Next featured event"
           >
-            <ChevronRight className="w-6 h-6" />
+            <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
-          <div className="absolute bottom-md left-1/2 -translate-x-1/2 z-20 flex items-center gap-md">
+          <div className="absolute bottom-4 sm:bottom-md left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 sm:gap-md">
             <button
               type="button"
-              onClick={() => setIsPaused((p) => !p)}
-              className="p-xs rounded-full bg-background/60 backdrop-blur-md border border-outline-variant text-on-surface hover:text-primary hover:bg-background transition-colors"
+              onClick={(e) => {
+                e.stopPropagation()
+                setIsPaused((p) => !p)
+              }}
+              className="p-1.5 sm:p-xs rounded-full bg-background/70 backdrop-blur-md border border-outline-variant text-on-surface hover:text-primary hover:bg-background transition-colors cursor-pointer"
               aria-label={isPaused ? 'Play slideshow' : 'Pause slideshow'}
               aria-pressed={isPaused}
             >
-              {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
+              {isPaused ? <Play className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <Pause className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
             </button>
             <div
-              className="flex items-center gap-sm"
+              className="flex items-center gap-1.5 sm:gap-sm py-2"
               role="group"
               aria-label="Featured event navigation"
             >
@@ -293,30 +336,38 @@ export function FeaturedCarousel({ events }: FeaturedCarouselProps) {
                 <button
                   key={index}
                   type="button"
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation()
                     setCurrent(index)
                     setImg(0)
                   }}
                   aria-label={`Go to slide ${index + 1}`}
                   aria-current={index === current}
                   className={cn(
-                    'group h-1.5 flex-1 overflow-hidden rounded-full transition-colors',
-                    index === current
-                      ? 'bg-on-surface-variant/40'
-                      : 'bg-on-surface-variant/20 hover:bg-on-surface-variant/40',
+                    'group h-5 py-1.5 -my-1.5 flex-1 overflow-hidden rounded-full transition-all cursor-pointer flex items-center',
+                    index === current ? 'opacity-100' : 'opacity-60 hover:opacity-100',
                   )}
-                  style={{ minWidth: 28, maxWidth: 40 }}
+                  style={{ minWidth: 32, maxWidth: 48 }}
                 >
-                  {index === current && (
-                    <span
-                      key={`${current}-${index}`}
-                      className="carousel-progress-fill block h-full w-full bg-primary"
-                      style={{
-                        animationDuration: `${currentSlideTicks}s`,
-                        animationPlayState: paused ? 'paused' : 'running',
-                      }}
-                    />
-                  )}
+                  <span
+                    className={cn(
+                      'block h-1.5 rounded-full w-full transition-colors',
+                      index === current
+                        ? 'bg-on-surface-variant/50'
+                        : 'bg-on-surface-variant/20 group-hover:bg-on-surface-variant/40',
+                    )}
+                  >
+                    {index === current && (
+                      <span
+                        key={`${current}-${index}`}
+                        className="carousel-progress-fill block h-full w-full bg-primary rounded-full"
+                        style={{
+                          animationDuration: `${currentSlideTicks}s`,
+                          animationPlayState: paused ? 'paused' : 'running',
+                        }}
+                      />
+                    )}
+                  </span>
                 </button>
               ))}
             </div>

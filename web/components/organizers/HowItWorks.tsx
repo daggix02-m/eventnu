@@ -3,7 +3,7 @@
 import { useRef } from 'react'
 import { useGSAP } from '@gsap/react'
 import { gsap } from '@/lib/gsap'
-import { Calendar, PenLine, Rocket, Scan, Banknote } from 'lucide-react'
+import { PenLine, Rocket, Scan, Banknote } from 'lucide-react'
 import { Container } from '@/components/layout/Container'
 
 const STEPS = [
@@ -14,7 +14,6 @@ const STEPS = [
     time: '~2 min',
     accent: 'text-primary',
     accentBg: 'bg-primary/10 border-primary/30',
-    accentGlow: 'shadow-primary/20',
   },
   {
     icon: Rocket,
@@ -23,7 +22,6 @@ const STEPS = [
     time: 'instant',
     accent: 'text-secondary',
     accentBg: 'bg-secondary/10 border-secondary/30',
-    accentGlow: 'shadow-secondary/20',
   },
   {
     icon: Scan,
@@ -32,7 +30,6 @@ const STEPS = [
     time: 'door-time',
     accent: 'text-tertiary',
     accentBg: 'bg-tertiary/10 border-tertiary/30',
-    accentGlow: 'shadow-tertiary/20',
   },
   {
     icon: Banknote,
@@ -41,7 +38,6 @@ const STEPS = [
     time: '24–48 hrs',
     accent: 'text-primary',
     accentBg: 'bg-primary/10 border-primary/30',
-    accentGlow: 'shadow-primary/20',
   },
 ] as const
 
@@ -53,25 +49,6 @@ export function OrganizersHowItWorks() {
 
   useGSAP(
     () => {
-      if (headerRef.current) {
-        gsap.fromTo(
-          headerRef.current.children,
-          { opacity: 0, y: 20 },
-          {
-            opacity: 1,
-            y: 0,
-            duration: 0.5,
-            stagger: 0.1,
-            ease: 'power2.out',
-            scrollTrigger: {
-              trigger: headerRef.current,
-              start: 'top 85%',
-              toggleActions: 'play none none none',
-            },
-          },
-        )
-      }
-
       if (lineRef.current) {
         gsap.fromTo(
           lineRef.current,
@@ -124,17 +101,12 @@ export function OrganizersHowItWorks() {
       <Container>
         <div
           ref={headerRef}
-          className="max-w-[48rem] mx-auto text-center space-y-md mb-lg md:mb-xl"
+          className="text-center max-w-[48rem] mx-auto mb-12 space-y-3"
         >
-          <div>
-            <div className="inline-flex items-center gap-xs text-primary font-mono text-label-sm uppercase tracking-wider">
-              <Calendar className="w-4 h-4" aria-hidden="true" /> Steps to Launch
-            </div>
-          </div>
-          <h2 className="font-display text-[32px] md:text-[44px] font-extrabold text-white leading-tight opacity-0">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white tracking-tight leading-tight">
             From idea to sold-out in four steps
           </h2>
-          <p className="text-on-surface text-body-lg leading-relaxed opacity-0">
+          <p className="text-on-surface-variant text-base sm:text-lg md:text-xl leading-relaxed">
             Our streamlined organizer flow makes listing fast, promotion automatic, and settlement
             reliable.
           </p>
@@ -144,7 +116,7 @@ export function OrganizersHowItWorks() {
           {/* Vertical connecting line */}
           <div
             ref={lineRef}
-            className="absolute left-7 top-7 bottom-7 w-[2px] bg-gradient-to-b from-primary via-secondary via-tertiary to-primary origin-top"
+            className="absolute left-7 top-7 bottom-7 w-[2px] bg-outline-variant/40 origin-top"
             aria-hidden="true"
           />
 
@@ -153,7 +125,7 @@ export function OrganizersHowItWorks() {
               <div key={idx} className="step-item relative flex items-start gap-lg opacity-0">
                 {/* Step number node */}
                 <div
-                  className={`relative z-10 w-14 h-14 rounded-xl border flex-col items-center justify-center shrink-0 flex shadow-lg ${step.accentBg} ${step.accentGlow}`}
+                  className={`relative z-10 w-14 h-14 rounded-xl border flex-col items-center justify-center shrink-0 flex ${step.accentBg}`}
                   aria-hidden="true"
                 >
                   <span

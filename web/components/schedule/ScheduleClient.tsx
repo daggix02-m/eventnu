@@ -10,6 +10,7 @@ import { ScheduleEventCard } from './ScheduleEventCard'
 import { ItineraryFloatingDock } from './ItineraryFloatingDock'
 import { EmptyScheduleState } from './EmptyScheduleState'
 import type { Event, Category } from '@/types'
+import { toDateString, getTodayString, nextFriday, getHourInTimeZone } from '@/lib/dates'
 
 interface ScheduleClientProps {
   events: Event[]
@@ -19,19 +20,7 @@ interface ScheduleClientProps {
 }
 
 function toLocalDateString(isoString: string): string {
-  const d = new Date(isoString)
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${y}-${m}-${day}`
-}
-
-function getTodayString(): string {
-  const d = new Date()
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${y}-${m}-${day}`
+  return toDateString(new Date(isoString))
 }
 
 export function ScheduleClient({
@@ -72,9 +61,7 @@ export function ScheduleClient({
   })
 
   const [timeFilter, setTimeFilter] = useState<TimeOfDayFilter>('all')
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(
-    initialCategory || null,
-  )
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(initialCategory || null)
   const [plannedEvents, setPlannedEvents] = useState<Event[]>([])
   const [highlightedEventId, setHighlightedEventId] = useState<string | null>(null)
   const [isRollingDice, setIsRollingDice] = useState(false)
@@ -90,15 +77,13 @@ export function ScheduleClient({
       .filter((ev) => {
         // Category filter
         if (selectedCategory) {
-          const hasCat = ev.event_categories?.some(
-            (ec) => ec.categories?.slug === selectedCategory,
-          )
+          const hasCat = ev.event_categories?.some((ec) => ec.categories?.slug === selectedCategory)
           if (!hasCat) return false
         }
 
         // Time of Day filter
         if (timeFilter !== 'all') {
-          const hour = new Date(ev.start_date).getHours()
+          const hour = getHourInTimeZone(ev.start_date, ev.timezone)
           if (timeFilter === 'daylight' && hour >= 17) return false
           if (timeFilter === 'golden' && (hour < 17 || hour >= 21)) return false
           if (timeFilter === 'midnight' && hour < 21) return false
@@ -198,18 +183,7 @@ export function ScheduleClient({
 
   // Jump to weekend shortcut
   const handleJumpToWeekend = () => {
-    const today = new Date()
-    const currentDay = today.getDay()
-    let daysUntilFriday = (5 - currentDay + 7) % 7
-    if (daysUntilFriday === 0 && today.getHours() >= 23) {
-      daysUntilFriday = 1 // Saturday
-    }
-    const friday = new Date(today)
-    friday.setDate(today.getDate() + daysUntilFriday)
-    const y = friday.getFullYear()
-    const m = String(friday.getMonth() + 1).padStart(2, '0')
-    const d = String(friday.getDate()).padStart(2, '0')
-    setSelectedDate(`${y}-${m}-${d}`)
+    setSelectedDate(toDateString(nextFriday()))
   }
 
   const handleResetFilters = () => {
@@ -243,7 +217,8 @@ export function ScheduleClient({
           What’s Happening in Addis
         </h1>
         <p className="text-sm md:text-base text-on-surface-variant max-w-[38rem]">
-          Pick any date, filter by vibe, and sync your favorite events to your personal calendar in one tap.
+          Pick any date, filter by vibe, and sync your favorite events to your personal calendar in
+          one tap.
         </p>
       </div>
 
@@ -314,10 +289,7 @@ export function ScheduleClient({
       )}
 
       {/* Sticky Floating Itinerary Dock */}
-      <ItineraryFloatingDock
-        plannedEvents={plannedEvents}
-        onClearPlan={handleClearPlan}
-      />
+      <ItineraryFloatingDock plannedEvents={plannedEvents} onClearPlan={handleClearPlan} />
     </main>
   )
 }

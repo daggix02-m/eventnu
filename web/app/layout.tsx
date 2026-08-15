@@ -9,6 +9,9 @@ import { ConvexAuthClientProvider } from '@/components/providers/ConvexAuthClien
 import { ConvexAuthNextjsServerProvider } from '@convex-dev/auth/nextjs/server'
 import { AuthModalProvider } from '@/components/auth/AuthModalContext'
 
+import { ServiceWorkerRegister } from '@/components/pwa/ServiceWorkerRegister'
+import { InstallPrompt } from '@/components/pwa/InstallPrompt'
+
 const inter = Inter({
   variable: '--font-inter',
   subsets: ['latin'],
@@ -40,7 +43,21 @@ export const metadata: Metadata = {
   description:
     'Discover concerts, arts, nightlife, and cultural experiences across Addis Ababa. All events in one place.',
   keywords: ['events', 'Addis Ababa', 'concerts', 'nightlife', 'arts', 'Ethiopia'],
-  icons: { icon: '/logo.png' },
+  applicationName: 'Event Nu',
+  manifest: '/manifest.webmanifest',
+  icons: {
+    icon: [
+      { url: '/logo.png', sizes: 'any', type: 'image/png' },
+      { url: '/icons/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/icons/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/logo.png', sizes: '180x180', type: 'image/png' },
+      { url: '/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+    shortcut: '/logo.png',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
@@ -51,7 +68,7 @@ export const metadata: Metadata = {
     description: 'Discover concerts, arts, nightlife, and cultural experiences across Addis Ababa.',
     type: 'website',
     locale: 'en_ET',
-    images: [{ url: '/logo.png', width: 512, height: 512, alt: 'Event Nu' }],
+    images: [{ url: '/logo.png', width: 794, height: 672, alt: 'Event Nu' }],
   },
 }
 
@@ -69,12 +86,14 @@ export default function RootLayout({
           <ConvexAuthClientProvider>
             <AuthModalProvider>
               <SkipLink />
+              <ServiceWorkerRegister />
               <TopNav />
-              <main id="main-content" className="min-h-screen" tabIndex={-1}>
+              <main id="main-content" className="min-h-screen pb-24 md:pb-0" tabIndex={-1}>
                 {children}
               </main>
               <Footer />
               <BottomTabBar />
+              <InstallPrompt />
             </AuthModalProvider>
           </ConvexAuthClientProvider>
         </ConvexAuthNextjsServerProvider>

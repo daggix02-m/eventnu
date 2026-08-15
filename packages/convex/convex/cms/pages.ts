@@ -19,7 +19,8 @@ export const getPageBySlug = query({
       .query('pages')
       .withIndex('by_slug', (q) => q.eq('slug', args.slug))
       .first()
-    return page ?? null
+    if (!page || !page.isPublished) return null
+    return page
   },
 })
 

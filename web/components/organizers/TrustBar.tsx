@@ -54,15 +54,6 @@ export function OrganizersTrustBar() {
       aria-label="Payment partners and trust indicators"
       className="relative z-10 py-md border-y border-outline-variant/20 bg-surface-container-lowest/60 overflow-hidden"
     >
-      {/* Gradient top line accent */}
-      <div
-        className="absolute top-0 left-0 right-0 h-[1px] opacity-50"
-        style={{
-          background:
-            'linear-gradient(90deg, transparent 0%, var(--color-primary) 30%, var(--color-secondary) 70%, transparent 100%)',
-        }}
-        aria-hidden="true"
-      />
 
       <Container>
         <div className="flex flex-col md:flex-row items-center gap-lg">

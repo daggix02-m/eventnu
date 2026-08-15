@@ -2,7 +2,7 @@ import { v } from 'convex/values'
 import { query, mutation, QueryCtx } from './_generated/server'
 import { Doc } from './_generated/dataModel'
 import { getUserProfile, requireUser } from './helpers'
-import { enrichEvent } from './events/enrichment'
+import { enrichPublicEvents } from './events/enrichment'
 import { rateLimiter } from './rateLimiter'
 
 export const countByEvent = query({
@@ -38,12 +38,10 @@ export const listByUser = query({
       .order('desc')
       .take(200)
     const events = await Promise.all(bookmarks.map((b) => ctx.db.get('events', b.eventId)))
-    const enriched = await Promise.all(
-      events
-        .filter((e): e is Doc<'events'> => !!e && e.status === 'published')
-        .map((e) => enrichEvent(ctx, e)),
+    return await enrichPublicEvents(
+      ctx,
+      events.filter((e): e is Doc<'events'> => !!e && e.status === 'published'),
     )
-    return enriched
   },
 })
 

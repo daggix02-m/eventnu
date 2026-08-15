@@ -19,10 +19,26 @@ export const submitContact = mutation({
   },
   handler: async (ctx, args) => {
     await rateLimiter.limit(ctx, 'submitContact', { key: 'global', throws: true })
+
+    const name = args.name.trim()
+    if (name.length === 0 || name.length > 200) {
+      throw new Error('Name must be between 1 and 200 characters')
+    }
+
+    const email = args.email.trim()
+    if (email.length === 0 || email.length > 254) {
+      throw new Error('Email must be between 1 and 254 characters')
+    }
+
+    const message = args.message.trim()
+    if (message.length === 0 || message.length > 5000) {
+      throw new Error('Message must be between 1 and 5000 characters')
+    }
+
     return await ctx.db.insert('contactSubmissions', {
-      name: args.name,
-      email: args.email,
-      message: args.message,
+      name,
+      email,
+      message,
       isResolved: false,
     })
   },

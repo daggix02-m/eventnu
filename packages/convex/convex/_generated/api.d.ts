@@ -49,7 +49,6 @@ import type * as reservations from "../reservations.js";
 import type * as seed from "../seed.js";
 import type * as shares from "../shares.js";
 import type * as support from "../support.js";
-import type * as verifyPassword from "../verifyPassword.js";
 
 import type {
   ApiFromModules,
@@ -99,7 +98,6 @@ declare const fullApi: ApiFromModules<{
   seed: typeof seed;
   shares: typeof shares;
   support: typeof support;
-  verifyPassword: typeof verifyPassword;
 }>;
 
 /**

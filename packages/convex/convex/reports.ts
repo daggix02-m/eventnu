@@ -3,29 +3,41 @@ import { query, mutation } from './_generated/server'
 import { Doc, Id } from './_generated/dataModel'
 import { insertModerationLog, insertNotification, requireAdmin } from './helpers'
 import { paginationOptsValidator } from 'convex/server'
+import { STATS_SCAN_CAP } from './constants'
 
 export const list = query({
   args: {
     paginationOpts: paginationOptsValidator,
     status: v.optional(v.string()),
-    targetType: v.optional(v.string()),
+    targetType: v.optional(
+      v.union(
+        v.literal('all'),
+        v.literal('event'),
+        v.literal('host'),
+        v.literal('user'),
+        v.literal('comment'),
+      ),
+    ),
   },
   handler: async (ctx, args) => {
     await requireAdmin(ctx)
-    const page =
-      args.status && args.status !== 'all'
-        ? await ctx.db
+    const { paginationOpts, status, targetType } = args
+    const base =
+      status && status !== 'all'
+        ? ctx.db
             .query('reports')
-            .withIndex('by_status', (q) => q.eq('status', args.status as Doc<'reports'>['status']))
-            .order('desc')
-            .paginate(args.paginationOpts)
-        : await ctx.db.query('reports').order('desc').paginate(args.paginationOpts)
-    let rows = page.page
-    if (args.targetType && args.targetType !== 'all') {
-      rows = rows.filter((r) => r.targetType === args.targetType)
-    }
+            .withIndex('by_status', (q) => q.eq('status', status as Doc<'reports'>['status']))
+        : ctx.db.query('reports')
+    const page = await base
+      .order('desc')
+      .filter((f) =>
+        f.and(
+          ...(targetType && targetType !== 'all' ? [f.eq(f.field('targetType'), targetType)] : []),
+        ),
+      )
+      .paginate(args.paginationOpts)
     const enriched = await Promise.all(
-      rows.map(async (r) => {
+      page.page.map(async (r) => {
         const reporter = await ctx.db.get('profiles', r.reporterId)
         return { ...r, reporter: reporter ?? null }
       }),
@@ -38,29 +50,39 @@ export const getStats = query({
   args: {},
   handler: async (ctx) => {
     await requireAdmin(ctx)
-    const byStatus = new Map<Doc<'reports'>['status'], number>()
-    let total = 0
-    let cursor: string | null = null
-    for (let i = 0; i < 20; i++) {
-      const page = await ctx.db.query('reports').order('desc').paginate({ cursor, numItems: 500 })
-      for (const report of page.page) {
-        total++
-        byStatus.set(report.status, (byStatus.get(report.status) ?? 0) + 1)
-      }
-      if (page.isDone) break
-      cursor = page.continueCursor
-    }
+    const [pending, actioned, dismissed] = await Promise.all([
+      ctx.db
+        .query('reports')
+        .withIndex('by_status', (q) => q.eq('status', 'pending'))
+        .take(STATS_SCAN_CAP),
+      ctx.db
+        .query('reports')
+        .withIndex('by_status', (q) => q.eq('status', 'actioned'))
+        .take(STATS_SCAN_CAP),
+      ctx.db
+        .query('reports')
+        .withIndex('by_status', (q) => q.eq('status', 'dismissed'))
+        .take(STATS_SCAN_CAP),
+    ])
     return {
-      total,
-      pending: byStatus.get('pending') ?? 0,
-      actioned: byStatus.get('actioned') ?? 0,
-      dismissed: byStatus.get('dismissed') ?? 0,
+      total: pending.length + actioned.length + dismissed.length,
+      pending: pending.length,
+      actioned: actioned.length,
+      dismissed: dismissed.length,
     }
   },
 })
 
 export const getTargetPreview = query({
-  args: { targetType: v.string(), targetId: v.string() },
+  args: {
+    targetType: v.union(
+      v.literal('event'),
+      v.literal('host'),
+      v.literal('user'),
+      v.literal('comment'),
+    ),
+    targetId: v.string(),
+  },
   handler: async (ctx, args) => {
     await requireAdmin(ctx)
     if (args.targetType === 'event') {

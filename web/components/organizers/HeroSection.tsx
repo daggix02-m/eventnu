@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useEffect, useState, useLayoutEffect } from 'react'
+import { useRef, useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useGSAP } from '@gsap/react'
@@ -28,14 +28,12 @@ interface PreviewEvent {
 
 export function OrganizersHero({ contactUrl, events, categoryCount }: OrganizersHeroProps) {
   const sectionRef = useRef<HTMLElement>(null)
-  const badgeRef = useRef<HTMLDivElement>(null)
   const headlineRef = useRef<HTMLHeadingElement>(null)
   const subRef = useRef<HTMLDivElement>(null)
   const ctaRef = useRef<HTMLDivElement>(null)
   const miniStatsRef = useRef<HTMLDivElement>(null)
   const mockupRef = useRef<HTMLDivElement>(null)
   const [currentPreview, setCurrentPreview] = useState(0)
-  const wordsSplitRef = useRef(false)
   const prefersReducedMotion = usePrefersReducedMotion()
 
   const previews: PreviewEvent[] = events.map((event) => ({
@@ -67,60 +65,49 @@ export function OrganizersHero({ contactUrl, events, categoryCount }: Organizers
     return () => clearInterval(interval)
   }, [prefersReducedMotion, hasPreviews, previews.length])
 
-  useLayoutEffect(() => {
-    if (wordsSplitRef.current) return
-    const el = headlineRef.current
-    if (!el) return
-    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null)
-    const textNodes = []
-    while (walker.nextNode()) textNodes.push(walker.currentNode)
-    textNodes.forEach((node) => {
-      if (!node.textContent?.trim()) return
-      const words = node.textContent.split(/\s+/)
-      const fragment = document.createDocumentFragment()
-      words.forEach((word, i) => {
-        const span = document.createElement('span')
-        span.className = 'hero-word inline-block'
-        span.textContent = word
-        fragment.appendChild(span)
-        if (i < words.length - 1) fragment.appendChild(document.createTextNode(' '))
-      })
-      node.parentNode?.replaceChild(fragment, node)
-    })
-    wordsSplitRef.current = true
-  }, [])
-
   useGSAP(
     () => {
       const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
       const heroWords = sectionRef.current?.querySelectorAll('.hero-word')
-      if (heroWords?.length) gsap.set(heroWords, { opacity: 0, y: 14 })
-      gsap.set(badgeRef.current, { opacity: 0, y: 16 })
-      gsap.set(subRef.current, { opacity: 0, y: 14 })
-      if (ctaRef.current) gsap.set(ctaRef.current.children, { opacity: 0, y: 12 })
-      if (miniStatsRef.current) gsap.set(miniStatsRef.current.children, { opacity: 0, y: 10 })
-      gsap.set(mockupRef.current, { opacity: 0, x: 30, scale: 0.95 })
-
-      tl.to(badgeRef.current, { opacity: 1, y: 0, duration: 0.4 })
       if (heroWords?.length) {
-        tl.to(heroWords, { opacity: 1, y: 0, duration: 0.3, stagger: 0.018 }, '-=0.1')
-      }
-      tl.to(subRef.current, { opacity: 1, y: 0, duration: 0.4 }, '-=0.05')
-      if (ctaRef.current) {
-        tl.to(ctaRef.current.children, { opacity: 1, y: 0, duration: 0.35, stagger: 0.08 }, '-=0.1')
-      }
-      if (miniStatsRef.current) {
-        tl.to(
-          miniStatsRef.current.children,
-          { opacity: 1, y: 0, duration: 0.3, stagger: 0.06 },
-          '-=0.05',
+        tl.fromTo(
+          heroWords,
+          { opacity: 0, y: 16 },
+          { opacity: 1, y: 0, duration: 0.35, stagger: 0.04 },
         )
       }
-      tl.to(
-        mockupRef.current,
-        { opacity: 1, x: 0, scale: 1, duration: 0.7, ease: 'power2.out' },
-        '-=0.5',
-      )
+      if (subRef.current) {
+        tl.fromTo(
+          subRef.current,
+          { opacity: 0, y: 14 },
+          { opacity: 1, y: 0, duration: 0.4 },
+          '-=0.1',
+        )
+      }
+      if (ctaRef.current) {
+        tl.fromTo(
+          ctaRef.current.children,
+          { opacity: 0, y: 12 },
+          { opacity: 1, y: 0, duration: 0.35, stagger: 0.08 },
+          '-=0.15',
+        )
+      }
+      if (miniStatsRef.current) {
+        tl.fromTo(
+          miniStatsRef.current.children,
+          { opacity: 0, y: 12 },
+          { opacity: 1, y: 0, duration: 0.3, stagger: 0.06 },
+          '-=0.1',
+        )
+      }
+      if (mockupRef.current) {
+        tl.fromTo(
+          mockupRef.current,
+          { opacity: 0, x: 20, scale: 0.98 },
+          { opacity: 1, x: 0, scale: 1, duration: 0.6, ease: 'power2.out' },
+          '-=0.4',
+        )
+      }
     },
     { scope: sectionRef },
   )
@@ -131,31 +118,19 @@ export function OrganizersHero({ contactUrl, events, categoryCount }: Organizers
       className="relative z-10 pt-xl md:pt-2xl pb-xl overflow-hidden"
       aria-label="Organizers hero section"
     >
-      <div
-        className="absolute top-0 left-0 w-[700px] h-[700px] bg-primary/8 rounded-full blur-[160px] pointer-events-none -translate-x-1/3 -translate-y-1/3"
-        aria-hidden="true"
-      />
-      <div
-        className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-secondary/6 rounded-full blur-[120px] pointer-events-none translate-x-1/4 translate-y-1/4"
-        aria-hidden="true"
-      />
-
       <Container>
         <div className="flex flex-col lg:flex-row items-center gap-xl lg:gap-2xl pt-md">
           {/* LEFT — copy */}
           <div className="flex-1 space-y-lg text-left max-w-[600px]">
-            <div
-              ref={badgeRef}
-              className="inline-flex items-center gap-xs px-sm py-1.5 rounded-full bg-primary/10 border border-primary/30 text-primary font-mono text-label-sm"
-            >
-              <span>For organizers in Addis Ababa</span>
-            </div>
-
             <h1
               ref={headlineRef}
               className="font-display text-[38px] leading-[1.1] md:text-[58px] lg:text-[68px] font-extrabold tracking-tight text-white"
             >
-              Launch Events <span className="premium-gradient">That Sell Out.</span>
+              <span className="hero-word inline-block">Launch</span>{' '}
+              <span className="hero-word inline-block">Events</span>{' '}
+              <span className="hero-word inline-block text-primary">That</span>{' '}
+              <span className="hero-word inline-block text-primary">Sell</span>{' '}
+              <span className="hero-word inline-block text-primary">Out.</span>
             </h1>
 
             <div ref={subRef} className="space-y-sm max-w-prose">
@@ -163,10 +138,10 @@ export function OrganizersHero({ contactUrl, events, categoryCount }: Organizers
                 List your event, accept local payments, and get discovered by the city planning its
                 next night out &mdash; all from one place.
               </p>
-              <div className="inline-flex items-center gap-xs px-sm py-2 rounded-xl bg-secondary/8 border border-secondary/20">
-                <CheckCircle2 className="w-4 h-4 text-secondary shrink-0" aria-hidden="true" />
-                <span className="text-secondary font-semibold text-[15px] leading-relaxed">
-                  Telebirr, CBE Birr, Chapa &amp; cards &mdash; accepted at checkout.
+              <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-surface-container-low/80 border border-outline-variant/30">
+                <CheckCircle2 className="w-4 h-4 text-primary shrink-0" aria-hidden="true" />
+                <span className="text-on-surface font-medium text-sm">
+                  Telebirr, CBE Birr, Chapa &amp; cards accepted at checkout.
                 </span>
               </div>
             </div>
@@ -212,12 +187,7 @@ export function OrganizersHero({ contactUrl, events, categoryCount }: Organizers
 
           {/* RIGHT — live listings preview */}
           <div ref={mockupRef} className="flex-1 w-full max-w-[520px] relative mt-lg lg:mt-0">
-            <div className="relative rounded-2xl glass-card border border-outline-variant/60 overflow-hidden p-md md:p-lg shadow-2xl shadow-black/50">
-              <div
-                className="absolute inset-0 bg-gradient-to-tr from-primary/10 via-transparent to-secondary/8 pointer-events-none"
-                aria-hidden="true"
-              />
-
+            <div className="relative rounded-2xl glass-card border border-outline-variant/60 overflow-hidden p-md md:p-lg shadow-xl shadow-black/40">
               {/* Top bar */}
               <div className="flex items-center justify-between border-b border-outline-variant/30 pb-sm mb-md relative z-10">
                 <div className="flex items-center gap-xs">

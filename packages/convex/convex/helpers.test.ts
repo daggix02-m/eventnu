@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { patchDefined, slugify, uniqueSlug } from './helpers'
+import { escapeHtml, patchDefined, slugify, uniqueSlug } from './helpers'
 
 describe('patchDefined', () => {
   it('keeps defined fields and drops undefined ones', () => {
@@ -49,5 +49,27 @@ describe('uniqueSlug', () => {
     const a = uniqueSlug('My Event')
     const b = uniqueSlug('My Event')
     expect(a).not.toBe(b)
+  })
+})
+
+describe('escapeHtml', () => {
+  it('escapes angle brackets, ampersands and quotes', () => {
+    expect(escapeHtml('<script>alert("x&y")</script>')).toBe(
+      '&lt;script&gt;alert(&quot;x&amp;y&quot;)&lt;/script&gt;',
+    )
+  })
+
+  it('escapes single quotes', () => {
+    expect(escapeHtml("it's")).toBe('it&#39;s')
+  })
+
+  it('leaves plain text untouched', () => {
+    expect(escapeHtml('plain text with spaces')).toBe('plain text with spaces')
+  })
+
+  it('turns a script tag inert when interpolated into an email body', () => {
+    const html = `<p>Hi ${escapeHtml('Bob</p><script>window.location="https://evil.example"</script><p>')},</p>`
+    expect(html).not.toContain('<script>')
+    expect(html).not.toContain('</script>')
   })
 })

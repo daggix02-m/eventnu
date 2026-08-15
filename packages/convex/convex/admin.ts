@@ -24,6 +24,8 @@ const ALL_TABLES: TableNames[] = [
   'organizerProfiles',
   'eventLikes',
   'eventComments',
+  'eventShares',
+  'experiencePosts',
   'follows',
   'pages',
   'announcements',
@@ -44,8 +46,19 @@ function normalizeEmail(email: string): string {
   return email.trim().toLowerCase()
 }
 
+function constantTimeEquals(a: string, b: string): boolean {
+  const aBytes = new TextEncoder().encode(a)
+  const bBytes = new TextEncoder().encode(b)
+  let diff = aBytes.length ^ bBytes.length
+  const max = Math.max(aBytes.length, bBytes.length)
+  for (let i = 0; i < max; i++) {
+    diff |= (aBytes[i] ?? 0) ^ (bBytes[i] ?? 0)
+  }
+  return diff === 0
+}
+
 function validateBootstrapKey(key: string): void {
-  if (!env.ADMIN_BOOTSTRAP_KEY || key !== env.ADMIN_BOOTSTRAP_KEY) {
+  if (!env.ADMIN_BOOTSTRAP_KEY || !constantTimeEquals(key, env.ADMIN_BOOTSTRAP_KEY)) {
     throw new Error('Invalid bootstrap key')
   }
 }
@@ -63,7 +76,7 @@ export const getAdminInfo = query({
     validateBootstrapKey(args.key)
     const admins = await ctx.db
       .query('profiles')
-      .filter((q) => q.eq(q.field('role'), 'admin'))
+      .withIndex('by_role', (q) => q.eq('role', 'admin'))
       .take(50)
     return {
       admins: admins.map((p) => ({

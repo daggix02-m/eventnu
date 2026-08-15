@@ -4,6 +4,7 @@ import { useRef, useEffect, useState } from 'react'
 import { CalendarDays, ChevronLeft, ChevronRight, Flame, Sparkles } from 'lucide-react'
 import { MiniCalendarModal } from './MiniCalendarModal'
 import { cn } from '@/lib/utils'
+import { toDateString, nextFriday } from '@/lib/dates'
 
 interface DateRailScrollerProps {
   selectedDate: string // 'YYYY-MM-DD'
@@ -26,13 +27,6 @@ const SHORT_MONTHS = [
   'Dec',
 ]
 const SHORT_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-
-function toDateString(d: Date): string {
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${y}-${m}-${day}`
-}
 
 function getUpcomingDates(daysCount = 45): Array<{
   dateStr: string
@@ -73,7 +67,6 @@ export function DateRailScroller({
   const [datesList] = useState(() => getUpcomingDates(45))
 
   const todayStr = toDateString(new Date())
-
   // Scroll active item into view smoothly
   useEffect(() => {
     if (!scrollContainerRef.current) return
@@ -111,16 +104,7 @@ export function DateRailScroller({
   }
 
   const handleSelectWeekend = () => {
-    const today = new Date()
-    const currentDay = today.getDay()
-    // Days until Friday (5)
-    let daysUntilFriday = (5 - currentDay + 7) % 7
-    if (daysUntilFriday === 0 && today.getHours() >= 23) {
-      daysUntilFriday = 1 // Saturday
-    }
-    const friday = new Date(today)
-    friday.setDate(today.getDate() + daysUntilFriday)
-    onSelectDate(toDateString(friday))
+    onSelectDate(toDateString(nextFriday()))
   }
 
   return (

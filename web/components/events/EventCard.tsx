@@ -1,6 +1,9 @@
+'use client'
+
 import Link from 'next/link'
 import Image from 'next/image'
-import { ArrowUpRight, Images } from 'lucide-react'
+import { useMemo } from 'react'
+import { ArrowUpRight, Images, MapPin } from 'lucide-react'
 import { cn, formatPrice, formatEventDateShort, isEventPast } from '@/lib/utils'
 import { filterStyle } from '@/lib/media'
 import { CardQuickActions } from '@/components/social/EventSocialActions'
@@ -21,14 +24,23 @@ export function EventCard({
 }: EventCardProps) {
   const ended = isEventPast(event.start_date)
   const isLg = size === 'lg'
-  const images = [...(event.images ?? [])].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+  const images = useMemo(
+    () => [...(event.images ?? [])].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)),
+    [event.images],
+  )
   const cover = images[0]
   const coverUrl = cover?.url || event.poster_url
   const href = event.slug ? `/events/${event.slug}` : null
+  const primaryCategory = event.event_categories?.[0]?.categories?.name
 
   const cardContent = (
     <>
-      <div className={cn('relative overflow-hidden', isLg ? 'h-56 md:h-64' : 'h-48')}>
+      <div
+        className={cn(
+          'relative overflow-hidden bg-surface-container-highest',
+          isLg ? 'h-56 md:h-64' : 'h-48',
+        )}
+      >
         {coverUrl ? (
           <Image
             src={coverUrl}
@@ -37,55 +49,92 @@ export function EventCard({
             priority={priority}
             className="object-cover group-hover:scale-105 transition-transform duration-500"
             style={{ filter: filterStyle(cover?.filter) }}
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            sizes="(max-width: 768px) 270px, (max-width: 1200px) 300px, 350px"
           />
         ) : (
-          <div className="w-full h-full bg-surface-container-highest flex items-center justify-center">
-            <span className="text-on-surface-variant font-mono text-label-sm">No image</span>
+          <div className="w-full h-full flex items-center justify-center">
+            <span className="text-on-surface-variant font-mono text-xs">No image</span>
           </div>
         )}
-        {images.length > 1 && (
-          <div className="absolute bottom-sm right-sm flex items-center gap-xs px-sm py-1 rounded-full bg-black/50 backdrop-blur-md text-white font-label-sm text-label-sm">
-            <Images className="w-3.5 h-3.5" />
-            {images.length}
-          </div>
-        )}
-        <div
-          className={cn(
-            'absolute top-sm right-sm px-sm py-1 rounded font-label-sm text-label-sm',
-            ended ? 'bg-error text-on-error' : 'bg-black/50 backdrop-blur-md text-white',
-          )}
-        >
-          {ended ? 'ENDED' : formatEventDateShort(event.start_date)}
-        </div>
-        <CardQuickActions eventId={event.id} className="absolute bottom-sm left-sm" />
-      </div>
-      <div className={cn('space-y-sm', isLg ? 'p-lg' : 'p-md')}>
-        <h3
-          className={cn(
-            'font-bold text-on-surface group-hover:text-primary transition-colors line-clamp-2',
-            isLg ? 'font-display text-headline-md' : 'font-headline-md text-body-lg',
-          )}
-        >
-          {event.title}
-        </h3>
-        <p className="text-on-surface-variant text-body-md line-clamp-1">{event.venue_name}</p>
-        {!ended && (
-          <div className="flex justify-between items-center pt-sm border-t border-outline-variant/30">
-            <span className="text-secondary font-bold text-body-lg">
-              {formatPrice(event.price_display, event.is_free)}
+
+        {/* Gradient Scrim */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
+
+        {/* Top Badges */}
+        <div className="absolute top-2.5 inset-x-2.5 flex items-center justify-between pointer-events-none">
+          {primaryCategory ? (
+            <span className="px-2.5 py-0.5 rounded-full bg-black/60 backdrop-blur-md border border-white/10 font-mono text-[10px] font-bold text-white uppercase tracking-wider">
+              {primaryCategory}
             </span>
-            {href && (
-              <ArrowUpRight className="w-5 h-5 text-primary group-hover:translate-x-1 transition-transform" />
+          ) : (
+            <span />
+          )}
+
+          <div
+            className={cn(
+              'px-2.5 py-0.5 rounded-full font-mono text-[10px] font-bold uppercase tracking-wider',
+              ended
+                ? 'bg-error text-on-error'
+                : 'bg-black/60 backdrop-blur-md border border-white/10 text-white',
             )}
+          >
+            {ended ? 'ENDED' : formatEventDateShort(event.start_date)}
+          </div>
+        </div>
+
+        {/* Bottom Overlays */}
+        {images.length > 1 && (
+          <div className="absolute bottom-2.5 right-2.5 flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-white font-mono text-[11px]">
+            <Images className="w-3 h-3" />
+            <span>{images.length}</span>
           </div>
         )}
+
+        <div className="pointer-events-auto">
+          <CardQuickActions eventId={event.id} className="absolute bottom-2.5 left-2.5" />
+        </div>
+      </div>
+
+      {/* Content */}
+      <div
+        className={cn(
+          'flex flex-col justify-between flex-1 space-y-2.5',
+          isLg ? 'p-5 md:p-6' : 'p-4',
+        )}
+      >
+        <div className="space-y-1">
+          <h3
+            className={cn(
+              'font-bold text-on-surface group-hover:text-primary transition-colors line-clamp-2',
+              isLg
+                ? 'font-display text-xl md:text-2xl leading-snug'
+                : 'font-display text-base sm:text-lg leading-snug',
+            )}
+          >
+            {event.title}
+          </h3>
+          <p className="flex items-center gap-1 text-on-surface-variant text-xs sm:text-sm line-clamp-1">
+            <MapPin className="w-3.5 h-3.5 text-primary shrink-0" />
+            <span className="truncate">{event.venue_name}</span>
+          </p>
+        </div>
+
+        <div className="flex justify-between items-center pt-2.5 border-t border-outline-variant/30 mt-auto">
+          <span className="text-secondary font-bold text-sm sm:text-base font-display">
+            {formatPrice(event.price_display, event.is_free)}
+          </span>
+          {href && (
+            <div className="w-7 h-7 rounded-full bg-surface-container-highest flex items-center justify-center text-on-surface group-hover:bg-primary group-hover:text-on-primary transition-all">
+              <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+            </div>
+          )}
+        </div>
       </div>
     </>
   )
 
   const cardClass = cn(
-    'group bg-surface-container border border-outline-variant rounded-xl overflow-hidden hover:border-primary transition-all duration-300',
+    'group flex flex-col bg-surface-container-high/80 border border-outline-variant/50 rounded-2xl overflow-hidden hover:border-primary/60 hover:shadow-xl hover:shadow-black/40 transition-all duration-300',
     isLg && 'lg:col-span-2',
     className,
   )

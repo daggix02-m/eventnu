@@ -10,6 +10,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
+import { toDateString } from '@/lib/dates'
 
 interface MiniCalendarModalProps {
   open: boolean
@@ -36,13 +37,6 @@ const MONTH_NAMES = [
 
 const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
-function toDateString(year: number, month: number, day: number): string {
-  const y = year
-  const m = String(month + 1).padStart(2, '0')
-  const d = String(day).padStart(2, '0')
-  return `${y}-${m}-${d}`
-}
-
 export function MiniCalendarModal({
   open,
   onOpenChange,
@@ -54,11 +48,7 @@ export function MiniCalendarModal({
   const [currentYear, setCurrentYear] = useState(initialDate.getFullYear())
   const [currentMonth, setCurrentMonth] = useState(initialDate.getMonth())
 
-  const todayStr = toDateString(
-    new Date().getFullYear(),
-    new Date().getMonth(),
-    new Date().getDate(),
-  )
+  const todayStr = toDateString(new Date())
 
   const handlePrevMonth = () => {
     if (currentMonth === 0) {
@@ -98,7 +88,7 @@ export function MiniCalendarModal({
     const dayNum = daysInPrevMonth - i
     const prevMonthIdx = currentMonth === 0 ? 11 : currentMonth - 1
     const prevYear = currentMonth === 0 ? currentYear - 1 : currentYear
-    const dateStr = toDateString(prevYear, prevMonthIdx, dayNum)
+    const dateStr = toDateString(new Date(prevYear, prevMonthIdx, dayNum))
     calendarCells.push({
       dateStr,
       dayNum,
@@ -109,7 +99,7 @@ export function MiniCalendarModal({
 
   // Current month days
   for (let d = 1; d <= daysInMonth; d++) {
-    const dateStr = toDateString(currentYear, currentMonth, d)
+    const dateStr = toDateString(new Date(currentYear, currentMonth, d))
     calendarCells.push({
       dateStr,
       dayNum: d,
@@ -123,7 +113,7 @@ export function MiniCalendarModal({
   for (let d = 1; d <= remainingCells; d++) {
     const nextMonthIdx = currentMonth === 11 ? 0 : currentMonth + 1
     const nextYear = currentMonth === 11 ? currentYear + 1 : currentYear
-    const dateStr = toDateString(nextYear, nextMonthIdx, d)
+    const dateStr = toDateString(new Date(nextYear, nextMonthIdx, d))
     calendarCells.push({
       dateStr,
       dayNum: d,
@@ -141,9 +131,7 @@ export function MiniCalendarModal({
               <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
                 <CalendarIcon className="w-4 h-4 text-primary" />
               </div>
-              <DialogTitle className="text-lg font-bold text-on-surface">
-                City Calendar
-              </DialogTitle>
+              <DialogTitle className="text-lg font-bold text-on-surface">City Calendar</DialogTitle>
             </div>
             <button
               onClick={handleJumpToToday}
@@ -209,8 +197,7 @@ export function MiniCalendarModal({
                   cell.isCurrentMonth
                     ? 'text-on-surface'
                     : 'text-on-surface-variant/30 hover:text-on-surface-variant/60',
-                  isSelected &&
-                    'bg-primary text-on-primary font-bold scale-105 z-10 shadow-md',
+                  isSelected && 'bg-primary text-on-primary font-bold scale-105 z-10 shadow-md',
                   !isSelected &&
                     hasEvents &&
                     'bg-surface-container-high/80 hover:bg-surface-container-highest border border-outline-variant/60',

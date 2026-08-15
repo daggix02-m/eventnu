@@ -31,12 +31,16 @@ export const create = mutation({
   },
   handler: async (ctx, args) => {
     const profile = await requireUser(ctx)
+    const content = args.content.trim()
+    if (content.length === 0 || content.length > 5000) {
+      throw new Error('Comment must be between 1 and 5000 characters')
+    }
     await rateLimiter.limit(ctx, 'commentCreate', { key: profile._id, throws: true })
     return await ctx.db.insert('eventComments', {
       eventId: args.eventId,
       userId: profile._id,
-      content: args.content,
       isDeleted: false,
+      content,
     })
   },
 })

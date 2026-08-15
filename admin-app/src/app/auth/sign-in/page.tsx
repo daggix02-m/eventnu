@@ -3,8 +3,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { useAction } from 'convex/react'
-import { api } from '@eventnu/convex/_generated/api'
 import { useAuthActions } from '@convex-dev/auth/react'
 import { Button } from '@/components/ui'
 import { Input } from '@/components/ui'
@@ -12,22 +10,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { toast } from 'sonner'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import { getErrorMessage } from '@/lib/errors'
-import { describeSignInError, isNetworkError, INVALID_CREDENTIALS, RATE_LIMITED } from '@/lib/auth'
-
-const VERIFY_RESULT_MESSAGES = {
-  invalid_account: 'No admin account found for this email.',
-  invalid_secret: 'Incorrect password.',
-  rate_limited: RATE_LIMITED,
-} as const
-
-function verifyResultMessage(reason: keyof typeof VERIFY_RESULT_MESSAGES): string {
-  return VERIFY_RESULT_MESSAGES[reason]
-}
+import { describeSignInError, isNetworkError, INVALID_CREDENTIALS } from '@/lib/auth'
 
 export default function SignIn() {
   const router = useRouter()
   const { signIn } = useAuthActions()
-  const verify = useAction(api.verifyPassword.verifyPassword)
 
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
@@ -52,25 +39,9 @@ export default function SignIn() {
       return
     }
 
-    let verifyError: string | null = null
+    let result: { signingIn: boolean } | null = null
 
     try {
-      try {
-        const result = await verify({ email: inputEmail, password })
-        if (!result.ok) {
-          toast.error(verifyResultMessage(result.reason))
-          if (result.reason === 'invalid_account') {
-            setFieldErrors({ email: verifyResultMessage('invalid_account') })
-          } else if (result.reason === 'invalid_secret') {
-            setFieldErrors({ password: verifyResultMessage('invalid_secret') })
-          }
-          return
-        }
-      } catch (err: unknown) {
-        verifyError = describeSignInError(err, getErrorMessage(err, 'Authentication failed'))
-      }
-
-      let result: { signingIn: boolean } | null = null
       for (let attempt = 0; attempt < 2; attempt++) {
         try {
           result = await signIn('password', formData)
@@ -88,10 +59,7 @@ export default function SignIn() {
         toast.error('Sign in failed. Please try again.')
       }
     } catch (err: unknown) {
-      const msg = describeSignInError(
-        err,
-        verifyError ?? getErrorMessage(err, 'Authentication failed'),
-      )
+      const msg = describeSignInError(err, getErrorMessage(err, 'Authentication failed'))
       toast.error(msg)
       if (msg === INVALID_CREDENTIALS) {
         setFieldErrors({ email: msg, password: msg })

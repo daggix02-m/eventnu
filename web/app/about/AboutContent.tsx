@@ -89,6 +89,7 @@ export function AboutContent({ eventCount, categoryCount }: AboutContentProps) {
             src="/images/events/july-20-26/night-shift.png"
             alt="Addis Ababa nightlife"
             fill
+            priority
             className="object-cover"
             sizes="256px"
           />

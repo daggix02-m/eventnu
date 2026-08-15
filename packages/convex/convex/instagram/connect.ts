@@ -271,7 +271,7 @@ export const listAdmins = internalQuery({
   handler: async (ctx) => {
     const admins = await ctx.db
       .query('profiles')
-      .filter((q) => q.eq(q.field('role'), 'admin'))
+      .withIndex('by_role', (q) => q.eq('role', 'admin'))
       .take(50)
     return admins.map((p) => ({ profileId: p._id, email: p.email ?? null }))
   },

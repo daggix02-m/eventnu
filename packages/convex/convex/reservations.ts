@@ -1,6 +1,6 @@
 import { v } from 'convex/values'
 import { query, mutation } from './_generated/server'
-import { api } from './_generated/api'
+import { internal } from './_generated/api'
 import { getUserProfile, requireAdmin } from './helpers'
 import { rateLimiter } from './rateLimiter'
 
@@ -26,8 +26,25 @@ export const create = mutation({
     await rateLimiter.limit(ctx, 'reservationCreate', { key: 'global', throws: true })
     await rateLimiter.limit(ctx, 'reservationPerEmail', { key: args.email, throws: true })
 
+    const name = args.name.trim()
+    if (name.length === 0 || name.length > 200) {
+      throw new Error('Name must be between 1 and 200 characters')
+    }
+
+    const email = args.email.trim()
+    if (email.length === 0 || email.length > 254) {
+      throw new Error('Email must be between 1 and 254 characters')
+    }
+
     const event = await ctx.db.get('events', args.eventId)
     if (!event) throw new Error('Event not found')
+
+    if (event.status !== 'published') {
+      throw new Error('Reservations are not open for this event')
+    }
+    if (event.endDate && event.endDate < Date.now()) {
+      throw new Error('This event has ended')
+    }
 
     if (
       event.reservationEnabled &&
@@ -47,16 +64,16 @@ export const create = mutation({
     const reservationId = await ctx.db.insert('reservationRequests', {
       eventId: args.eventId,
       userId,
-      name: args.name,
-      email: args.email,
-      message: args.message ?? '',
+      name,
+      email,
+      message: args.message?.trim() ?? '',
       status: 'pending',
     })
 
-    ctx.scheduler.runAfter(0, api.email.sendReservationConfirmation, {
+    ctx.scheduler.runAfter(0, internal.email.sendReservationConfirmation, {
       reservationId,
     })
-    ctx.scheduler.runAfter(0, api.email.sendAdminAlert, {
+    ctx.scheduler.runAfter(0, internal.email.sendAdminAlert, {
       reservationId,
     })
 
@@ -67,7 +84,12 @@ export const create = mutation({
 export const updateStatus = mutation({
   args: {
     reservationId: v.id('reservationRequests'),
-    status: v.string(),
+    status: v.union(
+      v.literal('pending'),
+      v.literal('confirmed'),
+      v.literal('cancelled'),
+      v.literal('rejected'),
+    ),
   },
   handler: async (ctx, args) => {
     await requireAdmin(ctx)

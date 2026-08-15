@@ -52,7 +52,7 @@ export function mapEvent(raw: RawEvent): Event {
     event_categories: (raw.categories ?? []).map((cat) => ({
       category_id: cat._id,
       event_id: raw._id,
-      is_primary: true,
+      is_primary: raw.primaryCategoryId === cat._id,
       categories: {
         id: cat._id,
         slug: cat.slug,
@@ -66,7 +66,6 @@ export function mapEvent(raw: RawEvent): Event {
     organizer: raw.organizer
       ? {
           id: raw.organizer._id,
-          email: raw.organizer.email ?? null,
           full_name: raw.organizer.fullName ?? null,
           avatar_url: raw.organizer.avatarUrl ?? null,
           created_at: raw.organizer._creationTime

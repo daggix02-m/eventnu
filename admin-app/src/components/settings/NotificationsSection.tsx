@@ -9,11 +9,10 @@ import { SettingsCard } from './SettingsCard'
 import type { NotificationPrefs } from './types'
 
 interface NotificationsSectionProps {
-  profileId: string
   prefs: NotificationPrefs
 }
 
-export function NotificationsSection({ profileId, prefs }: NotificationsSectionProps) {
+export function NotificationsSection({ prefs }: NotificationsSectionProps) {
   const [notifications, setNotifications] = useState(prefs)
 
   useEffect(() => {
@@ -27,7 +26,7 @@ export function NotificationsSection({ profileId, prefs }: NotificationsSectionP
     const next = { ...notifications, [key]: checked }
     setNotifications(next)
     try {
-      await updateAdminNotificationPrefs(profileId, {
+      await updateAdminNotificationPrefs({
         email_reports: next.emailReports,
         email_events: next.emailEvents,
         email_users: next.emailUsers,

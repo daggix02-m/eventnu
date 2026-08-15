@@ -121,16 +121,6 @@ export function OrganizersStatBand({ stats }: OrganizersStatBandProps) {
       className="relative z-10 py-xl border-y border-outline-variant/30 overflow-hidden"
       aria-label="Platform statistics"
     >
-      {/* Radial background */}
-      <div
-        className="absolute inset-0 bg-gradient-to-b from-surface-container-lowest/60 via-surface/20 to-surface-container-lowest/60 pointer-events-none"
-        aria-hidden="true"
-      />
-      <div
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[300px] bg-primary/5 rounded-full blur-[100px] pointer-events-none"
-        aria-hidden="true"
-      />
-
       <Container>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-sm md:gap-md">
           {stats.map((stat) => {
@@ -138,12 +128,8 @@ export function OrganizersStatBand({ stats }: OrganizersStatBandProps) {
             return (
               <div
                 key={stat.label}
-                className="stat-item group relative flex flex-col items-center text-center p-md rounded-2xl bg-surface-container/20 border border-outline-variant/30 hover:border-primary/30 hover:bg-surface-container/40 transition-all duration-300 opacity-0"
+                className="stat-item group relative flex flex-col items-center text-center p-md rounded-2xl bg-surface-container-low/70 border border-outline-variant/30 hover:border-outline-variant/60 transition-all duration-300 opacity-0"
               >
-                <div
-                  className="absolute inset-0 rounded-2xl bg-primary/4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-                  aria-hidden="true"
-                />
                 <div
                   className={`relative z-10 w-12 h-12 rounded-xl border flex items-center justify-center mb-md ${iconBg}`}
                 >

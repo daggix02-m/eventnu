@@ -44,7 +44,7 @@ export function ExperiencesClient({ eventSlug }: { eventSlug?: string }) {
             <Skeleton className="h-40 w-full rounded-xl" />
           </div>
         ) : posts.length === 0 ? (
-          <div className="rounded-xl border border-outline-variant bg-surface-container-low p-xl text-center">
+          <div className="w-full rounded-2xl border border-outline-variant bg-surface-container-low p-6 sm:p-8 md:p-xl text-center">
             <p className="font-display text-headline-md text-on-surface">No experiences yet</p>
             <p className="mt-xs text-body-md text-on-surface-variant">
               Be the first to share what it was like at an Event Nu event.

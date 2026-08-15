@@ -114,7 +114,7 @@ actions, then `invalidateQueries` + `revalidatePath` (kept for the SSR seed).
 | `categories.ts`, `hosts.ts`, `organizers.ts`, `profiles.ts`, `features.ts` | Content catalogs |
 | `reports.ts`, `moderation.ts`, `notifications.ts`, `support.ts` | Trust & safety |
 | `likes.ts`, `comments.ts`, `bookmarks.ts`, `follows.ts`, `shares.ts`, `reservations.ts`, `experiencePosts.ts`, `email.ts` | Consumer-site features |
-| `crons.ts`, `rateLimiter.ts`, `migrations.ts`, `seed.ts`, `verifyPassword.ts` | Ops |
+| `crons.ts`, `rateLimiter.ts`, `migrations.ts`, `seed.ts` | Ops |
 
 ## Routes & responsibilities
 

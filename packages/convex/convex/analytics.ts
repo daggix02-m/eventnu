@@ -1,17 +1,22 @@
 import { v } from 'convex/values'
 import { query } from './_generated/server'
 import { requireAdmin } from './helpers'
+import { STATS_SCAN_CAP } from './constants'
 
 export const getStats = query({
   args: {},
   handler: async (ctx) => {
     await requireAdmin(ctx)
-    const events = await ctx.db.query('events').take(1000)
-    const profiles = await ctx.db.query('profiles').take(1000)
-    const hosts = await ctx.db.query('hosts').take(500)
-    const organizerProfiles = await ctx.db.query('organizerProfiles').take(500)
-    const reports = await ctx.db.query('reports').take(500)
-    const moderationLogs = await ctx.db.query('moderationLogs').take(500)
+    const [events, profiles, hosts, organizerProfiles, reports, moderationLogs] = await Promise.all(
+      [
+        ctx.db.query('events').take(STATS_SCAN_CAP),
+        ctx.db.query('profiles').take(STATS_SCAN_CAP),
+        ctx.db.query('hosts').take(STATS_SCAN_CAP),
+        ctx.db.query('organizerProfiles').take(STATS_SCAN_CAP),
+        ctx.db.query('reports').take(STATS_SCAN_CAP),
+        ctx.db.query('moderationLogs').take(STATS_SCAN_CAP),
+      ],
+    )
 
     return {
       totalEvents: events.length,
@@ -32,8 +37,10 @@ export const getWeekly = query({
     const now = args.now
     const weekMs = 7 * 24 * 60 * 60 * 1000
 
-    const events = await ctx.db.query('events').take(2000)
-    const profiles = await ctx.db.query('profiles').take(2000)
+    const [events, profiles] = await Promise.all([
+      ctx.db.query('events').take(STATS_SCAN_CAP),
+      ctx.db.query('profiles').take(STATS_SCAN_CAP),
+    ])
 
     const eventsPerWeek: { week: string; count: number }[] = []
     const usersPerWeek: { week: string; count: number }[] = []

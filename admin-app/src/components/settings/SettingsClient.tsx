@@ -78,7 +78,7 @@ export function SettingsClient({
 
           {/* Right Column - Preferences & Stats */}
           <div className="space-y-6">
-            <NotificationsSection profileId={profile.id} prefs={notificationPrefs} />
+            <NotificationsSection prefs={notificationPrefs} />
             <AdminStatsSection stats={adminStats} />
             <InstagramSettingsCard
               initialStatus={instagramStatus ?? null}

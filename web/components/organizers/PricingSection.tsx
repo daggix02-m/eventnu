@@ -15,7 +15,7 @@ interface OrganizersPricingProps {
 const FREE_FEATURES = [
   'Unlimited free event listings',
   'Full discovery & search exposure',
-  'Attendee RSVP management',
+  'Attendee registration & guest list',
   'Event analytics dashboard',
   'Unlisted / private event option',
 ]
@@ -36,24 +36,6 @@ export function OrganizersPricing({ contactUrl = '/contact' }: OrganizersPricing
 
   useGSAP(
     () => {
-      if (headerRef.current) {
-        gsap.fromTo(
-          headerRef.current.children,
-          { opacity: 0, y: 20 },
-          {
-            opacity: 1,
-            y: 0,
-            duration: 0.5,
-            stagger: 0.1,
-            ease: 'power2.out',
-            scrollTrigger: {
-              trigger: headerRef.current,
-              start: 'top 85%',
-              toggleActions: 'play none none none',
-            },
-          },
-        )
-      }
       if (cardsRef.current) {
         gsap.fromTo(
           cardsRef.current.children,
@@ -83,34 +65,25 @@ export function OrganizersPricing({ contactUrl = '/contact' }: OrganizersPricing
       id="pricing"
       className="relative z-10 py-2xl border-t border-outline-variant/30 scroll-mt-16"
     >
-      {/* Background glow */}
-      <div
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-primary/6 rounded-full blur-[120px] pointer-events-none"
-        aria-hidden="true"
-      />
-
       <Container>
         {/* Header */}
-        <div ref={headerRef} className="text-center max-w-[42rem] mx-auto space-y-sm mb-xl">
-          <div>
-            <div className="inline-flex items-center gap-xs text-tertiary font-mono text-label-sm uppercase tracking-wider">
-              <Banknote className="w-4 h-4" aria-hidden="true" />
-              Simple, Transparent Pricing
-            </div>
-          </div>
-          <h2 className="font-display text-[32px] md:text-[44px] font-extrabold text-white leading-tight">
+        <div
+          ref={headerRef}
+          className="text-center max-w-[48rem] mx-auto mb-12 space-y-3"
+        >
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white tracking-tight leading-tight">
             Start free. Grow with confidence.
           </h2>
-          <p className="text-on-surface text-body-lg leading-relaxed">
+          <p className="text-on-surface-variant text-base sm:text-lg md:text-xl leading-relaxed">
             Listing is always free. Paid ticketing is priced per event — contact us for current
             rates, and you decide whether to pass fees on or absorb them.
           </p>
         </div>
 
         {/* Cards */}
-        <div ref={cardsRef} className="grid grid-cols-1 md:grid-cols-2 gap-md max-w-4xl mx-auto">
+        <div ref={cardsRef} className="grid grid-cols-1 md:grid-cols-2 gap-md max-w-[56rem] mx-auto">
           {/* Free tier */}
-          <div className="relative rounded-2xl border border-outline-variant/50 bg-surface-container/20 p-lg md:p-xl flex flex-col hover:border-primary/30 hover:bg-surface-container/30 transition-all duration-300 group overflow-hidden">
+          <div className="relative rounded-2xl border border-outline-variant/50 bg-surface-container/20 p-6 sm:p-8 md:p-xl flex flex-col hover:border-primary/30 hover:bg-surface-container/30 transition-all duration-300 group overflow-hidden">
             {/* Top accent bar */}
             <div
               className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-primary/60 to-primary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
@@ -170,8 +143,8 @@ export function OrganizersPricing({ contactUrl = '/contact' }: OrganizersPricing
           </div>
 
           {/* Paid tier */}
-          <div className="relative rounded-2xl border-2 border-primary/40 bg-surface-container/30 p-lg md:p-xl flex flex-col hover:border-primary/70 hover:bg-surface-container/50 transition-all duration-300 group overflow-hidden shadow-xl shadow-primary/10">
-            {/* Top gradient glow */}
+          <div className="relative rounded-2xl border-2 border-primary/50 bg-surface-container/30 p-6 sm:p-8 md:p-xl flex flex-col hover:border-primary/80 hover:bg-surface-container/50 transition-all duration-300 group overflow-hidden shadow-xl shadow-black/40">
+            {/* Top accent bar */}
             <div
               className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-primary to-secondary"
               aria-hidden="true"
@@ -183,7 +156,7 @@ export function OrganizersPricing({ contactUrl = '/contact' }: OrganizersPricing
 
             {/* "Most popular" badge */}
             <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-              <span className="inline-flex items-center gap-xs px-md py-1 rounded-full bg-primary border border-primary/20 font-mono text-[11px] font-bold text-on-primary uppercase tracking-wider shadow-lg shadow-primary/30">
+              <span className="inline-flex items-center gap-xs px-md py-1 rounded-full bg-primary border border-primary/20 font-mono text-[11px] font-bold text-on-primary uppercase tracking-wider shadow-md">
                 Paid Ticketing
               </span>
             </div>

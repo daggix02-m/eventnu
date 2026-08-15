@@ -42,7 +42,7 @@ export async function Footer() {
   ]
 
   return (
-    <footer className="w-full bg-surface-container-lowest pb-tabbar-safe md:pb-0">
+    <footer className="hidden md:block w-full bg-surface-container-lowest border-t border-outline-variant/30 pb-10">
       <div
         className="h-[2px] w-full"
         style={{
@@ -56,56 +56,86 @@ export async function Footer() {
         aria-hidden="true"
       />
 
-      <div className="max-w-container-max mx-auto px-gutter pt-2xl pb-xl">
-        {/* Row 1: brand + contact */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-xl lg:gap-2xl">
-          <div className="lg:col-span-7 space-y-md">
-            <Link href="/" className="inline-flex items-center gap-sm">
+      <div className="max-w-container-max mx-auto px-gutter pt-12 md:pt-16">
+        {/* Main Footer Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-8">
+          {/* Column 1: Brand & Tagline */}
+          <div className="sm:col-span-2 lg:col-span-4 space-y-4">
+            <Link href="/" className="inline-flex items-center gap-3 group">
               <Image
-                src="/logo.png"
+                src="/asset-2.png"
                 alt="Event Nu"
                 width={794}
                 height={672}
                 style={{ height: '40px', width: 'auto' }}
-                className="rounded-lg"
+                className="rounded-lg transition-transform group-hover:scale-105"
               />
-              <span className="text-headline-md text-primary font-bold">Event Nu</span>
+              <span className="text-xl font-bold text-primary tracking-tight">Event Nu</span>
             </Link>
-            <h2 className="font-display text-display-md md:text-display-lg font-extrabold leading-tight text-on-background">
+            <h2 className="font-display text-lg md:text-xl font-bold leading-snug text-on-background max-w-[24rem]">
               Discover live experiences in Addis Ababa.{' '}
               <span className="text-primary">All events in one place.</span>
             </h2>
-            <p className="text-body-lg text-on-surface-variant max-w-[28rem]">{SITE.tagline}</p>
-            <Link
-              href="/organizers"
-              className="inline-flex items-center gap-xs text-body-md text-primary font-semibold hover:underline underline-offset-4"
-            >
-              Have an event? List it for free
-              <ArrowUpRight className="w-4 h-4" />
-            </Link>
+            <p className="text-sm text-on-surface-variant max-w-[24rem] leading-relaxed">{SITE.tagline}</p>
+            <div>
+              <Link
+                href="/organizers"
+                className="inline-flex items-center gap-1.5 text-sm text-primary font-semibold hover:underline underline-offset-4 group"
+              >
+                <span>Have an event? List it for free</span>
+                <ArrowUpRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+              </Link>
+            </div>
           </div>
 
-          <div className="lg:col-span-5 lg:justify-self-end">
-            <p className="font-mono text-label-sm text-secondary uppercase tracking-wider">
+          {/* Column 2: Categories (if available) */}
+          {categories.length > 0 && (
+            <div className="sm:col-span-2 lg:col-span-3 space-y-3.5">
+              <p className="font-mono text-xs font-semibold text-secondary uppercase tracking-wider">
+                Categories
+              </p>
+              <nav className="flex flex-wrap gap-1.5" aria-label="Category links">
+                {categories.map((category) => (
+                  <Link
+                    key={category.id}
+                    href={`/categories/${category.slug}`}
+                    className="px-3 py-1 rounded-full border border-outline-variant/50 bg-surface-container-low/60 text-xs font-medium text-on-surface-variant hover:text-primary hover:border-primary/60 hover:bg-surface-container transition-colors"
+                  >
+                    {category.name}
+                  </Link>
+                ))}
+              </nav>
+            </div>
+          )}
+
+          {/* Column 3: Contact */}
+          <div
+            className={`${
+              categories.length > 0
+                ? 'sm:col-span-1 lg:col-span-3'
+                : 'sm:col-span-1 lg:col-span-4'
+            } space-y-3.5`}
+          >
+            <p className="font-mono text-xs font-semibold text-secondary uppercase tracking-wider">
               Contact
             </p>
-            <ul className="mt-sm space-y-sm">
+            <ul className="space-y-2.5">
               <li>
                 <a
                   href={`mailto:${SITE.email}`}
-                  className="inline-flex items-center gap-sm text-body-md text-on-surface-variant hover:text-primary transition-colors"
+                  className="inline-flex items-center gap-2.5 text-sm text-on-surface-variant hover:text-primary transition-colors group"
                 >
-                  <Mail className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
-                  {SITE.email}
+                  <Mail className="w-4 h-4 text-outline group-hover:text-primary transition-colors shrink-0" aria-hidden="true" />
+                  <span className="break-all">{SITE.email}</span>
                 </a>
               </li>
               <li>
                 <a
                   href={`tel:${SITE.phones[0].tel}`}
-                  className="inline-flex items-center gap-sm text-body-md text-on-surface-variant hover:text-primary transition-colors"
+                  className="inline-flex items-center gap-2.5 text-sm text-on-surface-variant hover:text-primary transition-colors group"
                 >
-                  <Phone className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
-                  {SITE.phones[0].label}
+                  <Phone className="w-4 h-4 text-outline group-hover:text-primary transition-colors shrink-0" aria-hidden="true" />
+                  <span>{SITE.phones[0].label}</span>
                 </a>
               </li>
               {socialLinks.map((link) => {
@@ -116,53 +146,38 @@ export async function Footer() {
                       href={link.href}
                       target={link.external ? '_blank' : undefined}
                       rel={link.external ? 'noopener noreferrer' : undefined}
-                      className="inline-flex items-center gap-sm text-body-md text-on-surface-variant hover:text-primary transition-colors"
+                      className="inline-flex items-center gap-2.5 text-sm text-on-surface-variant hover:text-primary transition-colors group"
                     >
-                      <Icon className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
-                      {link.label}
+                      <Icon className="w-4 h-4 text-outline group-hover:text-primary transition-colors shrink-0" aria-hidden="true" />
+                      <span>{link.label}</span>
                     </a>
                   </li>
                 )
               })}
-              <li className="flex items-center gap-sm text-body-md text-on-surface-variant">
-                <MapPin className="w-4 h-4 flex-shrink-0" />
-                {SITE.location}
+              <li className="inline-flex items-center gap-2.5 text-sm text-on-surface-variant/80">
+                <MapPin className="w-4 h-4 text-outline shrink-0" aria-hidden="true" />
+                <span>{SITE.location}</span>
               </li>
             </ul>
           </div>
-        </div>
 
-        {/* Row 2: real-data columns */}
-        <div className="mt-xl grid grid-cols-1 md:grid-cols-2 gap-xl">
-          {categories.length > 0 && (
-            <div>
-              <p className="font-mono text-label-sm text-secondary uppercase tracking-wider">
-                Browse by category
-              </p>
-              <nav className="mt-sm flex flex-wrap gap-xs" aria-label="Category links">
-                {categories.map((category) => (
-                  <Link
-                    key={category.id}
-                    href={`/categories/${category.slug}`}
-                    className="px-md py-2 rounded-full border border-outline-variant bg-surface-container/40 text-body-md text-on-surface-variant hover:text-primary hover:border-primary transition-colors"
-                  >
-                    {category.name}
-                  </Link>
-                ))}
-              </nav>
-            </div>
-          )}
-
-          <div className={categories.length > 0 ? '' : 'md:col-span-2'}>
-            <p className="font-mono text-label-sm text-secondary uppercase tracking-wider">
-              Info &amp; legal
+          {/* Column 4: Info & Legal */}
+          <div
+            className={`${
+              categories.length > 0
+                ? 'sm:col-span-1 lg:col-span-2'
+                : 'sm:col-span-1 lg:col-span-4'
+            } space-y-3.5`}
+          >
+            <p className="font-mono text-xs font-semibold text-secondary uppercase tracking-wider">
+              Info &amp; Legal
             </p>
-            <nav className="mt-sm flex flex-col gap-sm" aria-label="Info and legal links">
+            <nav className="flex flex-col space-y-2.5" aria-label="Info and legal links">
               {infoLinks.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="inline-flex items-center gap-sm text-body-md text-on-surface-variant hover:text-primary transition-colors"
+                  className="text-sm text-on-surface-variant hover:text-primary transition-colors"
                 >
                   {link.label}
                 </Link>
@@ -172,12 +187,12 @@ export async function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="pt-lg mt-xl flex flex-col sm:flex-row items-center justify-between gap-md border-t border-outline-variant">
-          <p className="text-on-surface-variant text-label-sm">
+        <div className="pt-8 mt-12 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-outline-variant/30 text-xs text-on-surface-variant">
+          <p>
             &copy; {new Date().getFullYear()} Event Nu. All rights reserved.
           </p>
-          <p className="inline-flex items-center gap-xs text-on-surface-variant/70 text-label-sm">
-            <CalendarHeart className="w-3.5 h-3.5" aria-hidden="true" />
+          <p className="inline-flex items-center gap-1.5 text-on-surface-variant/70">
+            <CalendarHeart className="w-3.5 h-3.5 text-primary/70" aria-hidden="true" />
             Made in {SITE.location}
           </p>
         </div>

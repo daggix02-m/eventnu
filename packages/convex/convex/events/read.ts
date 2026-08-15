@@ -3,7 +3,14 @@ import { query } from '../_generated/server'
 import { Doc, Id } from '../_generated/dataModel'
 import { paginationOptsValidator } from 'convex/server'
 import { requireAdmin, requireUser } from '../helpers'
-import { enrichEvent, getEventCategoryLinks, getEventImages, resolveImageUrls } from './enrichment'
+import { STATS_SCAN_CAP } from '../constants'
+import {
+  enrichPublicEvent,
+  enrichPublicEvents,
+  getEventCategoryLinks,
+  getEventImages,
+  resolveImageUrls,
+} from './enrichment'
 
 export const getPublished = query({
   args: {},
@@ -13,7 +20,7 @@ export const getPublished = query({
       .withIndex('by_status', (q) => q.eq('status', 'published'))
       .order('desc')
       .take(100)
-    return await Promise.all(events.map((e) => enrichEvent(ctx, e)))
+    return await enrichPublicEvents(ctx, events)
   },
 })
 
@@ -29,7 +36,7 @@ export const getFeatured = query({
     const upcoming = events
       .filter((e) => e.status === 'published' && e.startDate >= args.startDate)
       .slice(0, limit)
-    return await Promise.all(upcoming.map((e) => enrichEvent(ctx, e)))
+    return await enrichPublicEvents(ctx, upcoming)
   },
 })
 
@@ -41,7 +48,7 @@ export const getBySlug = query({
       .withIndex('by_slug', (q) => q.eq('slug', args.slug))
       .unique()
     if (!event || event.status !== 'published') return null
-    return enrichEvent(ctx, event, true)
+    return enrichPublicEvent(ctx, event, true)
   },
 })
 
@@ -74,7 +81,7 @@ export const getSimilar = query({
     const ranked = await Promise.all(rankedIds.map((id) => ctx.db.get('events', id)))
     const published = ranked.filter((e): e is Doc<'events'> => !!e && e.status === 'published')
 
-    return await Promise.all(published.map((e) => enrichEvent(ctx, e)))
+    return await enrichPublicEvents(ctx, published)
   },
 })
 
@@ -95,7 +102,10 @@ export const getByCategory = query({
       .sort((a, b) =>
         a.primary === b.primary ? a.event.startDate - b.event.startDate : a.primary ? -1 : 1,
       )
-    return await Promise.all(published.map(({ event }) => enrichEvent(ctx, event)))
+    return await enrichPublicEvents(
+      ctx,
+      published.map(({ event }) => event),
+    )
   },
 })
 
@@ -110,34 +120,33 @@ export const list = query({
   },
   handler: async (ctx, args) => {
     await requireAdmin(ctx)
-    const { paginationOpts, ...filters } = args
-    const q = filters.search?.trim().toLowerCase()
+    const { paginationOpts, status, source, featured, frequency, search } = args
+    const q = search?.trim().toLowerCase()
 
-    const page = filters.status
-      ? await ctx.db
-          .query('events')
-          .withIndex('by_status', (q) => q.eq('status', filters.status as Doc<'events'>['status']))
-          .order('desc')
-          .paginate(paginationOpts)
-      : await ctx.db.query('events').order('desc').paginate(paginationOpts)
+    const base =
+      status && status !== 'all'
+        ? ctx.db
+            .query('events')
+            .withIndex('by_status', (ix) => ix.eq('status', status as Doc<'events'>['status']))
+        : ctx.db.query('events')
 
-    let pageItems = page.page
-    if (filters.source) {
-      pageItems = pageItems.filter((e) => e.source === filters.source)
-    }
-    if (filters.featured !== undefined) {
-      pageItems = pageItems.filter((e) => e.isFeatured === filters.featured)
-    }
-    if (filters.frequency) {
-      pageItems = pageItems.filter((e) => e.frequencyType === filters.frequency)
-    }
-    if (q) {
-      pageItems = pageItems.filter(
-        (e) =>
-          e.title.toLowerCase().includes(q) ||
-          (e.description && e.description.toLowerCase().includes(q)),
+    const page = await base
+      .order('desc')
+      .filter((f) =>
+        f.and(
+          ...(source ? [f.eq(f.field('source'), source)] : []),
+          ...(featured !== undefined ? [f.eq(f.field('isFeatured'), featured)] : []),
+          ...(frequency ? [f.eq(f.field('frequencyType'), frequency)] : []),
+        ),
       )
-    }
+      .paginate(paginationOpts)
+
+    if (!q) return page
+    const pageItems = page.page.filter(
+      (e) =>
+        e.title.toLowerCase().includes(q) ||
+        (e.description && e.description.toLowerCase().includes(q)),
+    )
     return { ...page, page: pageItems }
   },
 })
@@ -214,22 +223,22 @@ export const getStats = query({
   args: { now: v.number() },
   handler: async (ctx, args) => {
     await requireAdmin(ctx)
-    let total = 0
-    let totalPublished = 0
-    let upcoming = 0
-    let pending = 0
-    let cursor: string | null = null
-    for (let i = 0; i < 20; i++) {
-      const page = await ctx.db.query('events').order('desc').paginate({ cursor, numItems: 500 })
-      for (const e of page.page) {
-        total++
-        if (e.status === 'published') totalPublished++
-        if (e.startDate >= args.now) upcoming++
-        if (e.status === 'pending_review') pending++
-      }
-      if (page.isDone) break
-      cursor = page.continueCursor
+    const [published, pending, all] = await Promise.all([
+      ctx.db
+        .query('events')
+        .withIndex('by_status', (q) => q.eq('status', 'published'))
+        .take(STATS_SCAN_CAP),
+      ctx.db
+        .query('events')
+        .withIndex('by_status', (q) => q.eq('status', 'pending_review'))
+        .take(STATS_SCAN_CAP),
+      ctx.db.query('events').take(STATS_SCAN_CAP),
+    ])
+    return {
+      total: all.length,
+      totalPublished: published.length,
+      upcoming: published.filter((e) => e.startDate >= args.now).length,
+      pending: pending.length,
     }
-    return { total, totalPublished, upcoming, pending }
   },
 })
