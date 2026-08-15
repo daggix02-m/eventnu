@@ -9,7 +9,6 @@ import { EventExperiences } from '@/components/events/EventExperiences'
 import { ReservationForm } from '@/components/events/ReservationForm'
 import { OrganizerCard } from '@/components/events/OrganizerCard'
 import { SimilarEvents } from '@/components/events/SimilarEvents'
-import { Container } from '@/components/layout/Container'
 import { getEventBySlug, getSimilarEvents } from '@/lib/api/events'
 import { absoluteUrl } from '@/lib/site'
 
@@ -83,23 +82,39 @@ export default async function EventPage({ params }: EventPageProps) {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
       />
       <EventHero event={event} />
-      <Container className="py-xl">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-md">
-          <div className="md:col-span-8 space-y-xl">
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 pb-28 md:pb-16">
+        <div className="flex flex-col lg:grid lg:grid-cols-12 gap-8 lg:gap-10 items-start w-full">
+          {/* Left / Main Content Column */}
+          <div className="w-full lg:col-span-7 xl:col-span-8 space-y-8 min-w-0">
             <EventDetails event={event} />
+
+            {/* Photos Showcase */}
             {event.images && event.images.length > 1 && (
-              <section className="space-y-md">
-                <h2 className="font-display text-headline-md">Photos</h2>
+              <section className="space-y-4 p-6 sm:p-8 rounded-2xl bg-surface-container/40 border border-outline-variant/40">
+                <div className="flex items-center justify-between border-b border-outline-variant/30 pb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-6 rounded-full bg-primary" />
+                    <h2 className="font-display text-xl sm:text-2xl font-bold text-on-surface">
+                      Event Gallery
+                    </h2>
+                  </div>
+                  <span className="font-mono text-xs text-on-surface-variant">
+                    {event.images.length} photos
+                  </span>
+                </div>
                 <EventPhotoGrid images={event.images} eventTitle={event.title} />
               </section>
             )}
+
             <OrganizerCard event={event} />
             <EventExperiences eventId={event.id} />
           </div>
-          <div className="md:col-span-4 space-y-md">
+
+          {/* Right / Sidebar Column */}
+          <div className="w-full lg:col-span-5 xl:col-span-4 space-y-6 min-w-0">
             <EventInfoCard event={event} />
             {event.action_type === 'reservation' && (
               <div id="reserve" className="scroll-mt-24">
@@ -108,7 +123,7 @@ export default async function EventPage({ params }: EventPageProps) {
             )}
           </div>
         </div>
-      </Container>
+      </div>
       <SimilarEvents events={similarEvents} />
       <EventStickyCTA event={event} />
     </>

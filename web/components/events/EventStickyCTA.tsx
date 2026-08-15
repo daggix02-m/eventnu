@@ -1,4 +1,4 @@
-import { ExternalLink, Ticket } from 'lucide-react'
+import { ExternalLink, Ticket, Calendar } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { formatPrice, formatEventDateShort, isEventPast } from '@/lib/utils'
 import type { Event } from '@/types'
@@ -15,30 +15,34 @@ export function EventStickyCTA({ event }: EventStickyCTAProps) {
 
   return (
     <div
-      className="sticky bottom-[calc(var(--spacing-tabbar)+env(safe-area-inset-bottom))] z-40 md:hidden bg-surface-container-low/90 backdrop-blur-md border-t border-outline-variant"
+       className="fixed bottom-[calc(9rem_+_env(safe-area-inset-bottom))] inset-x-0 z-40 md:hidden px-4 pointer-events-none"
       aria-label="Event actions"
     >
-      <div className="flex items-center justify-between gap-md px-gutter py-sm">
-        <div className="min-w-0">
-          <p className="text-secondary font-bold text-body-lg truncate">
-            {formatPrice(event.price_display, event.is_free)}
-          </p>
-          <p className="text-label-sm text-on-surface-variant truncate">
-            {formatEventDateShort(event.start_date)}
+      <div className="pointer-events-auto max-w-[32rem] mx-auto bg-surface-container-high/95 backdrop-blur-xl border border-outline-variant/80 rounded-2xl p-3 sm:p-3.5 shadow-2xl shadow-black/70 flex items-center justify-between gap-3">
+        <div className="min-w-0 flex-1 pl-1">
+          <div className="flex items-center gap-1.5">
+            <span className="text-secondary font-display font-bold text-base sm:text-lg leading-tight truncate">
+              {formatPrice(event.price_display, event.is_free)}
+            </span>
+          </div>
+          <p className="flex items-center gap-1 font-mono text-[11px] text-on-surface-variant truncate">
+            <Calendar className="w-3 h-3 text-primary shrink-0" />
+            <span>{formatEventDateShort(event.start_date)}</span>
           </p>
         </div>
+
         {event.external_link ? (
-          <Button asChild size="lg" className="flex-shrink-0">
+          <Button asChild size="sm" className="rounded-xl font-bold gap-1.5 shrink-0 px-4 py-2 shadow-md">
             <a href={event.external_link} target="_blank" rel="noopener noreferrer">
               <ExternalLink className="w-4 h-4" />
-              {externalLabel}
+              <span>{externalLabel}</span>
             </a>
           </Button>
         ) : event.action_type === 'reservation' ? (
-          <Button asChild size="lg" className="flex-shrink-0">
+          <Button asChild size="sm" className="rounded-xl font-bold gap-1.5 shrink-0 px-4 py-2 shadow-md">
             <a href="#reserve">
               <Ticket className="w-4 h-4" />
-              Reserve a spot
+              <span>Reserve</span>
             </a>
           </Button>
         ) : null}
