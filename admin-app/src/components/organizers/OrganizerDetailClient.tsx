@@ -16,6 +16,7 @@ import {
   XCircle,
   CheckCircle,
   Building2,
+  UserCog,
   Link as LinkIcon,
 } from 'lucide-react'
 import { formatDate } from '@/lib/format'
@@ -29,6 +30,7 @@ import {
   unverifyOrganizer,
   suspendOrganizer,
   unsuspendOrganizer,
+  setOrganizerManagementMode,
 } from '@/lib/actions/organizers'
 import { getOrganizerRecentEvents } from '@/lib/actions/events'
 import type { MappedOrganizer } from '@/lib/mappers'
@@ -120,6 +122,26 @@ export function OrganizerDetailClient({ organizer, eventCount }: OrganizerDetail
     } catch (err) {
       console.error('Unsuspend error:', err)
       toast.error(getErrorMessage(err, 'Failed to unsuspend organizer'))
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleToggleManagementMode = async () => {
+    const next =
+      organizer.management_mode === 'organizer_managed' ? 'admin_managed' : 'organizer_managed'
+    setIsLoading(true)
+    try {
+      await setOrganizerManagementMode(organizer.profile_id, next)
+      toast.success(
+        next === 'organizer_managed'
+          ? 'Management transferred to organizer'
+          : 'Management retained by Event Nu',
+      )
+      router.refresh()
+    } catch (err) {
+      console.error('Management mode error:', err)
+      toast.error(getErrorMessage(err, 'Failed to change management mode'))
     } finally {
       setIsLoading(false)
     }
@@ -365,6 +387,12 @@ export function OrganizerDetailClient({ organizer, eventCount }: OrganizerDetail
                 Suspend
               </Button>
             )}
+            <Button onClick={handleToggleManagementMode} disabled={isLoading} variant="outline">
+              <UserCog size={16} className="mr-2" />
+              {organizer.management_mode === 'organizer_managed'
+                ? 'Transfer to admin-managed'
+                : 'Transfer to organizer-managed'}
+            </Button>
           </div>
         </Card>
       </motion.div>

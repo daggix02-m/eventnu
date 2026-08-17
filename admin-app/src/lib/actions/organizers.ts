@@ -57,6 +57,17 @@ export async function unverifyOrganizer(profileId: string) {
   revalidatePath('/organizers')
 }
 
+export async function setOrganizerManagementMode(
+  profileId: string,
+  managementMode: 'admin_managed' | 'organizer_managed',
+) {
+  await fetchMutation(api.organizers.setManagementMode, {
+    profileId: profileId as Id<'profiles'>,
+    managementMode,
+  })
+  revalidatePath('/organizers')
+}
+
 export async function suspendOrganizer(profileId: string) {
   await fetchMutation(api.profiles.suspend, { profileId: profileId as Id<'profiles'> })
   revalidatePath('/organizers')
