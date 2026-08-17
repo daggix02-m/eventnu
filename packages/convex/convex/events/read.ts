@@ -2,7 +2,7 @@ import { v } from 'convex/values'
 import { query } from '../_generated/server'
 import { Doc, Id } from '../_generated/dataModel'
 import { paginationOptsValidator } from 'convex/server'
-import { requireAdmin, requireUser } from '../helpers'
+import { requireAdmin, requireOrganizerOwner, requireUser } from '../helpers'
 import { STATS_SCAN_CAP } from '../constants'
 import {
   enrichPublicEvent,
@@ -196,14 +196,27 @@ export const listByOrganizer = query({
   },
 })
 
+export const listByOwner = query({
+  args: { ownerId: v.id('organizerProfiles'), limit: v.optional(v.number()) },
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx)
+    const limit = Math.min(Math.max(1, args.limit ?? 20), 100)
+    return await ctx.db
+      .query('events')
+      .withIndex('by_owner', (q) => q.eq('ownerId', args.ownerId))
+      .order('desc')
+      .take(limit)
+  },
+})
+
 export const listMine = query({
   args: { limit: v.optional(v.number()) },
   handler: async (ctx, args) => {
-    const profile = await requireUser(ctx)
+    const { organizer } = await requireOrganizerOwner(ctx)
     const limit = Math.min(Math.max(1, args.limit ?? 50), 200)
     return await ctx.db
       .query('events')
-      .withIndex('by_organizer', (q) => q.eq('organizerId', profile._id))
+      .withIndex('by_owner', (q) => q.eq('ownerId', organizer._id))
       .order('desc')
       .take(limit)
   },

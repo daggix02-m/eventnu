@@ -7,21 +7,18 @@ export const getStats = query({
   args: {},
   handler: async (ctx) => {
     await requireAdmin(ctx)
-    const [events, profiles, hosts, organizerProfiles, reports, moderationLogs] = await Promise.all(
-      [
-        ctx.db.query('events').take(STATS_SCAN_CAP),
-        ctx.db.query('profiles').take(STATS_SCAN_CAP),
-        ctx.db.query('hosts').take(STATS_SCAN_CAP),
-        ctx.db.query('organizerProfiles').take(STATS_SCAN_CAP),
-        ctx.db.query('reports').take(STATS_SCAN_CAP),
-        ctx.db.query('moderationLogs').take(STATS_SCAN_CAP),
-      ],
-    )
+    const [events, profiles, organizerProfiles, reports, moderationLogs] = await Promise.all([
+      ctx.db.query('events').take(STATS_SCAN_CAP),
+      ctx.db.query('profiles').take(STATS_SCAN_CAP),
+      ctx.db.query('organizerProfiles').take(STATS_SCAN_CAP),
+      ctx.db.query('reports').take(STATS_SCAN_CAP),
+      ctx.db.query('moderationLogs').take(STATS_SCAN_CAP),
+    ])
 
     return {
       totalEvents: events.length,
       totalUsers: profiles.length,
-      totalHosts: hosts.length,
+      totalHosts: 0,
       totalOrganizers: organizerProfiles.length,
       totalReports: reports.length,
       totalModerationLogs: moderationLogs.length,

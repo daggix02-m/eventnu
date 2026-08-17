@@ -287,7 +287,13 @@ export function mapTopEvent(e: Doc<'events'> | null | undefined) {
 }
 
 export function mapReportTargetPreview(
-  p: Doc<'eventComments'> | Doc<'events'> | Doc<'hosts'> | Doc<'profiles'> | null | undefined,
+  p:
+    | Doc<'eventComments'>
+    | Doc<'events'>
+    | Doc<'organizerProfiles'>
+    | Doc<'profiles'>
+    | null
+    | undefined,
 ):
   | { target_type: 'comment'; content: string }
   | { target_type: 'event'; poster_url?: string; title: string; status: string }
@@ -303,8 +309,13 @@ export function mapReportTargetPreview(
       poster_url: p.posterUrl,
       status: p.status ?? '',
     }
-  if ('name' in p)
-    return { target_type: 'host', name: p.name ?? '', logo_url: p.logoUrl, status: p.status ?? '' }
+  if ('organizerName' in p)
+    return {
+      target_type: 'host',
+      name: p.organizerName ?? '',
+      logo_url: p.logoUrl,
+      status: p.status ?? '',
+    }
   return {
     target_type: 'user',
     full_name: p.fullName ?? '',

@@ -42,28 +42,32 @@ export async function getEventCategoryLinks(ctx: QueryCtx | MutationCtx, eventId
 }
 
 export type PublicOrganizer = {
-  _id: Id<'profiles'>
+  _id: Id<'organizerProfiles'>
   fullName?: string
   avatarUrl?: string
   verified: boolean
   handle?: string
   logoUrl?: string
+  bio?: string
+  followerCount: number
   _creationTime: number
 }
 
 export function toPublicOrganizer(
-  profile: Doc<'profiles'> | null,
-  organizer?: Doc<'organizerProfiles'> | null,
+  organizer: Doc<'organizerProfiles'> | null,
+  profile?: Doc<'profiles'> | null,
 ): PublicOrganizer | null {
-  if (!profile) return null
+  if (!organizer) return null
   return {
-    _id: profile._id,
-    fullName: profile.fullName,
-    avatarUrl: profile.avatarUrl,
-    verified: profile.verified,
-    handle: organizer?.organizerHandle,
-    logoUrl: organizer?.logoUrl,
-    _creationTime: profile._creationTime,
+    _id: organizer._id,
+    fullName: organizer.organizerName,
+    avatarUrl: profile?.avatarUrl,
+    verified: organizer.verified,
+    handle: organizer.organizerHandle,
+    logoUrl: organizer.logoUrl,
+    bio: organizer.bio,
+    followerCount: organizer.followerCount,
+    _creationTime: organizer._creationTime,
   }
 }
 
@@ -88,7 +92,7 @@ export type PublicEvent = {
   actionType: Doc<'events'>['actionType']
   status: Doc<'events'>['status']
   source: string
-  organizerId?: Id<'profiles'>
+  ownerId?: Id<'organizerProfiles'>
   isFeatured: boolean
   venueName: string
   venueAddress?: string
@@ -132,7 +136,7 @@ export function toPublicEvent(
     actionType: event.actionType,
     status: event.status,
     source: event.source,
-    organizerId: event.organizerId,
+    ownerId: event.ownerId,
     isFeatured: event.isFeatured,
     venueName: event.venueName,
     venueAddress: event.venueAddress,
@@ -160,17 +164,13 @@ export async function enrichPublicEvent(
     await Promise.all(links.map((link) => ctx.db.get('categories', link.categoryId)))
   ).filter((c): c is Doc<'categories'> => c !== null)
   const images = await resolveImageUrls(ctx, await getEventImages(ctx, event._id))
-  const organizerId = event.organizerId
-  const organizer =
-    includeOrganizer && organizerId
-      ? toPublicOrganizer(
-          await ctx.db.get('profiles', organizerId),
-          await ctx.db
-            .query('organizerProfiles')
-            .withIndex('by_profile', (q) => q.eq('profileId', organizerId))
-            .first(),
-        )
-      : null
+  const ownerId = event.ownerId
+  let organizer: PublicOrganizer | null = null
+  if (includeOrganizer && ownerId) {
+    const org = await ctx.db.get('organizerProfiles', ownerId)
+    const profile = org?.profileId ? await ctx.db.get('profiles', org.profileId) : null
+    organizer = toPublicOrganizer(org, profile)
+  }
   return toPublicEvent(event, categories, images, organizer)
 }
 
@@ -198,37 +198,36 @@ export async function enrichPublicEvents(
     events.map(async (event) => resolveImageUrls(ctx, await getEventImages(ctx, event._id))),
   )
 
-  const organizerIds = [
+  const ownerIds = [
     ...new Set(
-      events.map((e) => e.organizerId).filter((id): id is Id<'profiles'> => id !== undefined),
+      events.map((e) => e.ownerId).filter((id): id is Id<'organizerProfiles'> => id !== undefined),
     ),
   ]
-  const profiles = await Promise.all(organizerIds.map((id) => ctx.db.get('profiles', id)))
-  const orgProfiles = await Promise.all(
-    organizerIds.map((id) =>
-      ctx.db
-        .query('organizerProfiles')
-        .withIndex('by_profile', (q) => q.eq('profileId', id))
-        .first(),
+  const orgs = await Promise.all(ownerIds.map((id) => ctx.db.get('organizerProfiles', id)))
+  const orgById = new Map<Id<'organizerProfiles'>, Doc<'organizerProfiles'>>()
+  ownerIds.forEach((id, i) => {
+    if (orgs[i]) orgById.set(id, orgs[i] as Doc<'organizerProfiles'>)
+  })
+
+  const profileIds = [
+    ...new Set(
+      orgs
+        .filter((o): o is Doc<'organizerProfiles'> => o !== null && o.profileId !== undefined)
+        .map((o) => o.profileId as Id<'profiles'>),
     ),
-  )
+  ]
+  const profiles = await Promise.all(profileIds.map((id) => ctx.db.get('profiles', id)))
   const profileById = new Map<Id<'profiles'>, Doc<'profiles'>>()
-  const orgByProfileId = new Map<Id<'profiles'>, Doc<'organizerProfiles'>>()
-  organizerIds.forEach((id, i) => {
+  profileIds.forEach((id, i) => {
     if (profiles[i]) profileById.set(id, profiles[i] as Doc<'profiles'>)
-    if (orgProfiles[i]) orgByProfileId.set(id, orgProfiles[i] as Doc<'organizerProfiles'>)
   })
 
   return events.map((event, i) => {
     const categories = linksByEvent[i]
       .map((link) => categoryById.get(link.categoryId))
       .filter((c): c is Doc<'categories'> => c !== undefined)
-    const organizer = event.organizerId
-      ? toPublicOrganizer(
-          profileById.get(event.organizerId) ?? null,
-          orgByProfileId.get(event.organizerId) ?? null,
-        )
-      : null
-    return toPublicEvent(event, categories, imagesByEvent[i], organizer)
+    const org = event.ownerId ? (orgById.get(event.ownerId) ?? null) : null
+    const profile = org?.profileId ? (profileById.get(org.profileId) ?? null) : null
+    return toPublicEvent(event, categories, imagesByEvent[i], toPublicOrganizer(org, profile))
   })
 }

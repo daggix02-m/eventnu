@@ -89,7 +89,7 @@ export const getTargetPreview = query({
       return await ctx.db.get('events', args.targetId as Id<'events'>)
     }
     if (args.targetType === 'host') {
-      return await ctx.db.get('hosts', args.targetId as Id<'hosts'>)
+      return await ctx.db.get('organizerProfiles', args.targetId as Id<'organizerProfiles'>)
     }
     if (args.targetType === 'user') {
       return await ctx.db.get('profiles', args.targetId as Id<'profiles'>)

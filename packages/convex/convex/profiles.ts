@@ -366,10 +366,16 @@ export const getUserWithCounts = query({
     const profile = await ctx.db.get('profiles', args.profileId)
     if (!profile) return null
 
-    const events = await ctx.db
-      .query('events')
-      .withIndex('by_organizer', (q) => q.eq('organizerId', args.profileId))
-      .take(500)
+    const org = await ctx.db
+      .query('organizerProfiles')
+      .withIndex('by_profile', (q) => q.eq('profileId', args.profileId))
+      .first()
+    const events = org
+      ? await ctx.db
+          .query('events')
+          .withIndex('by_owner', (q) => q.eq('ownerId', org._id))
+          .take(500)
+      : []
     const likes = await ctx.db
       .query('eventLikes')
       .withIndex('by_user', (q) => q.eq('userId', args.profileId))

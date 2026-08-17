@@ -81,12 +81,12 @@ export async function computeProfileMetrics(
     .query('organizerProfiles')
     .withIndex('by_profile', (q) => q.eq('profileId', profile._id))
     .first()
-  const events = await ctx.db
-    .query('events')
-    .withIndex('by_organizerId_and_status', (q) =>
-      q.eq('organizerId', profile._id).eq('status', 'published'),
-    )
-    .take(500)
+  const events = org
+    ? await ctx.db
+        .query('events')
+        .withIndex('by_owner_and_status', (q) => q.eq('ownerId', org._id).eq('status', 'published'))
+        .take(500)
+    : []
   const publishedEvents = events.length
   const reservationCount = events.reduce((sum, e) => sum + (e.reservationCount ?? 0), 0)
 

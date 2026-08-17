@@ -107,6 +107,7 @@ const schema = defineSchema({
     .index('by_organizerId_and_status', ['organizerId', 'status'])
     .index('by_hostId_and_status', ['hostId', 'status'])
     .index('by_owner', ['ownerId'])
+    .index('by_owner_and_status', ['ownerId', 'status'])
     .index('by_isFeatured_and_startDate', ['isFeatured', 'startDate'])
     .index('by_insta_post', ['instaPostId']),
 

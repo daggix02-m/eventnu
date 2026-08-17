@@ -36,7 +36,7 @@ export function mapEvent(raw: RawEvent): Event {
     status: raw.status,
     source: raw.source,
     is_featured: raw.isFeatured,
-    organizer_id: raw.organizerId,
+    organizer_id: raw.ownerId,
     venue_name: raw.venueName,
     venue_address: raw.venueAddress,
     venue_map_link: raw.venueMapLink,
@@ -71,6 +71,8 @@ export function mapEvent(raw: RawEvent): Event {
           verified: raw.organizer.verified,
           handle: raw.organizer.handle ?? null,
           logo_url: raw.organizer.logoUrl ?? null,
+          bio: raw.organizer.bio ?? null,
+          follower_count: raw.organizer.followerCount,
           created_at: raw.organizer._creationTime
             ? new Date(raw.organizer._creationTime).toISOString()
             : undefined,

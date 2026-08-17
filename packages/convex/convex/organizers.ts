@@ -72,16 +72,11 @@ export const getByHandle = query({
       .first()
     if (!org) return null
 
-    const profileId = org.profileId
-    const profile = profileId ? await ctx.db.get('profiles', profileId) : null
-    const events = profileId
-      ? await ctx.db
-          .query('events')
-          .withIndex('by_organizerId_and_status', (q) =>
-            q.eq('organizerId', profileId).eq('status', 'published'),
-          )
-          .take(50)
-      : []
+    const profile = org.profileId ? await ctx.db.get('profiles', org.profileId) : null
+    const events = await ctx.db
+      .query('events')
+      .withIndex('by_owner_and_status', (q) => q.eq('ownerId', org._id).eq('status', 'published'))
+      .take(50)
 
     return {
       id: org._id,
@@ -92,7 +87,7 @@ export const getByHandle = query({
       website: org.website ?? null,
       contactEmail: org.contactEmail ?? null,
       followerCount: org.followerCount,
-      verified: profile?.verified ?? false,
+      verified: org.verified,
       fullName: profile?.fullName ?? null,
       avatarUrl: profile?.avatarUrl ?? null,
       events: events.map((e) => ({

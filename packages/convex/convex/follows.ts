@@ -30,7 +30,7 @@ export const countByFollower = query({
 export const listFollowers = query({
   args: {
     followingId: v.id('profiles'),
-    followType: v.union(v.literal('host'), v.literal('organizer'), v.literal('user')),
+    followType: v.union(v.literal('organizer'), v.literal('user')),
   },
   handler: async (ctx, args) => {
     const follows = await ctx.db
@@ -51,14 +51,7 @@ async function adjustFollowerCount(
   followType: string,
   delta: 1 | -1,
 ): Promise<void> {
-  if (followType === 'host') {
-    const host = await ctx.db.get('hosts', followingId as unknown as Id<'hosts'>)
-    if (host) {
-      await ctx.db.patch('hosts', host._id, {
-        followerCount: Math.max(0, host.followerCount + delta),
-      })
-    }
-  } else if (followType === 'organizer') {
+  if (followType === 'organizer') {
     const org = await ctx.db.get(
       'organizerProfiles',
       followingId as unknown as Id<'organizerProfiles'>,
@@ -81,7 +74,7 @@ async function adjustFollowerCount(
 export const toggle = mutation({
   args: {
     followingId: v.id('profiles'),
-    followType: v.union(v.literal('host'), v.literal('organizer'), v.literal('user')),
+    followType: v.union(v.literal('organizer'), v.literal('user')),
   },
   handler: async (ctx, args) => {
     const profile = await requireUser(ctx)

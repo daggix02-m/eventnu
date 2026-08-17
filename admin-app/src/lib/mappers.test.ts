@@ -184,8 +184,12 @@ describe('mapReportTargetPreview', () => {
     })
   })
 
-  it('discriminates hosts', () => {
-    const h = { name: 'Venue', status: 'active', _id: 'x' } as unknown as Doc<'hosts'>
+  it('discriminates organizers (former hosts)', () => {
+    const h = {
+      organizerName: 'Venue',
+      status: 'active',
+      _id: 'x',
+    } as unknown as Doc<'organizerProfiles'>
     expect(mapReportTargetPreview(h)).toEqual({
       target_type: 'host',
       name: 'Venue',

@@ -31,8 +31,8 @@ function makeEventDoc(): Doc<'events'> {
     actionType: 'reservation',
     status: 'published',
     source: 'admin',
-    organizerId: 'profiles_test' as Doc<'profiles'>['_id'],
     hostId: 'hosts_test' as Doc<'hosts'>['_id'],
+    ownerId: 'organizerProfiles_test' as Doc<'organizerProfiles'>['_id'],
     isStandalone: false,
     isFeatured: true,
     featuredSection: 'home',
@@ -70,6 +70,27 @@ function makeProfileDoc(): Doc<'profiles'> {
   }
 }
 
+function makeOrganizerDoc(
+  overrides: Partial<Doc<'organizerProfiles'>> = {},
+): Doc<'organizerProfiles'> {
+  return {
+    _id: 'organizerProfiles_test' as Doc<'organizerProfiles'>['_id'],
+    _creationTime: 5,
+    profileId: 'profiles_test' as Doc<'profiles'>['_id'],
+    organizerName: 'Addis Nights',
+    organizerHandle: 'addis-nights',
+    bio: 'A rooftop venue in Bole',
+    logoUrl: 'https://img.example/logo.jpg',
+    website: 'https://addis.example',
+    contactEmail: 'hello@addis.example',
+    managementMode: 'organizer_managed',
+    kind: 'organizer',
+    followerCount: 12,
+    verified: true,
+    ...overrides,
+  }
+}
+
 describe('toPublicEvent', () => {
   const event = makeEventDoc()
   const images = [
@@ -83,7 +104,7 @@ describe('toPublicEvent', () => {
     },
   ]
   const categories: Array<Doc<'categories'>> = []
-  const organizer = toPublicOrganizer(makeProfileDoc())
+  const organizer = toPublicOrganizer(makeOrganizerDoc())
 
   it('strips internal and admin-only fields', () => {
     const result = toPublicEvent(event, categories, images, organizer)
@@ -97,6 +118,7 @@ describe('toPublicEvent', () => {
       'reservationCount',
       'isStandalone',
       'hostId',
+      'organizerId',
     ]) {
       expect(field in result).toBe(false)
     }
@@ -115,6 +137,7 @@ describe('toPublicEvent', () => {
       likeCount: 7,
       source: 'admin',
       venueName: event.venueName,
+      ownerId: 'organizerProfiles_test',
     })
   })
 
@@ -144,46 +167,42 @@ describe('toPublicEvent', () => {
 })
 
 describe('toPublicOrganizer', () => {
-  it('returns null for a missing profile', () => {
+  it('returns null for a missing organizer', () => {
     expect(toPublicOrganizer(null)).toBeNull()
   })
 
-  it('keeps only identity and display fields', () => {
-    const result = toPublicOrganizer(makeProfileDoc())
-    expect(result).toEqual({
-      _id: 'profiles_test',
-      fullName: 'Sara Bekele',
-      avatarUrl: 'https://img.example/avatar.jpg',
-      verified: false,
-      _creationTime: 5,
-    })
-  })
-
-  it('exposes the verified flag when set', () => {
-    const result = toPublicOrganizer({ ...makeProfileDoc(), verified: true })
-    expect(result?.verified).toBe(true)
-  })
-
-  it('merges organizer handle and logo when provided', () => {
-    const result = toPublicOrganizer(makeProfileDoc(), {
-      organizerHandle: 'sara',
-      logoUrl: 'https://img.example/logo.jpg',
-    } as Doc<'organizerProfiles'>)
+  it('exposes business identity from the organizer entity', () => {
+    const result = toPublicOrganizer(makeOrganizerDoc())
     expect(result).toMatchObject({
-      handle: 'sara',
+      _id: 'organizerProfiles_test',
+      fullName: 'Addis Nights',
+      handle: 'addis-nights',
       logoUrl: 'https://img.example/logo.jpg',
+      bio: 'A rooftop venue in Bole',
+      verified: true,
+      followerCount: 12,
     })
   })
 
-  it('does not expose email, authUserId, role, suspension or terms', () => {
-    const result = toPublicOrganizer(makeProfileDoc()) as Record<string, unknown>
+  it('falls back to the linked profile avatar', () => {
+    const result = toPublicOrganizer(makeOrganizerDoc(), makeProfileDoc())
+    expect(result?.avatarUrl).toBe('https://img.example/avatar.jpg')
+  })
+
+  it('does not expose account or management internals', () => {
+    const result = toPublicOrganizer(makeOrganizerDoc(), makeProfileDoc()) as Record<
+      string,
+      unknown
+    >
     for (const field of [
       'email',
       'authUserId',
       'role',
       'suspended',
-      'acceptedTermsAt',
-      'acceptedTermsVersion',
+      'managementMode',
+      'profileId',
+      'legacyHostId',
+      'contactEmail',
     ]) {
       expect(field in result).toBe(false)
     }
@@ -331,27 +350,13 @@ describe('enrichPublicEvents', () => {
     expect(categoryGets[0][1]).toBe(sharedCategory._id)
   })
 
-  it('enriches organizer identity (verified, handle, logo) for events in the batch', async () => {
+  it('enriches organizer identity from the owner organizerProfiles', async () => {
     const { db } = makeDb({
       categories: [],
       eventCategories: [],
       eventImages: [],
-      profiles: [
-        {
-          _id: 'profiles_test',
-          verified: true,
-          fullName: 'Sara Bekele',
-          avatarUrl: 'https://img.example/avatar.jpg',
-        },
-      ],
-      organizerProfiles: [
-        {
-          _id: 'organizerProfiles_x',
-          profileId: 'profiles_test',
-          organizerHandle: 'sara',
-          logoUrl: 'https://img.example/logo.jpg',
-        },
-      ],
+      organizerProfiles: [makeOrganizerDoc()],
+      profiles: [makeProfileDoc()],
     })
     const ctx = { db, storage: { getUrl: vi.fn() } } as unknown as Parameters<
       typeof enrichPublicEvents
@@ -360,9 +365,11 @@ describe('enrichPublicEvents', () => {
     const result = await enrichPublicEvents(ctx, [eventA])
 
     expect(result[0].organizer).toMatchObject({
-      verified: true,
-      handle: 'sara',
+      _id: 'organizerProfiles_test',
+      fullName: 'Addis Nights',
+      handle: 'addis-nights',
       logoUrl: 'https://img.example/logo.jpg',
+      verified: true,
     })
   })
 

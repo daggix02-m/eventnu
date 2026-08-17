@@ -6,6 +6,8 @@ interface Profile {
   verified?: boolean
   handle?: string | null
   logo_url?: string | null
+  bio?: string | null
+  follower_count?: number
   created_at?: string
 }
 
