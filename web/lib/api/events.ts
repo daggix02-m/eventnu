@@ -68,6 +68,9 @@ export function mapEvent(raw: RawEvent): Event {
           id: raw.organizer._id,
           full_name: raw.organizer.fullName ?? null,
           avatar_url: raw.organizer.avatarUrl ?? null,
+          verified: raw.organizer.verified,
+          handle: raw.organizer.handle ?? null,
+          logo_url: raw.organizer.logoUrl ?? null,
           created_at: raw.organizer._creationTime
             ? new Date(raw.organizer._creationTime).toISOString()
             : undefined,

@@ -15,6 +15,8 @@ import { redeemVerificationCode } from '@/lib/auth'
 const EMAIL_KEY = 'eventnu_auth_email'
 const REDIRECT_KEY = 'eventnu_auth_redirect'
 const PENDING_TERMS_KEY = 'eventnu_pending_terms'
+const PENDING_ACCOUNT_KEY = 'eventnu_pending_account_type'
+const PENDING_ORG_NAME_KEY = 'eventnu_pending_org_name'
 
 function AuthCallbackInner() {
   const router = useRouter()
@@ -22,6 +24,7 @@ function AuthCallbackInner() {
   const { signIn } = useAuthActions()
   const ensureProfile = useMutation(api.profiles.ensureProfile)
   const acceptTerms = useMutation(api.profiles.acceptTerms)
+  const createOrganizer = useMutation(api.organizers.create)
 
   const [email, setEmail] = useState('')
   const [code, setCode] = useState('')
@@ -35,7 +38,19 @@ function AuthCallbackInner() {
       try {
         await redeemVerificationCode(signIn, mail, verificationCode)
         try {
-          await ensureProfile({})
+          const accountType =
+            (sessionStorage.getItem(PENDING_ACCOUNT_KEY) as 'user' | 'organizer' | null) ?? 'user'
+          const orgName = sessionStorage.getItem(PENDING_ORG_NAME_KEY) ?? ''
+          await ensureProfile({ accountType })
+          if (accountType === 'organizer' && orgName.trim()) {
+            try {
+              await createOrganizer({ organizerName: orgName.trim() })
+            } catch {
+              /* organizer profile creation retried on next visit */
+            }
+          }
+          sessionStorage.removeItem(PENDING_ACCOUNT_KEY)
+          sessionStorage.removeItem(PENDING_ORG_NAME_KEY)
         } catch {
           /* retried on next visit */
         }
@@ -70,7 +85,7 @@ function AuthCallbackInner() {
         )
       }
     },
-    [router, signIn, ensureProfile, acceptTerms],
+    [router, signIn, ensureProfile, acceptTerms, createOrganizer],
   )
 
   useEffect(() => {

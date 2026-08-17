@@ -13,6 +13,10 @@ import { ExperiencePostCard } from '@/components/experiences/ExperiencePostCard'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useAuthModal } from '@/components/auth/AuthModalContext'
 import { mapEvent } from '@/lib/api/events'
+import { VerifiedBadge } from '@/components/verification/VerifiedBadge'
+import { VerificationReveal } from '@/components/verification/VerificationReveal'
+
+const SEEN_VERIFIED_KEY = 'eventnu_seen_verified'
 
 export function ProfileClient() {
   const { isAuthenticated, isLoading: authLoading } = useConvexAuth()
@@ -25,6 +29,26 @@ export function ProfileClient() {
   const me = useQuery(api.profiles.getMe)
   const bookmarks = useQuery(api.bookmarks.listByUser)
   const posts = useQuery(api.experiencePosts.listByUser, me ? { profileId: me._id } : 'skip')
+  const [showReveal, setShowReveal] = useState(false)
+
+  useEffect(() => {
+    if (!me?.verified || !me.verifiedAt) return
+    try {
+      const seen = Number(localStorage.getItem(SEEN_VERIFIED_KEY) ?? '0')
+      if (me.verifiedAt > seen) setShowReveal(true)
+    } catch {
+      /* storage unavailable */
+    }
+  }, [me?.verified, me?.verifiedAt])
+
+  const handleRevealClose = () => {
+    setShowReveal(false)
+    try {
+      localStorage.setItem(SEEN_VERIFIED_KEY, String(me?.verifiedAt ?? Date.now()))
+    } catch {
+      /* storage unavailable */
+    }
+  }
 
   useEffect(() => {
     const param = searchParams.get('tab')
@@ -77,9 +101,12 @@ export function ProfileClient() {
             .toUpperCase()}
         </div>
         <div className="flex-1">
-          <h1 className="font-display text-headline-md text-on-surface">
-            {me?.fullName ?? 'Your profile'}
-          </h1>
+          <div className="flex flex-wrap items-center gap-sm">
+            <h1 className="font-display text-headline-md text-on-surface">
+              {me?.fullName ?? 'Your profile'}
+            </h1>
+            {me?.verified && <VerifiedBadge />}
+          </div>
           <p className="font-body-md text-on-surface-variant">{me?.email}</p>
         </div>
       </header>
@@ -151,6 +178,7 @@ export function ProfileClient() {
           )}
         </TabsContent>
       </Tabs>
+      <VerificationReveal open={showReveal} onClose={handleRevealClose} />
     </div>
   )
 }

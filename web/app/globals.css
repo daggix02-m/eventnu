@@ -347,6 +347,25 @@ textarea:focus-visible {
   animation: carousel-progress 6s linear forwards;
 }
 
+/* Verification wax-seal stamp press */
+@keyframes seal-press {
+  0% {
+    transform: scale(1.6) rotate(-14deg);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(0.94) rotate(2deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+.seal-press {
+  animation: seal-press 0.5s ease-out both;
+}
+
 /* Tighten gutters to an app-like rhythm on phones */
 @media (max-width: 767px) {
   :root {

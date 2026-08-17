@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { EventGallery } from '@/components/events/EventGallery'
 import { hasGallery } from '@/lib/media'
+import { VerifiedBadge } from '@/components/verification/VerifiedBadge'
 import type { Event } from '@/types'
 
 interface EventHeroProps {
@@ -130,7 +131,7 @@ export function EventHero({ event }: EventHeroProps) {
               </h1>
 
               {event.subtitle && (
-                <p className="text-sm sm:text-base md:text-lg text-on-surface-variant font-medium leading-relaxed max-w-2xl">
+                <p className="text-sm sm:text-base md:text-lg text-on-surface-variant font-medium leading-relaxed max-w-[42rem]">
                   {event.subtitle}
                 </p>
               )}
@@ -155,10 +156,20 @@ export function EventHero({ event }: EventHeroProps) {
                     <Sparkles className="w-3.5 h-3.5 text-secondary shrink-0" />
                     <span>
                       Host:{' '}
-                      <strong className="text-on-surface font-semibold">
-                        {event.organizer.full_name}
-                      </strong>
+                      {event.organizer.handle ? (
+                        <Link
+                          href={`/organizer/${event.organizer.handle}`}
+                          className="text-on-surface font-semibold hover:text-primary"
+                        >
+                          {event.organizer.full_name}
+                        </Link>
+                      ) : (
+                        <strong className="text-on-surface font-semibold">
+                          {event.organizer.full_name}
+                        </strong>
+                      )}
                     </span>
+                    {event.organizer.verified && <VerifiedBadge compact />}
                   </div>
                 )}
               </div>

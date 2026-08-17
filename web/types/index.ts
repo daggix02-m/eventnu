@@ -3,6 +3,9 @@ interface Profile {
   email?: string | null
   full_name?: string | null
   avatar_url?: string | null
+  verified?: boolean
+  handle?: string | null
+  logo_url?: string | null
   created_at?: string
 }
 
