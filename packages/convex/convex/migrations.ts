@@ -1,7 +1,30 @@
 import { mutation } from './_generated/server'
 import { internalMutation } from './_generated/server'
-import { Id } from './_generated/dataModel'
+import { Doc, Id } from './_generated/dataModel'
 import { requireAdmin } from './helpers'
+
+/**
+ * Map a legacy `hosts` doc into the organizerProfiles shape used for migrated
+ * venues. `hostType` and `contactPhone` are intentionally dropped; `slug`
+ * becomes the public `organizerHandle`.
+ */
+export function mapHostToVenueOrganizer(host: Doc<'hosts'>) {
+  return {
+    organizerName: host.name,
+    organizerHandle: host.slug,
+    bio: host.description || undefined,
+    logoUrl: host.logoUrl ?? undefined,
+    website: host.website ?? undefined,
+    contactEmail: host.contactEmail ?? undefined,
+    managementMode: 'admin_managed' as const,
+    kind: 'venue' as const,
+    locationText: host.locationText || undefined,
+    status: host.status || undefined,
+    legacyHostId: host._id,
+    followerCount: host.followerCount,
+    verified: host.verified,
+  }
+}
 
 function eventTime(y: number, m: number, d: number, h: number, min: number): number {
   return Date.UTC(y, m - 1, d, h, min) - 3 * 60 * 60 * 1000
@@ -183,6 +206,86 @@ export const backfillPhaseBFields = internalMutation({
       }
     }
     return { profilesPatched, orgsPatched }
+  },
+})
+
+export const backfillHostsToOrganizers = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    let inserted = 0
+    let skipped = 0
+    for await (const host of ctx.db.query('hosts')) {
+      const existing = await ctx.db
+        .query('organizerProfiles')
+        .filter((q) => q.eq(q.field('legacyHostId'), host._id))
+        .first()
+      if (existing) {
+        skipped++
+        continue
+      }
+      await ctx.db.insert('organizerProfiles', mapHostToVenueOrganizer(host))
+      inserted++
+    }
+    return { inserted, skipped }
+  },
+})
+
+export const backfillEventOwnerId = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    let patched = 0
+    let skipped = 0
+    let unresolved = 0
+    for await (const event of ctx.db.query('events')) {
+      if (event.ownerId) {
+        skipped++
+        continue
+      }
+      let ownerId: Id<'organizerProfiles'> | undefined
+      if (event.organizerId) {
+        const profileId = event.organizerId
+        const org = await ctx.db
+          .query('organizerProfiles')
+          .withIndex('by_profile', (q) => q.eq('profileId', profileId))
+          .first()
+        ownerId = org?._id
+      } else if (event.hostId) {
+        const hostId = event.hostId
+        const org = await ctx.db
+          .query('organizerProfiles')
+          .filter((q) => q.eq(q.field('legacyHostId'), hostId))
+          .first()
+        ownerId = org?._id
+      }
+      if (ownerId) {
+        await ctx.db.patch('events', event._id, { ownerId })
+        patched++
+      } else {
+        unresolved++
+      }
+    }
+    return { patched, skipped, unresolved }
+  },
+})
+
+export const backfillFollowTypeHost = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    let remapped = 0
+    for await (const follow of ctx.db.query('follows')) {
+      if (follow.followType !== 'host') continue
+      const org = await ctx.db
+        .query('organizerProfiles')
+        .filter((q) => q.eq(q.field('legacyHostId'), follow.followingId))
+        .first()
+      if (!org) continue
+      await ctx.db.patch('follows', follow._id, {
+        followType: 'organizer',
+        followingId: org._id as unknown as Id<'profiles'>,
+      })
+      remapped++
+    }
+    return { remapped }
   },
 })
 

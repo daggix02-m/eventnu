@@ -81,6 +81,7 @@ const schema = defineSchema({
     source: v.string(),
     organizerId: v.optional(v.id('profiles')),
     hostId: v.optional(v.id('hosts')),
+    ownerId: v.optional(v.id('organizerProfiles')),
     isStandalone: v.boolean(),
     isFeatured: v.boolean(),
     featuredSection: v.optional(v.string()),
@@ -105,6 +106,7 @@ const schema = defineSchema({
     .index('by_host', ['hostId'])
     .index('by_organizerId_and_status', ['organizerId', 'status'])
     .index('by_hostId_and_status', ['hostId', 'status'])
+    .index('by_owner', ['ownerId'])
     .index('by_isFeatured_and_startDate', ['isFeatured', 'startDate'])
     .index('by_insta_post', ['instaPostId']),
 
@@ -179,7 +181,7 @@ const schema = defineSchema({
     .index('by_status', ['status']),
 
   organizerProfiles: defineTable({
-    profileId: v.id('profiles'),
+    profileId: v.optional(v.id('profiles')),
     organizerName: v.string(),
     organizerHandle: v.optional(v.string()),
     bio: v.optional(v.string()),
@@ -188,6 +190,10 @@ const schema = defineSchema({
     contactEmail: v.optional(v.string()),
     socialLinks: v.optional(v.any()),
     managementMode: v.union(v.literal('admin_managed'), v.literal('organizer_managed')),
+    kind: v.optional(v.union(v.literal('organizer'), v.literal('venue'))),
+    locationText: v.optional(v.string()),
+    status: v.optional(v.string()),
+    legacyHostId: v.optional(v.string()),
     followerCount: v.number(),
     verified: v.boolean(),
   })

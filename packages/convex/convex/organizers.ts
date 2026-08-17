@@ -72,13 +72,16 @@ export const getByHandle = query({
       .first()
     if (!org) return null
 
-    const profile = await ctx.db.get('profiles', org.profileId)
-    const events = await ctx.db
-      .query('events')
-      .withIndex('by_organizerId_and_status', (q) =>
-        q.eq('organizerId', org.profileId).eq('status', 'published'),
-      )
-      .take(50)
+    const profileId = org.profileId
+    const profile = profileId ? await ctx.db.get('profiles', profileId) : null
+    const events = profileId
+      ? await ctx.db
+          .query('events')
+          .withIndex('by_organizerId_and_status', (q) =>
+            q.eq('organizerId', profileId).eq('status', 'published'),
+          )
+          .take(50)
+      : []
 
     return {
       id: org._id,

@@ -17,14 +17,16 @@ export async function getOrganizers(params: {
     search: params.search,
   })
   const rows = result.page ?? []
-  const profileIds = [...new Set(rows.map((o) => o.profileId))]
+  const profileIds = [
+    ...new Set(rows.map((o) => o.profileId).filter((id): id is Id<'profiles'> => id !== undefined)),
+  ]
   const profiles = await Promise.all(
     profileIds.map((profileId) =>
       fetchQuery(api.profiles.getById, { profileId: profileId as Id<'profiles'> }),
     ),
   )
   const profileById = new Map(profiles.filter((p) => p !== null).map((p) => [p._id, p]))
-  let items = rows.map((o) => mapOrganizer(o, profileById.get(o.profileId)))
+  let items = rows.map((o) => mapOrganizer(o, o.profileId ? profileById.get(o.profileId) : null))
   if (params.verified !== undefined) {
     items = items.filter((o) => o.verified === params.verified)
   }
