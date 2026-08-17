@@ -65,7 +65,7 @@ async function adjustFollowerCount(
     const user = await ctx.db.get('profiles', followingId)
     if (user) {
       await ctx.db.patch('profiles', user._id, {
-        followerCount: Math.max(0, user.followerCount + delta),
+        followerCount: Math.max(0, (user.followerCount ?? 0) + delta),
       })
     }
   }

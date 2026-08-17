@@ -70,7 +70,7 @@ export async function computeProfileMetrics(
       metrics: {
         publishedEvents: 0,
         engagementGiven,
-        followerCount: profile.followerCount,
+        followerCount: profile.followerCount ?? 0,
         experiencePosts,
         reservationCount: 0,
       },
