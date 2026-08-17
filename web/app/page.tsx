@@ -46,7 +46,7 @@ export default async function HomePage({ searchParams }: PageProps) {
         categories={categories}
         initialSearch={typeof params.q === 'string' ? params.q : ''}
         initialCategory={typeof params.category === 'string' ? params.category : undefined}
-        initialDate={typeof params.date === 'string' ? params.date : 'all'}
+        initialStatus={typeof params.date === 'string' ? params.date : 'all'}
       />
     </>
   )

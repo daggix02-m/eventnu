@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useEffect, useState } from 'react'
-import { CalendarDays, ChevronLeft, ChevronRight, Flame, Sparkles } from 'lucide-react'
+import { CalendarDays, ChevronLeft, ChevronRight, Flame } from 'lucide-react'
 import { MiniCalendarModal } from './MiniCalendarModal'
 import { cn } from '@/lib/utils'
 import { toDateString, nextFriday } from '@/lib/dates'

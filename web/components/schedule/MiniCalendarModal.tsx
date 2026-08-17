@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Sparkles } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -124,7 +124,7 @@ export function MiniCalendarModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md bg-surface-container-low/95 backdrop-blur-2xl border-outline-variant/60 shadow-2xl">
+      <DialogContent className="sm:max-w-[28rem] bg-surface-container-low/95 backdrop-blur-2xl border-outline-variant/60 shadow-2xl">
         <DialogHeader className="pb-2">
           <div className="flex items-center justify-between pr-6">
             <div className="flex items-center gap-2">

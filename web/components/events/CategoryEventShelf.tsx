@@ -29,10 +29,7 @@ const CATEGORY_ICONS: Record<string, LucideIcon> = {
   family: Heart,
 }
 
-const CATEGORY_COLORS: Record<
-  string,
-  { bg: string; text: string; border: string }
-> = {
+const CATEGORY_COLORS: Record<string, { bg: string; text: string; border: string }> = {
   music: {
     bg: 'bg-purple-500/10',
     text: 'text-purple-400',
@@ -205,18 +202,11 @@ export function CategoryEventShelf({
       <div className="relative -mx-gutter px-gutter md:mx-0 md:px-0">
         <div
           ref={scrollRef}
-          className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-none snap-x snap-mandatory py-1 scroll-smooth touch-pan-x"
+          className="flex gap-3 sm:gap-4 overflow-x-auto overflow-y-hidden overscroll-x-contain scrollbar-none snap-x snap-mandatory py-1 scroll-smooth touch-pan-x"
         >
           {events.map((event, index) => (
-            <div
-              key={event.id}
-              className="w-[260px] sm:w-[290px] md:w-[320px] shrink-0 snap-start"
-            >
-              <EventCard
-                event={event}
-                priority={priorityFirst && index === 0}
-                className="h-full"
-              />
+            <div key={event.id} className="w-[260px] sm:w-[290px] md:w-[320px] shrink-0 snap-start">
+              <EventCard event={event} priority={priorityFirst && index === 0} className="h-full" />
             </div>
           ))}
         </div>

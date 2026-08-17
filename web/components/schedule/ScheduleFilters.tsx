@@ -1,7 +1,6 @@
 'use client'
 
-import { useState } from 'react'
-import { Sun, Sunset, Moon, Sparkles, Dices, Layers } from 'lucide-react'
+import { Sun, Sunset, Moon, Dices, Layers } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Category } from '@/types'
 
@@ -66,7 +65,9 @@ export function ScheduleFilters({
                     : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest/60',
                 )}
               >
-                <Icon className={cn('w-3.5 h-3.5', isActive ? 'text-on-primary' : 'text-primary')} />
+                <Icon
+                  className={cn('w-3.5 h-3.5', isActive ? 'text-on-primary' : 'text-primary')}
+                />
                 <span>{item.label}</span>
               </button>
             )

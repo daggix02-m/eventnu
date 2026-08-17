@@ -6,9 +6,9 @@ import { Container } from '@/components/layout/Container'
 import { EventList } from '@/components/events/EventList'
 import { CategoryEventShelf } from '@/components/events/CategoryEventShelf'
 import { PulseEqualizer } from '@/components/events/PulseEqualizer'
-import { SearchBar, CategoryPills, DateFilter } from '@/components/events/SearchBar'
+import { SearchBar } from '@/components/events/SearchBar'
+import { SegmentedControl } from '@/components/ui/segmented-control'
 import { useScrollReveal } from '@/lib/hooks/useScrollReveal'
-import { cn } from '@/lib/utils'
 import type { Event, Category } from '@/types'
 
 interface DiscoverPageClientProps {
@@ -16,42 +16,21 @@ interface DiscoverPageClientProps {
   categories: Category[]
   initialSearch?: string
   initialCategory?: string
-  initialDate?: string
+  initialStatus?: string
 }
 
-function matchesDateFilter(eventDate: Date, filter: string): boolean {
-  const now = new Date()
-  const eventDay = new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate())
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-  const tomorrow = new Date(today)
-  tomorrow.setDate(today.getDate() + 1)
+type EventStatus = 'all' | 'upcoming' | 'ended'
 
-  switch (filter) {
-    case 'upcoming':
-      return eventDate >= now
-    case 'past':
-      return eventDate < now
-    case 'today':
-      return eventDay.getTime() === today.getTime()
-    case 'tomorrow':
-      return eventDay.getTime() === tomorrow.getTime()
-    case 'weekend': {
-      const day = eventDate.getDay()
-      return day === 0 || day === 6
-    }
-    case 'week': {
-      const endOfWeek = new Date(today)
-      endOfWeek.setDate(today.getDate() + 7)
-      return eventDate >= today && eventDate < endOfWeek
-    }
-    case 'month': {
-      return (
-        eventDate.getMonth() === today.getMonth() && eventDate.getFullYear() === today.getFullYear()
-      )
-    }
-    default:
-      return true
-  }
+function toStatus(value: string | undefined): EventStatus {
+  if (value === 'upcoming') return 'upcoming'
+  if (value === 'past' || value === 'ended') return 'ended'
+  return 'all'
+}
+
+function matchesStatus(eventDate: Date, status: EventStatus): boolean {
+  if (status === 'all') return true
+  const now = new Date()
+  return status === 'upcoming' ? eventDate >= now : eventDate < now
 }
 
 export function DiscoverPageClient({
@@ -59,22 +38,22 @@ export function DiscoverPageClient({
   categories,
   initialSearch = '',
   initialCategory,
-  initialDate = 'all',
+  initialStatus,
 }: DiscoverPageClientProps) {
   const [search, setSearch] = useState(initialSearch)
   const [activeCategory, setActiveCategory] = useState<string | undefined>(initialCategory)
-  const [dateFilter, setDateFilter] = useState(initialDate)
+  const [status, setStatus] = useState<EventStatus>(() => toStatus(initialStatus))
   const [viewMode, setViewMode] = useState<'categorized' | 'grid'>('categorized')
 
   const headingRef = useScrollReveal({ y: 20, duration: 0.6 })
-  const filtersRef = useScrollReveal({ y: 16, duration: 0.5, delay: 0.1 })
+  const searchRef = useScrollReveal({ y: 16, duration: 0.5, delay: 0.1 })
   const gridRef = useScrollReveal({ y: 16, duration: 0.5, delay: 0.15 })
 
-  // All events sorted and filtered by date
-  const dateFilteredEvents = useMemo(() => {
+  // All events sorted and filtered by status
+  const statusFilteredEvents = useMemo(() => {
     const now = Date.now()
     return events
-      .filter((event) => matchesDateFilter(new Date(event.start_date), dateFilter))
+      .filter((event) => matchesStatus(new Date(event.start_date), status))
       .sort((a, b) => {
         const aTime = new Date(a.start_date).getTime()
         const bTime = new Date(b.start_date).getTime()
@@ -83,12 +62,12 @@ export function DiscoverPageClient({
         if (aUpcoming !== bUpcoming) return aUpcoming ? -1 : 1
         return aUpcoming ? aTime - bTime : bTime - aTime
       })
-  }, [events, dateFilter])
+  }, [events, status])
 
   // Filtered events when searching or selecting a specific category
   const filteredEvents = useMemo(() => {
     const term = search.toLowerCase().trim()
-    return dateFilteredEvents.filter((event) => {
+    return statusFilteredEvents.filter((event) => {
       const matchesSearch =
         !term ||
         event.title.toLowerCase().includes(term) ||
@@ -103,7 +82,7 @@ export function DiscoverPageClient({
 
       return matchesSearch && matchesCategory
     })
-  }, [dateFilteredEvents, search, activeCategory])
+  }, [statusFilteredEvents, search, activeCategory])
 
   // Group events by categories for horizontal scrolling shelves
   const categorizedShelves = useMemo(() => {
@@ -113,7 +92,7 @@ export function DiscoverPageClient({
     const shelves: { category: Category; events: Event[] }[] = []
 
     categories.forEach((cat) => {
-      const catEvents = dateFilteredEvents.filter((event) => {
+      const catEvents = statusFilteredEvents.filter((event) => {
         const primaryCat =
           event.event_categories?.find((ec) => ec.is_primary)?.categories ??
           event.event_categories?.[0]?.categories
@@ -129,7 +108,7 @@ export function DiscoverPageClient({
     })
 
     return shelves
-  }, [dateFilteredEvents, categories, activeCategory, search])
+  }, [statusFilteredEvents, categories, activeCategory, search])
 
   const isCategorizedView =
     viewMode === 'categorized' && !activeCategory && !search.trim() && categorizedShelves.length > 0
@@ -138,50 +117,42 @@ export function DiscoverPageClient({
     <>
       <Container className="py-xl space-y-xl" id="event-grid">
         {/* Page Header */}
-        <div ref={headingRef} className="flex flex-col sm:flex-row sm:items-center justify-between gap-md">
+        <div
+          ref={headingRef}
+          className="flex flex-col sm:flex-row sm:items-center justify-between gap-md"
+        >
           <div className="flex items-center gap-md">
             <h2 className="font-display text-display-lg-mobile md:text-display-lg text-on-surface">
-              Discover <span className="text-primary">events</span>
+              Find <span className="text-primary">yourz</span>
             </h2>
             <PulseEqualizer className="hidden sm:flex" barCount={5} />
           </div>
 
-          <div className="flex items-center gap-sm self-start sm:self-auto">
+          <div className="flex flex-wrap items-center gap-sm self-start sm:self-auto">
             {/* View Mode Toggle (Categorized Shelves vs Grid) */}
             {!activeCategory && !search.trim() && (
-              <div className="flex items-center p-1 bg-surface-container-low border border-outline-variant rounded-xl">
-                <button
-                  type="button"
-                  onClick={() => setViewMode('categorized')}
-                  aria-pressed={viewMode === 'categorized'}
-                  aria-label="Categorized Shelves View"
-                  className={cn(
-                    'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all',
-                    viewMode === 'categorized'
-                      ? 'bg-primary text-on-primary shadow-sm'
-                      : 'text-on-surface-variant hover:text-on-surface',
-                  )}
-                >
-                  <Rows3 className="w-3.5 h-3.5" />
-                  <span>Shelves</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setViewMode('grid')}
-                  aria-pressed={viewMode === 'grid'}
-                  aria-label="Grid View"
-                  className={cn(
-                    'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all',
-                    viewMode === 'grid'
-                      ? 'bg-primary text-on-primary shadow-sm'
-                      : 'text-on-surface-variant hover:text-on-surface',
-                  )}
-                >
-                  <LayoutGrid className="w-3.5 h-3.5" />
-                  <span>Grid</span>
-                </button>
-              </div>
+              <SegmentedControl
+                ariaLabel="View mode"
+                value={viewMode}
+                onChange={setViewMode}
+                options={[
+                  { value: 'categorized', label: 'Shelves', icon: Rows3 },
+                  { value: 'grid', label: 'Grid', icon: LayoutGrid },
+                ]}
+              />
             )}
+
+            {/* Event Status Toggle (All / Upcoming / Ended) */}
+            <SegmentedControl
+              ariaLabel="Event status"
+              value={status}
+              onChange={setStatus}
+              options={[
+                { value: 'all', label: 'All' },
+                { value: 'upcoming', label: 'Upcoming' },
+                { value: 'ended', label: 'Ended' },
+              ]}
+            />
 
             <p className="text-on-surface-variant font-mono text-label-sm">
               {filteredEvents.length} event{filteredEvents.length !== 1 ? 's' : ''}
@@ -189,19 +160,9 @@ export function DiscoverPageClient({
           </div>
         </div>
 
-        {/* Filters */}
-        <div ref={filtersRef} className="flex flex-col md:flex-row gap-md">
-          <div className="md:w-1/3">
-            <SearchBar value={search} onChange={setSearch} placeholder="Search events..." />
-          </div>
-          <div className="md:w-2/3 flex flex-col gap-sm sticky top-16 z-30 -mx-gutter px-gutter py-sm bg-background/90 backdrop-blur-md border-b border-outline-variant/60 md:static md:mx-0 md:px-0 md:py-0 md:bg-transparent md:backdrop-blur-none md:border-0">
-            <CategoryPills
-              categories={categories}
-              activeSlug={activeCategory}
-              onSelect={setActiveCategory}
-            />
-            <DateFilter value={dateFilter} onChange={setDateFilter} />
-          </div>
+        {/* Search */}
+        <div ref={searchRef} className="md:w-1/3">
+          <SearchBar value={search} onChange={setSearch} placeholder="Search events..." />
         </div>
 
         {/* Content Area: Horizontal Categorized Shelves OR Filtered Grid */}
@@ -209,13 +170,13 @@ export function DiscoverPageClient({
           {isCategorizedView ? (
             <div className="space-y-xl">
               {/* Featured / Trending Shelf */}
-              {dateFilteredEvents.length > 0 && (
+              {status !== 'ended' && statusFilteredEvents.length > 0 && (
                 <CategoryEventShelf
                   category={{
                     slug: 'trending',
-                    name: '🔥 Trending & Upcoming',
+                    name: 'Trending & Upcoming',
                   }}
-                  events={dateFilteredEvents.slice(0, 8)}
+                  events={statusFilteredEvents.slice(0, 8)}
                   priorityFirst
                 />
               )}

@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import {
   Calendar,
-  Banknote,
   MapPin,
   ExternalLink,
   MessageSquarePlus,
@@ -11,12 +10,11 @@ import {
   Copy,
   Check,
   Navigation,
-  Share2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { SITE } from '@/lib/site'
 import { EventSocialActions } from '@/components/social/EventSocialActions'
-import { formatPrice, formatEventDate, isEventPast } from '@/lib/utils'
+import { formatPrice, isEventPast } from '@/lib/utils'
 import type { Event } from '@/types'
 
 interface EventInfoCardProps {
@@ -207,17 +205,11 @@ export function EventInfoCard({ event }: EventInfoCardProps) {
               </a>
             </Button>
           )}
-
-
         </div>
 
         {/* Social / Bookmark Row + Compact Calendar Export */}
         <div className="pt-2 border-t border-outline-variant/30 flex items-center justify-between">
-          <EventSocialActions
-            eventId={event.id}
-            title={event.title}
-            className="flex-1"
-          />
+          <EventSocialActions eventId={event.id} title={event.title} className="flex-1" />
           {!ended && (
             <button
               type="button"
@@ -289,9 +281,7 @@ export function EventInfoCard({ event }: EventInfoCardProps) {
 
         {/* Venue Info & Copy Address */}
         <div className="space-y-1.5 pt-1">
-          <p className="font-display font-bold text-sm text-on-surface">
-            {event.venue_name}
-          </p>
+          <p className="font-display font-bold text-sm text-on-surface">{event.venue_name}</p>
           {event.venue_address && (
             <p className="font-body-md text-xs text-on-surface-variant leading-relaxed">
               {event.venue_address}

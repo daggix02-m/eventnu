@@ -16,17 +16,18 @@ export function EmptyScheduleState({
   hasNextEventDate = false,
 }: EmptyScheduleStateProps) {
   return (
-    <div className="w-full max-w-xl mx-auto my-8 flex flex-col items-center justify-center text-center p-6 sm:p-10 rounded-3xl bg-surface-container-high/60 border border-outline-variant/40 backdrop-blur-xl space-y-5 shadow-2xl shrink-0">
+    <div className="w-full max-w-[36rem] mx-auto my-8 flex flex-col items-center justify-center text-center p-6 sm:p-10 rounded-3xl bg-surface-container-high/60 border border-outline-variant/40 backdrop-blur-xl space-y-5 shadow-2xl shrink-0">
       <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
         <Coffee className="w-8 h-8" />
       </div>
 
-      <div className="space-y-2 w-full max-w-md mx-auto text-center">
+      <div className="space-y-2 w-full max-w-[28rem] mx-auto text-center">
         <h3 className="font-display text-xl sm:text-2xl font-bold text-on-surface">
           Addis is taking a breather!
         </h3>
         <p className="text-xs sm:text-sm text-on-surface-variant leading-relaxed">
-          No events match this date or filter. Check out what&apos;s coming up this weekend or jump to the nearest active night.
+          No events match this date or filter. Check out what&apos;s coming up this weekend or jump
+          to the nearest active night.
         </p>
       </div>
 

@@ -3,7 +3,7 @@
 import { useState, useMemo, useRef, useCallback } from 'react'
 import { useGSAP } from '@gsap/react'
 import { gsap } from '@/lib/gsap'
-import { CalendarDays, Sparkles, Filter, CalendarCheck } from 'lucide-react'
+import { CalendarDays } from 'lucide-react'
 import { DateRailScroller } from './DateRailScroller'
 import { ScheduleFilters, type TimeOfDayFilter } from './ScheduleFilters'
 import { ScheduleEventCard } from './ScheduleEventCard'

@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import {
@@ -13,7 +12,6 @@ import {
   ChevronDown,
   Calendar as CalendarIcon,
   Download,
-  Share2,
 } from 'lucide-react'
 import {
   DropdownMenu,
@@ -79,15 +77,12 @@ export function ScheduleEventCard({
   onTogglePlan,
   isHighlighted = false,
 }: ScheduleEventCardProps) {
-  const [downloaded, setDownloaded] = useState(false)
   const status = getEventStatus(event.start_date, event.end_date, event.timezone)
   const timeFormatted = formatTime(event.start_date, event.timezone)
 
   const handleDownloadIcs = () => {
     const icsContent = buildIcs(event)
     downloadIcsFile(`${event.slug || event.id}-event.ics`, icsContent)
-    setDownloaded(true)
-    setTimeout(() => setDownloaded(false), 2500)
   }
 
   const primaryCategory = event.event_categories?.[0]?.categories?.name
