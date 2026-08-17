@@ -643,8 +643,6 @@ export const insertSeedEvents = internalMutation({
         actionType: 'open_entry',
         status: 'published',
         source: 'manual',
-        organizerId: undefined,
-        hostId: undefined,
         isStandalone: true,
         isFeatured: !!e.featuredSection,
         featuredSection: e.featuredSection,

@@ -30,7 +30,6 @@ vi.mock('@/lib/actions/events', () => ({
 const defaultProps = {
   mode: 'create' as const,
   categories: [],
-  hosts: [],
   organizers: [],
 }
 
@@ -115,7 +114,6 @@ describe('EventForm', () => {
         eventId="evt_123"
         initial={{ title: 'Old Title' }}
         categories={[]}
-        hosts={[]}
         organizers={[]}
         onSaved={onSaved}
       />,

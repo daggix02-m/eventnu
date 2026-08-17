@@ -3,7 +3,14 @@ import nextTs from 'eslint-config-next/typescript'
 
 const eslintConfig = [
   {
-    ignores: ['node_modules/', '.next/', 'out/', 'next-env.d.ts', 'packages/convex/**'],
+    ignores: [
+      'node_modules/',
+      '.next/',
+      'out/',
+      'coverage/',
+      'next-env.d.ts',
+      'packages/convex/**',
+    ],
   },
   ...nextVitals,
   ...nextTs,

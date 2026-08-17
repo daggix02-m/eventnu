@@ -43,7 +43,6 @@ import { EventForm } from '@/components/events/EventForm'
 import type {
   Category,
   FeaturedSection,
-  Host,
   Organizer,
   EventFormValues,
 } from '@/components/events/event-form/types'
@@ -105,7 +104,6 @@ export function EventDetailClient({
   event,
   eventCategories,
   allCategories,
-  hosts,
   organizers,
   featuredSections = [],
   moderationLogs,
@@ -114,7 +112,6 @@ export function EventDetailClient({
   event: MappedEvent
   eventCategories: EventCategory[]
   allCategories: Category[]
-  hosts: Host[]
   organizers: Organizer[]
   featuredSections?: FeaturedSection[]
   moderationLogs: MappedModerationLog[]
@@ -148,13 +145,10 @@ export function EventDetailClient({
       reservation_limit: event.reservation_limit?.toString() || '',
       ownershipType: event.is_standalone
         ? 'standalone'
-        : event.host_id
-          ? 'host'
-          : event.organizer_id
-            ? 'organizer'
-            : 'standalone',
-      host_id: event.host_id || '',
-      organizer_id: event.organizer_id || '',
+        : event.owner_id
+          ? 'organizer'
+          : 'standalone',
+      organizer_id: event.owner_id || '',
       status: event.status || 'draft',
       frequency_type: event.frequency_type || 'one_time',
       is_featured: event.is_featured ?? false,
@@ -231,13 +225,7 @@ export function EventDetailClient({
     }
   }
 
-  const sourceType = event.is_standalone
-    ? 'standalone'
-    : event.host_id
-      ? 'host'
-      : event.organizer_id
-        ? 'organizer'
-        : 'unknown'
+  const sourceType = event.is_standalone ? 'standalone' : event.owner_id ? 'organizer' : 'unknown'
 
   return (
     <>
@@ -334,7 +322,6 @@ export function EventDetailClient({
             mode="edit"
             eventId={event.id}
             categories={allCategories}
-            hosts={hosts}
             organizers={organizers}
             featuredSections={featuredSections}
             initial={initialForm}
@@ -510,24 +497,13 @@ export function EventDetailClient({
                       {sourceType}
                     </Badge>
                   </FieldGroup>
-                  {event.host_id && hosts.find((h) => h.id === event.host_id) && (
-                    <FieldGroup label="Host">
+                  {event.owner_id && organizers.find((o) => o.id === event.owner_id) && (
+                    <FieldGroup label="Organizer">
                       <p className="text-sm text-foreground">
-                        {hosts.find((h) => h.id === event.host_id)?.name}
+                        {organizers.find((o) => o.id === event.owner_id)?.organizer_name}
                       </p>
                     </FieldGroup>
                   )}
-                  {event.organizer_id &&
-                    organizers.find((o) => o.profile_id === event.organizer_id) && (
-                      <FieldGroup label="Organizer">
-                        <p className="text-sm text-foreground">
-                          {
-                            organizers.find((o) => o.profile_id === event.organizer_id)
-                              ?.organizer_name
-                          }
-                        </p>
-                      </FieldGroup>
-                    )}
                   {event.is_standalone && (
                     <p className="text-xs text-muted-foreground">
                       Standalone event (no host or organizer)

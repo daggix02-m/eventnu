@@ -30,7 +30,6 @@ import type * as experiencePosts from "../experiencePosts.js";
 import type * as features from "../features.js";
 import type * as follows from "../follows.js";
 import type * as helpers from "../helpers.js";
-import type * as hosts from "../hosts.js";
 import type * as http from "../http.js";
 import type * as instagram_connect from "../instagram/connect.js";
 import type * as instagram_crypto from "../instagram/crypto.js";
@@ -81,7 +80,6 @@ declare const fullApi: ApiFromModules<{
   features: typeof features;
   follows: typeof follows;
   helpers: typeof helpers;
-  hosts: typeof hosts;
   http: typeof http;
   "instagram/connect": typeof instagram_connect;
   "instagram/crypto": typeof instagram_crypto;

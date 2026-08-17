@@ -80,7 +80,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark" data-scroll-behavior="smooth">
       <body
-        className={`${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} bg-background text-on-background font-sans overflow-x-hidden antialiased`}
+        className={`${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} bg-background text-on-background font-sans antialiased`}
       >
         <ConvexAuthNextjsServerProvider>
           <ConvexAuthClientProvider>
@@ -88,7 +88,11 @@ export default function RootLayout({
               <SkipLink />
               <ServiceWorkerRegister />
               <TopNav />
-              <main id="main-content" className="min-h-screen pb-24 md:pb-0" tabIndex={-1}>
+              <main
+                id="main-content"
+                className="min-h-screen pb-24 md:pb-0 overflow-x-hidden"
+                tabIndex={-1}
+              >
                 {children}
               </main>
               <Footer />

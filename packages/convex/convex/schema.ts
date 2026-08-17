@@ -79,8 +79,6 @@ const schema = defineSchema({
       v.literal('archived'),
     ),
     source: v.string(),
-    organizerId: v.optional(v.id('profiles')),
-    hostId: v.optional(v.id('hosts')),
     ownerId: v.optional(v.id('organizerProfiles')),
     isStandalone: v.boolean(),
     isFeatured: v.boolean(),
@@ -102,10 +100,6 @@ const schema = defineSchema({
   })
     .index('by_status', ['status'])
     .index('by_slug', ['slug'])
-    .index('by_organizer', ['organizerId'])
-    .index('by_host', ['hostId'])
-    .index('by_organizerId_and_status', ['organizerId', 'status'])
-    .index('by_hostId_and_status', ['hostId', 'status'])
     .index('by_owner', ['ownerId'])
     .index('by_owner_and_status', ['ownerId', 'status'])
     .index('by_isFeatured_and_startDate', ['isFeatured', 'startDate'])
@@ -164,23 +158,6 @@ const schema = defineSchema({
     .index('by_slug', ['slug'])
     .index('by_parent', ['parentId']),
 
-  hosts: defineTable({
-    name: v.string(),
-    slug: v.string(),
-    hostType: v.string(),
-    description: v.string(),
-    contactEmail: v.optional(v.string()),
-    contactPhone: v.optional(v.string()),
-    website: v.optional(v.string()),
-    locationText: v.string(),
-    logoUrl: v.optional(v.string()),
-    verified: v.boolean(),
-    status: v.string(),
-    followerCount: v.number(),
-  })
-    .index('by_slug', ['slug'])
-    .index('by_status', ['status']),
-
   organizerProfiles: defineTable({
     profileId: v.optional(v.id('profiles')),
     organizerName: v.string(),
@@ -194,7 +171,6 @@ const schema = defineSchema({
     kind: v.optional(v.union(v.literal('organizer'), v.literal('venue'))),
     locationText: v.optional(v.string()),
     status: v.optional(v.string()),
-    legacyHostId: v.optional(v.string()),
     followerCount: v.number(),
     verified: v.boolean(),
   })

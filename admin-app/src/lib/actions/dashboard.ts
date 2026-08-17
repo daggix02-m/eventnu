@@ -15,7 +15,6 @@ export async function getDashboardStats() {
     totalPublished: eventStats.totalPublished,
     upcomingCount: eventStats.upcoming,
     pendingReview: eventStats.pending,
-    activeHosts: analytics.totalHosts,
     totalUsers: analytics.totalUsers,
     openReports: analytics.totalReports,
   }
@@ -28,7 +27,7 @@ export async function getPendingReviewEvents() {
     title: e.title,
     poster_url: e.posterUrl,
     status: e.status,
-    organizer_id: e.organizerId,
+    organizer_id: e.ownerId,
     created_at: e._creationTime,
   }))
 }

@@ -170,32 +170,6 @@ export const getById = query({
   },
 })
 
-export const listByHost = query({
-  args: { hostId: v.id('hosts'), limit: v.optional(v.number()) },
-  handler: async (ctx, args) => {
-    await requireAdmin(ctx)
-    const limit = Math.min(Math.max(1, args.limit ?? 20), 100)
-    return await ctx.db
-      .query('events')
-      .withIndex('by_host', (q) => q.eq('hostId', args.hostId))
-      .order('desc')
-      .take(limit)
-  },
-})
-
-export const listByOrganizer = query({
-  args: { profileId: v.id('profiles'), limit: v.optional(v.number()) },
-  handler: async (ctx, args) => {
-    await requireAdmin(ctx)
-    const limit = Math.min(Math.max(1, args.limit ?? 20), 100)
-    return await ctx.db
-      .query('events')
-      .withIndex('by_organizer', (q) => q.eq('organizerId', args.profileId))
-      .order('desc')
-      .take(limit)
-  },
-})
-
 export const listByOwner = query({
   args: { ownerId: v.id('organizerProfiles'), limit: v.optional(v.number()) },
   handler: async (ctx, args) => {

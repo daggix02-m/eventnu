@@ -31,7 +31,6 @@ function makeEventDoc(): Doc<'events'> {
     actionType: 'reservation',
     status: 'published',
     source: 'admin',
-    hostId: 'hosts_test' as Doc<'hosts'>['_id'],
     ownerId: 'organizerProfiles_test' as Doc<'organizerProfiles'>['_id'],
     isStandalone: false,
     isFeatured: true,
@@ -117,8 +116,6 @@ describe('toPublicEvent', () => {
       'bookmarkCount',
       'reservationCount',
       'isStandalone',
-      'hostId',
-      'organizerId',
     ]) {
       expect(field in result).toBe(false)
     }
@@ -201,7 +198,6 @@ describe('toPublicOrganizer', () => {
       'suspended',
       'managementMode',
       'profileId',
-      'legacyHostId',
       'contactEmail',
     ]) {
       expect(field in result).toBe(false)

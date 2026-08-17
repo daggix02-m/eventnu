@@ -7,7 +7,6 @@ import { cn } from '@/lib/utils'
 import {
   LayoutDashboard,
   CalendarDays,
-  Building2,
   Users,
   UserCog,
   Flag,
@@ -36,7 +35,6 @@ const navGroups = [
     items: [
       { label: 'Dashboard', href: '/', icon: LayoutDashboard },
       { label: 'Events', href: '/events', icon: CalendarDays, badge: 'pendingReview' },
-      { label: 'Hosts', href: '/hosts', icon: Building2 },
       { label: 'Organizers', href: '/organizers', icon: UserCog },
       { label: 'Users', href: '/users', icon: Users },
       { label: 'Reports', href: '/reports', icon: Flag, badge: 'openReports' },

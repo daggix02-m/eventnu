@@ -20,7 +20,6 @@ const ALL_TABLES: TableNames[] = [
   'eventCategories',
   'eventImages',
   'categories',
-  'hosts',
   'organizerProfiles',
   'eventLikes',
   'eventComments',

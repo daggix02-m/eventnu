@@ -18,7 +18,6 @@ export const getStats = query({
     return {
       totalEvents: events.length,
       totalUsers: profiles.length,
-      totalHosts: 0,
       totalOrganizers: organizerProfiles.length,
       totalReports: reports.length,
       totalModerationLogs: moderationLogs.length,

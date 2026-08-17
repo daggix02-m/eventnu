@@ -146,7 +146,7 @@ export function FeaturedCarousel({ events }: FeaturedCarouselProps) {
   return (
     <section
       ref={sectionRef}
-      className="relative h-[520px] md:h-[768px] w-full overflow-hidden touch-pan-y select-none"
+      className="relative h-[55svh] sm:h-[520px] md:h-[768px] w-full overflow-hidden touch-pan-y select-none"
       aria-roledescription="carousel"
       aria-label="Featured events"
       tabIndex={0}
@@ -325,7 +325,11 @@ export function FeaturedCarousel({ events }: FeaturedCarouselProps) {
               aria-label={isPaused ? 'Play slideshow' : 'Pause slideshow'}
               aria-pressed={isPaused}
             >
-              {isPaused ? <Play className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <Pause className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
+              {isPaused ? (
+                <Play className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              ) : (
+                <Pause className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              )}
             </button>
             <div
               className="flex items-center gap-1.5 sm:gap-sm py-2"

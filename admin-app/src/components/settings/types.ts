@@ -19,7 +19,6 @@ export interface FeaturedSection {
 export interface AdminStats {
   totalEvents: number
   totalUsers: number
-  totalHosts: number
   totalOrganizers: number
   openReports: number
   moderationCount: number

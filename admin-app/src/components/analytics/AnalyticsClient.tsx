@@ -13,14 +13,13 @@ import {
   LineChart,
   Line,
 } from 'recharts'
-import { Calendar, Users, Building2, UserCog, TrendingUp, Activity } from 'lucide-react'
+import { Calendar, Users, UserCog, TrendingUp, Activity } from 'lucide-react'
 
 interface AnalyticsData {
   eventsPerWeek: { week_start: string; event_count: number }[]
   usersPerWeek: { week_start: string; user_count: number }[]
   totalEvents: number
   totalUsers: number
-  totalHosts: number
   totalOrganizers: number
   topEvents: { id: string; title: string; like_count: number; start_date: string }[]
 }
@@ -66,11 +65,6 @@ export function AnalyticsClient({ data }: AnalyticsClientProps) {
       label: 'Total Users',
       value: data.totalUsers,
       icon: Users,
-    },
-    {
-      label: 'Total Hosts',
-      value: data.totalHosts,
-      icon: Building2,
     },
     {
       label: 'Organizers',

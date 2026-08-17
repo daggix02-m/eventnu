@@ -35,7 +35,6 @@ export async function getAdminStats() {
   return {
     totalEvents: stats.totalEvents,
     totalUsers: stats.totalUsers,
-    totalHosts: stats.totalHosts,
     totalOrganizers: stats.totalOrganizers,
     openReports: stats.totalReports,
     moderationCount: stats.totalModerationLogs,

@@ -7,7 +7,6 @@ export default async function AnalyticsPage() {
     usersPerWeek: [],
     totalEvents: 0,
     totalUsers: 0,
-    totalHosts: 0,
     totalOrganizers: 0,
     topEvents: [],
   }

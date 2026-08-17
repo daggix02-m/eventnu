@@ -17,7 +17,6 @@ import {
   type Category,
   type EventFormValues,
   type FeaturedSection,
-  type Host,
   type Organizer,
   type UpdateField,
 } from './event-form/types'
@@ -26,7 +25,6 @@ export function EventForm({
   mode,
   eventId,
   categories,
-  hosts,
   organizers,
   featuredSections = [],
   initial,
@@ -36,7 +34,6 @@ export function EventForm({
   mode: 'create' | 'edit'
   eventId?: string
   categories: Category[]
-  hosts: Host[]
   organizers: Organizer[]
   featuredSections?: FeaturedSection[]
   initial?: Partial<EventFormValues>
@@ -89,7 +86,6 @@ export function EventForm({
       external_link_label: form.external_link_label || null,
       contact_email: form.contact_email || null,
       reservation_limit: form.reservation_limit ? parseInt(form.reservation_limit) : null,
-      host_id: form.ownershipType === 'host' ? form.host_id : null,
       organizer_id: form.ownershipType === 'organizer' ? form.organizer_id : null,
       is_standalone: form.ownershipType === 'standalone',
       frequency_type: form.frequency_type,
@@ -175,7 +171,6 @@ export function EventForm({
           <EventMoreOptions
             form={form}
             update={updateField}
-            hosts={hosts}
             organizers={organizers}
             featuredSections={featuredSections}
           />

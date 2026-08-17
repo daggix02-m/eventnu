@@ -21,7 +21,6 @@ export default async function SettingsPage({
   let adminStats: Awaited<ReturnType<typeof getAdminStats>> = {
     totalEvents: 0,
     totalUsers: 0,
-    totalHosts: 0,
     totalOrganizers: 0,
     openReports: 0,
     moderationCount: 0,

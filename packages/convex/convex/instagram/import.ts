@@ -135,8 +135,6 @@ export const createImportedEvent = internalMutation({
       actionType: 'open_entry',
       status: 'published',
       source: 'instagram',
-      organizerId: undefined,
-      hostId: undefined,
       isStandalone: true,
       isFeatured: false,
       featuredSection: undefined,

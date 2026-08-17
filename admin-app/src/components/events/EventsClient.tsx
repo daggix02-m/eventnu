@@ -58,7 +58,6 @@ const sourceOptions = [
   { value: 'all', label: 'All' },
   { value: 'admin', label: 'Admin Posted' },
   { value: 'organizer', label: 'Organizer' },
-  { value: 'host', label: 'Host' },
   { value: 'standalone', label: 'Standalone' },
   { value: 'instagram', label: 'Instagram' },
 ]
@@ -357,13 +356,7 @@ export function EventsClient({
                   </Badge>
                 ) : (
                   <Badge variant="outline" className="text-xs">
-                    {event.is_standalone
-                      ? 'Standalone'
-                      : event.host_id
-                        ? 'Host'
-                        : event.organizer_id
-                          ? 'Organizer'
-                          : 'Unknown'}
+                    {event.is_standalone ? 'Standalone' : event.owner_id ? 'Organizer' : 'Unknown'}
                   </Badge>
                 ),
             },

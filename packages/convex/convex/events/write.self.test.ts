@@ -47,7 +47,7 @@ describe('events.createSelf', () => {
     expect(insert).toHaveBeenCalledWith(
       'events',
       expect.objectContaining({
-        organizerId: 'profiles_org',
+        ownerId: 'organizerProfiles_org',
         status: 'pending_review',
         source: 'organizer',
         isFeatured: false,
@@ -70,7 +70,7 @@ describe('events.updateSelf', () => {
   it('updates an event owned by the organizer', async () => {
     const { ctx, patch } = makeCtx({
       _id: 'events_own',
-      organizerId: 'profiles_org',
+      ownerId: 'organizerProfiles_org',
     })
     const id = await updateSelfHandler(ctx, { eventId: 'events_own', title: 'New title' })
     expect(id).toBe('events_own')
@@ -82,14 +82,18 @@ describe('events.updateSelf', () => {
   })
 
   it('refuses to edit another organizer event', async () => {
-    const { ctx } = makeCtx({ _id: 'events_other', organizerId: 'profiles_other' })
+    const { ctx } = makeCtx({ _id: 'events_other', ownerId: 'organizerProfiles_other' })
     await expect(updateSelfHandler(ctx, { eventId: 'events_other', title: 'X' })).rejects.toThrow(
       'Not authorized',
     )
   })
 
   it('refuses to edit a published event', async () => {
-    const { ctx } = makeCtx({ _id: 'events_own', organizerId: 'profiles_org', status: 'published' })
+    const { ctx } = makeCtx({
+      _id: 'events_own',
+      ownerId: 'organizerProfiles_org',
+      status: 'published',
+    })
     await expect(updateSelfHandler(ctx, { eventId: 'events_own', title: 'X' })).rejects.toThrow(
       'cannot be edited',
     )

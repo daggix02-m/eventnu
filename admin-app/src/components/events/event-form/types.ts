@@ -9,13 +9,8 @@ export interface Category {
   sort_order?: number
 }
 
-export interface Host {
-  id: string
-  name: string
-  slug: string
-}
-
 export interface Organizer {
+  id: string
   profile_id: string
   organizer_name: string
   organizer_handle?: string | null
@@ -40,8 +35,7 @@ export interface EventFormValues {
   external_link_label: string
   contact_email: string
   reservation_limit: string
-  ownershipType: 'host' | 'organizer' | 'standalone'
-  host_id: string
+  ownershipType: 'organizer' | 'standalone'
   organizer_id: string
   status: string
   frequency_type: string
@@ -123,7 +117,6 @@ export function emptyValues(): EventFormValues {
     contact_email: '',
     reservation_limit: '',
     ownershipType: 'standalone',
-    host_id: '',
     organizer_id: '',
     status: 'draft',
     frequency_type: 'one_time',

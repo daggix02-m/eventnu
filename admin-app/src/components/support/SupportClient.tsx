@@ -41,9 +41,9 @@ const faqs = [
       'Go to Reports & Moderation. Select a report from the list to view details. You can dismiss the report, warn the user, or take action on the reported content.',
   },
   {
-    question: 'How do I create a new host profile?',
+    question: 'How do I set up an organizer?',
     answer:
-      'Visit the Hosts page and click "Create Host". Fill in the required information including name, type, and contact details. The host will be immediately available.',
+      'On the Organizers page, you can manage organizer profiles. Organizers can create and manage their own events through self-service.',
   },
   {
     question: 'How do I verify an organizer?',

@@ -432,7 +432,7 @@ export function ReportsClient({
                           </div>
                         </div>
                       )}
-                      {targetPreview.target_type === 'host' && (
+                      {targetPreview.target_type === 'organizer' && (
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center overflow-hidden">
                             {targetPreview.logo_url ? (
@@ -525,7 +525,7 @@ export function ReportsClient({
               </div>
               {selectedReport.target_type === 'host' && (
                 <p className="px-6 pb-4 text-xs text-muted-foreground">
-                  Host moderation is not supported yet — dismiss this report instead.
+                  Organizer moderation is not supported yet — dismiss this report instead.
                 </p>
               )}
             </>

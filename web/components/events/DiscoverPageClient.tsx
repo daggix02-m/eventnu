@@ -115,7 +115,7 @@ export function DiscoverPageClient({
 
   return (
     <>
-      <Container className="py-xl space-y-xl" id="event-grid">
+      <Container className="py-lg md:py-xl space-y-lg md:space-y-xl" id="event-grid">
         {/* Page Header */}
         <div
           ref={headingRef}

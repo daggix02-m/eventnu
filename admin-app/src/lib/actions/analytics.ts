@@ -22,7 +22,6 @@ export async function getAnalytics() {
     })),
     totalEvents: stats.totalEvents,
     totalUsers: stats.totalUsers,
-    totalHosts: stats.totalHosts,
     totalOrganizers: stats.totalOrganizers,
     topEvents: (topEvents ?? []).map(mapTopEvent),
   }

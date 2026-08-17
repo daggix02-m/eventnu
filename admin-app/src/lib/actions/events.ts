@@ -86,11 +86,11 @@ export async function getEventById(eventId: string) {
 
 async function getRecentEvents(
   queryRef: FunctionReference<'query', 'public'>,
-  idKey: 'hostId' | 'profileId',
+  idKey: 'ownerId',
   id: string,
   limit = 20,
 ) {
-  const events = await fetchQuery(queryRef, { [idKey]: id as Id<'hosts'>, limit })
+  const events = await fetchQuery(queryRef, { [idKey]: id as Id<'organizerProfiles'>, limit })
   return (events ?? []).map(
     (e: {
       _id: string
@@ -106,12 +106,8 @@ async function getRecentEvents(
   )
 }
 
-export async function getHostRecentEvents(hostId: string) {
-  return getRecentEvents(api.events.read.listByHost, 'hostId', hostId)
-}
-
 export async function getOrganizerRecentEvents(profileId: string) {
-  return getRecentEvents(api.events.read.listByOrganizer, 'profileId', profileId)
+  return getRecentEvents(api.events.read.listByOwner, 'ownerId', profileId)
 }
 
 export async function getUploadUrl() {
@@ -142,7 +138,6 @@ export async function createEvent(data: {
   contact_email?: string | null
   reservation_limit?: number | null
   status?: string
-  host_id?: string | null
   organizer_id?: string | null
   is_standalone?: boolean
   frequency_type?: string
@@ -174,13 +169,11 @@ export async function createEvent(data: {
     venueAddress: data.venue_address ?? undefined,
     isFree: data.is_free ?? false,
     priceDisplay: data.price_display ?? undefined,
-    actionType: data.action_type as Doc<'events'>['actionType'] ?? 'open_entry',
+    actionType: (data.action_type as Doc<'events'>['actionType']) ?? 'open_entry',
     externalLink: data.external_link ?? undefined,
     externalLinkLabel: data.external_link_label ?? undefined,
     contactEmail: data.contact_email ?? undefined,
-    status: data.status as Doc<'events'>['status'] ?? 'draft',
-    hostId: (data.host_id as Id<'hosts'>) ?? undefined,
-    organizerId: (data.organizer_id as Id<'profiles'>) ?? undefined,
+    status: (data.status as Doc<'events'>['status']) ?? 'draft',
     isStandalone: data.is_standalone ?? false,
     frequencyType: data.frequency_type ?? 'one_time',
     isFeatured: data.is_featured ?? false,
@@ -219,7 +212,6 @@ export async function updateEvent(
     contact_email?: string | null
     reservation_limit?: number | null
     status?: string
-    host_id?: string | null
     organizer_id?: string | null
     is_standalone?: boolean
     frequency_type?: string
@@ -254,13 +246,11 @@ export async function updateEvent(
     venueAddress: data.venue_address ?? undefined,
     isFree: data.is_free ?? false,
     priceDisplay: data.price_display ?? undefined,
-    actionType: data.action_type as Doc<'events'>['actionType'] ?? undefined,
+    actionType: (data.action_type as Doc<'events'>['actionType']) ?? undefined,
     externalLink: data.external_link ?? undefined,
     externalLinkLabel: data.external_link_label ?? undefined,
     contactEmail: data.contact_email ?? undefined,
-    status: data.status as Doc<'events'>['status'] ?? undefined,
-    hostId: (data.host_id as Id<'hosts'>) ?? undefined,
-    organizerId: (data.organizer_id as Id<'profiles'>) ?? undefined,
+    status: (data.status as Doc<'events'>['status']) ?? undefined,
     isStandalone: data.is_standalone ?? false,
     frequencyType: data.frequency_type ?? 'one_time',
     isFeatured: data.is_featured ?? false,

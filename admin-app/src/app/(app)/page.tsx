@@ -11,23 +11,13 @@ import { Avatar } from '@/components/ui'
 import { format } from 'date-fns'
 import { formatDate } from '@/lib/format'
 import Link from 'next/link'
-import {
-  Calendar,
-  CalendarDays,
-  Clock,
-  Building2,
-  Users,
-  Flag,
-  ArrowRight,
-  Activity,
-} from 'lucide-react'
+import { Calendar, CalendarDays, Clock, Users, Flag, ArrowRight, Activity } from 'lucide-react'
 
 export default async function DashboardPage() {
   let stats: Awaited<ReturnType<typeof getDashboardStats>> = {
     totalPublished: 0,
     upcomingCount: 0,
     pendingReview: 0,
-    activeHosts: 0,
     totalUsers: 0,
     openReports: 0,
   }
@@ -47,7 +37,6 @@ export default async function DashboardPage() {
     stats.totalPublished === 0 &&
     stats.upcomingCount === 0 &&
     stats.pendingReview === 0 &&
-    stats.activeHosts === 0 &&
     stats.totalUsers === 0 &&
     stats.openReports === 0
 
@@ -69,12 +58,6 @@ export default async function DashboardPage() {
       value: stats.pendingReview,
       icon: Clock,
       highlight: stats.pendingReview > 0,
-      trend: null,
-    },
-    {
-      label: 'Active Hosts',
-      value: stats.activeHosts,
-      icon: Building2,
       trend: null,
     },
     {
@@ -126,7 +109,7 @@ export default async function DashboardPage() {
             <div className="space-y-2">
               {[
                 'Create an event',
-                'Set up host profiles',
+                'Set up organizer profiles',
                 'Review submitted events',
                 'Configure featured sections',
               ].map((item, i) => (

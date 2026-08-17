@@ -12,7 +12,6 @@ import {
   statusOptions,
   type EventFormValues,
   type FeaturedSection,
-  type Host,
   type Organizer,
   type UpdateField,
 } from './types'
@@ -20,7 +19,6 @@ import {
 interface EventMoreOptionsProps {
   form: EventFormValues
   update: UpdateField
-  hosts: Host[]
   organizers: Organizer[]
   featuredSections?: FeaturedSection[]
 }
@@ -28,7 +26,6 @@ interface EventMoreOptionsProps {
 export function EventMoreOptions({
   form,
   update,
-  hosts,
   organizers,
   featuredSections = [],
 }: EventMoreOptionsProps) {
@@ -150,7 +147,7 @@ export function EventMoreOptions({
             <SubSectionHeader index="07" title="Ownership" />
             <div className="space-y-4">
               <div className="flex gap-2">
-                {(['standalone', 'host', 'organizer'] as const).map((type) => (
+                {(['standalone', 'organizer'] as const).map((type) => (
                   <button
                     key={type}
                     type="button"
@@ -167,18 +164,6 @@ export function EventMoreOptions({
                   </button>
                 ))}
               </div>
-              {form.ownershipType === 'host' && (
-                <Field label="Select Host">
-                  <Select value={form.host_id} onChange={(e) => update('host_id', e.target.value)}>
-                    <option value="">Select a host</option>
-                    {hosts.map((h) => (
-                      <option key={h.id} value={h.id}>
-                        {h.name}
-                      </option>
-                    ))}
-                  </Select>
-                </Field>
-              )}
               {form.ownershipType === 'organizer' && (
                 <Field label="Select Organizer">
                   <Select

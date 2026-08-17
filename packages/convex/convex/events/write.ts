@@ -58,8 +58,7 @@ export const create = mutation({
         v.literal('archived'),
       ),
     ),
-    hostId: v.optional(v.id('hosts')),
-    organizerId: v.optional(v.id('profiles')),
+    ownerId: v.optional(v.id('organizerProfiles')),
     isStandalone: v.optional(v.boolean()),
     frequencyType: v.optional(v.string()),
     isFeatured: v.optional(v.boolean()),
@@ -99,8 +98,7 @@ export const create = mutation({
       externalLinkLabel: args.externalLinkLabel ?? undefined,
       contactEmail: args.contactEmail ?? undefined,
       status: (args.status ?? 'draft') as Doc<'events'>['status'],
-      hostId: args.hostId ?? undefined,
-      organizerId: args.organizerId ?? undefined,
+      ownerId: args.ownerId ?? undefined,
       isStandalone: args.isStandalone ?? false,
       frequencyType: args.frequencyType ?? 'one_time',
       isFeatured: args.isFeatured ?? false,
@@ -179,8 +177,7 @@ export const update = mutation({
         v.literal('archived'),
       ),
     ),
-    hostId: v.optional(v.id('hosts')),
-    organizerId: v.optional(v.id('profiles')),
+    ownerId: v.optional(v.id('organizerProfiles')),
     isStandalone: v.optional(v.boolean()),
     frequencyType: v.optional(v.string()),
     isFeatured: v.optional(v.boolean()),
@@ -316,7 +313,7 @@ export const createSelf = mutation({
     reservationLimit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const { profile } = await requireOrganizerOwner(ctx)
+    const { organizer } = await requireOrganizerOwner(ctx)
 
     if (args.images && args.images.length > MAX_EVENT_IMAGES) {
       throw new Error(`Maximum ${MAX_EVENT_IMAGES} images allowed`)
@@ -340,8 +337,7 @@ export const createSelf = mutation({
       externalLinkLabel: args.externalLinkLabel ?? undefined,
       contactEmail: args.contactEmail ?? undefined,
       status: 'pending_review',
-      hostId: undefined,
-      organizerId: profile._id,
+      ownerId: organizer._id,
       isStandalone: false,
       frequencyType: 'one_time',
       isFeatured: false,
@@ -399,10 +395,10 @@ export const updateSelf = mutation({
     reservationLimit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const { profile } = await requireOrganizerOwner(ctx)
+    const { organizer } = await requireOrganizerOwner(ctx)
     const event = await ctx.db.get('events', args.eventId)
     if (!event) throw new Error('Event not found')
-    if (event.organizerId !== profile._id) throw new Error('Not authorized')
+    if (event.ownerId !== organizer._id) throw new Error('Not authorized')
     if (event.status === 'published') throw new Error('Published events cannot be edited')
 
     const { eventId, ...fields } = args

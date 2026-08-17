@@ -8,7 +8,6 @@ import {
   mapEvent,
   mapEventCategory,
   mapFeaturedSection,
-  mapHost,
   mapModerationLog,
   mapNotification,
   mapOrganizer,
@@ -81,7 +80,6 @@ describe('mapEvent', () => {
     title: 'Sauti Sol',
     startDate: T0,
     endDate: T0 + 3600_000,
-    organizerId: 'org1',
     featuredUntil: null,
   } as unknown as Doc<'events'>
 
@@ -89,7 +87,6 @@ describe('mapEvent', () => {
     const m = mapEvent(e)
     expect(m.id).toBe('evt1')
     expect(m.title).toBe('Sauti Sol')
-    expect(m.organizer_id).toBe('org1')
     expect(m.is_free).toBe(false)
     expect(m.action_type).toBe('open_entry')
     expect(m.status).toBe('draft')
@@ -191,7 +188,7 @@ describe('mapReportTargetPreview', () => {
       _id: 'x',
     } as unknown as Doc<'organizerProfiles'>
     expect(mapReportTargetPreview(h)).toEqual({
-      target_type: 'host',
+      target_type: 'organizer',
       name: 'Venue',
       status: 'active',
     })
@@ -257,51 +254,6 @@ describe('mapAdminUser', () => {
     expect(m.full_name).toBe('Fallback')
     expect(m.avatar_url).toBeUndefined()
     expect(m.has_profile).toBe(false)
-  })
-})
-
-describe('mapHost', () => {
-  it('maps fields and defaults for null', () => {
-    const h = {
-      _id: 'h1',
-      _creationTime: T0,
-      name: 'Ghion',
-      slug: 'ghion',
-      hostType: 'venue',
-      description: 'd',
-      contactEmail: 'x@y.com',
-      contactPhone: '+251',
-      website: 'w.example',
-      locationText: 'Addis Ababa',
-      logoUrl: 'https://img/l.png',
-      verified: true,
-      status: 'active',
-      followerCount: 5,
-    } as unknown as Doc<'hosts'>
-
-    expect(mapHost(h)).toMatchObject({
-      id: 'h1',
-      name: 'Ghion',
-      slug: 'ghion',
-      host_type: 'venue',
-      contact_email: 'x@y.com',
-      contact_phone: '+251',
-      website: 'w.example',
-      location_text: 'Addis Ababa',
-      logo_url: 'https://img/l.png',
-      verified: true,
-      status: 'active',
-      follower_count: 5,
-    })
-    expect(mapHost(null)).toMatchObject({
-      id: '',
-      name: '',
-      slug: '',
-      host_type: '',
-      verified: false,
-      status: 'active',
-      follower_count: 0,
-    })
   })
 })
 

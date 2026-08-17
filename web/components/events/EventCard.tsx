@@ -39,7 +39,7 @@ export function EventCard({
       <div
         className={cn(
           'relative overflow-hidden bg-surface-container-highest',
-          isLg ? 'h-56 md:h-64' : 'h-48',
+          isLg ? 'h-56 md:h-64' : 'h-40 sm:h-48',
         )}
       >
         {coverUrl ? (

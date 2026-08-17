@@ -77,8 +77,7 @@ export function mapEvent(e: Doc<'events'> | null | undefined) {
     action_type: e?.actionType ?? 'open_entry',
     status: e?.status ?? 'draft',
     source: e?.source ?? '',
-    organizer_id: e?.organizerId,
-    host_id: e?.hostId,
+    owner_id: e?.ownerId,
     is_standalone: e?.isStandalone ?? false,
     is_featured: e?.isFeatured ?? false,
     featured_section: e?.featuredSection,
@@ -93,26 +92,6 @@ export function mapEvent(e: Doc<'events'> | null | undefined) {
     admin_note: e?.adminNote,
     created_at: iso(e?._creationTime),
     updated_at: iso(e?._creationTime),
-  }
-}
-
-export function mapHost(h: Doc<'hosts'> | null | undefined) {
-  return {
-    id: h?._id ?? '',
-    name: h?.name ?? '',
-    slug: h?.slug ?? '',
-    host_type: h?.hostType ?? '',
-    description: h?.description ?? '',
-    contact_email: h?.contactEmail,
-    contact_phone: h?.contactPhone,
-    website: h?.website,
-    location_text: h?.locationText ?? '',
-    logo_url: h?.logoUrl,
-    verified: h?.verified ?? false,
-    status: h?.status ?? 'active',
-    follower_count: h?.followerCount ?? 0,
-    created_at: iso(h?._creationTime),
-    updated_at: iso(h?._creationTime),
   }
 }
 
@@ -143,6 +122,7 @@ export function mapOrganizer(
   profile?: Doc<'profiles'> | null | undefined,
 ) {
   return {
+    id: o?._id ?? '',
     profile_id: o?.profileId ?? '',
     organizer_name: o?.organizerName ?? '',
     bio: o?.bio ?? '',
@@ -298,7 +278,7 @@ export function mapReportTargetPreview(
   | { target_type: 'comment'; content: string }
   | { target_type: 'event'; poster_url?: string; title: string; status: string }
   | { target_type: 'user'; avatar_url?: string; full_name: string; username: string }
-  | { target_type: 'host'; logo_url?: string; name: string; status: string }
+  | { target_type: 'organizer'; logo_url?: string; name: string; status: string }
   | null {
   if (!p) return null
   if ('content' in p) return { target_type: 'comment', content: p.content ?? '' }
@@ -311,7 +291,7 @@ export function mapReportTargetPreview(
     }
   if ('organizerName' in p)
     return {
-      target_type: 'host',
+      target_type: 'organizer',
       name: p.organizerName ?? '',
       logo_url: p.logoUrl,
       status: p.status ?? '',
@@ -326,7 +306,6 @@ export function mapReportTargetPreview(
 
 export type MappedUser = ReturnType<typeof mapAdminUser>
 export type MappedEvent = ReturnType<typeof mapEvent>
-export type MappedHost = ReturnType<typeof mapHost>
 export type MappedCategory = ReturnType<typeof mapCategory>
 export type MappedOrganizer = ReturnType<typeof mapOrganizer>
 export type MappedReport = ReturnType<typeof mapReport>
