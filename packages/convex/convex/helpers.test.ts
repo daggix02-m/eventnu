@@ -1,5 +1,7 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { escapeHtml, patchDefined, slugify, uniqueSlug } from './helpers'
+import { incrementEngagementCounter } from './helpers'
+import { Doc } from './_generated/dataModel'
 
 describe('patchDefined', () => {
   it('keeps defined fields and drops undefined ones', () => {
@@ -71,5 +73,55 @@ describe('escapeHtml', () => {
     const html = `<p>Hi ${escapeHtml('Bob</p><script>window.location="https://evil.example"</script><p>')},</p>`
     expect(html).not.toContain('<script>')
     expect(html).not.toContain('</script>')
+  })
+})
+
+function makeCounterDoc(): Doc<'engagementCounters'> {
+  return {
+    _id: 'engagementCounters_existing' as Doc<'engagementCounters'>['_id'],
+    _creationTime: 1,
+    profileId: 'profiles_test' as Doc<'profiles'>['_id'],
+    likes: 3,
+    comments: 1,
+    bookmarks: 0,
+    shares: 0,
+    posts: 0,
+  }
+}
+
+function makeCounterCtx(existing?: Doc<'engagementCounters'>) {
+  const patch = vi.fn(async () => undefined)
+  const insert = vi.fn(async () => 'engagementCounters_new')
+  const query = vi.fn(() => ({
+    withIndex: () => ({ first: vi.fn(async () => existing ?? null) }),
+  }))
+  const db = { patch, insert, query }
+  return { ctx: { db } as never, patch, insert }
+}
+
+describe('incrementEngagementCounter', () => {
+  it('inserts a new counter seeded with the incremented field when none exists', async () => {
+    const { ctx, insert } = makeCounterCtx()
+    await incrementEngagementCounter(ctx, 'profiles_test' as Doc<'profiles'>['_id'], 'likes', 1)
+    expect(insert).toHaveBeenCalledWith(
+      'engagementCounters',
+      expect.objectContaining({ profileId: 'profiles_test', likes: 1, comments: 0 }),
+    )
+  })
+
+  it('patches an existing counter by the delta', async () => {
+    const { ctx, patch } = makeCounterCtx(makeCounterDoc())
+    await incrementEngagementCounter(ctx, 'profiles_test' as Doc<'profiles'>['_id'], 'likes', 1)
+    expect(patch).toHaveBeenCalledWith('engagementCounters', 'engagementCounters_existing', {
+      likes: 4,
+    })
+  })
+
+  it('clamps decrements at zero', async () => {
+    const { ctx, patch } = makeCounterCtx(makeCounterDoc())
+    await incrementEngagementCounter(ctx, 'profiles_test' as Doc<'profiles'>['_id'], 'comments', -1)
+    expect(patch).toHaveBeenCalledWith('engagementCounters', 'engagementCounters_existing', {
+      comments: 0,
+    })
   })
 })

@@ -59,6 +59,8 @@ function makeProfileDoc(): Doc<'profiles'> {
     _creationTime: 5,
     authUserId: 'users_test' as Doc<'users'>['_id'],
     role: 'user',
+    verified: false,
+    followerCount: 0,
     fullName: 'Sara Bekele',
     avatarUrl: 'https://img.example/avatar.jpg',
     email: 'sara@example.com',
@@ -152,7 +154,24 @@ describe('toPublicOrganizer', () => {
       _id: 'profiles_test',
       fullName: 'Sara Bekele',
       avatarUrl: 'https://img.example/avatar.jpg',
+      verified: false,
       _creationTime: 5,
+    })
+  })
+
+  it('exposes the verified flag when set', () => {
+    const result = toPublicOrganizer({ ...makeProfileDoc(), verified: true })
+    expect(result?.verified).toBe(true)
+  })
+
+  it('merges organizer handle and logo when provided', () => {
+    const result = toPublicOrganizer(makeProfileDoc(), {
+      organizerHandle: 'sara',
+      logoUrl: 'https://img.example/logo.jpg',
+    } as Doc<'organizerProfiles'>)
+    expect(result).toMatchObject({
+      handle: 'sara',
+      logoUrl: 'https://img.example/logo.jpg',
     })
   })
 
@@ -231,8 +250,7 @@ type TableRows = Record<string, Array<Record<string, unknown>>>
 
 function makeDb(rows: TableRows) {
   const get = vi.fn(
-    (table: keyof TableRows, id: string) =>
-      (rows[table] as Array<Record<string, unknown>>).find((r) => r._id === id) ?? null,
+    (table: keyof TableRows, id: string) => (rows[table] ?? []).find((r) => r._id === id) ?? null,
   )
   const query = vi.fn((table: keyof TableRows) => {
     const tableRows = (rows[table] ?? []) as Array<Record<string, unknown>>
@@ -294,7 +312,7 @@ describe('enrichPublicEvents', () => {
   })
 
   it('fetches a shared category only once across the batch', async () => {
-    const { db, query } = makeDb({
+    const { db } = makeDb({
       categories: [category, sharedCategory],
       eventCategories: [
         { _id: 'ec_a', eventId: eventA._id, categoryId: sharedCategory._id, isPrimary: true },
@@ -308,10 +326,44 @@ describe('enrichPublicEvents', () => {
 
     await enrichPublicEvents(ctx, [eventA, eventB])
 
-    const categoryGets = query.mock.calls.filter(([table]) => table === 'categories')
-    expect(categoryGets).toHaveLength(0)
-    expect(db.get).toHaveBeenCalledWith('categories', sharedCategory._id)
-    expect(db.get).toHaveBeenCalledTimes(1)
+    const categoryGets = db.get.mock.calls.filter(([table]) => table === 'categories')
+    expect(categoryGets).toHaveLength(1)
+    expect(categoryGets[0][1]).toBe(sharedCategory._id)
+  })
+
+  it('enriches organizer identity (verified, handle, logo) for events in the batch', async () => {
+    const { db } = makeDb({
+      categories: [],
+      eventCategories: [],
+      eventImages: [],
+      profiles: [
+        {
+          _id: 'profiles_test',
+          verified: true,
+          fullName: 'Sara Bekele',
+          avatarUrl: 'https://img.example/avatar.jpg',
+        },
+      ],
+      organizerProfiles: [
+        {
+          _id: 'organizerProfiles_x',
+          profileId: 'profiles_test',
+          organizerHandle: 'sara',
+          logoUrl: 'https://img.example/logo.jpg',
+        },
+      ],
+    })
+    const ctx = { db, storage: { getUrl: vi.fn() } } as unknown as Parameters<
+      typeof enrichPublicEvents
+    >[0]
+
+    const result = await enrichPublicEvents(ctx, [eventA])
+
+    expect(result[0].organizer).toMatchObject({
+      verified: true,
+      handle: 'sara',
+      logoUrl: 'https://img.example/logo.jpg',
+    })
   })
 
   it('returns an empty array when given no events', async () => {

@@ -10,4 +10,11 @@ crons.interval(
   {},
 )
 
+crons.interval(
+  'evaluate verification eligibility',
+  { hours: 24 },
+  internal.verification.evaluateEligibility,
+  {},
+)
+
 export default crons

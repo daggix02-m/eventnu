@@ -45,15 +45,24 @@ export type PublicOrganizer = {
   _id: Id<'profiles'>
   fullName?: string
   avatarUrl?: string
+  verified: boolean
+  handle?: string
+  logoUrl?: string
   _creationTime: number
 }
 
-export function toPublicOrganizer(profile: Doc<'profiles'> | null): PublicOrganizer | null {
+export function toPublicOrganizer(
+  profile: Doc<'profiles'> | null,
+  organizer?: Doc<'organizerProfiles'> | null,
+): PublicOrganizer | null {
   if (!profile) return null
   return {
     _id: profile._id,
     fullName: profile.fullName,
     avatarUrl: profile.avatarUrl,
+    verified: profile.verified,
+    handle: organizer?.organizerHandle,
+    logoUrl: organizer?.logoUrl,
     _creationTime: profile._creationTime,
   }
 }
@@ -151,9 +160,16 @@ export async function enrichPublicEvent(
     await Promise.all(links.map((link) => ctx.db.get('categories', link.categoryId)))
   ).filter((c): c is Doc<'categories'> => c !== null)
   const images = await resolveImageUrls(ctx, await getEventImages(ctx, event._id))
+  const organizerId = event.organizerId
   const organizer =
-    includeOrganizer && event.organizerId
-      ? toPublicOrganizer(await ctx.db.get('profiles', event.organizerId))
+    includeOrganizer && organizerId
+      ? toPublicOrganizer(
+          await ctx.db.get('profiles', organizerId),
+          await ctx.db
+            .query('organizerProfiles')
+            .withIndex('by_profile', (q) => q.eq('profileId', organizerId))
+            .first(),
+        )
       : null
   return toPublicEvent(event, categories, images, organizer)
 }
@@ -182,10 +198,37 @@ export async function enrichPublicEvents(
     events.map(async (event) => resolveImageUrls(ctx, await getEventImages(ctx, event._id))),
   )
 
+  const organizerIds = [
+    ...new Set(
+      events.map((e) => e.organizerId).filter((id): id is Id<'profiles'> => id !== undefined),
+    ),
+  ]
+  const profiles = await Promise.all(organizerIds.map((id) => ctx.db.get('profiles', id)))
+  const orgProfiles = await Promise.all(
+    organizerIds.map((id) =>
+      ctx.db
+        .query('organizerProfiles')
+        .withIndex('by_profile', (q) => q.eq('profileId', id))
+        .first(),
+    ),
+  )
+  const profileById = new Map<Id<'profiles'>, Doc<'profiles'>>()
+  const orgByProfileId = new Map<Id<'profiles'>, Doc<'organizerProfiles'>>()
+  organizerIds.forEach((id, i) => {
+    if (profiles[i]) profileById.set(id, profiles[i] as Doc<'profiles'>)
+    if (orgProfiles[i]) orgByProfileId.set(id, orgProfiles[i] as Doc<'organizerProfiles'>)
+  })
+
   return events.map((event, i) => {
     const categories = linksByEvent[i]
       .map((link) => categoryById.get(link.categoryId))
       .filter((c): c is Doc<'categories'> => c !== undefined)
-    return toPublicEvent(event, categories, imagesByEvent[i], null)
+    const organizer = event.organizerId
+      ? toPublicOrganizer(
+          profileById.get(event.organizerId) ?? null,
+          orgByProfileId.get(event.organizerId) ?? null,
+        )
+      : null
+    return toPublicEvent(event, categories, imagesByEvent[i], organizer)
   })
 }

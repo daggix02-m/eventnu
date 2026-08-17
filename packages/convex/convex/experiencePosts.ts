@@ -1,7 +1,7 @@
 import { v } from 'convex/values'
 import { query, mutation, QueryCtx } from './_generated/server'
 import { Doc, Id } from './_generated/dataModel'
-import { requireUser } from './helpers'
+import { requireUser, incrementEngagementCounter } from './helpers'
 import { rateLimiter } from './rateLimiter'
 
 const MAX_CONTENT_LENGTH = 2000
@@ -111,7 +111,7 @@ export const create = mutation({
       imageUrl = (await ctx.storage.getUrl(args.imageStorageId as Id<'_storage'>)) ?? undefined
     }
 
-    return await ctx.db.insert('experiencePosts', {
+    const postId = await ctx.db.insert('experiencePosts', {
       userId: profile._id,
       eventId: args.eventId,
       content,
@@ -119,6 +119,8 @@ export const create = mutation({
       imageUrl,
       isDeleted: false,
     })
+    await incrementEngagementCounter(ctx, profile._id, 'posts', 1)
+    return postId
   },
 })
 

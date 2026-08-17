@@ -196,6 +196,19 @@ export const listByOrganizer = query({
   },
 })
 
+export const listMine = query({
+  args: { limit: v.optional(v.number()) },
+  handler: async (ctx, args) => {
+    const profile = await requireUser(ctx)
+    const limit = Math.min(Math.max(1, args.limit ?? 50), 200)
+    return await ctx.db
+      .query('events')
+      .withIndex('by_organizer', (q) => q.eq('organizerId', profile._id))
+      .order('desc')
+      .take(limit)
+  },
+})
+
 export const getStorageUrls = query({
   args: { storageIds: v.array(v.string()) },
   handler: async (ctx, args) => {

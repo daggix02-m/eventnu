@@ -1,7 +1,7 @@
 import { v } from 'convex/values'
 import { query, mutation, QueryCtx } from './_generated/server'
 import { Doc } from './_generated/dataModel'
-import { getUserProfile, requireUser } from './helpers'
+import { getUserProfile, requireUser, incrementEngagementCounter } from './helpers'
 import { enrichPublicEvents } from './events/enrichment'
 import { rateLimiter } from './rateLimiter'
 
@@ -61,6 +61,7 @@ export const toggle = mutation({
       .first()
     if (existing) {
       await ctx.db.delete('eventBookmarks', existing._id)
+      await incrementEngagementCounter(ctx, userId, 'bookmarks', -1)
       await ctx.db.patch('events', args.eventId, {
         bookmarkCount: Math.max(0, (event.bookmarkCount ?? 0) - 1),
       })
@@ -70,6 +71,7 @@ export const toggle = mutation({
         userId,
         eventId: args.eventId,
       })
+      await incrementEngagementCounter(ctx, userId, 'bookmarks', 1)
       await ctx.db.patch('events', args.eventId, {
         bookmarkCount: (event.bookmarkCount ?? 0) + 1,
       })

@@ -1,6 +1,6 @@
 import { v } from 'convex/values'
 import { query, mutation } from './_generated/server'
-import { getUserProfile, requireUser } from './helpers'
+import { getUserProfile, requireUser, incrementEngagementCounter } from './helpers'
 import { rateLimiter } from './rateLimiter'
 
 export const countByEvent = query({
@@ -38,6 +38,7 @@ export const toggle = mutation({
       .first()
     if (existing) {
       await ctx.db.delete('eventLikes', existing._id)
+      await incrementEngagementCounter(ctx, userId, 'likes', -1)
       const event = await ctx.db.get('events', args.eventId)
       if (event) {
         await ctx.db.patch('events', args.eventId, {
@@ -50,6 +51,7 @@ export const toggle = mutation({
         userId,
         eventId: args.eventId,
       })
+      await incrementEngagementCounter(ctx, userId, 'likes', 1)
       const event = await ctx.db.get('events', args.eventId)
       if (event) {
         await ctx.db.patch('events', args.eventId, {

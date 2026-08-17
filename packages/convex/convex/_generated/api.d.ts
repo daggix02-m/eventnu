@@ -41,6 +41,7 @@ import type * as likes from "../likes.js";
 import type * as migrations from "../migrations.js";
 import type * as moderation from "../moderation.js";
 import type * as notifications from "../notifications.js";
+import type * as organizerSettings from "../organizerSettings.js";
 import type * as organizers from "../organizers.js";
 import type * as profiles from "../profiles.js";
 import type * as rateLimiter from "../rateLimiter.js";
@@ -49,6 +50,7 @@ import type * as reservations from "../reservations.js";
 import type * as seed from "../seed.js";
 import type * as shares from "../shares.js";
 import type * as support from "../support.js";
+import type * as verification from "../verification.js";
 
 import type {
   ApiFromModules,
@@ -90,6 +92,7 @@ declare const fullApi: ApiFromModules<{
   migrations: typeof migrations;
   moderation: typeof moderation;
   notifications: typeof notifications;
+  organizerSettings: typeof organizerSettings;
   organizers: typeof organizers;
   profiles: typeof profiles;
   rateLimiter: typeof rateLimiter;
@@ -98,6 +101,7 @@ declare const fullApi: ApiFromModules<{
   seed: typeof seed;
   shares: typeof shares;
   support: typeof support;
+  verification: typeof verification;
 }>;
 
 /**

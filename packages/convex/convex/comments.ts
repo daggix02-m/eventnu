@@ -1,6 +1,6 @@
 import { v } from 'convex/values'
 import { query, mutation } from './_generated/server'
-import { requireUser } from './helpers'
+import { requireUser, incrementEngagementCounter } from './helpers'
 import { rateLimiter } from './rateLimiter'
 
 export const listByEvent = query({
@@ -36,12 +36,14 @@ export const create = mutation({
       throw new Error('Comment must be between 1 and 5000 characters')
     }
     await rateLimiter.limit(ctx, 'commentCreate', { key: profile._id, throws: true })
-    return await ctx.db.insert('eventComments', {
+    const commentId = await ctx.db.insert('eventComments', {
       eventId: args.eventId,
       userId: profile._id,
       isDeleted: false,
       content,
     })
+    await incrementEngagementCounter(ctx, profile._id, 'comments', 1)
+    return commentId
   },
 })
 

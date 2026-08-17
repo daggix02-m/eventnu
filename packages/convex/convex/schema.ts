@@ -7,16 +7,44 @@ const schema = defineSchema({
 
   profiles: defineTable({
     authUserId: v.optional(v.id('users')),
-    role: v.union(v.literal('admin'), v.literal('user')),
+    role: v.union(v.literal('admin'), v.literal('user'), v.literal('organizer')),
+    verified: v.boolean(),
+    verifiedAt: v.optional(v.number()),
+    verifiedBy: v.optional(v.id('profiles')),
     fullName: v.optional(v.string()),
     avatarUrl: v.optional(v.string()),
     email: v.optional(v.string()),
+    followerCount: v.number(),
     suspended: v.boolean(),
     acceptedTermsAt: v.optional(v.number()),
     acceptedTermsVersion: v.optional(v.string()),
   })
     .index('by_auth_user', ['authUserId'])
-    .index('by_role', ['role']),
+    .index('by_role', ['role'])
+    .index('by_verified', ['verified']),
+
+  verificationScores: defineTable({
+    profileId: v.id('profiles'),
+    kind: v.union(v.literal('user'), v.literal('organizer')),
+    publishedEvents: v.number(),
+    engagementGiven: v.number(),
+    followerCount: v.number(),
+    experiencePosts: v.number(),
+    reservationCount: v.number(),
+    eligible: v.boolean(),
+    evaluatedAt: v.number(),
+  })
+    .index('by_profile', ['profileId'])
+    .index('by_eligible', ['eligible']),
+
+  engagementCounters: defineTable({
+    profileId: v.id('profiles'),
+    likes: v.number(),
+    comments: v.number(),
+    bookmarks: v.number(),
+    shares: v.number(),
+    posts: v.number(),
+  }).index('by_profile', ['profileId']),
 
   events: defineTable({
     title: v.string(),
@@ -159,8 +187,21 @@ const schema = defineSchema({
     website: v.optional(v.string()),
     contactEmail: v.optional(v.string()),
     socialLinks: v.optional(v.any()),
+    managementMode: v.union(v.literal('admin_managed'), v.literal('organizer_managed')),
     followerCount: v.number(),
     verified: v.boolean(),
+  })
+    .index('by_profile', ['profileId'])
+    .index('by_handle', ['organizerHandle']),
+
+  organizerSettings: defineTable({
+    profileId: v.id('profiles'),
+    hideLikeCount: v.boolean(),
+    notificationEmail: v.boolean(),
+    notificationInApp: v.boolean(),
+    mentionSetting: v.union(v.literal('allow'), v.literal('block'), v.literal('approve')),
+    tagSetting: v.union(v.literal('allow'), v.literal('block')),
+    archiveEvents: v.boolean(),
   }).index('by_profile', ['profileId']),
 
   eventLikes: defineTable({
@@ -186,7 +227,8 @@ const schema = defineSchema({
     followType: v.string(),
   })
     .index('by_follower', ['followerId'])
-    .index('by_followerId_and_followingId', ['followerId', 'followingId']),
+    .index('by_followerId_and_followingId', ['followerId', 'followingId'])
+    .index('by_following', ['followingId']),
 
   eventBookmarks: defineTable({
     userId: v.id('profiles'),

@@ -151,6 +151,41 @@ export const setEventTimes = mutation({
   },
 })
 
+export const backfillProfileVerified = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    let patched = 0
+    for await (const profile of ctx.db.query('profiles')) {
+      if ((profile as unknown as { verified?: boolean }).verified === undefined) {
+        await ctx.db.patch('profiles', profile._id, { verified: false })
+        patched++
+      }
+    }
+    return { patched }
+  },
+})
+
+export const backfillPhaseBFields = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    let profilesPatched = 0
+    let orgsPatched = 0
+    for await (const p of ctx.db.query('profiles')) {
+      if ((p as unknown as { followerCount?: number }).followerCount === undefined) {
+        await ctx.db.patch('profiles', p._id, { followerCount: 0 })
+        profilesPatched++
+      }
+    }
+    for await (const o of ctx.db.query('organizerProfiles')) {
+      if ((o as unknown as { managementMode?: string }).managementMode === undefined) {
+        await ctx.db.patch('organizerProfiles', o._id, { managementMode: 'organizer_managed' })
+        orgsPatched++
+      }
+    }
+    return { profilesPatched, orgsPatched }
+  },
+})
+
 export const backfillEventCategories = internalMutation({
   args: {},
   handler: async (ctx) => {

@@ -163,6 +163,8 @@ export const createAdminProfile = internalMutation({
     return await ctx.db.insert('profiles', {
       authUserId: args.authUserId,
       role: 'admin',
+      verified: false,
+      followerCount: 0,
       fullName: args.fullName,
       email: args.email,
       suspended: false,

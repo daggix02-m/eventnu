@@ -21,6 +21,8 @@ function toUserRow(user: Doc<'users'>, profile: Doc<'profiles'> | null | undefin
     image: user.image ?? null,
     profileId: profile?._id ?? null,
     role: profile?.role ?? 'user',
+    verified: profile?.verified ?? false,
+    verifiedAt: profile?.verifiedAt ?? null,
     fullName: profile?.fullName ?? user.name ?? null,
     avatarUrl: profile?.avatarUrl ?? user.image ?? null,
     suspended: profile?.suspended ?? false,
@@ -55,7 +57,10 @@ export const getProfileEmail = internalQuery({
 })
 
 export const ensureProfile = mutation({
-  args: { fullName: v.optional(v.string()) },
+  args: {
+    fullName: v.optional(v.string()),
+    accountType: v.optional(v.union(v.literal('user'), v.literal('organizer'))),
+  },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx)
     if (!userId) throw new Error('Not authenticated')
@@ -70,18 +75,26 @@ export const ensureProfile = mutation({
     const email = user?.email
     if (!email) throw new Error('Account has no email')
 
+    const role = args.accountType ?? 'user'
+
     const byEmail = await ctx.db
       .query('profiles')
       .filter((q) => q.eq(q.field('email'), email))
       .first()
     if (byEmail) {
-      await ctx.db.patch('profiles', byEmail._id, { authUserId: userId })
+      const promote = role === 'organizer' && byEmail.role === 'user'
+      await ctx.db.patch('profiles', byEmail._id, {
+        authUserId: userId,
+        ...(promote ? { role: 'organizer' as const } : {}),
+      })
       return { id: byEmail._id, created: false }
     }
 
     const id = await ctx.db.insert('profiles', {
       authUserId: userId,
-      role: 'user',
+      role,
+      verified: false,
+      followerCount: 0,
       fullName: args.fullName ?? user.name ?? undefined,
       email,
       suspended: false,
@@ -320,6 +333,8 @@ export const setUserSuspended = mutation({
     await ctx.db.insert('profiles', {
       authUserId: args.userId,
       role: 'user',
+      verified: false,
+      followerCount: 0,
       fullName: user.name ?? undefined,
       email: user.email ?? undefined,
       suspended: args.suspended,

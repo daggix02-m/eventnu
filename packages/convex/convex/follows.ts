@@ -1,6 +1,6 @@
 import { v } from 'convex/values'
 import { query, mutation, MutationCtx } from './_generated/server'
-import { Id } from './_generated/dataModel'
+import { Doc, Id } from './_generated/dataModel'
 import { requireUser } from './helpers'
 import { rateLimiter } from './rateLimiter'
 
@@ -27,6 +27,24 @@ export const countByFollower = query({
   },
 })
 
+export const listFollowers = query({
+  args: {
+    followingId: v.id('profiles'),
+    followType: v.union(v.literal('host'), v.literal('organizer'), v.literal('user')),
+  },
+  handler: async (ctx, args) => {
+    const follows = await ctx.db
+      .query('follows')
+      .withIndex('by_following', (q) => q.eq('followingId', args.followingId))
+      .take(200)
+    const filtered = follows.filter((f) => f.followType === args.followType)
+    const profiles = await Promise.all(filtered.map((f) => ctx.db.get('profiles', f.followerId)))
+    return profiles
+      .filter((p): p is Doc<'profiles'> => p !== null)
+      .map((p) => ({ id: p._id, fullName: p.fullName ?? null, avatarUrl: p.avatarUrl ?? null }))
+  },
+})
+
 async function adjustFollowerCount(
   ctx: MutationCtx,
   followingId: Id<'profiles'>,
@@ -50,13 +68,20 @@ async function adjustFollowerCount(
         followerCount: Math.max(0, org.followerCount + delta),
       })
     }
+  } else if (followType === 'user') {
+    const user = await ctx.db.get('profiles', followingId)
+    if (user) {
+      await ctx.db.patch('profiles', user._id, {
+        followerCount: Math.max(0, user.followerCount + delta),
+      })
+    }
   }
 }
 
 export const toggle = mutation({
   args: {
     followingId: v.id('profiles'),
-    followType: v.union(v.literal('host'), v.literal('organizer')),
+    followType: v.union(v.literal('host'), v.literal('organizer'), v.literal('user')),
   },
   handler: async (ctx, args) => {
     const profile = await requireUser(ctx)

@@ -1,6 +1,6 @@
 import { v } from 'convex/values'
 import { mutation } from './_generated/server'
-import { getUserProfile } from './helpers'
+import { getUserProfile, incrementEngagementCounter } from './helpers'
 import { rateLimiter } from './rateLimiter'
 
 export const track = mutation({
@@ -17,5 +17,8 @@ export const track = mutation({
       userId: profile?._id,
       platform: args.platform ?? undefined,
     })
+    if (profile) {
+      await incrementEngagementCounter(ctx, profile._id, 'shares', 1)
+    }
   },
 })

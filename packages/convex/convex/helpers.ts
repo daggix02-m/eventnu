@@ -25,6 +25,27 @@ export async function requireAdmin(ctx: QueryCtx | MutationCtx): Promise<Doc<'pr
   return profile
 }
 
+/**
+ * Resolve the signed-in organizer and confirm they own a self-managed
+ * (`organizer_managed`) organizer profile. Admin-managed profiles are edited
+ * only by the Event Nu team, never by the linked account.
+ */
+export async function requireOrganizerOwner(
+  ctx: QueryCtx | MutationCtx,
+): Promise<{ profile: Doc<'profiles'>; organizer: Doc<'organizerProfiles'> }> {
+  const profile = await requireUser(ctx)
+  if (profile.role !== 'organizer') throw new Error('Organizer access required')
+  const organizer = await ctx.db
+    .query('organizerProfiles')
+    .withIndex('by_profile', (q) => q.eq('profileId', profile._id))
+    .first()
+  if (!organizer) throw new Error('Organizer profile not found')
+  if (organizer.managementMode !== 'organizer_managed') {
+    throw new Error('This organizer profile is managed by the Event Nu team')
+  }
+  return { profile, organizer }
+}
+
 /** Build a partial patch containing only the defined fields of `fields`. */
 export function patchDefined<T extends object>(fields: T): Partial<T> {
   const updates: Partial<T> = {}
@@ -137,6 +158,38 @@ export async function insertModerationLog(
     targetId: args.targetId,
     note: args.note ?? undefined,
   })
+}
+
+/**
+ * Bump (or seed) a profile's incrementally-maintained engagement counter. Must
+ * be called in the SAME mutation that writes the underlying engagement row so
+ * the two can never drift.
+ */
+export async function incrementEngagementCounter(
+  ctx: MutationCtx,
+  profileId: Id<'profiles'>,
+  field: 'likes' | 'comments' | 'bookmarks' | 'shares' | 'posts',
+  delta: 1 | -1,
+): Promise<void> {
+  const existing = await ctx.db
+    .query('engagementCounters')
+    .withIndex('by_profile', (q) => q.eq('profileId', profileId))
+    .first()
+  if (existing) {
+    const next = Math.max(0, existing[field] + delta)
+    await ctx.db.patch('engagementCounters', existing._id, {
+      [field]: next,
+    } as Partial<Doc<'engagementCounters'>>)
+  } else {
+    await ctx.db.insert('engagementCounters', {
+      profileId,
+      likes: field === 'likes' ? Math.max(0, delta) : 0,
+      comments: field === 'comments' ? Math.max(0, delta) : 0,
+      bookmarks: field === 'bookmarks' ? Math.max(0, delta) : 0,
+      shares: field === 'shares' ? Math.max(0, delta) : 0,
+      posts: field === 'posts' ? Math.max(0, delta) : 0,
+    })
+  }
 }
 
 /** Resolve admin full names for moderation log rows. */

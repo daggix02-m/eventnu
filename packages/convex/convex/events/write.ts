@@ -7,6 +7,7 @@ import {
   patchDefined,
   replaceEventImages,
   requireAdmin,
+  requireOrganizerOwner,
   requireUser,
   uniqueSlug,
 } from '../helpers'
@@ -282,5 +283,136 @@ export const deleteEvent = mutation({
       await ctx.db.delete('reservationRequests', row._id)
     }
     await ctx.db.delete('events', args.eventId)
+  },
+})
+
+const ORGANIZER_ACTION_TYPE = v.union(
+  v.literal('open_entry'),
+  v.literal('reservation'),
+  v.literal('external_link'),
+  v.literal('contact'),
+)
+
+export const createSelf = mutation({
+  args: {
+    title: v.string(),
+    description: v.optional(v.string()),
+    startDate: v.number(),
+    endDate: v.optional(v.number()),
+    posterUrl: v.optional(v.string()),
+    imageAspectRatio: v.optional(v.string()),
+    images: v.optional(v.array(eventImageValidator)),
+    venueName: v.optional(v.string()),
+    venueAddress: v.optional(v.string()),
+    venueMapLink: v.optional(v.string()),
+    isFree: v.optional(v.boolean()),
+    priceDisplay: v.optional(v.string()),
+    actionType: v.optional(ORGANIZER_ACTION_TYPE),
+    externalLink: v.optional(v.string()),
+    externalLinkLabel: v.optional(v.string()),
+    contactEmail: v.optional(v.string()),
+    timezone: v.optional(v.string()),
+    categoryIds: v.optional(v.array(v.id('categories'))),
+    reservationLimit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const { profile } = await requireOrganizerOwner(ctx)
+
+    if (args.images && args.images.length > MAX_EVENT_IMAGES) {
+      throw new Error(`Maximum ${MAX_EVENT_IMAGES} images allowed`)
+    }
+    const images = (args.images ?? []).slice(0, MAX_EVENT_IMAGES)
+    const slug = uniqueSlug(args.title)
+
+    const eventId = await ctx.db.insert('events', {
+      title: args.title,
+      description: args.description ?? '',
+      startDate: args.startDate,
+      endDate: args.endDate ?? undefined,
+      posterUrl: images[0]?.url ?? args.posterUrl ?? undefined,
+      imageAspectRatio: args.imageAspectRatio ?? undefined,
+      venueName: args.venueName ?? '',
+      venueAddress: args.venueAddress ?? undefined,
+      isFree: args.isFree ?? false,
+      priceDisplay: args.priceDisplay ?? undefined,
+      actionType: (args.actionType ?? 'open_entry') as Doc<'events'>['actionType'],
+      externalLink: args.externalLink ?? undefined,
+      externalLinkLabel: args.externalLinkLabel ?? undefined,
+      contactEmail: args.contactEmail ?? undefined,
+      status: 'pending_review',
+      hostId: undefined,
+      organizerId: profile._id,
+      isStandalone: false,
+      frequencyType: 'one_time',
+      isFeatured: false,
+      featuredSection: undefined,
+      adminNote: undefined,
+      venueMapLink: args.venueMapLink ?? undefined,
+      timezone: args.timezone ?? 'Africa/Addis_Ababa',
+      slug,
+      reservationCount: 0,
+      teaserVideoUrl: undefined,
+      videoAspectRatio: undefined,
+      subtitle: undefined,
+      featuredUntil: undefined,
+      reservationEnabled: args.actionType === 'reservation',
+      reservationLimit: args.reservationLimit ?? undefined,
+      likeCount: 0,
+      bookmarkCount: 0,
+      source: 'organizer',
+      venueLat: undefined,
+      venueLng: undefined,
+    })
+
+    for (const [i, categoryId] of (args.categoryIds ?? []).entries()) {
+      await ctx.db.insert('eventCategories', {
+        eventId,
+        categoryId,
+        isPrimary: i === 0,
+      })
+    }
+
+    await insertEventImages(ctx, eventId, images)
+
+    return eventId
+  },
+})
+
+export const updateSelf = mutation({
+  args: {
+    eventId: v.id('events'),
+    title: v.optional(v.string()),
+    description: v.optional(v.string()),
+    startDate: v.optional(v.number()),
+    endDate: v.optional(v.number()),
+    posterUrl: v.optional(v.string()),
+    venueName: v.optional(v.string()),
+    venueAddress: v.optional(v.string()),
+    venueMapLink: v.optional(v.string()),
+    isFree: v.optional(v.boolean()),
+    priceDisplay: v.optional(v.string()),
+    actionType: v.optional(ORGANIZER_ACTION_TYPE),
+    externalLink: v.optional(v.string()),
+    externalLinkLabel: v.optional(v.string()),
+    contactEmail: v.optional(v.string()),
+    timezone: v.optional(v.string()),
+    reservationLimit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const { profile } = await requireOrganizerOwner(ctx)
+    const event = await ctx.db.get('events', args.eventId)
+    if (!event) throw new Error('Event not found')
+    if (event.organizerId !== profile._id) throw new Error('Not authorized')
+    if (event.status === 'published') throw new Error('Published events cannot be edited')
+
+    const { eventId, ...fields } = args
+    const updates = {
+      ...patchDefined(fields),
+      ...(fields.actionType !== undefined
+        ? { reservationEnabled: fields.actionType === 'reservation' }
+        : {}),
+    } as Partial<Doc<'events'>>
+    await ctx.db.patch('events', eventId, updates)
+    return eventId
   },
 })
