@@ -168,6 +168,10 @@ const schema = defineSchema({
     contactEmail: v.optional(v.string()),
     socialLinks: v.optional(v.any()),
     managementMode: v.optional(v.union(v.literal('admin_managed'), v.literal('organizer_managed'))),
+    applicationStatus: v.optional(
+      v.union(v.literal('pending_review'), v.literal('approved'), v.literal('rejected')),
+    ),
+    rejectionReason: v.optional(v.string()),
     kind: v.optional(v.union(v.literal('organizer'), v.literal('venue'))),
     locationText: v.optional(v.string()),
     status: v.optional(v.string()),
@@ -216,10 +220,19 @@ const schema = defineSchema({
   eventBookmarks: defineTable({
     userId: v.id('profiles'),
     eventId: v.id('events'),
+    folderId: v.optional(v.id('bookmarkFolders')),
   })
     .index('by_user', ['userId'])
     .index('by_event', ['eventId'])
-    .index('by_userId_and_eventId', ['userId', 'eventId']),
+    .index('by_userId_and_eventId', ['userId', 'eventId'])
+    .index('by_user_and_folder', ['userId', 'folderId']),
+
+  bookmarkFolders: defineTable({
+    userId: v.id('profiles'),
+    name: v.string(),
+  })
+    .index('by_user', ['userId'])
+    .index('by_user_and_name', ['userId', 'name']),
 
   eventShares: defineTable({
     eventId: v.id('events'),
@@ -289,7 +302,9 @@ const schema = defineSchema({
     reason: v.string(),
     status: v.union(v.literal('pending'), v.literal('dismissed'), v.literal('actioned')),
     adminNote: v.optional(v.string()),
-  }).index('by_status', ['status']),
+  })
+    .index('by_status', ['status'])
+    .index('by_reporter_and_target', ['reporterId', 'targetType', 'targetId']),
 
   moderationLogs: defineTable({
     adminId: v.id('profiles'),

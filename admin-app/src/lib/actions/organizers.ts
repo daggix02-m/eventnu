@@ -59,6 +59,19 @@ export async function unverifyOrganizer(profileId: string) {
   revalidatePath('/organizers')
 }
 
+export async function approveOrganizerApplication(profileId: string) {
+  await fetchMutation(api.organizers.approveApplication, { profileId: profileId as Id<'profiles'> })
+  revalidatePath('/organizers')
+}
+
+export async function rejectOrganizerApplication(profileId: string, reason?: string) {
+  await fetchMutation(api.organizers.rejectApplication, {
+    profileId: profileId as Id<'profiles'>,
+    reason,
+  })
+  revalidatePath('/organizers')
+}
+
 export async function setOrganizerManagementMode(
   profileId: string,
   managementMode: 'admin_managed' | 'organizer_managed',

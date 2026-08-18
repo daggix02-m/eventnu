@@ -42,13 +42,31 @@ export function EventCard({
           isLg ? 'h-56 md:h-64' : 'h-40 sm:h-48',
         )}
       >
-        {coverUrl ? (
+        {href ? (
+          <Link href={href} aria-label={`Open ${event.title}`} className="absolute inset-0 z-0">
+            {coverUrl ? (
+              <Image
+                src={coverUrl}
+                alt={event.title}
+                fill
+                priority={priority}
+                className="object-cover group-hover:scale-105 transition-transform duration-500"
+                style={{ filter: filterStyle(cover?.filter) }}
+                sizes="(max-width: 768px) 270px, (max-width: 1200px) 300px, 350px"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <span className="text-on-surface-variant font-mono text-xs">No image</span>
+              </div>
+            )}
+          </Link>
+        ) : coverUrl ? (
           <Image
             src={coverUrl}
             alt={event.title}
             fill
             priority={priority}
-            className="object-cover group-hover:scale-105 transition-transform duration-500"
+            className="object-cover"
             style={{ filter: filterStyle(cover?.filter) }}
             sizes="(max-width: 768px) 270px, (max-width: 1200px) 300px, 350px"
           />
@@ -59,7 +77,7 @@ export function EventCard({
         )}
 
         {/* Gradient Scrim */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
+        <div className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-80 transition-opacity group-hover:opacity-90" />
 
         {/* Top Badges */}
         <div className="absolute top-2.5 inset-x-2.5 flex items-center justify-between pointer-events-none">
@@ -92,7 +110,13 @@ export function EventCard({
         )}
 
         <div className="pointer-events-auto">
-          <CardQuickActions eventId={event.id} className="absolute bottom-2.5 right-2.5" />
+          <CardQuickActions
+            eventId={event.id}
+            title={event.title}
+            shareUrl={href ?? undefined}
+            compact
+            className="absolute bottom-2.5 right-2.5"
+          />
         </div>
       </div>
 
@@ -112,7 +136,13 @@ export function EventCard({
                 : 'font-display text-base sm:text-lg leading-snug',
             )}
           >
-            {event.title}
+            {href ? (
+              <Link href={href} className="focus-visible:outline-none">
+                {event.title}
+              </Link>
+            ) : (
+              event.title
+            )}
           </h3>
           <p className="flex items-center gap-1 text-on-surface-variant text-xs sm:text-sm line-clamp-1">
             <MapPin className="w-3.5 h-3.5 text-primary shrink-0" />
@@ -120,22 +150,35 @@ export function EventCard({
           </p>
           {event.organizer && (
             <p className="flex items-center gap-1.5 pt-1 text-xs text-on-surface-variant line-clamp-1">
-              <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-container-highest">
-                {event.organizer.logo_url ? (
-                  <Image
-                    src={event.organizer.logo_url}
-                    alt=""
-                    width={20}
-                    height={20}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <span className="text-[9px] font-bold text-primary">
-                    {(event.organizer.full_name || 'O').slice(0, 1).toUpperCase()}
-                  </span>
-                )}
-              </span>
-              <span className="truncate">{event.organizer.full_name || 'Organizer'}</span>
+              <Link
+                href={event.organizer.handle ? `/organizer/${event.organizer.handle}` : '#'}
+                onClick={(e) => {
+                  if (!event.organizer?.handle) e.preventDefault()
+                }}
+                className="inline-flex min-w-0 items-center gap-1.5 rounded-md focus-visible:ring-2 focus-visible:ring-primary"
+                aria-label={
+                  event.organizer.handle
+                    ? `View ${event.organizer.full_name || 'organizer'} profile`
+                    : undefined
+                }
+              >
+                <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-container-highest">
+                  {event.organizer.logo_url ? (
+                    <Image
+                      src={event.organizer.logo_url}
+                      alt=""
+                      width={20}
+                      height={20}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-[9px] font-bold text-primary">
+                      {(event.organizer.full_name || 'O').slice(0, 1).toUpperCase()}
+                    </span>
+                  )}
+                </span>
+                <span className="truncate">{event.organizer.full_name || 'Organizer'}</span>
+              </Link>
               {event.organizer.verified && <VerifiedBadge compact />}
             </p>
           )}
@@ -161,13 +204,5 @@ export function EventCard({
     className,
   )
 
-  if (!href) {
-    return <div className={cardClass}>{cardContent}</div>
-  }
-
-  return (
-    <Link href={href} className={cardClass}>
-      {cardContent}
-    </Link>
-  )
+  return <div className={cardClass}>{cardContent}</div>
 }

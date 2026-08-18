@@ -85,7 +85,6 @@ export const getByHandle = query({
       bio: org.bio ?? null,
       logoUrl: org.logoUrl ?? null,
       website: org.website ?? null,
-      contactEmail: org.contactEmail ?? null,
       followerCount: org.followerCount,
       verified: org.verified,
       fullName: profile?.fullName ?? null,
@@ -140,6 +139,7 @@ export const create = mutation({
       contactEmail: args.contactEmail ?? undefined,
       socialLinks: args.socialLinks ?? undefined,
       managementMode,
+      applicationStatus: profile.role === 'admin' ? 'approved' : 'pending_review',
       followerCount: 0,
       verified: false,
     })
@@ -171,6 +171,69 @@ export const update = mutation({
     if (existing) {
       await ctx.db.patch('organizerProfiles', existing._id, updates)
     }
+  },
+})
+
+export const resubmit = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const profile = await requireUser(ctx)
+    const existing = await ctx.db
+      .query('organizerProfiles')
+      .withIndex('by_profile', (q) => q.eq('profileId', profile._id))
+      .first()
+    if (!existing) throw new Error('Organizer profile not found')
+    if (existing.applicationStatus !== 'rejected') {
+      throw new Error('Only rejected applications can be resubmitted')
+    }
+    await ctx.db.patch('organizerProfiles', existing._id, {
+      applicationStatus: 'pending_review',
+      rejectionReason: undefined,
+    })
+  },
+})
+
+export const approveApplication = mutation({
+  args: { profileId: v.id('profiles') },
+  handler: async (ctx, args) => {
+    const admin = await requireAdmin(ctx)
+    const existing = await ctx.db
+      .query('organizerProfiles')
+      .withIndex('by_profile', (q) => q.eq('profileId', args.profileId))
+      .first()
+    if (!existing) throw new Error('Organizer profile not found')
+    await ctx.db.patch('organizerProfiles', existing._id, {
+      applicationStatus: 'approved',
+      rejectionReason: undefined,
+    })
+    await insertModerationLog(ctx, {
+      adminId: admin._id,
+      action: 'approve_organizer_application',
+      targetType: 'organizer',
+      targetId: args.profileId,
+    })
+  },
+})
+
+export const rejectApplication = mutation({
+  args: { profileId: v.id('profiles'), reason: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const admin = await requireAdmin(ctx)
+    const existing = await ctx.db
+      .query('organizerProfiles')
+      .withIndex('by_profile', (q) => q.eq('profileId', args.profileId))
+      .first()
+    if (!existing) throw new Error('Organizer profile not found')
+    await ctx.db.patch('organizerProfiles', existing._id, {
+      applicationStatus: 'rejected',
+      rejectionReason: args.reason?.trim() || undefined,
+    })
+    await insertModerationLog(ctx, {
+      adminId: admin._id,
+      action: 'reject_organizer_application',
+      targetType: 'organizer',
+      targetId: args.profileId,
+    })
   },
 })
 

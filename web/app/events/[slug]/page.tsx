@@ -1,7 +1,6 @@
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { EventHero } from '@/components/events/EventHero'
-import { EventStickyCTA } from '@/components/events/EventStickyCTA'
 import { EventDetails } from '@/components/events/EventDetails'
 import { EventPhotoGrid } from '@/components/events/EventPhotoGrid'
 import { EventInfoCard } from '@/components/events/EventInfoCard'
@@ -125,7 +124,6 @@ export default async function EventPage({ params }: EventPageProps) {
         </div>
       </div>
       <SimilarEvents events={similarEvents} />
-      <EventStickyCTA event={event} />
     </>
   )
 }

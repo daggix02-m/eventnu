@@ -3,9 +3,10 @@
 import { useEffect, useState } from 'react'
 import { useQuery } from 'convex/react'
 import { api } from '@eventnu/convex/_generated/api'
+import type { Id } from '@eventnu/convex/_generated/dataModel'
 import { useConvexAuth } from '@convex-dev/auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { LogIn, Bookmark, MessageSquarePlus, User } from 'lucide-react'
+import { LogIn, Bookmark, Folder, MessageSquarePlus, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { EventCard } from '@/components/events/EventCard'
@@ -26,8 +27,18 @@ export function ProfileClient() {
   const [tab, setTab] = useState<'bookmarks' | 'posts'>(() =>
     searchParams.get('tab') === 'posts' ? 'posts' : 'bookmarks',
   )
+  const [selectedFolder, setSelectedFolder] = useState<string>('all')
   const me = useQuery(api.profiles.getMe)
   const bookmarks = useQuery(api.bookmarks.listByUser)
+  const folders = useQuery(api.bookmarks.listFolders, isAuthenticated ? {} : 'skip')
+  const folderBookmarks = useQuery(
+    api.bookmarks.listByFolder,
+    isAuthenticated && selectedFolder !== 'all'
+      ? selectedFolder === 'uncategorized'
+        ? {}
+        : { folderId: selectedFolder as Id<'bookmarkFolders'> }
+      : 'skip',
+  )
   const posts = useQuery(api.experiencePosts.listByUser, me ? { profileId: me._id } : 'skip')
   const [showReveal, setShowReveal] = useState(false)
 
@@ -124,7 +135,36 @@ export function ProfileClient() {
         </TabsList>
 
         <TabsContent value="bookmarks">
-          {bookmarks === undefined ? (
+          {folders && (
+            <div className="mb-md flex flex-wrap gap-2" aria-label="Saved event folders">
+              <button
+                type="button"
+                onClick={() => setSelectedFolder('all')}
+                className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors ${selectedFolder === 'all' ? 'border-primary bg-primary/10 text-primary' : 'border-outline-variant text-on-surface-variant hover:border-primary/50'}`}
+              >
+                <Bookmark className="h-3.5 w-3.5" /> All saved
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedFolder('uncategorized')}
+                className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors ${selectedFolder === 'uncategorized' ? 'border-primary bg-primary/10 text-primary' : 'border-outline-variant text-on-surface-variant hover:border-primary/50'}`}
+              >
+                Uncategorized
+              </button>
+              {folders.map((folder) => (
+                <button
+                  key={folder._id}
+                  type="button"
+                  onClick={() => setSelectedFolder(folder._id)}
+                  className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors ${selectedFolder === folder._id ? 'border-primary bg-primary/10 text-primary' : 'border-outline-variant text-on-surface-variant hover:border-primary/50'}`}
+                >
+                  <Folder className="h-3.5 w-3.5" /> {folder.name}
+                </button>
+              ))}
+            </div>
+          )}
+          {bookmarks === undefined ||
+          (selectedFolder !== 'all' && folderBookmarks === undefined) ? (
             <div
               className="grid grid-cols-1 gap-md sm:grid-cols-2 lg:grid-cols-3"
               aria-hidden="true"
@@ -133,7 +173,7 @@ export function ProfileClient() {
               <Skeleton className="h-72 w-full rounded-xl" />
               <Skeleton className="h-72 w-full rounded-xl" />
             </div>
-          ) : bookmarks.length === 0 ? (
+          ) : (selectedFolder === 'all' ? bookmarks : (folderBookmarks ?? [])).length === 0 ? (
             <div className="w-full rounded-2xl border border-outline-variant bg-surface-container-low p-6 sm:p-8 md:p-xl text-center">
               <p className="font-display text-headline-md text-on-surface">No saved events yet</p>
               <p className="mt-xs font-body-md text-on-surface-variant">
@@ -142,7 +182,7 @@ export function ProfileClient() {
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-md sm:grid-cols-2 lg:grid-cols-3">
-              {bookmarks.map((event) => (
+              {(selectedFolder === 'all' ? bookmarks : (folderBookmarks ?? [])).map((event) => (
                 <EventCard key={event._id as string} event={mapEvent(event)} />
               ))}
             </div>

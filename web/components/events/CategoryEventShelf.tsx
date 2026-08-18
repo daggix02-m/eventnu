@@ -202,7 +202,7 @@ export function CategoryEventShelf({
       <div className="relative -mx-gutter px-gutter md:mx-0 md:px-0">
         <div
           ref={scrollRef}
-          className="flex gap-3 sm:gap-4 overflow-x-auto overflow-y-hidden overscroll-x-contain overscroll-y-contain scrollbar-none snap-x snap-mandatory py-1 scroll-smooth touch-pan-x"
+          className="flex gap-3 sm:gap-4 overflow-x-auto overscroll-x-contain scrollbar-none snap-x snap-mandatory py-1 scroll-smooth touch-auto"
         >
           {events.map((event, index) => (
             <div key={event.id} className="w-[260px] sm:w-[290px] md:w-[320px] shrink-0 snap-start">

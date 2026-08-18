@@ -6,7 +6,6 @@ import { useQuery } from 'convex/react'
 import { api } from '@eventnu/convex/_generated/api'
 import { useAuthActions, useConvexAuth } from '@convex-dev/auth/react'
 import { LogOut, Bookmark, User } from 'lucide-react'
-import { useAuthModal } from '@/components/auth/AuthModalContext'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   DropdownMenu,
@@ -22,7 +21,6 @@ import { Skeleton } from '@/components/ui/skeleton'
 export function AuthButton() {
   const { isAuthenticated, isLoading } = useConvexAuth()
   const { signOut } = useAuthActions()
-  const { openAuth } = useAuthModal()
   const router = useRouter()
   const profile = useQuery(api.profiles.getMe)
 
@@ -32,7 +30,21 @@ export function AuthButton() {
 
   if (!isAuthenticated) {
     return (
-      <Button variant="outline" size="sm" onClick={openAuth}>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => {
+          try {
+            sessionStorage.setItem(
+              'eventnu_auth_redirect',
+              window.location.pathname + window.location.search,
+            )
+          } catch {
+            /* storage unavailable */
+          }
+          router.push('/auth')
+        }}
+      >
         Sign in
       </Button>
     )

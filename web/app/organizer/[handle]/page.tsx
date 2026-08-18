@@ -6,6 +6,7 @@ import { CalendarDays, Globe, Users, MapPin } from 'lucide-react'
 import { Container } from '@/components/layout/Container'
 import { VerifiedBadge } from '@/components/verification/VerifiedBadge'
 import { getOrganizerByHandle } from '@/lib/api/organizers'
+import { ReportDialog } from '@/components/moderation/ReportDialog'
 
 export const metadata: Metadata = {
   title: 'Organizer | Event Nu',
@@ -82,14 +83,9 @@ export default async function OrganizerProfilePage({
                   Website
                 </a>
               )}
-              {organizer.contactEmail && (
-                <a
-                  href={`mailto:${organizer.contactEmail}`}
-                  className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
-                >
-                  Contact
-                </a>
-              )}
+            </div>
+            <div className="mt-sm">
+              <ReportDialog targetType="organizer" targetId={organizer.id} />
             </div>
           </div>
         </header>

@@ -133,6 +133,8 @@ export function mapOrganizer(
     follower_count: o?.followerCount ?? 0,
     verified: o?.verified ?? false,
     management_mode: o?.managementMode ?? 'organizer_managed',
+    application_status: o?.applicationStatus ?? 'approved',
+    rejection_reason: o?.rejectionReason ?? null,
     created_at: iso(o?._creationTime),
     updated_at: iso(o?._creationTime),
     organizer_handle: o?.organizerHandle ?? '',

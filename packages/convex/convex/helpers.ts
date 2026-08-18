@@ -43,6 +43,12 @@ export async function requireOrganizerOwner(
   if (organizer.managementMode !== 'organizer_managed') {
     throw new Error('This organizer profile is managed by the Event Nu team')
   }
+  if (organizer.applicationStatus === 'pending_review') {
+    throw new Error('Organizer application is pending review')
+  }
+  if (organizer.applicationStatus === 'rejected') {
+    throw new Error('Organizer application was rejected')
+  }
   return { profile, organizer }
 }
 

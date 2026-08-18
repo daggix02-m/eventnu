@@ -25,7 +25,7 @@ const spacingShadowGuard = {
         const value =
           lit.type === 'Literal' || lit.type === 'StringLiteral' ? String(lit.value ?? '') : null
         if (value === null) return
-        const matches = value.match(/\bmax-w-(sm|md|lg|xl|2xl|3xl)\b/g)
+        const matches = value.match(/\bmax-w-(xs|sm|md|lg|xl|2xl|3xl)\b/g)
         if (matches?.length) {
           context.report({
             node,

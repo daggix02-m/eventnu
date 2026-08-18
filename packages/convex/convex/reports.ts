@@ -1,9 +1,58 @@
 import { v } from 'convex/values'
 import { query, mutation } from './_generated/server'
 import { Doc, Id } from './_generated/dataModel'
-import { insertModerationLog, insertNotification, requireAdmin } from './helpers'
+import { insertModerationLog, insertNotification, requireAdmin, requireUser } from './helpers'
 import { paginationOptsValidator } from 'convex/server'
 import { STATS_SCAN_CAP } from './constants'
+import { rateLimiter } from './rateLimiter'
+
+const reportTargetType = v.union(v.literal('event'), v.literal('organizer'))
+const reportReason = v.union(
+  v.literal('fraud_or_scam'),
+  v.literal('illegal_activity'),
+  v.literal('unsafe_venue_or_event'),
+  v.literal('misleading_information'),
+  v.literal('harassment_or_discrimination'),
+  v.literal('copyright_or_intellectual_property'),
+  v.literal('other'),
+)
+
+export const submit = mutation({
+  args: {
+    targetType: reportTargetType,
+    targetId: v.string(),
+    reason: reportReason,
+    details: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const reporter = await requireUser(ctx)
+    await rateLimiter.limit(ctx, 'reportSubmit', { key: reporter._id, throws: true })
+    const target =
+      args.targetType === 'event'
+        ? await ctx.db.get('events', args.targetId as Id<'events'>)
+        : await ctx.db.get('organizerProfiles', args.targetId as Id<'organizerProfiles'>)
+    if (!target) throw new Error('Report target not found')
+    const duplicate = await ctx.db
+      .query('reports')
+      .withIndex('by_reporter_and_target', (q) =>
+        q
+          .eq('reporterId', reporter._id)
+          .eq('targetType', args.targetType)
+          .eq('targetId', args.targetId),
+      )
+      .filter((q) => q.eq(q.field('status'), 'pending'))
+      .first()
+    if (duplicate) throw new Error('You already reported this item')
+    const suffix = args.details?.trim() ? `\n\n${args.details.trim().slice(0, 1000)}` : ''
+    return await ctx.db.insert('reports', {
+      reporterId: reporter._id,
+      targetType: args.targetType,
+      targetId: args.targetId,
+      reason: `${args.reason}${suffix}`,
+      status: 'pending',
+    })
+  },
+})
 
 export const list = query({
   args: {
@@ -13,6 +62,7 @@ export const list = query({
       v.union(
         v.literal('all'),
         v.literal('event'),
+        v.literal('organizer'),
         v.literal('host'),
         v.literal('user'),
         v.literal('comment'),
@@ -77,6 +127,7 @@ export const getTargetPreview = query({
   args: {
     targetType: v.union(
       v.literal('event'),
+      v.literal('organizer'),
       v.literal('host'),
       v.literal('user'),
       v.literal('comment'),
@@ -89,6 +140,9 @@ export const getTargetPreview = query({
       return await ctx.db.get('events', args.targetId as Id<'events'>)
     }
     if (args.targetType === 'host') {
+      return await ctx.db.get('organizerProfiles', args.targetId as Id<'organizerProfiles'>)
+    }
+    if (args.targetType === 'organizer') {
       return await ctx.db.get('organizerProfiles', args.targetId as Id<'organizerProfiles'>)
     }
     if (args.targetType === 'user') {
@@ -117,6 +171,22 @@ export const actionReport = mutation({
   },
   handler: async (ctx, args) => {
     const admin = await requireAdmin(ctx)
+    const report = await ctx.db.get('reports', args.reportId)
+    if (!report) throw new Error('Report not found')
+    const actionTargets: Record<string, string[]> = {
+      warn_user: ['user'],
+      suspend_user: ['user'],
+      hide_event: ['event'],
+      hide_organizer: ['organizer', 'host'],
+      delete_comment: ['comment'],
+    }
+    if (
+      args.action &&
+      actionTargets[args.action] &&
+      !actionTargets[args.action].includes(report.targetType)
+    ) {
+      throw new Error('Action does not match report target')
+    }
     await ctx.db.patch('reports', args.reportId, { status: 'actioned' })
     await insertModerationLog(ctx, {
       adminId: admin._id,
@@ -157,6 +227,14 @@ export const hideEventFromReport = mutation({
   handler: async (ctx, args) => {
     await requireAdmin(ctx)
     await ctx.db.patch('events', args.eventId, { status: 'archived' })
+  },
+})
+
+export const hideOrganizerFromReport = mutation({
+  args: { organizerId: v.id('organizerProfiles') },
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx)
+    await ctx.db.patch('organizerProfiles', args.organizerId, { status: 'suspended' })
   },
 })
 

@@ -8,7 +8,15 @@ vi.mock('./helpers', () => ({
   insertModerationLog: vi.fn(async () => 'moderationLogs_test'),
 }))
 
-const { create, update, getMine, setManagementMode } = await import('./organizers')
+const {
+  create,
+  update,
+  getMine,
+  setManagementMode,
+  resubmit,
+  approveApplication,
+  rejectApplication,
+} = await import('./organizers')
 const { requireUser, requireAdmin } = await import('./helpers')
 
 type Handler = (ctx: unknown, args: unknown) => Promise<unknown>
@@ -16,6 +24,9 @@ const createHandler = (create as unknown as { _handler: Handler })._handler
 const updateHandler = (update as unknown as { _handler: Handler })._handler
 const getMineHandler = (getMine as unknown as { _handler: Handler })._handler
 const setManagementModeHandler = (setManagementMode as unknown as { _handler: Handler })._handler
+const resubmitHandler = (resubmit as unknown as { _handler: Handler })._handler
+const approveApplicationHandler = (approveApplication as unknown as { _handler: Handler })._handler
+const rejectApplicationHandler = (rejectApplication as unknown as { _handler: Handler })._handler
 
 function makeCtx(opts: { existing?: Record<string, unknown> | null } = {}) {
   const insert = vi.fn(async () => 'organizerProfiles_new')
@@ -39,6 +50,7 @@ describe('organizers.create (self-service)', () => {
       expect.objectContaining({
         profileId: 'profiles_org',
         organizerName: 'Addis Nights',
+        applicationStatus: 'pending_review',
         verified: false,
         followerCount: 0,
       }),
@@ -58,6 +70,37 @@ describe('organizers.create (self-service)', () => {
   it('rejects when an organizer profile already exists', async () => {
     const { ctx } = makeCtx({ existing: { _id: 'organizerProfiles_existing' } })
     await expect(createHandler(ctx, { organizerName: 'X' })).rejects.toThrow('already exists')
+  })
+})
+
+describe('organizer application review', () => {
+  it('resubmits a rejected application', async () => {
+    const { ctx, patch } = makeCtx({
+      existing: { _id: 'organizerProfiles_existing', applicationStatus: 'rejected' },
+    })
+    await resubmitHandler(ctx, {})
+    expect(patch).toHaveBeenCalledWith('organizerProfiles', 'organizerProfiles_existing', {
+      applicationStatus: 'pending_review',
+      rejectionReason: undefined,
+    })
+  })
+
+  it('allows admins to approve an application', async () => {
+    const { ctx, patch } = makeCtx({ existing: { _id: 'organizerProfiles_existing' } })
+    await approveApplicationHandler(ctx, { profileId: 'profiles_org' })
+    expect(patch).toHaveBeenCalledWith('organizerProfiles', 'organizerProfiles_existing', {
+      applicationStatus: 'approved',
+      rejectionReason: undefined,
+    })
+  })
+
+  it('allows admins to reject an application with a reason', async () => {
+    const { ctx, patch } = makeCtx({ existing: { _id: 'organizerProfiles_existing' } })
+    await rejectApplicationHandler(ctx, { profileId: 'profiles_org', reason: 'Need more details' })
+    expect(patch).toHaveBeenCalledWith('organizerProfiles', 'organizerProfiles_existing', {
+      applicationStatus: 'rejected',
+      rejectionReason: 'Need more details',
+    })
   })
 })
 

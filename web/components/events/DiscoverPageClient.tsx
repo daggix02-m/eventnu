@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { LayoutGrid, Rows3 } from 'lucide-react'
+import { Building2, LayoutGrid, Rows3 } from 'lucide-react'
 import { Container } from '@/components/layout/Container'
 import { EventList } from '@/components/events/EventList'
 import { CategoryEventShelf } from '@/components/events/CategoryEventShelf'
@@ -43,7 +43,7 @@ export function DiscoverPageClient({
   const [search, setSearch] = useState(initialSearch)
   const [activeCategory, setActiveCategory] = useState<string | undefined>(initialCategory)
   const [status, setStatus] = useState<EventStatus>(() => toStatus(initialStatus))
-  const [viewMode, setViewMode] = useState<'categorized' | 'grid'>('categorized')
+  const [viewMode, setViewMode] = useState<'categorized' | 'organizer' | 'grid'>('categorized')
 
   const headingRef = useScrollReveal({ y: 20, duration: 0.6 })
   const searchRef = useScrollReveal({ y: 16, duration: 0.5, delay: 0.1 })
@@ -73,7 +73,9 @@ export function DiscoverPageClient({
         event.title.toLowerCase().includes(term) ||
         event.venue_name?.toLowerCase().includes(term) ||
         event.venue_address?.toLowerCase().includes(term) ||
-        event.description?.toLowerCase().includes(term)
+        event.description?.toLowerCase().includes(term) ||
+        event.organizer?.full_name?.toLowerCase().includes(term) ||
+        event.organizer?.handle?.toLowerCase().includes(term)
 
       const primaryCategory =
         event.event_categories?.find((ec) => ec.is_primary)?.categories ??
@@ -110,8 +112,33 @@ export function DiscoverPageClient({
     return shelves
   }, [statusFilteredEvents, categories, activeCategory, search])
 
+  const organizerShelves = useMemo(() => {
+    if (activeCategory || search.trim()) return []
+    const groups = new Map<string, { name: string; events: Event[] }>()
+    for (const event of statusFilteredEvents) {
+      const key = event.organizer?.id ?? 'independent'
+      const existing = groups.get(key)
+      if (existing) {
+        existing.events.push(event)
+      } else {
+        groups.set(key, {
+          name: event.organizer?.full_name || 'Independent events',
+          events: [event],
+        })
+      }
+    }
+    return [...groups.entries()]
+      .sort(([, a], [, b]) => a.name.localeCompare(b.name))
+      .map(([id, group]) => ({
+        category: { id, slug: `organizer-${id}`, name: group.name },
+        events: group.events,
+      }))
+  }, [statusFilteredEvents, activeCategory, search])
+
   const isCategorizedView =
     viewMode === 'categorized' && !activeCategory && !search.trim() && categorizedShelves.length > 0
+  const isOrganizerView =
+    viewMode === 'organizer' && !activeCategory && !search.trim() && organizerShelves.length > 0
 
   return (
     <>
@@ -137,6 +164,7 @@ export function DiscoverPageClient({
                 onChange={setViewMode}
                 options={[
                   { value: 'categorized', label: 'Shelves', icon: Rows3 },
+                  { value: 'organizer', label: 'Organizers', icon: Building2 },
                   { value: 'grid', label: 'Grid', icon: LayoutGrid },
                 ]}
               />
@@ -188,6 +216,16 @@ export function DiscoverPageClient({
                   category={category}
                   events={catEvents}
                   onSelectCategory={setActiveCategory}
+                />
+              ))}
+            </div>
+          ) : isOrganizerView ? (
+            <div className="space-y-xl">
+              {organizerShelves.map(({ category, events: organizerEvents }) => (
+                <CategoryEventShelf
+                  key={category.id}
+                  category={category}
+                  events={organizerEvents}
                 />
               ))}
             </div>

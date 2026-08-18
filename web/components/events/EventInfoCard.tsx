@@ -1,54 +1,14 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import {
-  Calendar,
-  MapPin,
-  ExternalLink,
-  MessageSquarePlus,
-  Ticket,
-  Copy,
-  Check,
-  Navigation,
-} from 'lucide-react'
+import { MapPin, ExternalLink, MessageSquarePlus, Copy, Check, Navigation } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { SITE } from '@/lib/site'
-import { EventSocialActions } from '@/components/social/EventSocialActions'
 import { formatPrice, isEventPast } from '@/lib/utils'
 import type { Event } from '@/types'
 
 interface EventInfoCardProps {
   event: Event
-}
-
-function escapeIcs(value: string): string {
-  return value.replace(/[\n;,\\]/g, (m) => `\\${m}`)
-}
-
-function toIcsDate(iso: string): string {
-  return new Date(iso).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'
-}
-
-function buildIcs(event: Event): string {
-  const dtStart = toIcsDate(event.start_date)
-  const dtEnd = event.end_date ? toIcsDate(event.end_date) : dtStart
-  const lines = [
-    'BEGIN:VCALENDAR',
-    'VERSION:2.0',
-    'PRODID:-//EventNu//Events//EN',
-    'CALSCALE:GREGORIAN',
-    'BEGIN:VEVENT',
-    `UID:${event.id}@eventnu`,
-    `DTSTAMP:${toIcsDate(new Date().toISOString())}`,
-    `DTSTART:${dtStart}`,
-    `DTEND:${dtEnd}`,
-    `SUMMARY:${escapeIcs(event.title)}`,
-    event.venue_name ? `LOCATION:${escapeIcs(event.venue_name)}` : null,
-    event.description ? `DESCRIPTION:${escapeIcs(event.description.slice(0, 200))}` : null,
-    'END:VEVENT',
-    'END:VCALENDAR',
-  ].filter((l): l is string => l !== null)
-  return lines.join('\r\n')
 }
 
 const OSM_EMBED_URL = 'https://www.openstreetmap.org/export/embed.html'
@@ -110,7 +70,6 @@ export function EventInfoCard({ event }: EventInfoCardProps) {
     event.external_link_label?.trim() || (event.is_free ? 'More Info' : 'Get Tickets')
   const ended = isEventPast(event.start_date)
   const [copiedAddress, setCopiedAddress] = useState(false)
-  const [downloadedIcs, setDownloadedIcs] = useState(false)
 
   const mapQuery =
     event.venue_lat && event.venue_lng
@@ -138,18 +97,6 @@ export function EventInfoCard({ event }: EventInfoCardProps) {
   const mapExternalUrl =
     event.venue_map_link ||
     (mapQuery ? `https://maps.google.com/maps?q=${encodeURIComponent(mapQuery)}` : null)
-
-  const handleAddToCalendar = useCallback(() => {
-    const blob = new Blob([buildIcs(event)], { type: 'text/calendar;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `${event.slug || event.id}.ics`
-    a.click()
-    URL.revokeObjectURL(url)
-    setDownloadedIcs(true)
-    setTimeout(() => setDownloadedIcs(false), 2500)
-  }, [event])
 
   const handleCopyAddress = useCallback(() => {
     const textToCopy = event.venue_address
@@ -195,45 +142,6 @@ export function EventInfoCard({ event }: EventInfoCardProps) {
                 <span>{externalLabel}</span>
               </a>
             </Button>
-          )}
-
-          {!ended && event.action_type === 'reservation' && (
-            <Button asChild size="lg" className="w-full font-bold gap-2 text-base rounded-xl">
-              <a href="#reserve">
-                <Ticket className="w-4 h-4" />
-                <span>Reserve a Spot</span>
-              </a>
-            </Button>
-          )}
-        </div>
-
-        {/* Social / Bookmark Row + Compact Calendar Export */}
-        <div className="pt-2 border-t border-outline-variant/30 flex items-center justify-between">
-          <EventSocialActions eventId={event.id} title={event.title} className="flex-1" />
-          {!ended && (
-            <button
-              type="button"
-              onClick={handleAddToCalendar}
-              title={downloadedIcs ? 'Added to calendar!' : 'Add to Calendar (.ics)'}
-              aria-label={downloadedIcs ? 'Added to calendar!' : 'Add to Calendar (.ics)'}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-mono font-semibold transition-all duration-200 border shrink-0 ml-2 active:scale-95 ${
-                downloadedIcs
-                  ? 'border-emerald-500/40 bg-emerald-500/10'
-                  : 'border-outline-variant/50 bg-surface-container hover:border-primary/40 hover:text-primary'
-              }`}
-            >
-              {downloadedIcs ? (
-                <>
-                  <Check className="w-3.5 h-3.5 text-emerald-400" />
-                  <span className="text-emerald-400">Saved!</span>
-                </>
-              ) : (
-                <>
-                  <Calendar className="w-3.5 h-3.5 text-on-surface-variant" />
-                  <span className="text-on-surface-variant">+ Calendar</span>
-                </>
-              )}
-            </button>
           )}
         </div>
       </div>

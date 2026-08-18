@@ -1,18 +1,8 @@
 'use client'
 
 import Image from 'next/image'
-import {
-  Play,
-  Calendar,
-  Clock,
-  MapPin,
-  Banknote,
-  Sparkles,
-  ShieldCheck,
-  Zap,
-  Info,
-} from 'lucide-react'
-import { formatPrice, formatEventDate } from '@/lib/utils'
+import { Play, Calendar, Clock, MapPin, Sparkles, ShieldCheck, Zap, Info } from 'lucide-react'
+import { formatEventDate } from '@/lib/utils'
 import type { Event } from '@/types'
 
 interface EventDetailsProps {
@@ -47,16 +37,6 @@ export function EventDetails({ event }: EventDetailsProps) {
             <span>Time</span>
           </div>
           <p className="font-display font-bold text-sm text-on-surface truncate">{timeFormatted}</p>
-        </div>
-
-        <div className="flex flex-col space-y-1 p-2 rounded-xl bg-surface-container/50">
-          <div className="flex items-center gap-1.5 text-on-surface-variant font-mono text-[11px] uppercase tracking-wider">
-            <Banknote className="w-3.5 h-3.5 text-secondary" />
-            <span>Admission</span>
-          </div>
-          <p className="font-display font-bold text-sm text-secondary truncate">
-            {formatPrice(event.price_display, event.is_free)}
-          </p>
         </div>
 
         <div className="flex flex-col space-y-1 p-2 rounded-xl bg-surface-container/50">

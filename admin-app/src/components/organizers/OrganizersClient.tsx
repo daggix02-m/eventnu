@@ -33,6 +33,8 @@ import type { OrganizerListFilters } from '@/lib/api/organizers'
 import {
   verifyOrganizer,
   unverifyOrganizer,
+  approveOrganizerApplication,
+  rejectOrganizerApplication,
   suspendOrganizer,
   unsuspendOrganizer,
 } from '@/lib/actions/organizers'
@@ -72,13 +74,15 @@ export function OrganizersClient({ initial, initialFilters }: OrganizersClientPr
   const refresh = () => queryClient.invalidateQueries({ queryKey: organizersKeys })
 
   const runAction = async (
-    action: 'verify' | 'unverify' | 'suspend' | 'unsuspend',
+    action: 'verify' | 'unverify' | 'approve' | 'reject' | 'suspend' | 'unsuspend',
     profileId: string,
   ) => {
     setMutating(true)
     try {
       if (action === 'verify') await verifyOrganizer(profileId)
       else if (action === 'unverify') await unverifyOrganizer(profileId)
+      else if (action === 'approve') await approveOrganizerApplication(profileId)
+      else if (action === 'reject') await rejectOrganizerApplication(profileId)
       else if (action === 'suspend') await suspendOrganizer(profileId)
       else await unsuspendOrganizer(profileId)
       await refresh()
@@ -166,6 +170,21 @@ export function OrganizersClient({ initial, initialFilters }: OrganizersClientPr
               header: 'Status',
               render: (org) => (
                 <div className="flex items-center gap-1">
+                  {org.application_status === 'pending_review' && (
+                    <Badge className="text-xs bg-warning/10 text-warning border-warning/20">
+                      Pending review
+                    </Badge>
+                  )}
+                  {org.application_status === 'rejected' && (
+                    <Badge className="text-xs bg-destructive/10 text-destructive border-destructive/20">
+                      Rejected
+                    </Badge>
+                  )}
+                  {org.application_status === 'approved' && (
+                    <Badge className="text-xs bg-success/10 text-success border-success/20">
+                      Approved
+                    </Badge>
+                  )}
                   {org.verified ? (
                     <Badge className="text-xs bg-primary/10 text-primary border-primary/20">
                       <ShieldCheck size={10} className="mr-1" />
@@ -215,6 +234,24 @@ export function OrganizersClient({ initial, initialFilters }: OrganizersClientPr
                   >
                     <Globe size={14} />
                   </button>
+                  {org.application_status === 'pending_review' && (
+                    <>
+                      <button
+                        onClick={() => runAction('approve', org.profile_id)}
+                        className="p-1.5 text-muted-foreground hover:text-success transition-colors rounded"
+                        title="Approve application"
+                      >
+                        <CheckCircle size={14} />
+                      </button>
+                      <button
+                        onClick={() => runAction('reject', org.profile_id)}
+                        className="p-1.5 text-muted-foreground hover:text-destructive transition-colors rounded"
+                        title="Reject application"
+                      >
+                        <XCircle size={14} />
+                      </button>
+                    </>
+                  )}
                   {org.verified ? (
                     <button
                       onClick={() => runAction('unverify', org.profile_id)}

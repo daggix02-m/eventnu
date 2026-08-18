@@ -33,6 +33,7 @@ export function OrganizerDashboard() {
   const events = useQuery(api.events.read.listMine, me && isManaged ? {} : 'skip')
 
   const updateOrganizer = useMutation(api.organizers.update)
+  const resubmitApplication = useMutation(api.organizers.resubmit)
   const updateSettings = useMutation(api.organizerSettings.update)
   const createEvent = useMutation(api.events.write.createSelf)
 
@@ -105,6 +106,41 @@ export function OrganizerDashboard() {
           <p className="mt-xs font-body-md text-on-surface-variant">
             This organizer profile is managed by the Event Nu team. Contact us to make changes.
           </p>
+        </div>
+      </Container>
+    )
+  }
+
+  if (organizer.applicationStatus === 'pending_review') {
+    return (
+      <Container className="py-lg">
+        <div className="mx-auto w-full max-w-[34rem] rounded-2xl border border-outline-variant bg-surface-container-low p-6 text-center sm:p-8">
+          <Megaphone className="mx-auto h-12 w-12 text-primary" aria-hidden="true" />
+          <h1 className="mt-sm font-display text-headline-md text-on-surface">
+            Your application is under review
+          </h1>
+          <p className="mt-xs font-body-md text-on-surface-variant">
+            The Event Nu team will review your organizer details before you can publish events.
+          </p>
+        </div>
+      </Container>
+    )
+  }
+
+  if (organizer.applicationStatus === 'rejected') {
+    return (
+      <Container className="py-lg">
+        <div className="mx-auto w-full max-w-[34rem] rounded-2xl border border-error/30 bg-surface-container-low p-6 text-center sm:p-8">
+          <h1 className="font-display text-headline-md text-on-surface">
+            Application not approved
+          </h1>
+          <p className="mt-xs font-body-md text-on-surface-variant">
+            {organizer.rejectionReason ||
+              'Please update your organizer details and resubmit for review.'}
+          </p>
+          <Button className="mt-lg" onClick={() => resubmitApplication({})}>
+            Resubmit application
+          </Button>
         </div>
       </Container>
     )

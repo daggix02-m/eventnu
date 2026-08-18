@@ -2,6 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { CalendarDays, UserCheck } from 'lucide-react'
 import { VerifiedBadge } from '@/components/verification/VerifiedBadge'
+import { ReportDialog } from '@/components/moderation/ReportDialog'
 import type { Event } from '@/types'
 
 export function OrganizerCard({ event }: { event: Event }) {
@@ -80,6 +81,7 @@ export function OrganizerCard({ event }: { event: Event }) {
         <UserCheck className="w-3.5 h-3.5 text-primary" />
         <span>{event.organizer.verified ? 'Verified Organizer' : 'Organizer'}</span>
       </div>
+      <ReportDialog targetType="organizer" targetId={event.organizer.id} />
     </section>
   )
 }

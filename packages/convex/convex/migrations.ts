@@ -181,6 +181,10 @@ export const backfillPhaseBFields = internalMutation({
         await ctx.db.patch('organizerProfiles', o._id, { managementMode: 'organizer_managed' })
         orgsPatched++
       }
+      if ((o as unknown as { applicationStatus?: string }).applicationStatus === undefined) {
+        await ctx.db.patch('organizerProfiles', o._id, { applicationStatus: 'approved' })
+        orgsPatched++
+      }
     }
     return { profilesPatched, orgsPatched }
   },

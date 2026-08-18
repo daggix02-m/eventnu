@@ -90,7 +90,7 @@ export default function RootLayout({
               <TopNav />
               <main
                 id="main-content"
-                className="min-h-screen pb-24 md:pb-0 overflow-x-hidden"
+                className="min-h-screen pb-24 md:pb-0 overflow-x-clip"
                 tabIndex={-1}
               >
                 {children}

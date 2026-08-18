@@ -15,6 +15,8 @@ import { Badge } from '@/components/ui/badge'
 import { EventGallery } from '@/components/events/EventGallery'
 import { hasGallery } from '@/lib/media'
 import { VerifiedBadge } from '@/components/verification/VerifiedBadge'
+import { ReportDialog } from '@/components/moderation/ReportDialog'
+import { CardQuickActions } from '@/components/social/EventSocialActions'
 import type { Event } from '@/types'
 
 interface EventHeroProps {
@@ -66,6 +68,14 @@ export function EventHero({ event }: EventHeroProps) {
           </div>
         )}
 
+        <CardQuickActions
+          eventId={event.id}
+          title={event.title}
+          shareUrl={`/events/${event.slug}`}
+          transparent
+          className="absolute bottom-8 right-4 z-30 sm:right-8"
+        />
+
         {/* Top Breadcrumb & Status Bar */}
         <div className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 flex items-center justify-between pointer-events-auto">
           {/* Breadcrumb Navigation */}
@@ -96,6 +106,7 @@ export function EventHero({ event }: EventHeroProps) {
 
           {/* Status & Date Badges */}
           <div className="flex items-center gap-2 ml-auto">
+            <ReportDialog targetType="event" targetId={event.id} />
             {ended ? (
               <span className="bg-error text-on-error font-mono text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-md">
                 Event Ended

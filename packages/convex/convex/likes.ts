@@ -62,3 +62,37 @@ export const toggle = mutation({
     }
   },
 })
+
+/** Set a like state without toggling, which makes gesture retries safe. */
+export const setLiked = mutation({
+  args: { eventId: v.id('events'), liked: v.boolean() },
+  handler: async (ctx, args) => {
+    const profile = await requireUser(ctx)
+    await rateLimiter.limit(ctx, 'likeSet', { key: profile._id, throws: true })
+
+    const existing = await ctx.db
+      .query('eventLikes')
+      .withIndex('by_userId_and_eventId', (q) =>
+        q.eq('userId', profile._id).eq('eventId', args.eventId),
+      )
+      .first()
+
+    if (args.liked && !existing) {
+      await ctx.db.insert('eventLikes', { userId: profile._id, eventId: args.eventId })
+      await incrementEngagementCounter(ctx, profile._id, 'likes', 1)
+      const event = await ctx.db.get('events', args.eventId)
+      if (event) await ctx.db.patch('events', args.eventId, { likeCount: event.likeCount + 1 })
+    } else if (!args.liked && existing) {
+      await ctx.db.delete('eventLikes', existing._id)
+      await incrementEngagementCounter(ctx, profile._id, 'likes', -1)
+      const event = await ctx.db.get('events', args.eventId)
+      if (event) {
+        await ctx.db.patch('events', args.eventId, {
+          likeCount: Math.max(0, event.likeCount - 1),
+        })
+      }
+    }
+
+    return args.liked
+  },
+})

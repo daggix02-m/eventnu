@@ -28,6 +28,7 @@ import {
   warnUserFromReport,
   suspendUserFromReport,
   hideEventFromReport,
+  hideOrganizerFromReport,
   deleteCommentFromReport,
   saveReportNote,
   getReportTargetPreview,
@@ -47,6 +48,7 @@ const statusOptions = [
 const targetTypeOptions = [
   { value: 'all', label: 'All Types' },
   { value: 'event', label: 'Event' },
+  { value: 'organizer', label: 'Organizer' },
   { value: 'host', label: 'Host' },
   { value: 'user', label: 'User' },
   { value: 'comment', label: 'Comment' },
@@ -61,6 +63,7 @@ const statusBadgeStyles: Record<string, string> = {
 
 const targetTypeIcons: Record<string, LucideIcon> = {
   event: Calendar,
+  organizer: Building2,
   host: Building2,
   user: User,
   comment: MessageSquare,
@@ -152,6 +155,8 @@ export function ReportsClient({
         await suspendUserFromReport(selectedReport.target_id, selectedReport.id)
       } else if (action === 'hide_event') {
         await hideEventFromReport(selectedReport.target_id, selectedReport.id)
+      } else if (action === 'hide_organizer') {
+        await hideOrganizerFromReport(selectedReport.target_id, selectedReport.id)
       } else if (action === 'delete_comment') {
         await deleteCommentFromReport(selectedReport.target_id, selectedReport.id)
       }
@@ -492,6 +497,15 @@ export function ReportsClient({
                 <Button
                   variant="outline"
                   className="h-10 border-warning text-warning hover:bg-warning/10"
+                  onClick={() => handleAction('hide_organizer')}
+                  disabled={loading || !['organizer', 'host'].includes(selectedReport.target_type)}
+                >
+                  <EyeOff size={16} className="mr-1" />
+                  Suspend Organizer
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-10 border-warning text-warning hover:bg-warning/10"
                   onClick={() => handleAction('warn_user')}
                   disabled={loading || selectedReport.target_type !== 'user'}
                 >
@@ -523,11 +537,6 @@ export function ReportsClient({
                   {selectedReport.target_type === 'comment' ? 'Delete' : 'Suspend'}
                 </Button>
               </div>
-              {selectedReport.target_type === 'host' && (
-                <p className="px-6 pb-4 text-xs text-muted-foreground">
-                  Organizer moderation is not supported yet — dismiss this report instead.
-                </p>
-              )}
             </>
           ) : (
             <div className="flex-1 flex items-center justify-center text-muted-foreground">

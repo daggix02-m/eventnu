@@ -7,9 +7,11 @@ export const rateLimiter = new RateLimiter(components.rateLimiter, {
   reservationPerEmail: { kind: 'fixed window', rate: 3, period: 24 * 60 * 60 * 1000 },
   commentCreate: { kind: 'token bucket', rate: 20, period: 60_000, capacity: 5 },
   likeToggle: { kind: 'token bucket', rate: 60, period: 60_000, capacity: 10 },
+  likeSet: { kind: 'token bucket', rate: 60, period: 60_000, capacity: 10 },
   followToggle: { kind: 'token bucket', rate: 30, period: 60_000, capacity: 10 },
   uploadUrl: { kind: 'token bucket', rate: 30, period: 60_000, capacity: 10 },
   bookmarkToggle: { kind: 'token bucket', rate: 60, period: 60_000, capacity: 10 },
   shareTrack: { kind: 'token bucket', rate: 120, period: 60_000, capacity: 30 },
   experiencePostCreate: { kind: 'fixed window', rate: 10, period: 60_000 },
+  reportSubmit: { kind: 'fixed window', rate: 5, period: 60_000 },
 })

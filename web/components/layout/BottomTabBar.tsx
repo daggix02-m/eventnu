@@ -71,6 +71,11 @@ function TabBarContent() {
             onClick={(e) => {
               if (tab.requiresAuth && !isAuthenticated) {
                 e.preventDefault()
+                try {
+                  sessionStorage.setItem('eventnu_auth_redirect', tab.href)
+                } catch {
+                  /* storage unavailable */
+                }
                 openAuth()
               }
             }}

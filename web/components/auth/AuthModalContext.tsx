@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useCallback, useContext, useMemo, useState } from 'react'
-import { AuthDialog } from '@/components/auth/AuthDialog'
+import { SignInDrawer } from '@/components/auth/SignInDrawer'
 
 interface AuthModalContextValue {
   openAuth: () => void
@@ -19,7 +19,7 @@ export function AuthModalProvider({ children }: { children: React.ReactNode }) {
   return (
     <AuthModalContext.Provider value={value}>
       {children}
-      <AuthDialog open={open} onOpenChange={setOpen} />
+      <SignInDrawer open={open} onOpenChange={setOpen} />
     </AuthModalContext.Provider>
   )
 }

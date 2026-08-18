@@ -45,6 +45,115 @@ export const listByUser = query({
   },
 })
 
+export const listFolders = query({
+  args: {},
+  handler: async (ctx) => {
+    const profile = await requireUser(ctx)
+    return await ctx.db
+      .query('bookmarkFolders')
+      .withIndex('by_user', (q) => q.eq('userId', profile._id))
+      .order('asc')
+      .take(100)
+  },
+})
+
+export const listByFolder = query({
+  args: { folderId: v.optional(v.id('bookmarkFolders')) },
+  handler: async (ctx, args) => {
+    const profile = await requireUser(ctx)
+    if (args.folderId) {
+      const folder = await ctx.db.get('bookmarkFolders', args.folderId)
+      if (!folder || folder.userId !== profile._id) throw new Error('Folder not found')
+    }
+    const bookmarks = await ctx.db
+      .query('eventBookmarks')
+      .withIndex('by_user', (q) => q.eq('userId', profile._id))
+      .order('desc')
+      .take(200)
+    const matchingBookmarks = args.folderId
+      ? bookmarks.filter((bookmark) => bookmark.folderId === args.folderId)
+      : bookmarks.filter((bookmark) => bookmark.folderId === undefined)
+    const events = await Promise.all(matchingBookmarks.map((b) => ctx.db.get('events', b.eventId)))
+    return await enrichPublicEvents(
+      ctx,
+      events.filter((e): e is Doc<'events'> => !!e && e.status === 'published'),
+    )
+  },
+})
+
+export const createFolder = mutation({
+  args: { name: v.string() },
+  handler: async (ctx, args) => {
+    const profile = await requireUser(ctx)
+    const name = args.name.trim()
+    if (!name || name.length > 60) throw new Error('Folder name must be 1 to 60 characters')
+    const existing = await ctx.db
+      .query('bookmarkFolders')
+      .withIndex('by_user_and_name', (q) => q.eq('userId', profile._id).eq('name', name))
+      .first()
+    if (existing) return existing._id
+    return await ctx.db.insert('bookmarkFolders', { userId: profile._id, name })
+  },
+})
+
+export const renameFolder = mutation({
+  args: { folderId: v.id('bookmarkFolders'), name: v.string() },
+  handler: async (ctx, args) => {
+    const profile = await requireUser(ctx)
+    const folder = await ctx.db.get('bookmarkFolders', args.folderId)
+    if (!folder || folder.userId !== profile._id) throw new Error('Folder not found')
+    const name = args.name.trim()
+    if (!name || name.length > 60) throw new Error('Folder name must be 1 to 60 characters')
+    const existing = await ctx.db
+      .query('bookmarkFolders')
+      .withIndex('by_user_and_name', (q) => q.eq('userId', profile._id).eq('name', name))
+      .first()
+    if (existing && existing._id !== folder._id) throw new Error('Folder already exists')
+    await ctx.db.patch('bookmarkFolders', folder._id, { name })
+  },
+})
+
+export const deleteFolder = mutation({
+  args: { folderId: v.id('bookmarkFolders') },
+  handler: async (ctx, args) => {
+    const profile = await requireUser(ctx)
+    const folder = await ctx.db.get('bookmarkFolders', args.folderId)
+    if (!folder || folder.userId !== profile._id) throw new Error('Folder not found')
+    const bookmarks = await ctx.db
+      .query('eventBookmarks')
+      .withIndex('by_user_and_folder', (q) =>
+        q.eq('userId', profile._id).eq('folderId', folder._id),
+      )
+      .take(500)
+    for (const bookmark of bookmarks) {
+      await ctx.db.patch('eventBookmarks', bookmark._id, { folderId: undefined })
+    }
+    await ctx.db.delete('bookmarkFolders', folder._id)
+  },
+})
+
+export const moveToFolder = mutation({
+  args: {
+    eventId: v.id('events'),
+    folderId: v.optional(v.id('bookmarkFolders')),
+  },
+  handler: async (ctx, args) => {
+    const profile = await requireUser(ctx)
+    if (args.folderId) {
+      const folder = await ctx.db.get('bookmarkFolders', args.folderId)
+      if (!folder || folder.userId !== profile._id) throw new Error('Folder not found')
+    }
+    const bookmark = await ctx.db
+      .query('eventBookmarks')
+      .withIndex('by_userId_and_eventId', (q) =>
+        q.eq('userId', profile._id).eq('eventId', args.eventId),
+      )
+      .first()
+    if (!bookmark) throw new Error('Event is not bookmarked')
+    await ctx.db.patch('eventBookmarks', bookmark._id, { folderId: args.folderId })
+  },
+})
+
 export const toggle = mutation({
   args: { eventId: v.id('events') },
   handler: async (ctx, args) => {
