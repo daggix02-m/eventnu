@@ -17,7 +17,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
-import { PageHeader, StatsCard } from '@/components/shared/PageLayout'
+import { PageHeader, StatsCard } from '@/components/layout/PageLayout'
 import {
   DataTable,
   FilterSelect,

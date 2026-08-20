@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
-import { UserCombobox } from '@/components/shared/UserCombobox'
+import { UserCombobox } from '@/components/users/UserCombobox'
 import {
   createAnnouncement,
   updateAnnouncement,

@@ -4,7 +4,7 @@ import {
   getRecentModerationLogs,
 } from '@/lib/actions/dashboard'
 import { StatCard } from '@/components/shared/StatCard'
-import { PageWrapper, PageHeader } from '@/components/shared/PageLayout'
+import { PageWrapper, PageHeader } from '@/components/layout/PageLayout'
 import { Button } from '@/components/ui'
 import { Badge } from '@/components/ui'
 import { Avatar } from '@/components/ui'

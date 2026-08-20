@@ -21,7 +21,7 @@ import {
 import { Button } from '@/components/ui'
 import { Badge } from '@/components/ui'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
-import { PageHeader } from '@/components/shared/PageLayout'
+import { PageHeader } from '@/components/layout/PageLayout'
 import {
   DataTable,
   EmptyState,
