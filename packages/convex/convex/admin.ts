@@ -50,6 +50,7 @@ const ALL_TABLES: TableNames[] = [
   'verificationScores',
   'engagementCounters',
   'organizerSettings',
+  'cronCheckpoints',
   'instagramConnections',
   'instagramConnectStates',
   'instagramSyncLogs',

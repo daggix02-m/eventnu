@@ -369,6 +369,12 @@ const schema = defineSchema({
     emailEvents: v.boolean(),
     emailUsers: v.boolean(),
   }).index('by_admin', ['adminId']),
+
+  cronCheckpoints: defineTable({
+    key: v.string(),
+    cursor: v.optional(v.string()),
+    updatedAt: v.number(),
+  }).index('by_key', ['key']),
 })
 
 export default schema

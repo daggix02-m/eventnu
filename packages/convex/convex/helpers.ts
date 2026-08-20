@@ -74,6 +74,25 @@ export function uniqueSlug(text: string): string {
   return `${slugify(text)}-${Math.random().toString(36).substring(2, 7)}`
 }
 
+/**
+ * Throw if another event already uses a slug. Pass the event's own id when
+ * updating so the current row is exempt. Prevents duplicate slugs that would
+ * make the public `getBySlug` page throw on `.unique()`.
+ */
+export async function assertUniqueEventSlug(
+  ctx: QueryCtx | MutationCtx,
+  slug: string,
+  excludeEventId?: Id<'events'>,
+): Promise<void> {
+  const existing = await ctx.db
+    .query('events')
+    .withIndex('by_slug', (q) => q.eq('slug', slug))
+    .first()
+  if (existing && existing._id !== excludeEventId) {
+    throw new Error('An event with this slug already exists')
+  }
+}
+
 /** Escape HTML-significant characters so user content can't break out of a template. */
 export function escapeHtml(value: string): string {
   return value

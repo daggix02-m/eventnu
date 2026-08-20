@@ -110,9 +110,28 @@ export async function computeProfileMetrics(
 export const evaluateEligibility = internalMutation({
   args: {},
   handler: async (ctx) => {
+    // Resume from the previous run's watermark so profiles past the first
+    // 10k are eventually scored (the old loop always started from cursor null
+    // and stopped after 20 pages, silently skipping everyone beyond that).
+    const CHECKPOINT_KEY = 'verification'
+    const MAX_RUNTIME_MS = 30_000 // safety margin inside the mutation budget
+    const start = Date.now()
     let evaluated = 0
-    let cursor: string | null = null
-    for (let i = 0; i < 20; i++) {
+    let done = false
+
+    const checkpoint = await ctx.db
+      .query('cronCheckpoints')
+      .withIndex('by_key', (q) => q.eq('key', CHECKPOINT_KEY))
+      .first()
+    const checkpointId =
+      checkpoint?._id ??
+      (await ctx.db.insert('cronCheckpoints', {
+        key: CHECKPOINT_KEY,
+        updatedAt: start,
+      }))
+    let cursor = checkpoint?.cursor ?? null
+
+    for (let i = 0; i < 10_000; i++) {
       const page = await ctx.db.query('profiles').paginate({ cursor, numItems: 500 })
       for (const profile of page.page) {
         const { kind, metrics } = await computeProfileMetrics(ctx, profile)
@@ -129,10 +148,20 @@ export const evaluateEligibility = internalMutation({
         }
         evaluated++
       }
-      if (page.isDone || page.continueCursor === null) break
+      if (page.isDone) {
+        // Full pass complete — reset the watermark so the next run starts fresh.
+        await ctx.db.patch('cronCheckpoints', checkpointId, {
+          cursor: undefined,
+          updatedAt: Date.now(),
+        })
+        done = true
+        break
+      }
       cursor = page.continueCursor
+      await ctx.db.patch('cronCheckpoints', checkpointId, { cursor, updatedAt: Date.now() })
+      if (Date.now() - start > MAX_RUNTIME_MS) break
     }
-    return { evaluated }
+    return { evaluated, done }
   },
 })
 

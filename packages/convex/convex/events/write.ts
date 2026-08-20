@@ -2,6 +2,7 @@ import { v } from 'convex/values'
 import { mutation } from '../_generated/server'
 import { Doc } from '../_generated/dataModel'
 import {
+  assertUniqueEventSlug,
   insertEventImages,
   insertModerationLog,
   patchDefined,
@@ -85,6 +86,7 @@ export const create = mutation({
     const images = (args.images ?? []).slice(0, MAX_EVENT_IMAGES)
 
     const slug = args.slug ?? uniqueSlug(args.title)
+    await assertUniqueEventSlug(ctx, slug)
 
     const eventId = await ctx.db.insert('events', {
       title: args.title,
@@ -203,6 +205,7 @@ export const update = mutation({
     if (fields.externalLink) validateUrl(fields.externalLink, 'External link')
     if (fields.venueMapLink) validateUrl(fields.venueMapLink, 'Venue map link')
     if (fields.teaserVideoUrl) validateUrl(fields.teaserVideoUrl, 'Teaser video URL')
+    if (fields.slug) await assertUniqueEventSlug(ctx, fields.slug, eventId)
     const updates = {
       ...patchDefined(fields),
       ...(fields.actionType !== undefined

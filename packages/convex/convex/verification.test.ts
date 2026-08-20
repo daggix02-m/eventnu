@@ -242,3 +242,84 @@ describe('verification.revoke', () => {
     expect(patch).toHaveBeenCalledWith('profiles', 'profiles_target', { verified: false })
   })
 })
+
+const { evaluateEligibility } = await import('./verification')
+type EvaluateHandler = (
+  ctx: unknown,
+  args: unknown,
+) => Promise<{ evaluated: number; done: boolean }>
+const evaluateHandler = (evaluateEligibility as unknown as { _handler: EvaluateHandler })._handler
+
+function makeCronCtx(opts: {
+  totalProfiles: number
+  existingCheckpoint?: { _id: string; cursor: string | null }
+}) {
+  const now = Date.now()
+  const profiles = Array.from({ length: opts.totalProfiles }, (_, i) => ({
+    _id: `profiles_p${i}`,
+    role: 'user' as const,
+    followerCount: 0,
+    suspended: false,
+  }))
+  const pages: Array<{ page: typeof profiles; isDone: boolean; continueCursor: string | null }> = []
+  for (let offset = 0; offset < profiles.length; offset += 3) {
+    pages.push({
+      page: profiles.slice(offset, offset + 3),
+      isDone: offset + 3 >= profiles.length,
+      continueCursor: offset + 3 < profiles.length ? `cursor-${offset + 3}` : null,
+    })
+  }
+  let pageIndex = 0
+  const db = {
+    query: (table: string) => {
+      const queryBuilder = {
+        withIndex: (name: string, pred: (q: unknown) => unknown) => queryBuilder,
+        paginate: async (opts: { cursor: string | null }) => {
+          const resumeFrom = opts.cursor
+            ? pages.findIndex((p) => p.continueCursor === opts.cursor) + 1
+            : 0
+          pageIndex = resumeFrom
+          const page = pages[pageIndex] ?? { page: [], isDone: true, continueCursor: null }
+          pageIndex++
+          return page
+        },
+        first: async () => (table === 'cronCheckpoints' ? (opts.existingCheckpoint ?? null) : null),
+      }
+      return queryBuilder
+    },
+    insert: vi.fn(async (_table: string, _doc: unknown) => 'cronCheckpoints_new'),
+    patch: vi.fn(async () => undefined),
+    get: vi.fn(async () => null),
+  }
+  return { ctx: { db }, db, pages }
+}
+
+describe('verification.evaluateEligibility', () => {
+  it('processes every profile across multiple pages (no 10k cap)', async () => {
+    const { ctx, db, pages } = makeCronCtx({ totalProfiles: 9 })
+    const result = await evaluateHandler(ctx, {})
+    expect(result.evaluated).toBe(9)
+    expect(result.done).toBe(true)
+    // Checkpoint watermark reset after a full pass so the next run starts fresh.
+    expect(db.patch).toHaveBeenCalledWith(
+      'cronCheckpoints',
+      'cronCheckpoints_new',
+      expect.objectContaining({ cursor: undefined }),
+    )
+  })
+
+  it('resumes from the previous run watermark instead of restarting', async () => {
+    const { ctx, db } = makeCronCtx({
+      totalProfiles: 6,
+      existingCheckpoint: { _id: 'cronCheckpoints_existing', cursor: 'cursor-3' },
+    })
+    const result = await evaluateHandler(ctx, {})
+    expect(result.evaluated).toBe(3) // resumes at page 2 (cursor-3), skipping page 1
+    expect(result.done).toBe(true)
+    expect(db.patch).toHaveBeenCalledWith(
+      'cronCheckpoints',
+      'cronCheckpoints_existing',
+      expect.objectContaining({ cursor: undefined }),
+    )
+  })
+})

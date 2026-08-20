@@ -27,7 +27,7 @@ export const getPublished = query({
 export const getFeatured = query({
   args: { startDate: v.number(), limit: v.optional(v.number()) },
   handler: async (ctx, args) => {
-    const limit = args.limit ?? 5
+    const limit = Math.min(Math.max(1, args.limit ?? 5), 50)
     const events = await ctx.db
       .query('events')
       .withIndex('by_isFeatured_and_startDate', (q) => q.eq('isFeatured', true))
@@ -43,10 +43,13 @@ export const getFeatured = query({
 export const getBySlug = query({
   args: { slug: v.string() },
   handler: async (ctx, args) => {
+    // .first() (not .unique()) so a legacy duplicate slug resolves to the most
+    // recent match instead of throwing; write paths now enforce uniqueness.
     const event = await ctx.db
       .query('events')
       .withIndex('by_slug', (q) => q.eq('slug', args.slug))
-      .unique()
+      .order('desc')
+      .first()
     if (!event || event.status !== 'published') return null
     return enrichPublicEvent(ctx, event, true)
   },
