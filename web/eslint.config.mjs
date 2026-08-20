@@ -40,7 +40,15 @@ const spacingShadowGuard = {
 
 const eslintConfig = [
   {
-    ignores: ['node_modules/', '.next/', 'out/', 'next-env.d.ts', 'packages/convex/**'],
+    ignores: [
+      'node_modules/',
+      '.next/',
+      'out/',
+      'next-env.d.ts',
+      'coverage/',
+      'stitch-screenshots/',
+      'packages/convex/**',
+    ],
   },
   ...nextVitals,
   ...nextTs,

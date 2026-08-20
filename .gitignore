@@ -11,3 +11,9 @@ Thumbs.db
 *.log
 *.tsbuildinfo
 coverage/
+
+# Local agent tooling artifacts (installed via `npx convex ai-files install`)
+.agents/
+.claude/
+skills-lock.json
+stitch-screenshots/
