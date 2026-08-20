@@ -60,9 +60,21 @@ export function useCursorPaginatedList<T, F>({
   const hasPrev = cursors.length > 0
   const pageIndex = cursors.length + 1
 
-  const next = useCallback(() => {
-    setCursors((prev) => (data?.nextCursor ? [...prev, data.nextCursor] : prev))
+  // Keep the latest page in a ref so rapid Next clicks can't push the same
+  // cursor twice off a stale closure. Updated in an effect (not during render).
+  const dataRef = useRef(data)
+  useEffect(() => {
+    dataRef.current = data
   }, [data])
+
+  const next = useCallback(() => {
+    setCursors((prev) => {
+      const nextCursor = dataRef.current?.nextCursor
+      if (!nextCursor || dataRef.current?.isDone) return prev
+      if (prev[prev.length - 1] === nextCursor) return prev
+      return [...prev, nextCursor]
+    })
+  }, [])
 
   const prev = useCallback(() => {
     setCursors((prev) => (prev.length > 0 ? prev.slice(0, -1) : prev))

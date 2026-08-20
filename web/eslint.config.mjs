@@ -56,6 +56,7 @@ const eslintConfig = [
     rules: {
       '@typescript-eslint/no-explicit-any': 'error',
       '@next/next/no-img-element': 'off',
+      '@next/next/no-html-link-for-pages': ['error', 'app'],
       'react-hooks/set-state-in-effect': 'off',
       'react-hooks/static-components': 'off',
       'react-hooks/purity': 'off',

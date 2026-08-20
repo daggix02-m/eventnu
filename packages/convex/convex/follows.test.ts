@@ -17,13 +17,16 @@ const listFollowersHandler = (listFollowers as unknown as { _handler: Handler })
 function makeToggleCtx(opts: {
   existing?: Array<Record<string, unknown>>
   user?: Record<string, unknown> | null
+  organizer?: Record<string, unknown> | null
 }) {
   const insert = vi.fn(async () => 'follows_new')
   const del = vi.fn(async () => undefined)
   const patch = vi.fn(async () => undefined)
-  const get = vi.fn(async (table: string, _id: string) =>
-    table === 'profiles' ? (opts.user ?? null) : null,
-  )
+  const get = vi.fn(async (table: string, _id: string) => {
+    if (table === 'profiles') return opts.user ?? null
+    if (table === 'organizerProfiles') return opts.organizer ?? null
+    return null
+  })
   const query = vi.fn(() => ({
     withIndex: () => ({
       take: vi.fn(async () => opts.existing ?? []),
@@ -54,6 +57,52 @@ describe('follows.toggle (user)', () => {
     const result = await toggleHandler(ctx, { followingId: 'profiles_target', followType: 'user' })
     expect(result).toBe(false)
     expect(patch).toHaveBeenCalledWith('profiles', 'profiles_target', { followerCount: 4 })
+  })
+})
+
+describe('follows.toggle (organizer)', () => {
+  it('follows an organizer profile and increments its follower count', async () => {
+    const { ctx, insert, patch } = makeToggleCtx({
+      existing: [],
+      organizer: { _id: 'organizerProfiles_target', followerCount: 10 },
+    })
+    const result = await toggleHandler(ctx, {
+      followingId: 'organizerProfiles_target',
+      followType: 'organizer',
+    })
+    expect(result).toBe(true)
+    expect(insert).toHaveBeenCalledWith(
+      'follows',
+      expect.objectContaining({ followType: 'organizer' }),
+    )
+    expect(patch).toHaveBeenCalledWith('organizerProfiles', 'organizerProfiles_target', {
+      followerCount: 11,
+    })
+  })
+
+  it('unfollows an organizer profile and decrements its follower count', async () => {
+    const { ctx, patch } = makeToggleCtx({
+      existing: [{ _id: 'follows_existing', followType: 'organizer' }],
+      organizer: { _id: 'organizerProfiles_target', followerCount: 10 },
+    })
+    const result = await toggleHandler(ctx, {
+      followingId: 'organizerProfiles_target',
+      followType: 'organizer',
+    })
+    expect(result).toBe(false)
+    expect(patch).toHaveBeenCalledWith('organizerProfiles', 'organizerProfiles_target', {
+      followerCount: 9,
+    })
+  })
+
+  it('tolerates a missing target without throwing', async () => {
+    const { ctx, insert } = makeToggleCtx({ existing: [], organizer: null })
+    const result = await toggleHandler(ctx, {
+      followingId: 'organizerProfiles_missing',
+      followType: 'organizer',
+    })
+    expect(result).toBe(true)
+    expect(insert).toHaveBeenCalled()
   })
 })
 

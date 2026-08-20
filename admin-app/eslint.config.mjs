@@ -20,6 +20,7 @@ const eslintConfig = [
       'react-hooks/set-state-in-effect': 'off',
       'react-hooks/static-components': 'off',
       '@next/next/no-img-element': 'off',
+      '@next/next/no-html-link-for-pages': ['error', 'src/app'],
       '@typescript-eslint/no-unused-vars': [
         'error',
         { args: 'none', caughtErrors: 'none', ignoreRestSiblings: true },
