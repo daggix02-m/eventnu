@@ -15,7 +15,7 @@ const RESEND_BASE = 'https://api.resend.com'
 const DEFAULT_FROM = 'EventNu <onboarding@resend.dev>'
 const CODE_ALPHABET = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ'
 
-function generateCode(length = 8): string {
+function generateCode(length = 10): string {
   const buf = new Uint32Array(length)
   crypto.getRandomValues(buf)
   let code = ''
@@ -25,7 +25,68 @@ function generateCode(length = 8): string {
   return code
 }
 
-const emailProvider = {
+function buildSignInHtml(escapedUrl: string, escapedToken: string): string {
+  return `
+    <div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:24px">
+      <h2 style="margin:0 0 16px">Your EventNu sign-in code</h2>
+      <p>Hi there,</p>
+      <p>Use the button below to securely sign in to EventNu. This link expires in one hour.</p>
+      <p style="margin:24px 0">
+        <a href="${escapedUrl}" style="background:#a078ff;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;display:inline-block;font-weight:bold">
+          Sign in to EventNu
+        </a>
+      </p>
+      <p>Or enter this code manually:</p>
+      <div style="background:#f5f5f5;border-radius:8px;padding:16px;margin:16px 0;font-size:24px;font-weight:bold;letter-spacing:4px;text-align:center">
+        ${escapedToken}
+      </div>
+      <p style="color:#666;font-size:14px">If you didn't request this, you can safely ignore this email.</p>
+    </div>
+  `
+}
+
+function buildResetHtml(escapedUrl: string, escapedToken: string): string {
+  return `
+    <div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:24px">
+      <h2 style="margin:0 0 16px">Reset your EventNu password</h2>
+      <p>Hi there,</p>
+      <p>We received a request to reset your password. Use the button below to set a new password. This link expires in one hour.</p>
+      <p style="margin:24px 0">
+        <a href="${escapedUrl}" style="background:#a078ff;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;display:inline-block;font-weight:bold">
+          Reset your password
+        </a>
+      </p>
+      <p>Or enter this code manually:</p>
+      <div style="background:#f5f5f5;border-radius:8px;padding:16px;margin:16px 0;font-size:24px;font-weight:bold;letter-spacing:4px;text-align:center">
+        ${escapedToken}
+      </div>
+      <p style="color:#666;font-size:14px">If you didn't request a password reset, you can safely ignore this email.</p>
+    </div>
+  `
+}
+
+async function sendEmail(email: string, subject: string, html: string): Promise<void> {
+  const envVars = env as unknown as Record<string, string | undefined>
+  const apiKey = envVars.RESEND_API_KEY
+  if (!apiKey) throw new Error('RESEND_API_KEY not configured')
+  const from = envVars.RESEND_FROM ?? DEFAULT_FROM
+
+  const res = await fetch(`${RESEND_BASE}/emails`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ from, to: email, subject, html }),
+  })
+  if (!res.ok) {
+    const text = await res.text()
+    console.error(`Resend API error ${res.status}: ${text}`)
+    throw new Error('Failed to send verification email')
+  }
+}
+
+const signInProvider = {
   maxAge: 60 * 60, // 1 hour
   normalizeIdentifier: (identifier: string) => identifier.trim().toLowerCase(),
   generateVerificationToken: () => generateCode(),
@@ -38,46 +99,32 @@ const emailProvider = {
     url: string
     token: string
   }) => {
-    const envVars = env as unknown as Record<string, string | undefined>
-    const apiKey = envVars.RESEND_API_KEY
-    if (!apiKey) throw new Error('RESEND_API_KEY not configured')
-    const from = envVars.RESEND_FROM ?? DEFAULT_FROM
+    await sendEmail(
+      email,
+      'Your EventNu sign-in code',
+      buildSignInHtml(escapeHtml(url), escapeHtml(token)),
+    )
+  },
+}
 
-    const html = `
-      <div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:24px">
-        <h2 style="margin:0 0 16px">Your EventNu sign-in link</h2>
-        <p>Hi there,</p>
-        <p>Use the button below to securely sign in to EventNu. This link expires in one hour.</p>
-        <p style="margin:24px 0">
-          <a href="${escapeHtml(url)}" style="background:#a078ff;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;display:inline-block;font-weight:bold">
-            Sign in to EventNu
-          </a>
-        </p>
-        <p>Or enter this code manually:</p>
-        <div style="background:#f5f5f5;border-radius:8px;padding:16px;margin:16px 0;font-size:24px;font-weight:bold;letter-spacing:4px;text-align:center">
-          ${escapeHtml(token)}
-        </div>
-        <p style="color:#666;font-size:14px">If you didn't request this, you can safely ignore this email.</p>
-      </div>
-    `
-
-    const res = await fetch(`${RESEND_BASE}/emails`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from,
-        to: email,
-        subject: 'Your EventNu sign-in code',
-        html,
-      }),
-    })
-    if (!res.ok) {
-      const text = await res.text()
-      throw new Error(`Resend error ${res.status}: ${text}`)
-    }
+const resetProvider = {
+  maxAge: 60 * 60, // 1 hour
+  normalizeIdentifier: (identifier: string) => identifier.trim().toLowerCase(),
+  generateVerificationToken: () => generateCode(),
+  sendVerificationRequest: async ({
+    identifier: email,
+    url,
+    token,
+  }: {
+    identifier: string
+    url: string
+    token: string
+  }) => {
+    await sendEmail(
+      email,
+      'Reset your EventNu password',
+      buildResetHtml(escapeHtml(url), escapeHtml(token)),
+    )
   },
 }
 
@@ -99,15 +146,21 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
                 .toLowerCase(),
             }
       },
-      reset: Email(emailProvider),
+      reset: Email(resetProvider),
     }),
-    Email(emailProvider),
+    Email(signInProvider),
   ],
 })
 
+const MIN_PASSWORD_LENGTH = 8
+
 export type ChangePasswordResult =
   | { ok: true }
-  | { ok: false; reason: 'invalid_current_password' | 'rate_limited' | 'not_authenticated' }
+  | {
+      ok: false
+      reason:
+        'invalid_current_password' | 'rate_limited' | 'not_authenticated' | 'password_too_short'
+    }
 
 export const changePassword = action({
   args: {
@@ -115,6 +168,10 @@ export const changePassword = action({
     newPassword: v.string(),
   },
   handler: async (ctx, { currentPassword, newPassword }): Promise<ChangePasswordResult> => {
+    if (newPassword.length < MIN_PASSWORD_LENGTH) {
+      return { ok: false, reason: 'password_too_short' }
+    }
+
     const userId = await getAuthUserId(ctx)
     if (!userId) return { ok: false, reason: 'not_authenticated' }
 

@@ -12,6 +12,7 @@ import { format } from 'date-fns'
 import { formatDate } from '@/lib/format'
 import Link from 'next/link'
 import { Calendar, CalendarDays, Clock, Users, Flag, ArrowRight, Activity } from 'lucide-react'
+import { logError } from '@/lib/logger'
 
 export default async function DashboardPage() {
   let stats: Awaited<ReturnType<typeof getDashboardStats>> = {
@@ -30,7 +31,7 @@ export default async function DashboardPage() {
       getRecentModerationLogs(),
     ])
   } catch (err) {
-    console.error('Failed to load dashboard:', err)
+    logError('admin/dashboard', err)
   }
 
   const isEmpty =
@@ -152,7 +153,7 @@ export default async function DashboardPage() {
                 </Link>
               </div>
               <div className="divide-y divide-outline-variant">
-                {pendingEvents.map((event) => (
+                {pendingEvents.map((event: (typeof pendingEvents)[number]) => (
                   <div
                     key={event.id}
                     className="p-4 flex items-center gap-4 hover:bg-surface-container-low transition-colors"
@@ -205,7 +206,7 @@ export default async function DashboardPage() {
                   No moderation activity yet.
                 </div>
               ) : (
-                moderationLogs.map((log) => (
+                moderationLogs.map((log: (typeof moderationLogs)[number]) => (
                   <div
                     key={log.id}
                     className="p-4 flex items-center gap-4 hover:bg-surface-container-low transition-colors"

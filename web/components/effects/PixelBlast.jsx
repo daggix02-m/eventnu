@@ -331,6 +331,16 @@ const PixelBlast = ({
 
   const threeRef = useRef(null)
   const prevConfigRef = useRef(null)
+
+  // Pause rendering when tab is backgrounded to save GPU/CPU
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      visibilityRef.current.visible = document.visibilityState === 'visible'
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [])
+
   useEffect(() => {
     const container = containerRef.current
     if (!container) return

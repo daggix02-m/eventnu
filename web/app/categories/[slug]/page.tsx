@@ -7,7 +7,8 @@ import { EventList } from '@/components/events/EventList'
 import { getCategoryBySlug, getEventsByCategory, getCategoriesWithCounts } from '@/lib/api/events'
 import { getCategoryIcon } from '@/lib/category-icons'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 300
+export const dynamic = 'force-static'
 
 interface CategoryPageProps {
   params: Promise<{ slug: string }>

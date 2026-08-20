@@ -1,5 +1,6 @@
 import { getOrganizers } from '@/lib/actions/organizers'
 import { OrganizersClient } from '@/components/organizers/OrganizersClient'
+import { logError } from '@/lib/logger'
 
 export default async function OrganizersPage({
   searchParams,
@@ -18,7 +19,7 @@ export default async function OrganizersPage({
   try {
     initial = await getOrganizers({ verified, search })
   } catch (err) {
-    console.error('Failed to load organizers:', err)
+    logError('admin/organizers', err)
   }
 
   return (

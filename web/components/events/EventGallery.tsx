@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { ChevronLeft, ChevronRight, Instagram } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn, isSafeUrl } from '@/lib/utils'
 import { filterStyle, aspectClass, sortedImages } from '@/lib/media'
 import type { Event, EventImage } from '@/types'
 
@@ -84,7 +84,7 @@ export function EventGallery({ event, className }: EventGalleryProps) {
         </>
       )}
 
-      {event.insta_permalink && (
+      {event.insta_permalink && isSafeUrl(event.insta_permalink) && (
         <a
           href={event.insta_permalink}
           target="_blank"

@@ -70,12 +70,18 @@ export function ReservationForm({ event }: ReservationFormProps) {
             <CheckCircle2 className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="font-display text-lg font-bold text-on-surface">Reservation Confirmed!</h3>
-            <p className="text-xs text-on-surface-variant font-mono">Spot reserved for {name || 'you'}</p>
+            <h3 className="font-display text-lg font-bold text-on-surface">
+              Reservation Confirmed!
+            </h3>
+            <p className="text-xs text-on-surface-variant font-mono">
+              Spot reserved for {name || 'you'}
+            </p>
           </div>
         </div>
         <p className="text-sm text-on-surface-variant leading-relaxed">
-          We&apos;ve recorded your spot for <strong className="text-on-surface">{event.title}</strong>. Watch your inbox at <strong className="text-on-surface">{email}</strong> for updates and check-in info.
+          We&apos;ve recorded your spot for{' '}
+          <strong className="text-on-surface">{event.title}</strong>. Watch your inbox at{' '}
+          <strong className="text-on-surface">{email}</strong> for updates and check-in info.
         </p>
       </div>
     )
@@ -102,7 +108,10 @@ export function ReservationForm({ event }: ReservationFormProps) {
 
       <form onSubmit={handleSubmit} className="space-y-3.5">
         <div>
-          <label htmlFor={`res-name-${event.id}`} className="block text-xs font-mono text-on-surface-variant mb-1 uppercase tracking-wider">
+          <label
+            htmlFor={`res-name-${event.id}`}
+            className="block text-xs font-mono text-on-surface-variant mb-1 uppercase tracking-wider"
+          >
             Full Name
           </label>
           <input
@@ -112,12 +121,16 @@ export function ReservationForm({ event }: ReservationFormProps) {
             onChange={(e) => setName(e.target.value)}
             placeholder="e.g. Abebe Bikila"
             required
+            autoComplete="name"
             className={inputClass}
           />
         </div>
 
         <div>
-          <label htmlFor={`res-email-${event.id}`} className="block text-xs font-mono text-on-surface-variant mb-1 uppercase tracking-wider">
+          <label
+            htmlFor={`res-email-${event.id}`}
+            className="block text-xs font-mono text-on-surface-variant mb-1 uppercase tracking-wider"
+          >
             Email Address
           </label>
           <input
@@ -127,12 +140,16 @@ export function ReservationForm({ event }: ReservationFormProps) {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="e.g. abebe@example.com"
             required
+            autoComplete="email"
             className={inputClass}
           />
         </div>
 
         <div>
-          <label htmlFor={`res-msg-${event.id}`} className="block text-xs font-mono text-on-surface-variant mb-1 uppercase tracking-wider">
+          <label
+            htmlFor={`res-msg-${event.id}`}
+            className="block text-xs font-mono text-on-surface-variant mb-1 uppercase tracking-wider"
+          >
             Note to Host (optional)
           </label>
           <textarea
@@ -146,13 +163,21 @@ export function ReservationForm({ event }: ReservationFormProps) {
         </div>
 
         {status === 'error' && (
-          <div className="flex items-center gap-2 p-3 rounded-xl bg-error/10 border border-error/20 text-xs text-error font-medium">
+          <div
+            role="alert"
+            className="flex items-center gap-2 p-3 rounded-xl bg-error/10 border border-error/20 text-xs text-error font-medium"
+          >
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{error}</span>
           </div>
         )}
 
-        <Button type="submit" size="lg" className="w-full font-bold text-sm rounded-xl" disabled={status === 'loading'}>
+        <Button
+          type="submit"
+          size="lg"
+          className="w-full font-bold text-sm rounded-xl"
+          disabled={status === 'loading'}
+        >
           {status === 'loading' ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin mr-2" /> Submitting Request...

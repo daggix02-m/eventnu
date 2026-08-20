@@ -1,6 +1,7 @@
 import { getUsers } from '@/lib/actions/users'
 import { getCurrentAdminProfile } from '@/lib/actions/session'
 import { UsersClient } from '@/components/users/UsersClient'
+import { logError } from '@/lib/logger'
 
 export default async function UsersPage({
   searchParams,
@@ -15,14 +16,14 @@ export default async function UsersPage({
   try {
     initial = await getUsers({ status, search })
   } catch (err) {
-    console.error('Failed to load users:', err)
+    logError('admin/users', err)
   }
 
   let currentAdmin = null
   try {
     currentAdmin = await getCurrentAdminProfile()
   } catch (err) {
-    console.error('Failed to load admin profile:', err)
+    logError('admin/users:profile', err)
   }
 
   return (

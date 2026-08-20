@@ -1,6 +1,7 @@
 'use server'
 
 import { fetchQuery } from '@/lib/actions/authedFetch'
+import type { Doc } from '@eventnu/convex/_generated/dataModel'
 import { api } from '@eventnu/convex/_generated/api'
 import { mapModerationLog } from '../mappers'
 
@@ -22,7 +23,7 @@ export async function getDashboardStats() {
 
 export async function getPendingReviewEvents() {
   const events = await fetchQuery(api.events.read.getPendingReview)
-  return events.map((e) => ({
+  return events.map((e: Doc<'events'>) => ({
     id: e._id,
     title: e.title,
     poster_url: e.posterUrl,
@@ -34,10 +35,10 @@ export async function getPendingReviewEvents() {
 
 export async function getRecentModerationLogs() {
   const logs = await fetchQuery(api.moderation.getRecent, { limit: 10 })
-  return logs.map((log) => mapModerationLog(log))
+  return logs.map((log: Doc<'moderationLogs'> & { adminName: string }) => mapModerationLog(log))
 }
 
 export async function getModerationLogsByTarget(targetType: string, targetId: string) {
   const logs = await fetchQuery(api.moderation.getByTarget, { targetType, targetId })
-  return logs.map((log) => mapModerationLog(log))
+  return logs.map((log: Doc<'moderationLogs'> & { adminName: string }) => mapModerationLog(log))
 }

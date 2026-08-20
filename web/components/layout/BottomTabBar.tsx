@@ -6,7 +6,7 @@ import { usePathname, useSearchParams } from 'next/navigation'
 import { Home, CalendarDays, Bookmark, User, type LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useConvexAuth } from '@convex-dev/auth/react'
-import { useAuthModal } from '@/components/auth/AuthModalContext'
+import { useAuthRedirect } from '@/components/auth/AuthRedirectContext'
 
 interface TabDef {
   key: string
@@ -53,7 +53,7 @@ function TabBarContent() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const { isAuthenticated } = useConvexAuth()
-  const { openAuth } = useAuthModal()
+  const { openAuth } = useAuthRedirect()
   const tabParam = searchParams.get('tab')
 
   return (
@@ -71,12 +71,7 @@ function TabBarContent() {
             onClick={(e) => {
               if (tab.requiresAuth && !isAuthenticated) {
                 e.preventDefault()
-                try {
-                  sessionStorage.setItem('eventnu_auth_redirect', tab.href)
-                } catch {
-                  /* storage unavailable */
-                }
-                openAuth()
+                openAuth(tab.href)
               }
             }}
             aria-label={tab.label}
@@ -113,6 +108,9 @@ function TabBarContent() {
 }
 
 export function BottomTabBar() {
+  const pathname = usePathname()
+  if (pathname.startsWith('/auth')) return null
+
   return (
     <div className="fixed bottom-[max(0.85rem,env(safe-area-inset-bottom))] inset-x-0 z-60 md:hidden flex justify-center px-4 pointer-events-none">
       <Suspense fallback={null}>

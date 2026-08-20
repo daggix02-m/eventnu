@@ -2,6 +2,7 @@ import { getCategories } from '@/lib/actions/categories'
 import { getAllOrganizers } from '@/lib/actions/organizers'
 import { getFeaturedSections } from '@/lib/actions/settings'
 import { EventForm } from '@/components/events/EventForm'
+import { logError } from '@/lib/logger'
 
 export default async function CreateEventPage() {
   let allCategories: Awaited<ReturnType<typeof getCategories>> = []
@@ -14,7 +15,7 @@ export default async function CreateEventPage() {
       getFeaturedSections(),
     ])
   } catch (err) {
-    console.error('Failed to load event form data:', err)
+    logError('admin/events:new', err)
   }
 
   return (

@@ -3,14 +3,7 @@
 import { useRef, useState } from 'react'
 import { useGSAP } from '@gsap/react'
 import { gsap } from '@/lib/gsap'
-import {
-  ChevronDown,
-  DollarSign,
-  Shield,
-  CreditCard,
-  Eye,
-  ArrowRight,
-} from 'lucide-react'
+import { ChevronDown, DollarSign, Shield, CreditCard, Eye, ArrowRight } from 'lucide-react'
 import { Container } from '@/components/layout/Container'
 import Link from 'next/link'
 
@@ -191,14 +184,16 @@ export function OrganizersFAQ() {
                     />
                   </button>
                   <div
-                    className={`transition-all duration-300 ease-in-out overflow-hidden ${
+                    className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${
                       isOpen
-                        ? 'max-h-[300px] opacity-100 border-t border-outline-variant/15'
-                        : 'max-h-0 opacity-0'
+                        ? 'grid-rows-[1fr] opacity-100 border-t border-outline-variant/15'
+                        : 'grid-rows-[0fr] opacity-0'
                     }`}
                   >
-                    <div className="p-md text-on-surface-variant text-body-md leading-relaxed">
-                      {item.answer}
+                    <div className="overflow-hidden min-h-0">
+                      <div className="p-md text-on-surface-variant text-body-md leading-relaxed">
+                        {item.answer}
+                      </div>
                     </div>
                   </div>
                 </div>

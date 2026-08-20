@@ -38,48 +38,49 @@ function makeCtx(opts: {
 }
 
 describe('profiles.ensureProfile', () => {
-  it('creates an organizer profile when accountType is organizer', async () => {
+  it('always creates with user role (no accountType escalation)', async () => {
     const { ctx, insert } = makeCtx({
       user: { email: 'org@example.com' },
     })
-    const result = await handler(ctx, { fullName: 'Addis Nights', accountType: 'organizer' })
+    const result = await handler(ctx, { fullName: 'Addis Nights' })
     expect(result).toEqual({ id: 'profiles_new', created: true })
-    expect(insert).toHaveBeenCalledWith(
-      'profiles',
-      expect.objectContaining({ role: 'organizer', verified: false }),
-    )
-  })
-
-  it('defaults to a user role when accountType is omitted', async () => {
-    const { ctx, insert } = makeCtx({
-      user: { email: 'user@example.com' },
-    })
-    await handler(ctx, { fullName: 'Sara' })
     expect(insert).toHaveBeenCalledWith(
       'profiles',
       expect.objectContaining({ role: 'user', verified: false }),
     )
   })
 
-  it('promotes an email-matched user profile to organizer when requested', async () => {
+  it('defaults to a user role when no args provided', async () => {
+    const { ctx, insert } = makeCtx({
+      user: { email: 'user@example.com' },
+    })
+    await handler(ctx, {})
+    expect(insert).toHaveBeenCalledWith(
+      'profiles',
+      expect.objectContaining({ role: 'user', verified: false }),
+    )
+  })
+
+  it('links email-matched profile without role promotion', async () => {
     const { ctx, patch } = makeCtx({
       user: { email: 'org@example.com' },
       existingByEmail: { _id: 'profiles_existing', role: 'user' },
     })
-    const result = await handler(ctx, { accountType: 'organizer' })
+    const result = await handler(ctx, {})
     expect(result).toEqual({ id: 'profiles_existing', created: false })
+    // Should patch authUserId but NOT change role
     expect(patch).toHaveBeenCalledWith(
       'profiles',
       'profiles_existing',
-      expect.objectContaining({ role: 'organizer' }),
+      expect.objectContaining({ authUserId: 'users_test' }),
     )
   })
 
-  it('returns the existing profile without promotion when already present by auth user', async () => {
+  it('returns the existing profile when already present by auth user', async () => {
     const { ctx, insert } = makeCtx({
       existingByAuth: { _id: 'profiles_existing', role: 'user' },
     })
-    const result = await handler(ctx, { accountType: 'organizer' })
+    const result = await handler(ctx, {})
     expect(result).toEqual({ id: 'profiles_existing', created: false })
     expect(insert).not.toHaveBeenCalled()
   })

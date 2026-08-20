@@ -28,6 +28,7 @@ type Env = {
   readonly ADMIN_APP_URL: string | undefined;
   readonly ADMIN_BOOTSTRAP_KEY: string | undefined;
   readonly ADMIN_BOOTSTRAP_PASSWORD: string | undefined;
+  readonly ADMIN_EMAIL: string | undefined;
   readonly CONVEX_SITE_URL: string | undefined;
   readonly FACEBOOK_APP_ID: string | undefined;
   readonly FACEBOOK_APP_SECRET: string | undefined;

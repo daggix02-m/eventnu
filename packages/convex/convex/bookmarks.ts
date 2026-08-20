@@ -28,6 +28,30 @@ export const hasBookmarked = query({
   },
 })
 
+/**
+ * Bulk variant of `hasBookmarked`: returns a map of `eventId -> true` for the
+ * requested events the current user has bookmarked. Collapses N per-card
+ * subscriptions into a single query for list pages.
+ */
+export const hasBookmarkedBulk = query({
+  args: { eventIds: v.array(v.id('events')) },
+  handler: async (ctx, args) => {
+    const profile = await getUserProfile(ctx)
+    const result: Record<string, boolean> = {}
+    if (!profile || args.eventIds.length === 0) return result
+    const wanted = new Set(args.eventIds)
+    const bookmarks = await ctx.db
+      .query('eventBookmarks')
+      .withIndex('by_user', (q) => q.eq('userId', profile._id))
+      .order('desc')
+      .take(1000)
+    for (const bookmark of bookmarks) {
+      if (wanted.has(bookmark.eventId)) result[bookmark.eventId] = true
+    }
+    return result
+  },
+})
+
 export const listByUser = query({
   args: {},
   handler: async (ctx) => {

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '@eventnu/convex/_generated/api'
+import type { FunctionReturnType } from 'convex/server'
 import { useConvexAuth } from '@convex-dev/auth/react'
 import { LogIn, CalendarDays, Users, Megaphone, Plus, Loader2 } from 'lucide-react'
 import { Container } from '@/components/layout/Container'
@@ -13,7 +14,7 @@ import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Skeleton } from '@/components/ui/skeleton'
 import { VerifiedBadge } from '@/components/verification/VerifiedBadge'
-import { useAuthModal } from '@/components/auth/AuthModalContext'
+import { useAuthRedirect } from '@/components/auth/AuthRedirectContext'
 
 function describeError(err: unknown): string {
   return err instanceof Error ? err.message : 'Something went wrong.'
@@ -25,7 +26,7 @@ function formatTsShort(ts: number): string {
 
 export function OrganizerDashboard() {
   const { isAuthenticated, isLoading: authLoading } = useConvexAuth()
-  const { openAuth } = useAuthModal()
+  const { openAuth } = useAuthRedirect()
   const me = useQuery(api.profiles.getMe)
   const organizer = useQuery(api.organizers.getMine)
   const isManaged = organizer?.managementMode === 'organizer_managed'
@@ -69,7 +70,7 @@ export function OrganizerDashboard() {
           <p className="mt-xs font-body-md text-on-surface-variant">
             Create an organizer profile to list and promote your events across Addis.
           </p>
-          <Button className="mt-lg" onClick={openAuth}>
+          <Button className="mt-lg" onClick={() => openAuth()}>
             <LogIn className="h-4 w-4" /> Sign in
           </Button>
         </div>
@@ -247,7 +248,7 @@ export function OrganizerDashboard() {
           {/* Events */}
           <TabsContent value="events" className="space-y-md">
             <div className="rounded-2xl border border-outline-variant bg-surface-container-low p-4 sm:p-6">
-              <h2 className="font-display text-lg text-on-surface">New event</h2>
+              <h2 className="font-display text-lg font-bold text-on-surface">New event</h2>
               <form onSubmit={handleCreateEvent} className="mt-md space-y-md">
                 <div className="grid grid-cols-1 gap-md sm:grid-cols-2">
                   <div className="space-y-sm">
@@ -302,7 +303,7 @@ export function OrganizerDashboard() {
             </div>
 
             <div className="space-y-md">
-              <h2 className="font-display text-lg text-on-surface">Your events</h2>
+              <h2 className="font-display text-lg font-bold text-on-surface">Your events</h2>
               {events === undefined ? (
                 <Skeleton className="h-40 w-full rounded-2xl" />
               ) : events.length === 0 ? (
@@ -311,22 +312,24 @@ export function OrganizerDashboard() {
                 </p>
               ) : (
                 <ul className="space-y-sm">
-                  {events.map((event) => (
-                    <li
-                      key={event._id}
-                      className="flex items-center justify-between rounded-xl border border-outline-variant bg-surface-container-low p-4"
-                    >
-                      <div className="min-w-0">
-                        <p className="truncate font-medium text-on-surface">{event.title}</p>
-                        <p className="font-mono text-label-sm text-on-surface-variant">
-                          {formatTsShort(event.startDate)} · {event.venueName}
-                        </p>
-                      </div>
-                      <span className="shrink-0 rounded-full bg-surface-container-high px-2.5 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">
-                        {event.status}
-                      </span>
-                    </li>
-                  ))}
+                  {events.map(
+                    (event: FunctionReturnType<typeof api.events.read.listMine>[number]) => (
+                      <li
+                        key={event._id}
+                        className="flex items-center justify-between rounded-xl border border-outline-variant bg-surface-container-low p-4"
+                      >
+                        <div className="min-w-0">
+                          <p className="truncate font-medium text-on-surface">{event.title}</p>
+                          <p className="font-mono text-label-sm text-on-surface-variant">
+                            {formatTsShort(event.startDate)} · {event.venueName}
+                          </p>
+                        </div>
+                        <span className="shrink-0 rounded-full bg-surface-container-high px-2.5 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">
+                          {event.status}
+                        </span>
+                      </li>
+                    ),
+                  )}
                 </ul>
               )}
             </div>

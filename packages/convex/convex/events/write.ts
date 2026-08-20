@@ -10,6 +10,7 @@ import {
   requireOrganizerOwner,
   requireUser,
   uniqueSlug,
+  validateUrl,
 } from '../helpers'
 import { rateLimiter } from '../rateLimiter'
 import { MAX_EVENT_IMAGES } from '../constants'
@@ -78,6 +79,9 @@ export const create = mutation({
     if (args.images && args.images.length > MAX_EVENT_IMAGES) {
       throw new Error(`Maximum ${MAX_EVENT_IMAGES} images allowed`)
     }
+    if (args.externalLink) validateUrl(args.externalLink, 'External link')
+    if (args.venueMapLink) validateUrl(args.venueMapLink, 'Venue map link')
+    if (args.teaserVideoUrl) validateUrl(args.teaserVideoUrl, 'Teaser video URL')
     const images = (args.images ?? []).slice(0, MAX_EVENT_IMAGES)
 
     const slug = args.slug ?? uniqueSlug(args.title)
@@ -196,6 +200,9 @@ export const update = mutation({
     await requireAdmin(ctx)
 
     const { eventId, images, categoryIds, ...fields } = args
+    if (fields.externalLink) validateUrl(fields.externalLink, 'External link')
+    if (fields.venueMapLink) validateUrl(fields.venueMapLink, 'Venue map link')
+    if (fields.teaserVideoUrl) validateUrl(fields.teaserVideoUrl, 'Teaser video URL')
     const updates = {
       ...patchDefined(fields),
       ...(fields.actionType !== undefined
@@ -314,10 +321,13 @@ export const createSelf = mutation({
   },
   handler: async (ctx, args) => {
     const { organizer } = await requireOrganizerOwner(ctx)
+    await rateLimiter.limit(ctx, 'eventCreate', { key: organizer._id, throws: true })
 
     if (args.images && args.images.length > MAX_EVENT_IMAGES) {
       throw new Error(`Maximum ${MAX_EVENT_IMAGES} images allowed`)
     }
+    if (args.externalLink) validateUrl(args.externalLink, 'External link')
+    if (args.venueMapLink) validateUrl(args.venueMapLink, 'Venue map link')
     const images = (args.images ?? []).slice(0, MAX_EVENT_IMAGES)
     const slug = uniqueSlug(args.title)
 
@@ -400,6 +410,8 @@ export const updateSelf = mutation({
     if (!event) throw new Error('Event not found')
     if (event.ownerId !== organizer._id) throw new Error('Not authorized')
     if (event.status === 'published') throw new Error('Published events cannot be edited')
+    if (args.externalLink) validateUrl(args.externalLink, 'External link')
+    if (args.venueMapLink) validateUrl(args.venueMapLink, 'Venue map link')
 
     const { eventId, ...fields } = args
     const updates = {

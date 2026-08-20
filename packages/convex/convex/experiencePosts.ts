@@ -1,7 +1,7 @@
 import { v } from 'convex/values'
 import { query, mutation, QueryCtx } from './_generated/server'
 import { Doc, Id } from './_generated/dataModel'
-import { requireUser, incrementEngagementCounter } from './helpers'
+import { requireUser, requireAdmin, incrementEngagementCounter } from './helpers'
 import { rateLimiter } from './rateLimiter'
 
 const MAX_CONTENT_LENGTH = 2000
@@ -130,7 +130,9 @@ export const remove = mutation({
     const profile = await requireUser(ctx)
     const post = await ctx.db.get('experiencePosts', args.postId)
     if (!post) throw new Error('Post not found')
-    if (post.userId !== profile._id) throw new Error('Not authorized')
+    if (post.userId !== profile._id && profile.role !== 'admin') {
+      throw new Error('Not authorized')
+    }
     await ctx.db.patch('experiencePosts', args.postId, { isDeleted: true })
   },
 })

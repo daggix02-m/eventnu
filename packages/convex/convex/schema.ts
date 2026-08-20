@@ -166,7 +166,16 @@ const schema = defineSchema({
     logoUrl: v.optional(v.string()),
     website: v.optional(v.string()),
     contactEmail: v.optional(v.string()),
-    socialLinks: v.optional(v.any()),
+    socialLinks: v.optional(
+      v.object({
+        twitter: v.optional(v.string()),
+        facebook: v.optional(v.string()),
+        instagram: v.optional(v.string()),
+        tiktok: v.optional(v.string()),
+        youtube: v.optional(v.string()),
+        linkedin: v.optional(v.string()),
+      }),
+    ),
     managementMode: v.optional(v.union(v.literal('admin_managed'), v.literal('organizer_managed'))),
     applicationStatus: v.optional(
       v.union(v.literal('pending_review'), v.literal('approved'), v.literal('rejected')),
@@ -257,7 +266,7 @@ const schema = defineSchema({
     slug: v.string(),
     title: v.string(),
     subtitle: v.optional(v.string()),
-    body: v.any(),
+    body: v.object({}),
     bodyHtml: v.optional(v.string()),
     heroImageUrl: v.optional(v.string()),
     isPublished: v.boolean(),

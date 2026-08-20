@@ -1,6 +1,9 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
+  experimental: {
+    optimizePackageImports: ['lucide-react'],
+  },
   images: {
     remotePatterns: [
       {
@@ -31,13 +34,19 @@ const nextConfig: NextConfig = {
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           {
             key: 'Strict-Transport-Security',
-            value: 'max-age=31536000; includeSubDomains',
+            value: 'max-age=31536000; includeSubDomains; preload',
           },
           {
             key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=()',
+            value:
+              'camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=(), midi=(), autoplay=(), encrypted-media=(), picture-in-picture=(), screen-wake-lock=()',
           },
+          { key: 'Speculation-Rules', value: '"/speculation-rules.json"' },
         ],
+      },
+      {
+        source: '/speculation-rules.json',
+        headers: [{ key: 'Content-Type', value: 'application/speculationrules+json' }],
       },
     ]
   },

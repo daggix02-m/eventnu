@@ -107,7 +107,9 @@ export function ExperiencePostCard({
       )}
 
       <div className="space-y-sm p-md">
-        <p className="whitespace-pre-wrap font-body-md text-on-surface">{post.content}</p>
+        <p className="whitespace-pre-wrap break-words font-body-md text-on-surface">
+          {post.content}
+        </p>
 
         {post.event && post.event.slug && (
           <Link

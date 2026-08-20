@@ -1,10 +1,11 @@
 'use server'
 
 import { fetchQuery, fetchMutation } from '@/lib/actions/authedFetch'
-import type { Id } from '@eventnu/convex/_generated/dataModel'
+import type { Doc, Id } from '@eventnu/convex/_generated/dataModel'
 import { api } from '@eventnu/convex/_generated/api'
 import { revalidatePath } from 'next/cache'
 import { mapAnnouncement, mapContactSubmission, mapPage } from '../mappers'
+import type { MappedUser } from '../mappers'
 import { getAllUsers } from './users'
 
 export async function getPages() {
@@ -78,10 +79,12 @@ export async function deletePage(id: string) {
 export async function getAnnouncements() {
   const announcements = await fetchQuery(api.cms.announcements.getAnnouncements)
   const users = await getAllUsers({ status: 'all' })
-  const byId = new Map(users.filter((u) => u.profileId).map((u) => [u.profileId, u]))
-  return announcements.map((a) => {
+  const byId = new Map(
+    users.filter((u: MappedUser) => u.profileId).map((u: MappedUser) => [u.profileId, u]),
+  )
+  return announcements.map((a: Doc<'announcements'>) => {
     const mapped = mapAnnouncement(a)
-    const target = mapped.target_user_id ? byId.get(mapped.target_user_id) : null
+    const target = mapped.target_user_id ? (byId.get(mapped.target_user_id) ?? null) : null
     return {
       ...mapped,
       target_user_name: target ? target.full_name || target.username : null,

@@ -7,11 +7,25 @@ import { cn } from '@/lib/utils'
 interface FieldBoxProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> {
   label: string
   showPasswordToggle?: boolean
+  error?: string
+  invalid?: boolean
 }
 
 const FieldBox = React.forwardRef<HTMLInputElement, FieldBoxProps>(
   (
-    { className, label, type, id, showPasswordToggle = false, value, onChange, onFocus, ...props },
+    {
+      className,
+      label,
+      type,
+      id,
+      showPasswordToggle = false,
+      error,
+      invalid = false,
+      value,
+      onChange,
+      onFocus,
+      ...props
+    },
     ref,
   ) => {
     const [showPassword, setShowPassword] = React.useState(false)
@@ -19,6 +33,7 @@ const FieldBox = React.forwardRef<HTMLInputElement, FieldBoxProps>(
     const [focused, setFocused] = React.useState(false)
     const generatedId = React.useId()
     const inputId = id ?? generatedId
+    const errorId = `${inputId}-error`
 
     const isPassword = type === 'password'
     const resolvedType = isPassword && showPassword ? 'text' : type
@@ -41,47 +56,59 @@ const FieldBox = React.forwardRef<HTMLInputElement, FieldBoxProps>(
 
     return (
       <div className="relative">
-        <input
-          ref={ref}
-          id={inputId}
-          type={resolvedType}
-          value={value}
-          onChange={handleChange}
-          onFocus={handleFocus}
-          onBlur={handleBlur}
-          placeholder={isActive ? props.placeholder : ' '}
-          className={cn(
-            'peer h-12 w-full rounded-xl border bg-surface-container-low px-md pt-5 pb-1 text-body-md text-on-surface',
-            'placeholder:text-transparent',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-transparent',
-            'disabled:cursor-not-allowed disabled:opacity-50',
-            isActive ? 'border-primary' : 'border-outline-variant',
-            showPasswordToggle && 'pr-12',
-            className,
-          )}
-          {...props}
-        />
-        <label
-          htmlFor={inputId}
-          className={cn(
-            'pointer-events-none absolute left-md transition-all duration-200',
-            isActive
-              ? 'top-1.5 text-label-sm text-primary'
-              : 'top-1/2 -translate-y-1/2 text-body-md text-on-surface-variant',
-          )}
-        >
-          {label}
-        </label>
-        {isPassword && showPasswordToggle && (
-          <button
-            type="button"
-            tabIndex={-1}
-            onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-on-surface-variant transition-colors hover:text-on-surface"
-            aria-label={showPassword ? 'Hide password' : 'Show password'}
+        <div className="relative h-14">
+          <input
+            ref={ref}
+            id={inputId}
+            type={resolvedType}
+            value={value}
+            onChange={handleChange}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
+            placeholder={isActive ? props.placeholder : ' '}
+            aria-invalid={invalid || !!error || undefined}
+            aria-describedby={invalid || error ? errorId : undefined}
+            className={cn(
+              'peer absolute inset-0 w-full rounded-xl border bg-surface-container-low px-md pt-4 pb-1 text-body-md text-on-surface',
+              'placeholder:text-transparent',
+              'disabled:cursor-not-allowed disabled:opacity-50',
+              error
+                ? 'border-error focus-visible:ring-error'
+                : isActive
+                  ? 'border-primary'
+                  : 'border-outline-variant',
+              showPasswordToggle && 'pr-12',
+              className,
+            )}
+            {...props}
+          />
+          <label
+            htmlFor={inputId}
+            className={cn(
+              'pointer-events-none absolute left-md transition-all duration-200',
+              isActive
+                ? 'top-1.5 text-label-sm text-primary'
+                : 'top-1/2 -translate-y-1/2 text-body-md text-on-surface-variant',
+            )}
           >
-            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-          </button>
+            {label}
+          </label>
+          {isPassword && showPasswordToggle && (
+            <button
+              type="button"
+              tabIndex={0}
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-2 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-on-surface-variant transition-colors hover:text-on-surface"
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          )}
+        </div>
+        {(error || invalid) && (
+          <p id={errorId} className={error ? 'mt-1 text-sm text-error' : 'sr-only'} role="alert">
+            {error || ''}
+          </p>
         )}
       </div>
     )

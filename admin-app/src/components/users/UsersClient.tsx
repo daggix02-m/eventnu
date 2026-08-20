@@ -278,6 +278,7 @@ export function UsersClient({ initial, initialFilters, currentAdminId }: UsersCl
                           onClick={() => setConfirmTarget({ type: 'demote', id: user.id })}
                           className="p-1.5 text-muted-foreground hover:text-warning transition-colors rounded"
                           title="Remove Admin"
+                          aria-label="Remove Admin"
                         >
                           <ShieldOff size={14} />
                         </button>
@@ -286,6 +287,7 @@ export function UsersClient({ initial, initialFilters, currentAdminId }: UsersCl
                           onClick={() => setConfirmTarget({ type: 'promote', id: user.id })}
                           className="p-1.5 text-muted-foreground hover:text-primary transition-colors rounded"
                           title="Make Admin"
+                          aria-label="Make Admin"
                         >
                           <ShieldPlus size={14} />
                         </button>
@@ -295,6 +297,7 @@ export function UsersClient({ initial, initialFilters, currentAdminId }: UsersCl
                           onClick={() => runAction('unsuspend', user.id)}
                           className="p-1.5 text-muted-foreground hover:text-success transition-colors rounded"
                           title="Unsuspend"
+                          aria-label="Unsuspend"
                         >
                           <ShieldCheck size={14} />
                         </button>
@@ -304,6 +307,7 @@ export function UsersClient({ initial, initialFilters, currentAdminId }: UsersCl
                             onClick={() => setConfirmTarget({ type: 'suspend', id: user.id })}
                             className="p-1.5 text-muted-foreground hover:text-warning transition-colors rounded"
                             title="Suspend"
+                            aria-label="Suspend"
                           >
                             <Shield size={14} />
                           </button>
@@ -311,6 +315,7 @@ export function UsersClient({ initial, initialFilters, currentAdminId }: UsersCl
                             onClick={() => setConfirmTarget({ type: 'ban', id: user.id })}
                             className="p-1.5 text-muted-foreground hover:text-destructive transition-colors rounded"
                             title="Ban"
+                            aria-label="Ban"
                           >
                             <XCircle size={14} />
                           </button>

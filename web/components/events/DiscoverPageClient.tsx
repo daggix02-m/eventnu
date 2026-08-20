@@ -5,7 +5,6 @@ import { Building2, LayoutGrid, Rows3 } from 'lucide-react'
 import { Container } from '@/components/layout/Container'
 import { EventList } from '@/components/events/EventList'
 import { CategoryEventShelf } from '@/components/events/CategoryEventShelf'
-import { PulseEqualizer } from '@/components/events/PulseEqualizer'
 import { SearchBar } from '@/components/events/SearchBar'
 import { SegmentedControl } from '@/components/ui/segmented-control'
 import { useScrollReveal } from '@/lib/hooks/useScrollReveal'
@@ -45,7 +44,6 @@ export function DiscoverPageClient({
   const [status, setStatus] = useState<EventStatus>(() => toStatus(initialStatus))
   const [viewMode, setViewMode] = useState<'categorized' | 'organizer' | 'grid'>('categorized')
 
-  const headingRef = useScrollReveal({ y: 20, duration: 0.6 })
   const searchRef = useScrollReveal({ y: 16, duration: 0.5, delay: 0.1 })
   const gridRef = useScrollReveal({ y: 16, duration: 0.5, delay: 0.15 })
 
@@ -143,18 +141,8 @@ export function DiscoverPageClient({
   return (
     <>
       <Container className="py-lg md:py-xl space-y-lg md:space-y-xl" id="event-grid">
-        {/* Page Header */}
-        <div
-          ref={headingRef}
-          className="flex flex-col sm:flex-row sm:items-center justify-between gap-md"
-        >
-          <div className="flex items-center gap-md">
-            <h2 className="font-display text-display-lg-mobile md:text-display-lg text-on-surface">
-              Find <span className="text-primary">yourz</span>
-            </h2>
-            <PulseEqualizer className="hidden sm:flex" barCount={5} />
-          </div>
-
+        {/* Controls */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-md">
           <div className="flex flex-wrap items-center gap-sm self-start sm:self-auto">
             {/* View Mode Toggle (Categorized Shelves vs Grid) */}
             {!activeCategory && !search.trim() && (

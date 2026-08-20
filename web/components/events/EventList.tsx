@@ -3,6 +3,7 @@ import { CalendarX } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Event } from '@/types'
 import { EventCard } from './EventCard'
+import { BulkSocialProvider } from '@/components/social/EventSocialActions'
 
 interface EventListProps {
   events: Event[]
@@ -40,16 +41,18 @@ export function EventList({
           </Link>
         </div>
       )}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-md">
-        {events.map((event, i) => (
-          <EventCard
-            key={event.id}
-            event={event}
-            size={bento && i === 0 ? 'lg' : 'default'}
-            priority={i === 0}
-          />
-        ))}
-      </div>
+      <BulkSocialProvider eventIds={events.map((event) => event.id)}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-md">
+          {events.map((event, i) => (
+            <EventCard
+              key={event.id}
+              event={event}
+              size={bento && i === 0 ? 'lg' : 'default'}
+              priority={i === 0}
+            />
+          ))}
+        </div>
+      </BulkSocialProvider>
     </div>
   )
 }

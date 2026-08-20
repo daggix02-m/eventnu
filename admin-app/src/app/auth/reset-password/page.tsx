@@ -72,125 +72,115 @@ function ResetPasswordInner() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-surface-container-low p-4">
-      <div className="w-full max-w-md">
-        <div className="flex items-center justify-center gap-3 mb-8">
-          <div className="w-12 h-12 rounded-md bg-primary text-primary-foreground flex items-center justify-center font-headline font-bold text-lg shadow-sm">
-            En
+    <Card className="border-0 shadow-[0_2px_4px_rgba(30,20,10,0.04),0_8px_24px_rgba(30,20,10,0.08)] rounded-2xl overflow-hidden bg-card">
+      <CardHeader className="space-y-1 pb-4 text-center">
+        <CardTitle className="text-2xl font-semibold tracking-tight text-foreground">
+          Choose a new password
+        </CardTitle>
+        <CardDescription className="text-muted-foreground">
+          Enter the reset code from your email and your new password.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+          <div className="space-y-1">
+            <label htmlFor="email" className="text-sm font-medium text-foreground">
+              Email
+            </label>
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              placeholder="admin@eventnu.et"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="h-11"
+            />
           </div>
-          <div className="text-left">
-            <h1 className="font-headline text-xl font-semibold text-foreground tracking-tight">
-              Event Nu
-            </h1>
-            <p className="font-mono text-[10px] text-muted-foreground uppercase tracking-[0.2em]">
-              Admin · Addissuite
-            </p>
+          <div className="space-y-1">
+            <label htmlFor="code" className="text-sm font-medium text-foreground">
+              Reset code
+            </label>
+            <Input
+              id="code"
+              name="code"
+              type="text"
+              autoComplete="one-time-code"
+              placeholder="e.g. 8AB2K9DXHN"
+              value={code}
+              onChange={(e) => setCode(e.target.value.toUpperCase())}
+              className="h-11 font-mono tracking-[0.2em] text-center"
+            />
           </div>
-        </div>
-
-        <Card className="border-0 shadow-[0_2px_4px_rgba(30,20,10,0.04),0_8px_24px_rgba(30,20,10,0.08)] rounded-2xl overflow-hidden bg-card">
-          <CardHeader className="space-y-1 pb-4 text-center">
-            <CardTitle className="text-2xl font-semibold tracking-tight text-foreground">
-              Choose a new password
-            </CardTitle>
-            <CardDescription className="text-muted-foreground">
-              Enter the reset code from your email and your new password.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-              <div className="space-y-1">
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  placeholder="admin@eventnu.et"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="h-11"
-                />
-              </div>
-              <div className="space-y-1">
-                <Input
-                  id="code"
-                  name="code"
-                  type="text"
-                  autoComplete="one-time-code"
-                  placeholder="e.g. 8AB2K9DX"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value.toUpperCase())}
-                  className="h-11 font-mono tracking-[0.2em] text-center"
-                />
-              </div>
-              <div className="space-y-1">
-                <div className="relative">
-                  <Input
-                    id="new-password"
-                    name="newPassword"
-                    type={showPassword ? 'text' : 'password'}
-                    autoComplete="new-password"
-                    placeholder="New password (min 8 chars)"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="h-11 pr-10"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  >
-                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                </div>
-              </div>
-              <div className="space-y-1">
-                <Input
-                  id="confirm-password"
-                  name="confirmPassword"
-                  type={showPassword ? 'text' : 'password'}
-                  autoComplete="new-password"
-                  placeholder="Confirm new password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="h-11"
-                />
-              </div>
-              {error && (
-                <p role="alert" className="text-sm text-destructive">
-                  {error}
-                </p>
-              )}
-              <Button className="w-full h-11" type="submit" disabled={loading}>
-                {loading ? (
-                  <>
-                    <Loader2 size={16} className="animate-spin" /> Resetting…
-                  </>
-                ) : (
-                  <>
-                    <ShieldCheck size={16} /> Reset password
-                  </>
-                )}
-              </Button>
-            </form>
-            <p className="text-center text-xs text-muted-foreground">
-              <Link
-                href="/auth/forgot-password"
-                className="text-primary hover:underline font-medium"
+          <div className="space-y-1">
+            <label htmlFor="new-password" className="text-sm font-medium text-foreground">
+              New password
+            </label>
+            <div className="relative">
+              <Input
+                id="new-password"
+                name="newPassword"
+                type={showPassword ? 'text' : 'password'}
+                autoComplete="new-password"
+                placeholder="Min 8 characters"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="h-11 pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
-                Request a new reset link
-              </Link>
-              {' · '}
-              <Link href="/auth/sign-in" className="text-primary hover:underline font-medium">
-                Back to sign in
-              </Link>
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+          </div>
+          <div className="space-y-1">
+            <label htmlFor="confirm-password" className="text-sm font-medium text-foreground">
+              Confirm password
+            </label>
+            <Input
+              id="confirm-password"
+              name="confirmPassword"
+              type={showPassword ? 'text' : 'password'}
+              autoComplete="new-password"
+              placeholder="Re-enter your new password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="h-11"
+            />
+          </div>
+          {error && (
+            <p role="alert" className="text-sm text-destructive">
+              {error}
             </p>
-          </CardContent>
-        </Card>
-
-        <p className="text-center text-xs text-muted-foreground mt-6">Admin access only.</p>
-      </div>
-    </div>
+          )}
+          <Button className="w-full h-11" type="submit" disabled={loading}>
+            {loading ? (
+              <>
+                <Loader2 size={16} className="animate-spin" /> Resetting…
+              </>
+            ) : (
+              <>
+                <ShieldCheck size={16} /> Reset password
+              </>
+            )}
+          </Button>
+        </form>
+        <p className="text-center text-xs text-muted-foreground">
+          <Link href="/auth/forgot-password" className="text-primary hover:underline font-medium">
+            Request a new reset link
+          </Link>
+          {' · '}
+          <Link href="/auth/sign-in" className="text-primary hover:underline font-medium">
+            Back to sign in
+          </Link>
+        </p>
+      </CardContent>
+    </Card>
   )
 }
 

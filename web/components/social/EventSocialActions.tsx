@@ -1,13 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { createContext, useContext, useMemo, useState } from 'react'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '@eventnu/convex/_generated/api'
+import type { FunctionReturnType } from 'convex/server'
 import type { Id } from '@eventnu/convex/_generated/dataModel'
 import { useConvexAuth } from '@convex-dev/auth/react'
 import { Heart, Bookmark, Share2, Check, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { useAuthModal } from '@/components/auth/AuthModalContext'
+import { useAuthRedirect } from '@/components/auth/AuthRedirectContext'
 import {
   Dialog,
   DialogContent,
@@ -20,8 +21,47 @@ import { Button } from '@/components/ui/button'
 
 function useAuthGate() {
   const { isAuthenticated, isLoading } = useConvexAuth()
-  const { openAuth } = useAuthModal()
+  const { openAuth } = useAuthRedirect()
   return { isAuthenticated, isLoading, openAuth }
+}
+
+/**
+ * Bulk social state for list pages: collapses N per-card like/bookmark
+ * subscriptions into a single query per list. `CardQuickActions` consumes this
+ * context when present and falls back to its own per-event query otherwise.
+ */
+interface BulkSocialState {
+  coveredIds: Set<string>
+  likedIds: Set<string>
+  savedIds: Set<string>
+}
+
+const BulkSocialContext = createContext<BulkSocialState | null>(null)
+
+export function BulkSocialProvider({
+  eventIds,
+  children,
+}: {
+  eventIds: string[]
+  children: React.ReactNode
+}) {
+  const { isAuthenticated } = useConvexAuth()
+  // Dedupe + sort so the args are canonical (stable across re-renders).
+  const ids = useMemo(() => [...new Set(eventIds)].sort() as Id<'events'>[], [eventIds])
+  const liked = useQuery(api.likes.hasLikedBulk, isAuthenticated ? { eventIds: ids } : 'skip')
+  const saved = useQuery(
+    api.bookmarks.hasBookmarkedBulk,
+    isAuthenticated ? { eventIds: ids } : 'skip',
+  )
+  const value = useMemo<BulkSocialState>(
+    () => ({
+      coveredIds: new Set(ids),
+      likedIds: new Set(liked ? Object.keys(liked) : []),
+      savedIds: new Set(saved ? Object.keys(saved) : []),
+    }),
+    [ids, liked, saved],
+  )
+  return <BulkSocialContext.Provider value={value}>{children}</BulkSocialContext.Provider>
 }
 
 function LikeButton({
@@ -35,7 +75,10 @@ function LikeButton({
 }) {
   const { isAuthenticated, isLoading, openAuth } = useAuthGate()
   const toggle = useMutation(api.likes.toggle)
-  const liked = useQuery(api.likes.hasLiked, { eventId: eventId as Id<'events'> })
+  const liked = useQuery(
+    api.likes.hasLiked,
+    isAuthenticated ? { eventId: eventId as Id<'events'> } : 'skip',
+  )
   const count = useQuery(api.likes.countByEvent, { eventId: eventId as Id<'events'> })
   const [pending, setPending] = useState(false)
 
@@ -98,7 +141,10 @@ function BookmarkButton({
   const toggle = useMutation(api.bookmarks.toggle)
   const moveToFolder = useMutation(api.bookmarks.moveToFolder)
   const createFolder = useMutation(api.bookmarks.createFolder)
-  const saved = useQuery(api.bookmarks.hasBookmarked, { eventId: eventId as Id<'events'> })
+  const saved = useQuery(
+    api.bookmarks.hasBookmarked,
+    isAuthenticated ? { eventId: eventId as Id<'events'> } : 'skip',
+  )
   const folders = useQuery(api.bookmarks.listFolders, isAuthenticated ? {} : 'skip')
   const [pending, setPending] = useState(false)
   const [showFolderPicker, setShowFolderPicker] = useState(false)
@@ -197,17 +243,19 @@ function BookmarkButton({
             >
               Uncategorized
             </button>
-            {folders?.map((folder) => (
-              <button
-                key={folder._id}
-                type="button"
-                onClick={() => void assignFolder(folder._id)}
-                disabled={folderPending}
-                className="w-full rounded-xl border border-outline-variant px-4 py-3 text-left text-on-surface transition-colors hover:border-primary hover:bg-surface-container-high"
-              >
-                {folder.name}
-              </button>
-            ))}
+            {folders?.map(
+              (folder: FunctionReturnType<typeof api.bookmarks.listFolders>[number]) => (
+                <button
+                  key={folder._id}
+                  type="button"
+                  onClick={() => void assignFolder(folder._id)}
+                  disabled={folderPending}
+                  className="w-full rounded-xl border border-outline-variant px-4 py-3 text-left text-on-surface transition-colors hover:border-primary hover:bg-surface-container-high"
+                >
+                  {folder.name}
+                </button>
+              ),
+            )}
           </div>
           <div className="flex gap-2">
             <input
@@ -337,8 +385,18 @@ export function CardQuickActions({
   const { isAuthenticated, isLoading, openAuth } = useAuthGate()
   const toggleLike = useMutation(api.likes.toggle)
   const toggleBookmark = useMutation(api.bookmarks.toggle)
-  const liked = useQuery(api.likes.hasLiked, { eventId: eventId as Id<'events'> })
-  const saved = useQuery(api.bookmarks.hasBookmarked, { eventId: eventId as Id<'events'> })
+  const bulk = useContext(BulkSocialContext)
+  const coveredByBulk = bulk?.coveredIds.has(eventId) ?? false
+  const likedQuery = useQuery(
+    api.likes.hasLiked,
+    isAuthenticated && !coveredByBulk ? { eventId: eventId as Id<'events'> } : 'skip',
+  )
+  const savedQuery = useQuery(
+    api.bookmarks.hasBookmarked,
+    isAuthenticated && !coveredByBulk ? { eventId: eventId as Id<'events'> } : 'skip',
+  )
+  const liked = coveredByBulk ? (bulk?.likedIds.has(eventId) ?? false) : (likedQuery ?? false)
+  const saved = coveredByBulk ? (bulk?.savedIds.has(eventId) ?? false) : (savedQuery ?? false)
 
   const guard = (e: React.MouseEvent) => {
     e.preventDefault()

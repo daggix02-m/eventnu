@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui'
 import { AlertTriangle, ArrowLeft } from 'lucide-react'
+import { logError } from '@/lib/logger'
 
 interface ErrorPageProps {
   error: Error & { digest?: string }
@@ -15,7 +16,7 @@ export default function AdminError({ error, reset }: ErrorPageProps) {
   const router = useRouter()
 
   useEffect(() => {
-    console.error('Admin page error:', error)
+    logError('admin/error', error)
   }, [error])
 
   return (
@@ -35,7 +36,7 @@ export default function AdminError({ error, reset }: ErrorPageProps) {
           <p className="text-sm text-muted-foreground">
             An unexpected error occurred. Please try again or return to the dashboard.
           </p>
-          {error.digest && (
+          {process.env.NODE_ENV === 'development' && error.digest && (
             <p className="text-xs text-muted-foreground bg-surface-container-high rounded-lg px-3 py-2 font-mono">
               Error: {error.digest}
             </p>

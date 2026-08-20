@@ -1,5 +1,6 @@
 import { getOrganizerById } from '@/lib/actions/organizers'
 import { OrganizerDetailClient } from '@/components/organizers/OrganizerDetailClient'
+import { logError } from '@/lib/logger'
 
 export default async function OrganizerDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -9,7 +10,7 @@ export default async function OrganizerDetailPage({ params }: { params: Promise<
   try {
     ;({ organizer, eventCount } = await getOrganizerById(id))
   } catch (err) {
-    console.error('Failed to load organizer:', err)
+    logError('admin/organizers/[id]', err)
   }
 
   if (!organizer) {

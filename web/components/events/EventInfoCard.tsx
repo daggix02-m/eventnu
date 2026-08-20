@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { MapPin, ExternalLink, MessageSquarePlus, Copy, Check, Navigation } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { SITE } from '@/lib/site'
-import { formatPrice, isEventPast } from '@/lib/utils'
+import { formatPrice, isEventPast, isSafeUrl } from '@/lib/utils'
 import type { Event } from '@/types'
 
 interface EventInfoCardProps {
@@ -65,24 +65,41 @@ function osmEmbedUrl(result: GeocodeResult): string {
   return `${OSM_EMBED_URL}?bbox=${centerLng - padLng},${centerLat - padLat},${centerLng + padLng},${centerLat + padLat}&layer=mapnik&marker=${result.lat},${result.lon}`
 }
 
+function osmEmbedUrlFromPoint(lat: number, lng: number): string {
+  const span = 0.01
+  return `${OSM_EMBED_URL}?bbox=${lng - span},${lat - span},${lng + span},${lat + span}&layer=mapnik&marker=${lat},${lng}`
+}
+
 export function EventInfoCard({ event }: EventInfoCardProps) {
   const externalLabel =
     event.external_link_label?.trim() || (event.is_free ? 'More Info' : 'Get Tickets')
   const ended = isEventPast(event.start_date)
   const [copiedAddress, setCopiedAddress] = useState(false)
 
-  const mapQuery =
-    event.venue_lat && event.venue_lng
-      ? `${event.venue_lat},${event.venue_lng}`
-      : event.venue_address?.trim() || event.venue_name
+  const hasCoordinates =
+    typeof event.venue_lat === 'number' &&
+    Number.isFinite(event.venue_lat) &&
+    typeof event.venue_lng === 'number' &&
+    Number.isFinite(event.venue_lng)
+  const mapQuery = hasCoordinates ? null : event.venue_address?.trim() || event.venue_name
   const [mapEmbedUrl, setMapEmbedUrl] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
-    if (!mapQuery) return
+    if (hasCoordinates) {
+      setMapEmbedUrl(osmEmbedUrlFromPoint(event.venue_lat!, event.venue_lng!))
+      return () => {
+        cancelled = true
+      }
+    }
+    const query = mapQuery ?? ''
+    if (!query) {
+      setMapEmbedUrl(null)
+      return
+    }
 
     async function resolveMap() {
-      const result = await geocodeMapQuery(mapQuery)
+      const result = await geocodeMapQuery(query)
       if (!cancelled && result) {
         setMapEmbedUrl(osmEmbedUrl(result))
       }
@@ -92,11 +109,12 @@ export function EventInfoCard({ event }: EventInfoCardProps) {
     return () => {
       cancelled = true
     }
-  }, [mapQuery])
+  }, [event.venue_lat, event.venue_lng, hasCoordinates, mapQuery])
 
+  const mapTarget = hasCoordinates ? `${event.venue_lat},${event.venue_lng}` : mapQuery
   const mapExternalUrl =
     event.venue_map_link ||
-    (mapQuery ? `https://maps.google.com/maps?q=${encodeURIComponent(mapQuery)}` : null)
+    (mapTarget ? `https://maps.google.com/maps?q=${encodeURIComponent(mapTarget)}` : null)
 
   const handleCopyAddress = useCallback(() => {
     const textToCopy = event.venue_address
@@ -135,7 +153,7 @@ export function EventInfoCard({ event }: EventInfoCardProps) {
 
         {/* Primary CTA Buttons */}
         <div className="space-y-2.5">
-          {!ended && event.external_link && (
+          {!ended && event.external_link && isSafeUrl(event.external_link) && (
             <Button asChild size="lg" className="w-full font-bold gap-2 text-base rounded-xl">
               <a href={event.external_link} target="_blank" rel="noopener noreferrer">
                 <ExternalLink className="w-4 h-4" />

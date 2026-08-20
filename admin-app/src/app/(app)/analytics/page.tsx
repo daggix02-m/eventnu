@@ -1,5 +1,6 @@
 import { getAnalytics } from '@/lib/actions/analytics'
 import { AnalyticsClient } from '@/components/analytics/AnalyticsClient'
+import { logError } from '@/lib/logger'
 
 export default async function AnalyticsPage() {
   let data: Awaited<ReturnType<typeof getAnalytics>> = {
@@ -13,7 +14,7 @@ export default async function AnalyticsPage() {
   try {
     data = await getAnalytics()
   } catch (err) {
-    console.error('Failed to load analytics:', err)
+    logError('admin/analytics', err)
   }
 
   return <AnalyticsClient data={data} />

@@ -1,5 +1,6 @@
 import { getReports, ReportTargetType } from '@/lib/actions/reports'
 import { ReportsClient } from '@/components/reports/ReportsClient'
+import { logError } from '@/lib/logger'
 
 export default async function ReportsPage({
   searchParams,
@@ -8,9 +9,8 @@ export default async function ReportsPage({
 }) {
   const params = await searchParams
   const status = typeof params.status === 'string' ? params.status : 'all'
-  const targetType = (
-    typeof params.targetType === 'string' ? params.targetType : 'all'
-  ) as ReportTargetType | 'all'
+  const targetType = (typeof params.targetType === 'string' ? params.targetType : 'all') as
+    ReportTargetType | 'all'
 
   let initial: Awaited<ReturnType<typeof getReports>> = {
     items: [],
@@ -20,7 +20,7 @@ export default async function ReportsPage({
   try {
     initial = await getReports({ status, targetType })
   } catch (err) {
-    console.error('Failed to load reports:', err)
+    logError('admin/reports', err)
   }
 
   return <ReportsClient initial={initial} initialFilters={{ status, targetType }} />

@@ -73,14 +73,29 @@ export function captionParts(caption: string): { title: string; description: str
   return { title, description: caption.trim() }
 }
 
+const INSTAGRAM_CDN_HOSTS = ['scontent-', 'cdninstagram.com', 'fbcdn.net']
+const MAX_REMOTE_IMAGE_BYTES = 20 * 1024 * 1024
+
 export async function storeRemoteImage(
   ctx: ActionCtx,
   url: string,
 ): Promise<{ url: string; storageId: string } | null> {
   try {
-    const res = await fetch(url)
+    const parsed = new URL(url)
+    if (parsed.protocol !== 'https:') return null
+    const host = parsed.hostname
+    const isAllowed = INSTAGRAM_CDN_HOSTS.some(
+      (h) => host.endsWith(`.${h}`) || host.startsWith(h.replace('-', '')) || host === h,
+    )
+    if (!isAllowed) return null
+    const res = await fetch(url, { signal: AbortSignal.timeout(30_000) })
     if (!res.ok) return null
+    const contentType = res.headers.get('content-type') ?? ''
+    if (!contentType.startsWith('image/')) return null
+    const contentLength = Number(res.headers.get('content-length') ?? 0)
+    if (contentLength > MAX_REMOTE_IMAGE_BYTES) return null
     const buf = await res.arrayBuffer()
+    if (buf.byteLength > MAX_REMOTE_IMAGE_BYTES) return null
     const storageId = await ctx.storage.store(new Blob([buf]))
     const storedUrl = await ctx.storage.getUrl(storageId)
     return storedUrl ? { url: storedUrl, storageId } : null
@@ -90,15 +105,7 @@ export async function storeRemoteImage(
 }
 
 export function randomState(): string {
-  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
-    return crypto.randomUUID()
-  }
-  return (
-    Date.now().toString(36) +
-    '-' +
-    Math.random().toString(36).slice(2) +
-    Math.random().toString(36).slice(2)
-  )
+  return crypto.randomUUID()
 }
 
 export const CONNECT_STATE_TTL_MS = 10 * 60 * 1000

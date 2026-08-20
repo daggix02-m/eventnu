@@ -59,7 +59,6 @@ export const getProfileEmail = internalQuery({
 export const ensureProfile = mutation({
   args: {
     fullName: v.optional(v.string()),
-    accountType: v.optional(v.union(v.literal('user'), v.literal('organizer'))),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx)
@@ -75,24 +74,20 @@ export const ensureProfile = mutation({
     const email = user?.email
     if (!email) throw new Error('Account has no email')
 
-    const role = args.accountType ?? 'user'
-
     const byEmail = await ctx.db
       .query('profiles')
       .filter((q) => q.eq(q.field('email'), email))
       .first()
     if (byEmail) {
-      const promote = role === 'organizer' && byEmail.role === 'user'
       await ctx.db.patch('profiles', byEmail._id, {
         authUserId: userId,
-        ...(promote ? { role: 'organizer' as const } : {}),
       })
       return { id: byEmail._id, created: false }
     }
 
     const id = await ctx.db.insert('profiles', {
       authUserId: userId,
-      role,
+      role: 'user',
       verified: false,
       followerCount: 0,
       fullName: args.fullName ?? user.name ?? undefined,

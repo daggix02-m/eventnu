@@ -111,7 +111,8 @@ http.route({
       await ctx.runAction(api.instagram.connect.completeConnect, { code, state })
       return redirect('?instagram=connected')
     } catch (e) {
-      return redirect(`?instagram=error&reason=${encodeURIComponent((e as Error).message)}`)
+      console.error('Instagram OAuth callback error:', e)
+      return redirect('?instagram=error')
     }
   }),
 })

@@ -104,7 +104,7 @@ export function ProfileSection({ profile }: ProfileSectionProps) {
             <input
               ref={avatarInputRef}
               type="file"
-              accept="image/*"
+              accept="image/jpeg,image/png,image/webp"
               className="hidden"
               onChange={handleAvatarFile}
             />
@@ -114,6 +114,7 @@ export function ProfileSection({ profile }: ProfileSectionProps) {
               onClick={() => avatarInputRef.current?.click()}
               disabled={uploadingAvatar}
               title="Change avatar"
+              aria-label="Change avatar"
             >
               {uploadingAvatar ? (
                 <Loader2 size={14} className="animate-spin" />

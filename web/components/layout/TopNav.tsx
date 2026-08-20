@@ -33,6 +33,8 @@ export function TopNav() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
+  if (pathname.startsWith('/auth')) return null
+
   return (
     <header
       className={cn(
@@ -54,7 +56,9 @@ export function TopNav() {
                 className="transition-transform duration-200 group-hover:scale-105"
                 priority
               />
-              <span className="font-bold text-lg text-primary tracking-tight md:hidden">Event Nu</span>
+              <span className="font-bold text-lg text-primary tracking-tight md:hidden">
+                Event Nu
+              </span>
               <span className="sr-only">Event Nu</span>
             </Link>
 

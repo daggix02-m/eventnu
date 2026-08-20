@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import { Play, Calendar, Clock, MapPin, Sparkles, ShieldCheck, Zap, Info } from 'lucide-react'
-import { formatEventDate } from '@/lib/utils'
+import { formatEventDate, isSafeUrl } from '@/lib/utils'
 import type { Event } from '@/types'
 
 interface EventDetailsProps {
@@ -74,7 +74,7 @@ export function EventDetails({ event }: EventDetailsProps) {
           </blockquote>
         )}
 
-        <div className="font-body-md text-base sm:text-lg text-on-surface-variant leading-relaxed space-y-4 whitespace-pre-line">
+        <div className="font-body-md text-base sm:text-lg text-on-surface-variant leading-relaxed space-y-4 whitespace-pre-line break-words">
           {event.description}
         </div>
 
@@ -109,10 +109,11 @@ export function EventDetails({ event }: EventDetailsProps) {
             type="button"
             className="relative w-full aspect-video rounded-2xl overflow-hidden group text-left bg-surface-container-high border border-outline-variant/50 shadow-xl shadow-black/40 cursor-pointer focus-visible:outline-2 focus-visible:outline-primary transition-all duration-300 hover:border-primary/60"
             aria-label="Play event teaser video"
-            onClick={() =>
-              event.teaser_video_url &&
-              window.open(event.teaser_video_url, '_blank', 'noopener,noreferrer')
-            }
+            onClick={() => {
+              if (event.teaser_video_url && isSafeUrl(event.teaser_video_url)) {
+                window.open(event.teaser_video_url, '_blank', 'noopener,noreferrer')
+              }
+            }}
           >
             {event.poster_url && (
               <Image

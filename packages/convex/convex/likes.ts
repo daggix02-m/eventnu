@@ -26,6 +26,30 @@ export const hasLiked = query({
   },
 })
 
+/**
+ * Bulk variant of `hasLiked`: returns a map of `eventId -> true` for the
+ * requested events the current user has liked. Collapses N per-card
+ * subscriptions into a single query for list pages.
+ */
+export const hasLikedBulk = query({
+  args: { eventIds: v.array(v.id('events')) },
+  handler: async (ctx, args) => {
+    const profile = await getUserProfile(ctx)
+    const result: Record<string, boolean> = {}
+    if (!profile || args.eventIds.length === 0) return result
+    const wanted = new Set(args.eventIds)
+    const likes = await ctx.db
+      .query('eventLikes')
+      .withIndex('by_user', (q) => q.eq('userId', profile._id))
+      .order('desc')
+      .take(1000)
+    for (const like of likes) {
+      if (wanted.has(like.eventId)) result[like.eventId] = true
+    }
+    return result
+  },
+})
+
 export const toggle = mutation({
   args: { eventId: v.id('events') },
   handler: async (ctx, args) => {

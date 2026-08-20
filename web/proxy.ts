@@ -21,6 +21,7 @@ function buildCsp(nonce: string): string {
     "base-uri 'self'",
     "form-action 'self'",
     "frame-ancestors 'self'",
+    `report-uri /api/csp-report`,
   ].join('; ')
 }
 

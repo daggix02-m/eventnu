@@ -5,13 +5,17 @@ import { notFound } from 'next/navigation'
 import { CalendarDays, Globe, Users, MapPin } from 'lucide-react'
 import { Container } from '@/components/layout/Container'
 import { VerifiedBadge } from '@/components/verification/VerifiedBadge'
-import { getOrganizerByHandle } from '@/lib/api/organizers'
+import { getOrganizerByHandle, type PublicOrganizerProfile } from '@/lib/api/organizers'
 import { ReportDialog } from '@/components/moderation/ReportDialog'
+import { isSafeUrl } from '@/lib/utils'
 
 export const metadata: Metadata = {
   title: 'Organizer | Event Nu',
   description: 'Events listed by this organizer on Event Nu.',
 }
+
+export const revalidate = 300
+export const dynamic = 'force-static'
 
 function formatDate(ts: number): string {
   return new Date(ts).toLocaleDateString('en-US', {
@@ -72,7 +76,7 @@ export default async function OrganizerProfilePage({
                 <Users className="h-4 w-4 text-primary" />
                 {organizer.followerCount} followers
               </span>
-              {organizer.website && (
+              {organizer.website && isSafeUrl(organizer.website) && (
                 <a
                   href={organizer.website}
                   target="_blank"
@@ -99,7 +103,7 @@ export default async function OrganizerProfilePage({
             </p>
           ) : (
             <ul className="mt-md grid grid-cols-1 gap-md sm:grid-cols-2">
-              {organizer.events.map((event) => (
+              {organizer.events.map((event: PublicOrganizerProfile['events'][number]) => (
                 <li key={event.id}>
                   <Link
                     href={event.slug ? `/events/${event.slug}` : '#'}

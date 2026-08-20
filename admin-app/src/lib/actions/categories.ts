@@ -1,14 +1,16 @@
 'use server'
 
 import { fetchQuery, fetchMutation } from '@/lib/actions/authedFetch'
-import type { Id } from '@eventnu/convex/_generated/dataModel'
+import type { Doc, Id } from '@eventnu/convex/_generated/dataModel'
 import { api } from '@eventnu/convex/_generated/api'
 import { revalidatePath } from 'next/cache'
 import { mapCategory } from '../mappers'
 
 export async function getCategories() {
   const categories = await fetchQuery(api.categories.getWithEventCounts)
-  return categories.map((c) => mapCategory(c, c.eventCount))
+  return categories.map((c: Doc<'categories'> & { eventCount: number }) =>
+    mapCategory(c, c.eventCount),
+  )
 }
 
 export async function createCategory(category: {

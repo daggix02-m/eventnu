@@ -94,4 +94,20 @@ describe('reservations.create guards', () => {
     )
     expect(scheduler.runAfter).toHaveBeenCalledTimes(2)
   })
+
+  it('rejects reservations with invalid email format', async () => {
+    const { ctx } = makeCtx(makeEventDoc())
+    await expect(createHandler(ctx, { ...validArgs, email: 'not-an-email' })).rejects.toThrow(
+      'valid email address',
+    )
+  })
+
+  it('normalizes email to lowercase', async () => {
+    const { ctx, insert } = makeCtx(makeEventDoc())
+    await createHandler(ctx, { ...validArgs, email: 'SARA@EXAMPLE.COM' })
+    expect(insert).toHaveBeenCalledWith(
+      'reservationRequests',
+      expect.objectContaining({ email: 'sara@example.com' }),
+    )
+  })
 })

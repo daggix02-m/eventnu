@@ -231,6 +231,7 @@ export function OrganizersClient({ initial, initialFilters }: OrganizersClientPr
                     onClick={() => openDetail(org)}
                     className="p-1.5 text-muted-foreground hover:text-primary transition-colors rounded"
                     title="View Details"
+                    aria-label="View Details"
                   >
                     <Globe size={14} />
                   </button>
@@ -240,6 +241,7 @@ export function OrganizersClient({ initial, initialFilters }: OrganizersClientPr
                         onClick={() => runAction('approve', org.profile_id)}
                         className="p-1.5 text-muted-foreground hover:text-success transition-colors rounded"
                         title="Approve application"
+                        aria-label="Approve application"
                       >
                         <CheckCircle size={14} />
                       </button>
@@ -247,6 +249,7 @@ export function OrganizersClient({ initial, initialFilters }: OrganizersClientPr
                         onClick={() => runAction('reject', org.profile_id)}
                         className="p-1.5 text-muted-foreground hover:text-destructive transition-colors rounded"
                         title="Reject application"
+                        aria-label="Reject application"
                       >
                         <XCircle size={14} />
                       </button>
@@ -257,6 +260,7 @@ export function OrganizersClient({ initial, initialFilters }: OrganizersClientPr
                       onClick={() => runAction('unverify', org.profile_id)}
                       className="p-1.5 text-muted-foreground hover:text-warning transition-colors rounded"
                       title="Unverify"
+                      aria-label="Unverify"
                     >
                       <Shield size={14} />
                     </button>
@@ -265,6 +269,7 @@ export function OrganizersClient({ initial, initialFilters }: OrganizersClientPr
                       onClick={() => runAction('verify', org.profile_id)}
                       className="p-1.5 text-muted-foreground hover:text-success transition-colors rounded"
                       title="Verify"
+                      aria-label="Verify"
                     >
                       <ShieldCheck size={14} />
                     </button>
@@ -274,6 +279,7 @@ export function OrganizersClient({ initial, initialFilters }: OrganizersClientPr
                       onClick={() => runAction('unsuspend', org.profile_id)}
                       className="p-1.5 text-muted-foreground hover:text-success transition-colors rounded"
                       title="Unsuspend"
+                      aria-label="Unsuspend"
                     >
                       <CheckCircle size={14} />
                     </button>
@@ -282,6 +288,7 @@ export function OrganizersClient({ initial, initialFilters }: OrganizersClientPr
                       onClick={() => runAction('suspend', org.profile_id)}
                       className="p-1.5 text-muted-foreground hover:text-destructive transition-colors rounded"
                       title="Suspend"
+                      aria-label="Suspend"
                     >
                       <XCircle size={14} />
                     </button>

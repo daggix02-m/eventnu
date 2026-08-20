@@ -4,6 +4,7 @@ import type { FunctionReturnType } from 'convex/server'
 import { convexAuthNextjsToken } from '@convex-dev/auth/nextjs/server'
 import { api } from '@eventnu/convex/_generated/api'
 import type { Announcement } from '@/types'
+import { logError } from '@/lib/logger'
 
 type RawAnnouncement = FunctionReturnType<
   typeof api.cms.announcements.getActiveAnnouncements
@@ -29,7 +30,7 @@ export async function getActiveAnnouncements(): Promise<Announcement[]> {
       created_at: raw._creationTime ? new Date(raw._creationTime).toISOString() : undefined,
     }))
   } catch (err) {
-    console.error('Failed to fetch active announcements:', err)
+    logError('announcements/getActive', err)
     return []
   }
 }

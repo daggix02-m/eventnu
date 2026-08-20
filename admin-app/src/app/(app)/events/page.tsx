@@ -1,5 +1,6 @@
 import { getEvents } from '@/lib/actions/events'
 import { EventsClient } from '@/components/events/EventsClient'
+import { logError } from '@/lib/logger'
 
 export default async function EventsPage({
   searchParams,
@@ -18,7 +19,7 @@ export default async function EventsPage({
   try {
     initial = await getEvents({ status, source, featured, frequency, search })
   } catch (err) {
-    console.error('Failed to load events:', err)
+    logError('admin/events', err)
   }
 
   return (

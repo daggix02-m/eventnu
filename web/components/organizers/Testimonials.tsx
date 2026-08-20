@@ -7,6 +7,7 @@ import { gsap } from '@/lib/gsap'
 import { ArrowRight, Ticket } from 'lucide-react'
 import { Container } from '@/components/layout/Container'
 import { EventCard } from '@/components/events/EventCard'
+import { BulkSocialProvider } from '@/components/social/EventSocialActions'
 import type { Event } from '@/types'
 
 interface OrganizersShowcaseProps {
@@ -53,28 +54,27 @@ export function OrganizersShowcase({ contactUrl, events }: OrganizersShowcasePro
       className="relative z-10 py-2xl border-t border-outline-variant/30 bg-surface-container-lowest/30 overflow-hidden"
     >
       <Container>
-        <div
-          ref={headerRef}
-          className="text-center max-w-[48rem] mx-auto mb-12 space-y-3"
-        >
+        <div ref={headerRef} className="text-center max-w-[48rem] mx-auto mb-12 space-y-3">
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white tracking-tight leading-tight">
             Your events, found across the city.
           </h2>
           <p className="text-on-surface-variant text-base sm:text-lg md:text-xl leading-relaxed">
-            Everything you publish appears on the homepage, category pages, and search —
-            alongside the real events of Addis Ababa. This is where your listings live today.
+            Everything you publish appears on the homepage, category pages, and search — alongside
+            the real events of Addis Ababa. This is where your listings live today.
           </p>
         </div>
 
         {showcaseEvents.length > 0 ? (
-          <div
-            ref={gridRef}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-md max-w-[64rem] mx-auto"
-          >
-            {showcaseEvents.map((event) => (
-              <EventCard key={event.id} event={event} />
-            ))}
-          </div>
+          <BulkSocialProvider eventIds={showcaseEvents.map((event) => event.id)}>
+            <div
+              ref={gridRef}
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-md max-w-[64rem] mx-auto"
+            >
+              {showcaseEvents.map((event) => (
+                <EventCard key={event.id} event={event} />
+              ))}
+            </div>
+          </BulkSocialProvider>
         ) : (
           <div className="flex flex-col items-center text-center gap-sm py-xl">
             <div className="w-16 h-16 rounded-2xl bg-surface-container-high flex items-center justify-center">

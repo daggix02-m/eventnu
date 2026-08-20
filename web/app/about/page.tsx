@@ -2,7 +2,8 @@ import type { Metadata } from 'next'
 import { AboutContent } from './AboutContent'
 import { getCategories, getPublishedEvents } from '@/lib/api/events'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 300
+export const dynamic = 'force-static'
 
 export const metadata: Metadata = {
   title: 'About | Event Nu',

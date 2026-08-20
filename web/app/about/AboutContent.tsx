@@ -41,7 +41,7 @@ export function AboutContent({ eventCount, categoryCount }: AboutContentProps) {
             <br />
             one place.
           </h1>
-          <p className="font-body-lg text-body-lg text-[#e9ddff] max-w-[42rem]">
+          <p className="font-body-lg text-body-lg text-primary-fixed max-w-[42rem]">
             Event Nu is where Addis Ababa finds what&apos;s on. Local organizers list their events
             in one place — from underground jazz sessions to high-energy festivals — so you never
             miss a beat.
@@ -59,7 +59,7 @@ export function AboutContent({ eventCount, categoryCount }: AboutContentProps) {
                 <dd className="font-display text-[22px] font-extrabold text-white leading-none tabular-nums">
                   {eventCount}
                 </dd>
-                <dd className="font-mono text-[11px] text-[#e9ddff]/80 uppercase tracking-wider mt-1">
+                <dd className="font-mono text-[11px] text-primary-fixed/80 uppercase tracking-wider mt-1">
                   events listed
                 </dd>
               </div>
@@ -68,7 +68,7 @@ export function AboutContent({ eventCount, categoryCount }: AboutContentProps) {
                 <dd className="font-display text-[22px] font-extrabold text-white leading-none tabular-nums">
                   {categoryCount}
                 </dd>
-                <dd className="font-mono text-[11px] text-[#e9ddff]/80 uppercase tracking-wider mt-1">
+                <dd className="font-mono text-[11px] text-primary-fixed/80 uppercase tracking-wider mt-1">
                   categories
                 </dd>
               </div>
@@ -77,7 +77,7 @@ export function AboutContent({ eventCount, categoryCount }: AboutContentProps) {
                 <dd className="font-display text-[22px] font-extrabold text-white leading-none tabular-nums">
                   0&nbsp;ETB
                 </dd>
-                <dd className="font-mono text-[11px] text-[#e9ddff]/80 uppercase tracking-wider mt-1">
+                <dd className="font-mono text-[11px] text-primary-fixed/80 uppercase tracking-wider mt-1">
                   free to list
                 </dd>
               </div>

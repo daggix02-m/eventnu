@@ -1,11 +1,20 @@
 import { v } from 'convex/values'
-import { action, internalMutation, query } from './_generated/server'
+import { action, internalMutation } from './_generated/server'
 import { env } from './_generated/server'
 import { internal } from './_generated/api'
 import { createAccount, modifyAccountCredentials } from '@convex-dev/auth/server'
 import type { Id, TableNames } from './_generated/dataModel'
+import { rateLimiter } from './rateLimiter'
 
-const ADMIN_EMAIL = 'event.nua@gmail.com'
+type AdminInfo = { profileId: Id<'profiles'>; email: string | null }
+
+function requireAdminEmail(): string {
+  const email = env.ADMIN_EMAIL
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    throw new Error('ADMIN_EMAIL environment variable is not configured or invalid')
+  }
+  return email.trim().toLowerCase()
+}
 
 const ALL_TABLES: TableNames[] = [
   'users',
@@ -69,22 +78,20 @@ function requireAdminPassword(): string {
   return env.ADMIN_BOOTSTRAP_PASSWORD
 }
 
-export const getAdminInfo = query({
+export const getAdminInfo = action({
   args: { key: v.string() },
   handler: async (ctx, args) => {
+    await rateLimiter.limit(ctx, 'bootstrapAction', { key: 'global', throws: true })
     validateBootstrapKey(args.key)
-    const admins = await ctx.db
-      .query('profiles')
-      .withIndex('by_role', (q) => q.eq('role', 'admin'))
-      .take(50)
+    const adminEmail = requireAdminEmail()
+    const admins: AdminInfo[] = await ctx.runQuery(internal.instagram.connect.listAdmins)
     return {
-      admins: admins.map((p) => ({
+      admins: admins.map((p: AdminInfo) => ({
         email: p.email ?? null,
-        fullName: p.fullName ?? null,
-        profileId: p._id,
+        profileId: p.profileId,
       })),
-      pinnedAdminEmail: ADMIN_EMAIL,
-      pinnedAdminExists: admins.some((p) => p.email === ADMIN_EMAIL),
+      pinnedAdminEmail: adminEmail,
+      pinnedAdminExists: admins.some((p: AdminInfo) => p.email === adminEmail),
     }
   },
 })
@@ -92,14 +99,16 @@ export const getAdminInfo = query({
 export const createAdminUser = action({
   args: { email: v.string(), name: v.string(), key: v.string() },
   handler: async (ctx, args) => {
+    await rateLimiter.limit(ctx, 'bootstrapAction', { key: 'global', throws: true })
     validateBootstrapKey(args.key)
 
+    const adminEmail = requireAdminEmail()
     const email = normalizeEmail(args.email)
-    if (email !== ADMIN_EMAIL) {
+    if (email !== adminEmail) {
       throw new Error('Only the pinned admin email can be created')
     }
 
-    const admins = await ctx.runQuery(internal.instagram.connect.listAdmins)
+    const admins: AdminInfo[] = await ctx.runQuery(internal.instagram.connect.listAdmins)
     if (admins.length > 0) {
       throw new Error('An admin already exists. Admin creation is bootstrap-only.')
     }
@@ -123,20 +132,22 @@ export const createAdminUser = action({
 export const setAdminPassword = action({
   args: { key: v.string() },
   handler: async (ctx, args) => {
+    await rateLimiter.limit(ctx, 'bootstrapAction', { key: 'global', throws: true })
     validateBootstrapKey(args.key)
 
-    const admins = await ctx.runQuery(internal.instagram.connect.listAdmins)
-    const admin = admins.find((a) => a.email === ADMIN_EMAIL)
+    const adminEmail = requireAdminEmail()
+    const admins: AdminInfo[] = await ctx.runQuery(internal.instagram.connect.listAdmins)
+    const admin = admins.find((a: AdminInfo) => a.email === adminEmail)
     if (!admin) {
-      throw new Error(`Pinned admin (${ADMIN_EMAIL}) does not exist`)
+      throw new Error('Pinned admin does not exist')
     }
 
     await modifyAccountCredentials(ctx, {
       provider: 'password',
-      account: { id: ADMIN_EMAIL, secret: requireAdminPassword() },
+      account: { id: adminEmail, secret: requireAdminPassword() },
     })
 
-    return { email: ADMIN_EMAIL, updated: true }
+    return { email: adminEmail, updated: true }
   },
 })
 
@@ -193,6 +204,7 @@ export const resetAdmins = action({
   args: {
     name: v.optional(v.string()),
     key: v.string(),
+    confirm: v.literal('WIPE_ALL_DATA'),
   },
   handler: async (
     ctx,
@@ -202,26 +214,29 @@ export const resetAdmins = action({
     adminProfileId: Id<'profiles'>
     email: string
   }> => {
+    await rateLimiter.limit(ctx, 'bootstrapAction', { key: 'global', throws: true })
     validateBootstrapKey(args.key)
+
+    const adminEmail = requireAdminEmail()
 
     const deleted: Record<string, number> = await ctx.runMutation(internal.admin.wipeDatabase, {})
 
     const { user } = await createAccount(ctx, {
       provider: 'password',
-      account: { id: ADMIN_EMAIL, secret: requireAdminPassword() },
-      profile: { email: ADMIN_EMAIL, name: args.name },
+      account: { id: adminEmail, secret: requireAdminPassword() },
+      profile: { email: adminEmail, name: args.name },
     })
 
     const adminProfileId: Id<'profiles'> = await ctx.runMutation(
       internal.admin.createAdminProfile,
       {
         authUserId: user._id,
-        email: ADMIN_EMAIL,
+        email: adminEmail,
         fullName: args.name,
       },
     )
 
-    return { deleted, adminProfileId, email: ADMIN_EMAIL }
+    return { deleted, adminProfileId, email: adminEmail }
   },
 })
 
@@ -235,6 +250,7 @@ export const seedBaseData = action({
     sectionsSeeded: boolean
     events: { created: number; skipped: number }
   }> => {
+    await rateLimiter.limit(ctx, 'bootstrapAction', { key: 'global', throws: true })
     validateBootstrapKey(args.key)
 
     const base = await ctx.runMutation(internal.seed.insertBaseData, {})

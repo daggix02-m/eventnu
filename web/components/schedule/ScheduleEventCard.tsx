@@ -6,7 +6,6 @@ import {
   CalendarPlus,
   Clock,
   MapPin,
-  Sparkles,
   Check,
   ExternalLink,
   ChevronDown,
@@ -162,7 +161,9 @@ export function ScheduleEventCard({
           </Link>
 
           {event.subtitle && (
-            <p className="text-xs text-on-surface-variant line-clamp-1">{event.subtitle}</p>
+            <p className="text-xs text-on-surface-variant line-clamp-1" title={event.subtitle}>
+              {event.subtitle}
+            </p>
           )}
 
           <div className="flex flex-wrap items-center gap-y-1 gap-x-3 text-xs text-on-surface-variant">
@@ -198,7 +199,6 @@ export function ScheduleEventCard({
                 </>
               ) : (
                 <>
-                  <Sparkles className="w-3.5 h-3.5 text-primary" />
                   <span>+ Plan My Day</span>
                 </>
               )}

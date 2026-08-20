@@ -10,13 +10,15 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Container } from '@/components/layout/Container'
-import { redeemVerificationCode } from '@/lib/auth'
-
-const EMAIL_KEY = 'eventnu_auth_email'
-const REDIRECT_KEY = 'eventnu_auth_redirect'
-const PENDING_TERMS_KEY = 'eventnu_pending_terms'
-const PENDING_ACCOUNT_KEY = 'eventnu_pending_account_type'
-const PENDING_ORG_NAME_KEY = 'eventnu_pending_org_name'
+import { CodeInput } from '@/components/auth/CodeInput'
+import { consumeAuthRedirect, redeemVerificationCode } from '@/lib/auth'
+import {
+  getEmail,
+  getPendingOrg,
+  getPendingTerms,
+  clearPendingTerms,
+  clearPendingOrg,
+} from '@/lib/auth-storage'
 
 function AuthCallbackInner() {
   const router = useRouter()
@@ -38,38 +40,36 @@ function AuthCallbackInner() {
       try {
         await redeemVerificationCode(signIn, mail, verificationCode)
         try {
-          const accountType =
-            (sessionStorage.getItem(PENDING_ACCOUNT_KEY) as 'user' | 'organizer' | null) ?? 'user'
-          const orgName = sessionStorage.getItem(PENDING_ORG_NAME_KEY) ?? ''
-          await ensureProfile({ accountType })
-          if (accountType === 'organizer' && orgName.trim()) {
+          const pending = getPendingOrg()
+          await ensureProfile({})
+          if (pending?.accountType === 'organizer' && pending.orgName.trim()) {
             try {
-              await createOrganizer({ organizerName: orgName.trim() })
+              await createOrganizer({
+                organizerName: pending.orgName.trim(),
+                kind: pending.orgKind ?? undefined,
+                bio: pending.orgBio || undefined,
+                website: pending.orgWebsite || undefined,
+                contactEmail: pending.orgContactEmail || undefined,
+                locationText: pending.orgLocation || undefined,
+              })
             } catch {
               /* organizer profile creation retried on next visit */
             }
           }
-          sessionStorage.removeItem(PENDING_ACCOUNT_KEY)
-          sessionStorage.removeItem(PENDING_ORG_NAME_KEY)
+          clearPendingOrg()
         } catch {
           /* retried on next visit */
         }
-        const pendingTerms = sessionStorage.getItem(PENDING_TERMS_KEY)
+        const pendingTerms = getPendingTerms()
         if (pendingTerms) {
           try {
             await acceptTerms({ version: pendingTerms })
-            sessionStorage.removeItem(PENDING_TERMS_KEY)
+            clearPendingTerms()
           } catch {
             /* non-fatal */
           }
         }
-        let target = '/'
-        try {
-          target = sessionStorage.getItem(REDIRECT_KEY) || '/'
-          sessionStorage.removeItem(REDIRECT_KEY)
-        } catch {
-          /* ignore */
-        }
+        const target = consumeAuthRedirect('/')
         router.replace(target)
         router.refresh()
       } catch (err) {
@@ -90,7 +90,7 @@ function AuthCallbackInner() {
 
   useEffect(() => {
     const urlCode = searchParams.get('code')
-    const mail = sessionStorage.getItem(EMAIL_KEY) || ''
+    const mail = getEmail() || ''
 
     if (urlCode) {
       if (mail) {
@@ -146,6 +146,7 @@ function AuthCallbackInner() {
         {status === 'idle' && (
           <form
             onSubmit={handleManualSubmit}
+            noValidate
             className="space-y-md rounded-xl border border-outline-variant bg-surface-container-low p-lg"
           >
             <p className="text-body-md text-on-surface-variant">
@@ -164,19 +165,20 @@ function AuthCallbackInner() {
               />
             </div>
             <div className="space-y-sm">
-              <Label htmlFor="cb-code">Code</Label>
-              <Input
-                id="cb-code"
-                type="text"
+              <Label>Code</Label>
+              <CodeInput
                 value={code}
-                onChange={(e) => setCode(e.target.value.toUpperCase())}
-                placeholder="e.g. 8AB2K9DX"
-                className="font-mono tracking-[0.2em]"
-                required
+                onChange={setCode}
+                onComplete={(c) => {
+                  if (email.trim()) {
+                    complete(email.trim().toLowerCase(), c)
+                  }
+                }}
+                error={!!error}
               />
             </div>
             {error && <p className="text-body-md text-error">{error}</p>}
-            <Button type="submit" className="w-full">
+            <Button type="submit" className="h-11 w-full">
               Verify and sign in
             </Button>
           </form>

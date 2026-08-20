@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { rememberAuthRedirect } from '@/lib/auth'
 
 export function AuthButton() {
   const { isAuthenticated, isLoading } = useConvexAuth()
@@ -34,15 +35,8 @@ export function AuthButton() {
         variant="outline"
         size="sm"
         onClick={() => {
-          try {
-            sessionStorage.setItem(
-              'eventnu_auth_redirect',
-              window.location.pathname + window.location.search,
-            )
-          } catch {
-            /* storage unavailable */
-          }
-          router.push('/auth')
+          rememberAuthRedirect(window.location.pathname, window.location.search)
+          router.push('/auth?mode=signin')
         }}
       >
         Sign in
@@ -62,7 +56,7 @@ export function AuthButton() {
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className="flex h-9 w-9 items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          className="flex h-9 w-9 items-center justify-center rounded-full"
           aria-label="Account menu"
         >
           <Avatar className="h-9 w-9">

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useQuery } from 'convex/react'
 import { api } from '@eventnu/convex/_generated/api'
+import type { FunctionReturnType } from 'convex/server'
 import type { Id } from '@eventnu/convex/_generated/dataModel'
 import { useConvexAuth } from '@convex-dev/auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -12,16 +13,17 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { EventCard } from '@/components/events/EventCard'
 import { ExperiencePostCard } from '@/components/experiences/ExperiencePostCard'
 import { Skeleton } from '@/components/ui/skeleton'
-import { useAuthModal } from '@/components/auth/AuthModalContext'
-import { mapEvent } from '@/lib/api/events'
+import { useAuthRedirect } from '@/components/auth/AuthRedirectContext'
+import { mapEvent } from '@/lib/api/map-event'
 import { VerifiedBadge } from '@/components/verification/VerifiedBadge'
 import { VerificationReveal } from '@/components/verification/VerificationReveal'
+import { BulkSocialProvider } from '@/components/social/EventSocialActions'
 
 const SEEN_VERIFIED_KEY = 'eventnu_seen_verified'
 
 export function ProfileClient() {
   const { isAuthenticated, isLoading: authLoading } = useConvexAuth()
-  const { openAuth } = useAuthModal()
+  const { openAuth } = useAuthRedirect()
   const searchParams = useSearchParams()
   const router = useRouter()
   const [tab, setTab] = useState<'bookmarks' | 'posts'>(() =>
@@ -73,6 +75,8 @@ export function ProfileClient() {
     router.replace(`/profile?tab=${value}`)
   }
 
+  const visibleBookmarks = selectedFolder === 'all' ? bookmarks : folderBookmarks
+
   if (authLoading) {
     return (
       <div className="mx-auto w-full max-w-[52rem] space-y-lg" aria-hidden="true">
@@ -92,7 +96,7 @@ export function ProfileClient() {
         <p className="mt-xs font-body-md text-on-surface-variant">
           Save events you love and share your experiences.
         </p>
-        <Button className="mt-lg" onClick={openAuth}>
+        <Button className="mt-lg" onClick={() => openAuth()}>
           <LogIn className="h-4 w-4" />
           Sign in
         </Button>
@@ -106,7 +110,7 @@ export function ProfileClient() {
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/15 font-display text-headline-md text-primary">
           {(me?.fullName ?? 'U')
             .split(' ')
-            .map((p) => p[0])
+            .map((p: string) => p[0])
             .slice(0, 2)
             .join('')
             .toUpperCase()}
@@ -151,20 +155,21 @@ export function ProfileClient() {
               >
                 Uncategorized
               </button>
-              {folders.map((folder) => (
-                <button
-                  key={folder._id}
-                  type="button"
-                  onClick={() => setSelectedFolder(folder._id)}
-                  className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors ${selectedFolder === folder._id ? 'border-primary bg-primary/10 text-primary' : 'border-outline-variant text-on-surface-variant hover:border-primary/50'}`}
-                >
-                  <Folder className="h-3.5 w-3.5" /> {folder.name}
-                </button>
-              ))}
+              {folders.map(
+                (folder: FunctionReturnType<typeof api.bookmarks.listFolders>[number]) => (
+                  <button
+                    key={folder._id}
+                    type="button"
+                    onClick={() => setSelectedFolder(folder._id)}
+                    className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors ${selectedFolder === folder._id ? 'border-primary bg-primary/10 text-primary' : 'border-outline-variant text-on-surface-variant hover:border-primary/50'}`}
+                  >
+                    <Folder className="h-3.5 w-3.5" /> {folder.name}
+                  </button>
+                ),
+              )}
             </div>
           )}
-          {bookmarks === undefined ||
-          (selectedFolder !== 'all' && folderBookmarks === undefined) ? (
+          {visibleBookmarks === undefined ? (
             <div
               className="grid grid-cols-1 gap-md sm:grid-cols-2 lg:grid-cols-3"
               aria-hidden="true"
@@ -173,7 +178,7 @@ export function ProfileClient() {
               <Skeleton className="h-72 w-full rounded-xl" />
               <Skeleton className="h-72 w-full rounded-xl" />
             </div>
-          ) : (selectedFolder === 'all' ? bookmarks : (folderBookmarks ?? [])).length === 0 ? (
+          ) : visibleBookmarks.length === 0 ? (
             <div className="w-full rounded-2xl border border-outline-variant bg-surface-container-low p-6 sm:p-8 md:p-xl text-center">
               <p className="font-display text-headline-md text-on-surface">No saved events yet</p>
               <p className="mt-xs font-body-md text-on-surface-variant">
@@ -181,11 +186,20 @@ export function ProfileClient() {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-md sm:grid-cols-2 lg:grid-cols-3">
-              {(selectedFolder === 'all' ? bookmarks : (folderBookmarks ?? [])).map((event) => (
-                <EventCard key={event._id as string} event={mapEvent(event)} />
-              ))}
-            </div>
+            <BulkSocialProvider
+              eventIds={visibleBookmarks.map(
+                (event: FunctionReturnType<typeof api.bookmarks.listByFolder>[number]) =>
+                  event._id as string,
+              )}
+            >
+              <div className="grid grid-cols-1 gap-md sm:grid-cols-2 lg:grid-cols-3">
+                {visibleBookmarks.map(
+                  (event: FunctionReturnType<typeof api.bookmarks.listByFolder>[number]) => (
+                    <EventCard key={event._id as string} event={mapEvent(event)} />
+                  ),
+                )}
+              </div>
+            </BulkSocialProvider>
           )}
         </TabsContent>
 
@@ -209,11 +223,13 @@ export function ProfileClient() {
             </div>
           ) : (
             <ul className="space-y-md">
-              {posts.map((post) => (
-                <li key={post.id}>
-                  <ExperiencePostCard post={post} canDelete />
-                </li>
-              ))}
+              {posts.map(
+                (post: FunctionReturnType<typeof api.experiencePosts.listByUser>[number]) => (
+                  <li key={post.id}>
+                    <ExperiencePostCard post={post} canDelete />
+                  </li>
+                ),
+              )}
             </ul>
           )}
         </TabsContent>

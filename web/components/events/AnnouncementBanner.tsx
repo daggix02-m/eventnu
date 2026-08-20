@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Megaphone, X } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn, isSafeUrl } from '@/lib/utils'
 import { usePrefersReducedMotion } from '@/lib/hooks/usePrefersReducedMotion'
 import type { Announcement } from '@/types'
 
@@ -87,7 +87,7 @@ export function AnnouncementBanner({ announcements }: AnnouncementBannerProps) {
           {current.message && (
             <span className="truncate text-on-surface-variant">{current.message}</span>
           )}
-          {current.link_url && (
+          {current.link_url && isSafeUrl(current.link_url) && (
             <Link
               href={current.link_url}
               className="shrink-0 font-bold text-primary hover:underline"

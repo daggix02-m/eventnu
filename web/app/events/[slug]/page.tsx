@@ -10,8 +10,10 @@ import { OrganizerCard } from '@/components/events/OrganizerCard'
 import { SimilarEvents } from '@/components/events/SimilarEvents'
 import { getEventBySlug, getSimilarEvents } from '@/lib/api/events'
 import { absoluteUrl } from '@/lib/site'
+import { safeJsonLd } from '@/lib/json-ld'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 300
+export const dynamic = 'force-static'
 
 interface EventPageProps {
   params: Promise<{ slug: string }>
@@ -79,10 +81,7 @@ export default async function EventPage({ params }: EventPageProps) {
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
-      />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }} />
       <EventHero event={event} />
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 pb-28 md:pb-16">
         <div className="flex flex-col lg:grid lg:grid-cols-12 gap-8 lg:gap-10 items-start w-full">
@@ -104,7 +103,11 @@ export default async function EventPage({ params }: EventPageProps) {
                     {event.images.length} photos
                   </span>
                 </div>
-                <EventPhotoGrid images={event.images} eventTitle={event.title} />
+                <EventPhotoGrid
+                  images={event.images}
+                  eventTitle={event.title}
+                  imageAspectRatio={event.image_aspect_ratio}
+                />
               </section>
             )}
 

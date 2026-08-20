@@ -1,43 +1,46 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useMutation } from 'convex/react'
 import { api } from '@eventnu/convex/_generated/api'
 import { useAuthActions } from '@convex-dev/auth/react'
-import { Loader2, Mail, ShieldCheck, Compass, Megaphone, ArrowLeft, Sparkles } from 'lucide-react'
+import { Loader2, ArrowLeft, Mail, Calendar, Megaphone, Info, Building2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'motion/react'
 import { AuthShell } from '@/components/auth/AuthShell'
-import {
-  AnimatedTabs,
-  AnimatedTabsList,
-  AnimatedTabsTrigger,
-  AnimatedTabsContent,
-} from '@/components/ui/animated-tabs'
 import { Checkbox } from '@/components/ui/checkbox'
 import { FieldBox } from '@/components/ui/field-box'
 import { Button } from '@/components/ui/button'
 import { TERMS_VERSION, TERMS_URL, PRIVACY_POLICY_URL } from '@/lib/terms'
-import { redeemVerificationCode } from '@/lib/auth'
+import { consumeAuthRedirect } from '@/lib/auth'
+import {
+  storeEmail,
+  storePendingTerms,
+  storePendingOrg,
+  clearAllPending,
+  type OrganizerKind,
+} from '@/lib/auth-storage'
 
-const EMAIL_KEY = 'eventnu_auth_email'
-const REDIRECT_KEY = 'eventnu_auth_redirect'
-const PENDING_TERMS_KEY = 'eventnu_pending_terms'
-const PENDING_ACCOUNT_KEY = 'eventnu_pending_account_type'
-const PENDING_ORG_NAME_KEY = 'eventnu_pending_org_name'
+/* -------------------------------------------------------------------------- */
+/*  Types                                                                       */
+/* -------------------------------------------------------------------------- */
 
 type AccountType = 'user' | 'organizer'
 
 type View =
   | { name: 'choose' }
   | { name: 'signin' }
-  | { name: 'signup' }
-  | { name: 'magic' }
-  | { name: 'check'; email: string; message: string }
-  | { name: 'code'; email: string }
+  | { name: 'signup'; step?: number }
+  | { name: 'verify'; email: string }
 
-function describeError(err: unknown): string {
+type FieldErrors = Record<string, string>
+
+/* -------------------------------------------------------------------------- */
+/*  Helpers                                                                     */
+/* -------------------------------------------------------------------------- */
+
+export function describeError(err: unknown): string {
   if (err instanceof Error) {
     const msg = err.message
     if (msg.includes('Invalid credentials') || msg.includes('InvalidAccountId')) {
@@ -46,7 +49,8 @@ function describeError(err: unknown): string {
     if (msg.includes('TooManyFailedAttempts')) {
       return 'Too many attempts. Please try again later.'
     }
-    if (msg.includes('password') && msg.includes('length')) {
+    const lower = msg.toLowerCase()
+    if (lower.includes('password') && lower.includes('length')) {
       return 'Password must be at least 8 characters.'
     }
     if (
@@ -59,66 +63,191 @@ function describeError(err: unknown): string {
     if (msg.includes('Account not found')) {
       return 'No account found for this email.'
     }
-    return msg
+    return 'Something went wrong. Please try again.'
   }
   return 'Something went wrong. Please try again.'
 }
 
-function GoogleIcon({ className }: { className?: string }) {
+/* -------------------------------------------------------------------------- */
+/*  Password strength                                                           */
+/* -------------------------------------------------------------------------- */
+
+export function getPasswordStrength(password: string): {
+  score: number
+  label: string
+  color: string
+} {
+  let score = 0
+  if (password.length >= 8) score++
+  if (password.length >= 12) score++
+  if (/[A-Z]/.test(password) && /[a-z]/.test(password)) score++
+  if (/\d/.test(password)) score++
+  if (/[^A-Za-z0-9]/.test(password)) score++
+
+  if (score <= 1) return { score: 1, label: 'Weak', color: 'bg-error' }
+  if (score <= 2) return { score: 2, label: 'Fair', color: 'bg-secondary' }
+  if (score <= 3) return { score: 3, label: 'Good', color: 'bg-primary' }
+  return { score: 4, label: 'Strong', color: 'bg-tertiary' }
+}
+
+function PasswordStrength({ password }: { password: string }) {
+  if (!password) return null
+  const { score, label, color } = getPasswordStrength(password)
+
   return (
-    <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
-      <path
-        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
-        fill="#4285F4"
-      />
-      <path
-        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-        fill="#34A853"
-      />
-      <path
-        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-        fill="#FBBC05"
-      />
-      <path
-        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-        fill="#EA4335"
-      />
-    </svg>
+    <div className="flex items-center gap-2" aria-live="polite">
+      <div className="flex flex-1 gap-0.5">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div
+            key={i}
+            className={`h-1.5 flex-1 rounded-full transition-colors ${
+              i < score ? color : 'bg-outline-variant/40'
+            }`}
+          />
+        ))}
+      </div>
+      <span className="text-xs text-on-surface-variant">{label}</span>
+    </div>
   )
 }
 
-function GitHubIcon({ className }: { className?: string }) {
+/* -------------------------------------------------------------------------- */
+/*  Error summary (focusable for screen readers)                               */
+/* -------------------------------------------------------------------------- */
+
+function ErrorSummary({ fieldErrors, formError }: { fieldErrors: FieldErrors; formError: string }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const hasErrors = formError || Object.keys(fieldErrors).length > 0
+
+  useEffect(() => {
+    if (hasErrors) ref.current?.focus()
+  }, [hasErrors])
+
+  if (!hasErrors) return null
+
+  const entries = Object.entries(fieldErrors).filter(([, v]) => v)
+
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-      <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-    </svg>
+    <div
+      ref={ref}
+      tabIndex={-1}
+      role="alert"
+      aria-labelledby="auth-error-heading"
+      className="mb-3 rounded-lg border border-error/40 bg-error/10 px-3 py-2 text-sm text-error"
+    >
+      <p id="auth-error-heading" className="font-semibold sr-only">
+        There is a problem
+      </p>
+      {formError && <p>{formError}</p>}
+      {entries.length > 0 && (
+        <ul className="mt-1 list-inside list-disc space-y-0.5">
+          {entries.map(([field, msg]) => (
+            <li key={field}>{msg}</li>
+          ))}
+        </ul>
+      )}
+    </div>
   )
 }
+
+/* -------------------------------------------------------------------------- */
+/*  Motion presets                                                              */
+/* -------------------------------------------------------------------------- */
+
+const fadeSlide = {
+  initial: { opacity: 0, y: 12, filter: 'blur(2px)' },
+  animate: { opacity: 1, y: 0, filter: 'blur(0px)' },
+  exit: { opacity: 0, y: -8, filter: 'blur(2px)' },
+  transition: { duration: 0.3, ease: [0.22, 1, 0.36, 1] as const },
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Step progress indicator                                                     */
+/* -------------------------------------------------------------------------- */
+
+function StepProgress({ current, total }: { current: number; total: number }) {
+  return (
+    <div className="mb-3 flex items-center gap-2" aria-label={`Step ${current} of ${total}`}>
+      <div className="flex flex-1 gap-1">
+        {Array.from({ length: total }).map((_, i) => (
+          <div
+            key={i}
+            className={`h-1 flex-1 rounded-full transition-colors ${
+              i < current ? 'bg-primary' : 'bg-outline-variant/40'
+            }`}
+          />
+        ))}
+      </div>
+      <span className="text-xs text-on-surface-variant">
+        {current} of {total}
+      </span>
+    </div>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Component                                                                   */
+/* -------------------------------------------------------------------------- */
 
 export function AuthPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { signIn } = useAuthActions()
   const ensureProfile = useMutation(api.profiles.ensureProfile)
   const acceptTerms = useMutation(api.profiles.acceptTerms)
   const createOrganizer = useMutation(api.organizers.create)
 
-  const [view, setView] = useState<View>({ name: 'choose' })
+  /* ---- refs for auto-focus ---- */
+  const emailRef = useRef<HTMLInputElement>(null)
+  const nameRef = useRef<HTMLInputElement>(null)
+
+  /* ---- state ---- */
+  const [view, setView] = useState<View>(() =>
+    searchParams.get('mode') === 'signin' ? { name: 'signin' } : { name: 'choose' },
+  )
   const [accountType, setAccountType] = useState<AccountType>('user')
   const [name, setName] = useState('')
   const [orgName, setOrgName] = useState('')
+  const [orgKind, setOrgKind] = useState<OrganizerKind>('organizer')
+  const [orgBio, setOrgBio] = useState('')
+  const [orgWebsite, setOrgWebsite] = useState('')
+  const [orgContactEmail, setOrgContactEmail] = useState('')
+  const [orgLocation, setOrgLocation] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [code, setCode] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [termsChecked, setTermsChecked] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [formError, setFormError] = useState('')
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
 
-  const storeEmail = (mail: string) => {
-    try {
-      sessionStorage.setItem(EMAIL_KEY, mail.trim().toLowerCase())
-    } catch {
-      /* storage unavailable */
+  /* ---- auto-focus first field on view change ---- */
+  const signupStep = view.name === 'signup' ? view.step : undefined
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (view.name === 'signin') {
+        emailRef.current?.focus()
+      }
+      if (view.name === 'signup' && (signupStep === 1 || !signupStep) && !name) {
+        nameRef.current?.focus()
+      }
+    }, 100)
+    return () => clearTimeout(timer)
+  }, [view.name, signupStep, name])
+
+  /* ---- shared helpers ---- */
+
+  const resetState = () => {
+    setFormError('')
+    setFieldErrors({})
+  }
+
+  const switchTo = (next: View) => {
+    resetState()
+    if (next.name === 'choose') {
+      clearAllPending()
     }
+    setView(next)
   }
 
   const finishSignIn = async (
@@ -126,23 +255,37 @@ export function AuthPage() {
     accountTypeArg?: AccountType,
     orgNameArg?: string,
     pendingTerms?: string | null,
+    orgDetails?: {
+      kind?: OrganizerKind
+      bio?: string
+      website?: string
+      contactEmail?: string
+      location?: string
+    },
   ) => {
     try {
-      await ensureProfile({ fullName, accountType: accountTypeArg })
+      await ensureProfile({ fullName })
     } catch {
-      /* profile creation retried on next visit */
+      /* retried on next visit */
     }
     if (accountTypeArg === 'organizer' && orgNameArg?.trim()) {
       try {
-        await createOrganizer({ organizerName: orgNameArg.trim() })
+        await createOrganizer({
+          organizerName: orgNameArg.trim(),
+          kind: orgDetails?.kind,
+          bio: orgDetails?.bio?.trim() || undefined,
+          website: orgDetails?.website?.trim() || undefined,
+          contactEmail: orgDetails?.contactEmail?.trim() || undefined,
+          locationText: orgDetails?.location?.trim() || undefined,
+        })
       } catch {
-        /* organizer profile creation retried on next visit */
+        /* retried on next visit */
       }
     }
     if (pendingTerms) {
       try {
         await acceptTerms({ version: pendingTerms })
-        sessionStorage.removeItem(PENDING_TERMS_KEY)
+        clearAllPending()
       } catch {
         /* non-fatal */
       }
@@ -150,25 +293,24 @@ export function AuthPage() {
   }
 
   const goHome = () => {
-    let target = '/'
-    try {
-      target = sessionStorage.getItem(REDIRECT_KEY) || '/'
-      sessionStorage.removeItem(REDIRECT_KEY)
-    } catch {
-      /* storage unavailable */
-    }
+    const target = consumeAuthRedirect('/')
     router.push(target)
     router.refresh()
   }
 
+  /* ---- handlers ---- */
+
   const handlePasswordSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!email.trim() || !password) {
-      setError('Please enter your email and password.')
+    const errs: FieldErrors = {}
+    if (!email.trim()) errs.email = 'Please enter your email.'
+    if (!password) errs.password = 'Please enter a password.'
+    if (Object.keys(errs).length > 0) {
+      setFieldErrors(errs)
       return
     }
     setLoading(true)
-    setError('')
+    resetState()
     try {
       storeEmail(email)
       const result = await signIn('password', {
@@ -181,15 +323,10 @@ export function AuthPage() {
         await finishSignIn()
         goHome()
       } else {
-        setView({
-          name: 'check',
-          email: email.trim().toLowerCase(),
-          message:
-            'We emailed a verification link to your address. Check your inbox to finish signing in.',
-        })
+        setView({ name: 'verify', email: email.trim().toLowerCase() })
       }
     } catch (err) {
-      setError(describeError(err))
+      setFormError(describeError(err))
     } finally {
       setLoading(false)
     }
@@ -197,33 +334,49 @@ export function AuthPage() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!name.trim()) {
-      setError('Please enter your name.')
-      return
-    }
+    const errs: FieldErrors = {}
+    if (!name.trim()) errs.name = 'Please enter your name.'
     if (accountType === 'organizer' && !orgName.trim()) {
-      setError('Please enter your organizer or business name.')
-      return
+      errs.orgName = 'Please enter your organizer or business name.'
     }
-    if (!email.trim() || !password) {
-      setError('Please enter your email and password.')
-      return
+    if (!email.trim()) {
+      errs.email = 'Please enter your email.'
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      errs.email = 'Please enter a valid email address.'
+    }
+    if (!password) {
+      errs.password = 'Please enter a password.'
+    } else if (password.length < 8) {
+      errs.password = 'Password must be at least 8 characters.'
+    }
+    if (password !== confirmPassword) {
+      errs.confirmPassword = 'Passwords do not match.'
     }
     if (!termsChecked) {
-      setError('Please accept the Terms of Service and Privacy Policy to continue.')
+      setFormError('Please accept the Terms of Service and Privacy Policy to continue.')
+      return
+    }
+    if (Object.keys(errs).length > 0) {
+      setFieldErrors(errs)
       return
     }
     setLoading(true)
-    setError('')
+    resetState()
     try {
       storeEmail(email)
-      sessionStorage.setItem(PENDING_TERMS_KEY, TERMS_VERSION)
+      storePendingTerms(TERMS_VERSION)
       if (accountType === 'organizer') {
-        sessionStorage.setItem(PENDING_ACCOUNT_KEY, 'organizer')
-        sessionStorage.setItem(PENDING_ORG_NAME_KEY, orgName.trim())
+        storePendingOrg({
+          accountType: 'organizer',
+          orgName: orgName.trim(),
+          orgKind,
+          orgBio: orgBio.trim(),
+          orgWebsite: orgWebsite.trim(),
+          orgContactEmail: orgContactEmail.trim(),
+          orgLocation: orgLocation.trim(),
+        })
       } else {
-        sessionStorage.removeItem(PENDING_ACCOUNT_KEY)
-        sessionStorage.removeItem(PENDING_ORG_NAME_KEY)
+        clearAllPending()
       }
       const result = await signIn('password', {
         email: email.trim().toLowerCase(),
@@ -233,168 +386,170 @@ export function AuthPage() {
         redirectTo: '/auth/callback',
       })
       if (result.signingIn) {
-        await finishSignIn(name.trim(), accountType, orgName, TERMS_VERSION)
+        await finishSignIn(name.trim(), accountType, orgName, TERMS_VERSION, {
+          kind: orgKind,
+          bio: orgBio,
+          website: orgWebsite,
+          contactEmail: orgContactEmail,
+          location: orgLocation,
+        })
         goHome()
       } else {
-        setView({
-          name: 'check',
-          email: email.trim().toLowerCase(),
-          message:
-            'Almost done — we emailed a verification link to your address. Click it to activate your account.',
-        })
+        setView({ name: 'verify', email: email.trim().toLowerCase() })
       }
     } catch (err) {
-      setError(describeError(err))
+      setFormError(describeError(err))
     } finally {
       setLoading(false)
     }
   }
 
-  const handleMagicRequest = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!email.trim()) {
-      setError('Please enter your email.')
-      return
+  /* ---- step-based signup for organizers ---- */
+  const orgStep = view.name === 'signup' ? (view.step ?? 1) : 1
+  const orgTotalSteps = accountType === 'organizer' ? 3 : 2
+
+  const validateStep = (step: number): boolean => {
+    const errs: FieldErrors = {}
+    if (step === 1) {
+      if (!name.trim()) errs.name = 'Please enter your name.'
+      if (!email.trim()) errs.email = 'Please enter your email.'
+      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()))
+        errs.email = 'Please enter a valid email address.'
     }
-    setLoading(true)
-    setError('')
-    try {
-      storeEmail(email)
-      await signIn('email', { email: email.trim().toLowerCase(), redirectTo: '/auth/callback' })
-      setView({
-        name: 'check',
-        email: email.trim().toLowerCase(),
-        message: 'We emailed a sign-in link to your address. It expires in one hour.',
-      })
-    } catch (err) {
-      setError(describeError(err))
-    } finally {
-      setLoading(false)
+    if (step === 2) {
+      if (!password) errs.password = 'Please enter a password.'
+      else if (password.length < 8) errs.password = 'Password must be at least 8 characters.'
+      if (password !== confirmPassword) errs.confirmPassword = 'Passwords do not match.'
     }
+    if (step === 3 && accountType === 'organizer') {
+      if (!orgName.trim()) errs.orgName = 'Please enter your organizer or business name.'
+    }
+    setFieldErrors(errs)
+    return Object.keys(errs).length === 0
   }
 
-  const handleCodeSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!code.trim()) {
-      setError('Please enter the code from your email.')
-      return
-    }
-    setLoading(true)
-    setError('')
-    try {
-      const mail = view.name === 'code' ? view.email : email.trim().toLowerCase()
-      storeEmail(mail)
-      await redeemVerificationCode(signIn, mail, code.trim())
-      const pendingTerms = sessionStorage.getItem(PENDING_TERMS_KEY)
-      const pendingAccount =
-        (sessionStorage.getItem(PENDING_ACCOUNT_KEY) as AccountType | null) ?? 'user'
-      const pendingOrgName = sessionStorage.getItem(PENDING_ORG_NAME_KEY) ?? ''
-      await finishSignIn(undefined, pendingAccount, pendingOrgName, pendingTerms)
-      sessionStorage.removeItem(PENDING_ACCOUNT_KEY)
-      sessionStorage.removeItem(PENDING_ORG_NAME_KEY)
-      goHome()
-    } catch (err) {
-      setError(describeError(err))
-    } finally {
-      setLoading(false)
-    }
+  const nextStep = () => {
+    if (!validateStep(orgStep)) return
+    resetState()
+    setView({ name: 'signup', step: orgStep + 1 })
   }
 
-  const switchTo = (next: View) => {
-    setError('')
-    setView(next)
+  const prevStep = () => {
+    resetState()
+    setView({ name: 'signup', step: orgStep - 1 })
   }
 
-  const chooseAccount = (type: AccountType) => {
-    setAccountType(type)
-    setError('')
-    setView({ name: 'signup' })
-  }
+  /* ---- dynamic shell copy ---- */
+
+  const shellTitle =
+    view.name === 'signup'
+      ? accountType === 'organizer'
+        ? 'Apply as an organizer'
+        : 'Create your account'
+      : view.name === 'signin'
+        ? 'Welcome back'
+        : view.name === 'verify'
+          ? 'Check your email'
+          : 'Join Event Nu'
+
+  const shellDescription =
+    view.name === 'signup'
+      ? accountType === 'organizer'
+        ? 'Create your organizer account. We\u2019ll review your application before you can publish events \u2014 usually within 1\u20132 business days.'
+        : 'Start discovering and saving the events you love.'
+      : view.name === 'signin'
+        ? 'Sign in to your account.'
+        : view.name === 'verify'
+          ? `We sent a verification link to ${view.email}. Click it to finish.`
+          : 'Your city\u2019s guide to what\u2019s happening. Pick how you want to get involved.'
+
+  /* ---- render ---- */
+
+  const subCardActions =
+    view.name === 'signin' ? (
+      <div className="mt-4 flex justify-center">
+        <button
+          type="button"
+          className="rounded-xl px-4 py-2.5 text-sm font-medium text-primary hover:bg-primary/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          onClick={() => {
+            if (email.trim()) storeEmail(email)
+            router.push('/auth/forgot-password')
+          }}
+        >
+          Forgot password?
+        </button>
+      </div>
+    ) : null
 
   return (
     <AuthShell
-      title={
-        view.name === 'signup'
-          ? accountType === 'organizer'
-            ? 'Apply as an organizer'
-            : 'Create your account'
-          : view.name === 'choose'
-            ? 'Join Event Nu'
-            : 'Welcome back'
-      }
-      description={
-        view.name === 'signup'
-          ? accountType === 'organizer'
-            ? 'Create your account, then submit your organizer details for review.'
-            : 'Like, save, and share the events you love.'
-          : view.name === 'choose'
-            ? 'Choose how you want to use Event Nu.'
-            : 'Sign in to continue.'
-      }
-      asideTitle="Make room for a good night."
+      title={shellTitle}
+      description={shellDescription}
+      asideTitle="Make room for a good time."
       asideDescription="Discover the people, places, and events shaping the city this week."
+      showTermsFooter={view.name !== 'signup'}
+      subCardActions={subCardActions}
     >
-      {error && (
-        <p
-          role="alert"
-          className="mb-4 rounded-xl border border-error/40 bg-error/10 px-md py-sm text-body-md text-error"
-        >
-          {error}
-        </p>
-      )}
-
       <AnimatePresence mode="wait">
+        {/* ------------------------------------------------------------------ */}
+        {/*  CHOOSE                                                             */}
+        {/* ------------------------------------------------------------------ */}
         {view.name === 'choose' && (
-          <motion.div
-            key="choose"
-            initial={{ opacity: 0, y: 12, filter: 'blur(4px)' }}
-            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-            exit={{ opacity: 0, y: -8, filter: 'blur(4px)' }}
-            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <div className="grid gap-sm sm:grid-cols-2">
+          <motion.div key="choose" {...fadeSlide}>
+            <ErrorSummary fieldErrors={fieldErrors} formError={formError} />
+
+            <div className="grid gap-2 sm:grid-cols-2">
               <p className="font-mono text-label-sm uppercase tracking-wider text-on-surface-variant sm:col-span-2">
                 I want to…
               </p>
               <button
                 type="button"
-                onClick={() => chooseAccount('user')}
-                className="flex w-full items-start gap-3 rounded-xl border border-outline-variant bg-surface-container-high p-4 text-left transition-[border-color,transform] hover:-translate-y-0.5 hover:border-primary/60"
+                onClick={() => {
+                  setAccountType('user')
+                  resetState()
+                  setView({ name: 'signup', step: 1 })
+                }}
+                className="group flex w-full items-start gap-3 rounded-xl border border-outline-variant bg-surface-container-high p-3 text-left transition-[border-color,transform] hover:-translate-y-0.5 hover:border-primary/60 active:scale-[0.98]"
               >
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
-                  <Compass className="h-5 w-5" />
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary transition-colors group-hover:bg-primary/25">
+                  <Calendar className="h-4 w-4" />
                 </span>
                 <span>
                   <span className="block font-display font-semibold text-on-surface">
-                    Find events
+                    Browse events
                   </span>
-                  <span className="text-body-md text-on-surface-variant">
-                    Attend as a guest — like, save, and share.
+                  <span className="text-sm text-on-surface-variant">
+                    Discover concerts, nightlife, and cultural events happening in Addis.
                   </span>
                 </span>
               </button>
               <button
                 type="button"
-                onClick={() => chooseAccount('organizer')}
-                className="flex w-full items-start gap-3 rounded-xl border border-outline-variant bg-surface-container-high p-4 text-left transition-[border-color,transform] hover:-translate-y-0.5 hover:border-primary/60"
+                onClick={() => {
+                  setAccountType('organizer')
+                  resetState()
+                  setView({ name: 'signup', step: 1 })
+                }}
+                className="group flex w-full items-start gap-3 rounded-xl border border-outline-variant bg-surface-container-high p-3 text-left transition-[border-color,transform] hover:-translate-y-0.5 hover:border-secondary/60 active:scale-[0.98]"
               >
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-secondary/15 text-secondary">
-                  <Megaphone className="h-5 w-5" />
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-secondary/15 text-secondary transition-colors group-hover:bg-secondary/25">
+                  <Megaphone className="h-4 w-4" />
                 </span>
                 <span>
                   <span className="block font-display font-semibold text-on-surface">
-                    List events
+                    Host events
                   </span>
-                  <span className="text-body-md text-on-surface-variant">
-                    Apply to list and promote your events. Approval is required before publishing.
+                  <span className="text-sm text-on-surface-variant">
+                    List your own events for the city. Organizer approval required before
+                    publishing.
                   </span>
                 </span>
               </button>
-              <p className="text-center text-body-md text-on-surface-variant sm:col-span-2">
+              <p className="text-center text-sm text-on-surface-variant sm:col-span-2">
                 Already have an account?{' '}
                 <button
                   type="button"
-                  className="font-medium text-primary hover:underline"
+                  className="min-h-11 inline-block px-2 font-medium text-primary hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                   onClick={() => switchTo({ name: 'signin' })}
                 >
                   Sign in
@@ -404,168 +559,16 @@ export function AuthPage() {
           </motion.div>
         )}
 
+        {/* ------------------------------------------------------------------ */}
+        {/*  SIGN IN                                                            */}
+        {/* ------------------------------------------------------------------ */}
         {view.name === 'signin' && (
-          <motion.div
-            key="signin"
-            initial={{ opacity: 0, y: 12, filter: 'blur(4px)' }}
-            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-            exit={{ opacity: 0, y: -8, filter: 'blur(4px)' }}
-            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <div className="space-y-3">
-              <button
-                type="button"
-                disabled
-                className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-outline-variant bg-surface-container-high text-body-md font-medium text-on-surface opacity-60 cursor-not-allowed"
-              >
-                <GoogleIcon className="h-5 w-5" />
-                Continue with Google
-              </button>
-              <button
-                type="button"
-                disabled
-                className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-outline-variant bg-surface-container-high text-body-md font-medium text-on-surface opacity-60 cursor-not-allowed"
-              >
-                <GitHubIcon className="h-5 w-5" />
-                Continue with GitHub
-              </button>
-            </div>
+          <motion.div key="signin" {...fadeSlide}>
+            <ErrorSummary fieldErrors={fieldErrors} formError={formError} />
 
-            <div className="relative my-5">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-outline-variant" />
-              </div>
-              <div className="relative flex justify-center text-label-sm">
-                <span className="bg-surface-container-low px-3 text-on-surface-variant">
-                  or continue with email
-                </span>
-              </div>
-            </div>
-
-            <AnimatedTabs defaultValue="email">
-              <AnimatedTabsList>
-                <AnimatedTabsTrigger value="email">
-                  <Mail className="h-4 w-4" />
-                  Email
-                </AnimatedTabsTrigger>
-                <AnimatedTabsTrigger value="magic">
-                  <Sparkles className="h-4 w-4" />
-                  Magic link
-                </AnimatedTabsTrigger>
-              </AnimatedTabsList>
-              <AnimatedTabsContent value="email" className="pt-4">
-                <form onSubmit={handlePasswordSignIn} className="space-y-md">
-                  <FieldBox
-                    label="Email"
-                    type="email"
-                    name="email"
-                    autoComplete="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com"
-                    required
-                  />
-                  <FieldBox
-                    label="Password"
-                    type="password"
-                    name="password"
-                    autoComplete="current-password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    showPasswordToggle
-                    required
-                  />
-                  <Button type="submit" className="h-12 w-full rounded-xl" disabled={loading}>
-                    {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-                    {loading ? 'Signing in…' : 'Sign in'}
-                  </Button>
-                  <p className="text-center text-on-surface-variant">
-                    New to Event Nu?{' '}
-                    <button
-                      type="button"
-                      className="text-primary hover:underline"
-                      onClick={() => switchTo({ name: 'choose' })}
-                    >
-                      Create an account
-                    </button>
-                  </p>
-                </form>
-              </AnimatedTabsContent>
-              <AnimatedTabsContent value="magic" className="pt-4">
-                <form onSubmit={handleMagicRequest} className="space-y-md">
-                  <FieldBox
-                    label="Email"
-                    type="email"
-                    name="email"
-                    autoComplete="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com"
-                    required
-                  />
-                  <Button type="submit" className="h-12 w-full rounded-xl" disabled={loading}>
-                    {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-                    {loading ? 'Sending link…' : 'Email me a sign-in link'}
-                  </Button>
-                  <p className="text-center text-on-surface-variant">
-                    We&apos;ll email you a one-time sign-in link that expires in one hour.
-                  </p>
-                </form>
-              </AnimatedTabsContent>
-            </AnimatedTabs>
-          </motion.div>
-        )}
-
-        {view.name === 'signup' && (
-          <motion.div
-            key="signup"
-            initial={{ opacity: 0, y: 12, filter: 'blur(4px)' }}
-            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-            exit={{ opacity: 0, y: -8, filter: 'blur(4px)' }}
-            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <button
-              type="button"
-              className="mb-md inline-flex items-center gap-1 text-body-md text-primary hover:underline"
-              onClick={() => switchTo({ name: 'choose' })}
-            >
-              <ArrowLeft className="h-4 w-4" /> Choose a different path
-            </button>
-            {accountType === 'organizer' && (
-              <div className="mb-md rounded-xl border border-secondary/30 bg-secondary/10 p-md">
-                <p className="font-mono text-label-sm uppercase tracking-wider text-secondary">
-                  Organizer application
-                </p>
-                <p className="mt-1 text-body-md text-on-surface-variant">
-                  Your account is created right away. Event Nu will review your organizer details
-                  before you can publish events.
-                </p>
-              </div>
-            )}
-            <form onSubmit={handleSignUp} className="space-y-md">
+            <form onSubmit={handlePasswordSignIn} noValidate className="space-y-5">
               <FieldBox
-                label="Full name"
-                type="text"
-                name="name"
-                autoComplete="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Your name"
-                required
-              />
-              {accountType === 'organizer' && (
-                <FieldBox
-                  label="Organizer / business name"
-                  type="text"
-                  name="orgName"
-                  value={orgName}
-                  onChange={(e) => setOrgName(e.target.value)}
-                  placeholder="e.g. Addis Nights"
-                  required
-                />
-              )}
-              <FieldBox
+                ref={emailRef}
                 label="Email"
                 type="email"
                 name="email"
@@ -573,141 +576,345 @@ export function AuthPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
+                invalid={!!fieldErrors.email}
                 required
               />
               <FieldBox
                 label="Password"
                 type="password"
                 name="password"
-                autoComplete="new-password"
+                autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="At least 8 characters"
+                placeholder="••••••••"
                 showPasswordToggle
-                minLength={8}
+                invalid={!!fieldErrors.password}
                 required
               />
-              <label className="flex items-start gap-sm text-body-md text-on-surface-variant">
-                <Checkbox
-                  checked={termsChecked}
-                  onCheckedChange={(checked) => setTermsChecked(checked === true)}
-                  className="mt-0.5"
-                  aria-label="Accept terms and privacy policy"
-                />
-                <span>
-                  I agree to the{' '}
-                  <Link href={TERMS_URL} className="text-primary hover:underline" target="_blank">
-                    Terms of Service
-                  </Link>{' '}
-                  and{' '}
-                  <Link
-                    href={PRIVACY_POLICY_URL}
-                    className="text-primary hover:underline"
-                    target="_blank"
-                  >
-                    Privacy Policy
-                  </Link>
-                  .
-                </span>
-              </label>
-              <Button type="submit" className="h-12 w-full rounded-xl" disabled={loading}>
+              <Button type="submit" className="h-11 w-full rounded-xl" disabled={loading}>
                 {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-                {loading
-                  ? accountType === 'organizer'
-                    ? 'Submitting application…'
-                    : 'Creating account…'
-                  : accountType === 'organizer'
-                    ? 'Submit application'
-                    : 'Create account'}
+                {loading ? 'Signing in\u2026' : 'Sign in'}
               </Button>
-              <p className="text-center text-body-md text-on-surface-variant">
-                Already have an account?{' '}
-                <button
-                  type="button"
-                  className="text-primary hover:underline"
-                  onClick={() => switchTo({ name: 'signin' })}
-                >
-                  Sign in
-                </button>
-              </p>
             </form>
-          </motion.div>
-        )}
 
-        {view.name === 'check' && (
-          <motion.div
-            key="check"
-            initial={{ opacity: 0, y: 12, filter: 'blur(4px)' }}
-            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-            exit={{ opacity: 0, y: -8, filter: 'blur(4px)' }}
-            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-            className="space-y-md"
-          >
-            <div className="flex items-start gap-sm rounded-xl border border-outline-variant bg-surface-container-high p-md">
-              <Mail className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-              <p className="text-body-md text-on-surface-variant">{view.message}</p>
-            </div>
-            <p className="text-body-md text-on-surface-variant">
-              Didn&apos;t get it?{' '}
+            <div className="mt-1 flex flex-col items-center gap-sm text-sm text-on-surface-variant">
               <button
                 type="button"
-                className="text-primary hover:underline"
-                onClick={() => switchTo({ name: 'code', email: view.email })}
+                className="min-h-11 px-2 text-primary hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                onClick={() => {
+                  resetState()
+                  setView({ name: 'choose' })
+                }}
               >
-                Enter the code manually
+                Create an account
               </button>
-              .
-            </p>
+            </div>
           </motion.div>
         )}
 
-        {view.name === 'code' && (
-          <motion.div
-            key="code"
-            initial={{ opacity: 0, y: 12, filter: 'blur(4px)' }}
-            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-            exit={{ opacity: 0, y: -8, filter: 'blur(4px)' }}
-            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <form onSubmit={handleCodeSubmit} className="space-y-md">
-              <p className="text-body-md text-on-surface-variant">
-                Enter the code we emailed to{' '}
-                <span className="font-mono text-on-surface">{view.email}</span>.
-              </p>
-              <FieldBox
-                label="Verification code"
-                type="text"
-                name="code"
-                inputMode="text"
-                autoComplete="one-time-code"
-                value={code}
-                onChange={(e) => setCode(e.target.value.toUpperCase())}
-                placeholder="e.g. 8AB2K9DX"
-                className="font-mono tracking-[0.2em]"
-                required
-              />
-              <Button type="submit" className="h-12 w-full rounded-xl" disabled={loading}>
-                {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-                {loading ? 'Verifying…' : 'Verify and sign in'}
-              </Button>
-              <div className="flex items-center justify-between text-body-md">
-                <button
-                  type="button"
-                  className="inline-flex items-center gap-1 text-primary hover:underline"
-                  onClick={() => switchTo({ name: 'signin' })}
-                >
-                  <ArrowLeft className="h-4 w-4" /> Back
-                </button>
-                <button
-                  type="button"
-                  className="inline-flex items-center gap-2 text-primary hover:underline disabled:opacity-50"
-                  onClick={() => switchTo({ name: 'signin' })}
-                  disabled={loading}
-                >
-                  <ShieldCheck className="h-4 w-4" /> Resend code
-                </button>
+        {/* ------------------------------------------------------------------ */}
+        {/*  SIGN UP — Step-based                                               */}
+        {/* ------------------------------------------------------------------ */}
+        {view.name === 'signup' && (
+          <motion.div key="signup" {...fadeSlide}>
+            <ErrorSummary fieldErrors={fieldErrors} formError={formError} />
+
+            <button
+              type="button"
+              className="mb-2 inline-flex min-h-11 items-center gap-1 px-1 text-sm text-on-surface-variant hover:text-on-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              onClick={() => (orgStep === 1 ? switchTo({ name: 'choose' }) : prevStep())}
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />{' '}
+              {orgStep === 1 ? 'Choose a different path' : 'Back'}
+            </button>
+
+            {accountType === 'organizer' && (
+              <StepProgress current={orgStep} total={orgTotalSteps} />
+            )}
+
+            {accountType === 'organizer' && orgStep === 1 && (
+              <div className="mb-2 flex items-center gap-2 rounded-lg border border-secondary/30 bg-secondary/10 px-3 py-1.5">
+                <Info className="h-3.5 w-3.5 shrink-0 text-secondary" />
+                <p className="text-xs text-on-surface-variant">
+                  Your account is created right away. We&apos;ll review your application before you
+                  can publish events — usually within 1–2 business days.
+                </p>
               </div>
+            )}
+
+            <form onSubmit={handleSignUp} noValidate className="space-y-5">
+              {/* ── Step 1: Personal info ── */}
+              {orgStep === 1 && (
+                <>
+                  <FieldBox
+                    ref={nameRef}
+                    label={accountType === 'organizer' ? 'Your personal name' : 'Full name'}
+                    type="text"
+                    name="name"
+                    autoComplete="name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Your name"
+                    invalid={!!fieldErrors.name}
+                    required
+                  />
+                  <FieldBox
+                    label="Email"
+                    type="email"
+                    name="email"
+                    autoComplete="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    invalid={!!fieldErrors.email}
+                    required
+                  />
+                </>
+              )}
+
+              {/* ── Step 2: Credentials ── */}
+              {(orgStep === 2 || accountType === 'user') && (
+                <>
+                  <div className="space-y-1">
+                    <FieldBox
+                      label="Password"
+                      type="password"
+                      name="password"
+                      autoComplete="new-password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="At least 8 characters"
+                      showPasswordToggle
+                      minLength={8}
+                      invalid={!!fieldErrors.password}
+                      required
+                    />
+                    <PasswordStrength password={password} />
+                  </div>
+                  <FieldBox
+                    label="Confirm password"
+                    type="password"
+                    name="confirmPassword"
+                    autoComplete="new-password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Re-enter your password"
+                    invalid={!!fieldErrors.confirmPassword}
+                    required
+                  />
+                  <label className="flex items-start gap-sm text-body-md text-on-surface-variant">
+                    <Checkbox
+                      checked={termsChecked}
+                      onCheckedChange={(checked) => setTermsChecked(checked === true)}
+                      className="mt-0.5"
+                      aria-label="Accept terms and privacy policy"
+                    />
+                    <span>
+                      I agree to the{' '}
+                      <Link
+                        href={TERMS_URL}
+                        className="text-primary hover:underline"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Terms of Service
+                      </Link>{' '}
+                      and{' '}
+                      <Link
+                        href={PRIVACY_POLICY_URL}
+                        className="text-primary hover:underline"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Privacy Policy
+                      </Link>
+                      .
+                    </span>
+                  </label>
+                </>
+              )}
+
+              {/* ── Step 3: Organizer details ── */}
+              {orgStep === 3 && accountType === 'organizer' && (
+                <>
+                  <FieldBox
+                    label="Organizer / business name"
+                    type="text"
+                    name="orgName"
+                    value={orgName}
+                    onChange={(e) => setOrgName(e.target.value)}
+                    placeholder="e.g. Addis Nights"
+                    invalid={!!fieldErrors.orgName}
+                    required
+                  />
+
+                  <div className="space-y-1.5">
+                    <p className="text-label-sm text-on-surface-variant">I am a…</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setOrgKind('organizer')}
+                        className={`group flex items-center gap-2.5 rounded-xl border px-3 py-2.5 text-left transition-[border-color,background] ${
+                          orgKind === 'organizer'
+                            ? 'border-primary bg-primary/10'
+                            : 'border-outline-variant bg-surface-container-high hover:border-primary/40'
+                        }`}
+                      >
+                        <span
+                          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors ${
+                            orgKind === 'organizer'
+                              ? 'bg-primary/20 text-primary'
+                              : 'bg-primary/10 text-primary/60 group-hover:bg-primary/15'
+                          }`}
+                        >
+                          <Megaphone className="h-4 w-4" />
+                        </span>
+                        <span>
+                          <span className="block text-sm font-medium text-on-surface">
+                            Organizer
+                          </span>
+                          <span className="text-xs text-on-surface-variant">
+                            Events &amp; experiences
+                          </span>
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setOrgKind('venue')}
+                        className={`group flex items-center gap-2.5 rounded-xl border px-3 py-2.5 text-left transition-[border-color,background] ${
+                          orgKind === 'venue'
+                            ? 'border-primary bg-primary/10'
+                            : 'border-outline-variant bg-surface-container-high hover:border-primary/40'
+                        }`}
+                      >
+                        <span
+                          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors ${
+                            orgKind === 'venue'
+                              ? 'bg-primary/20 text-primary'
+                              : 'bg-primary/10 text-primary/60 group-hover:bg-primary/15'
+                          }`}
+                        >
+                          <Building2 className="h-4 w-4" />
+                        </span>
+                        <span>
+                          <span className="block text-sm font-medium text-on-surface">Venue</span>
+                          <span className="text-xs text-on-surface-variant">
+                            Spaces &amp; locations
+                          </span>
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label htmlFor="org-bio" className="text-label-sm text-on-surface-variant">
+                      Short bio
+                    </label>
+                    <textarea
+                      id="org-bio"
+                      value={orgBio}
+                      onChange={(e) => setOrgBio(e.target.value)}
+                      placeholder={
+                        orgKind === 'venue'
+                          ? 'Tell people about your space…'
+                          : 'What kind of events do you host?'
+                      }
+                      rows={3}
+                      maxLength={300}
+                      className="w-full resize-none rounded-xl border border-outline-variant bg-surface-container-low px-md py-3 text-body-md text-on-surface placeholder:text-on-surface-variant/50 focus-visible:border-transparent"
+                    />
+                    <p className="text-right text-xs text-on-surface-variant">
+                      {orgBio.length}/300
+                    </p>
+                  </div>
+
+                  <FieldBox
+                    label="City / location"
+                    type="text"
+                    name="orgLocation"
+                    value={orgLocation}
+                    onChange={(e) => setOrgLocation(e.target.value)}
+                    placeholder="e.g. Addis Ababa, Bole"
+                    required
+                  />
+
+                  <FieldBox
+                    label="Contact email"
+                    type="email"
+                    name="orgContactEmail"
+                    autoComplete="email"
+                    value={orgContactEmail || email}
+                    onChange={(e) => setOrgContactEmail(e.target.value)}
+                    onBlur={() => {
+                      if (!orgContactEmail && email) setOrgContactEmail(email)
+                    }}
+                    placeholder="you@example.com"
+                    required
+                  />
+
+                  <FieldBox
+                    label="Website (optional)"
+                    type="url"
+                    name="orgWebsite"
+                    value={orgWebsite}
+                    onChange={(e) => setOrgWebsite(e.target.value)}
+                    placeholder="https://example.com"
+                  />
+                </>
+              )}
+
+              {/* ── Navigation / Submit ── */}
+              {accountType === 'organizer' && orgStep < orgTotalSteps ? (
+                <Button type="button" className="h-11 w-full rounded-xl" onClick={nextStep}>
+                  Continue
+                </Button>
+              ) : (
+                <Button type="submit" className="h-11 w-full rounded-xl" disabled={loading}>
+                  {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+                  {loading
+                    ? accountType === 'organizer'
+                      ? 'Submitting application\u2026'
+                      : 'Creating account\u2026'
+                    : accountType === 'organizer'
+                      ? 'Submit application'
+                      : 'Create account'}
+                </Button>
+              )}
             </form>
+
+            <div className="mt-3 text-center text-sm text-on-surface-variant">
+              Already have an account?{' '}
+              <button
+                type="button"
+                className="min-h-11 inline-block px-2 font-medium text-primary hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                onClick={() => switchTo({ name: 'signin' })}
+              >
+                Sign in
+              </button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* ------------------------------------------------------------------ */}
+        {/*  VERIFY — check your email                                          */}
+        {/* ------------------------------------------------------------------ */}
+        {view.name === 'verify' && (
+          <motion.div key="verify" {...fadeSlide}>
+            <div className="flex flex-col items-center gap-3 text-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/15">
+                <Mail className="h-6 w-6 text-primary" />
+              </div>
+              <p className="text-sm text-on-surface-variant">
+                Click the link in the email to finish signing in. The link expires in one hour.
+              </p>
+              <Button
+                variant="outline"
+                className="mt-1"
+                onClick={() => switchTo({ name: 'signin' })}
+              >
+                Back to sign in
+              </Button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

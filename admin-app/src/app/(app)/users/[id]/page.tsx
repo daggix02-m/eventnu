@@ -1,6 +1,7 @@
 import { getUserById } from '@/lib/actions/users'
 import { getCurrentAdminProfile } from '@/lib/actions/session'
 import { UserDetailClient } from '@/components/users/UserDetailClient'
+import { logError } from '@/lib/logger'
 
 export default async function UserDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -10,14 +11,14 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
   try {
     ;({ profile, stats } = await getUserById(id))
   } catch (err) {
-    console.error('Failed to load user:', err)
+    logError('admin/users/[id]', err)
   }
 
   let currentAdmin = null
   try {
     currentAdmin = await getCurrentAdminProfile()
   } catch (err) {
-    console.error('Failed to load admin profile:', err)
+    logError('admin/users/[id]:profile', err)
   }
 
   if (!profile) {

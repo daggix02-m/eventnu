@@ -5,6 +5,7 @@ import { getFeaturedSections } from '@/lib/actions/settings'
 import { getModerationLogsByTarget } from '@/lib/actions/dashboard'
 import { EventDetailClient } from '@/components/events/EventDetailClient'
 import { notFound } from 'next/navigation'
+import { logError } from '@/lib/logger'
 
 export default async function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -15,7 +16,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
   try {
     ;({ event, categories, images } = await getEventById(id))
   } catch (err) {
-    console.error('Failed to load event:', err)
+    logError('admin/events/[id]', err)
   }
 
   if (!event) notFound()
@@ -32,7 +33,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
       getModerationLogsByTarget('event', id),
     ])
   } catch (err) {
-    console.error('Failed to load event dependencies:', err)
+    logError('admin/events/[id]:deps', err)
   }
 
   return (

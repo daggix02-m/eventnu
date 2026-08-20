@@ -14,7 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { useAuthModal } from '@/components/auth/AuthModalContext'
+import { useAuthRedirect } from '@/components/auth/AuthRedirectContext'
 
 const reasons = [
   ['fraud_or_scam', 'Fraud or scam'],
@@ -36,7 +36,7 @@ export function ReportDialog({
   targetId: string
 }) {
   const { isAuthenticated, isLoading } = useConvexAuth()
-  const { openAuth } = useAuthModal()
+  const { openAuth } = useAuthRedirect()
   const submit = useMutation(api.reports.submit)
   const [open, setOpen] = useState(false)
   const [reason, setReason] = useState<(typeof reasons)[number][0]>('other')

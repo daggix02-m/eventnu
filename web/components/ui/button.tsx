@@ -15,9 +15,9 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <Comp
         ref={ref}
+        aria-busy={props.disabled && props['aria-busy'] !== false ? true : undefined}
         className={cn(
           'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl font-bold transition-all duration-200',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background',
           'active:scale-95 disabled:pointer-events-none disabled:opacity-50',
           variant === 'primary' &&
             'primary-gradient text-white shadow-lg shadow-black/40 hover:shadow-black/50',

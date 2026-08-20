@@ -79,103 +79,89 @@ function AuthCallbackInner() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-surface-container-low p-4">
-      <div className="w-full max-w-md">
-        <div className="flex items-center justify-center gap-3 mb-8">
-          <div className="w-12 h-12 rounded-md bg-primary text-primary-foreground flex items-center justify-center font-headline font-bold text-lg shadow-sm">
-            En
-          </div>
-          <div className="text-left">
-            <h1 className="font-headline text-xl font-semibold text-foreground tracking-tight">
-              Event Nu
-            </h1>
-            <p className="font-mono text-[10px] text-muted-foreground uppercase tracking-[0.2em]">
-              Admin · Addissuite
+    <Card className="border-0 shadow-[0_2px_4px_rgba(30,20,10,0.04),0_8px_24px_rgba(30,20,10,0.08)] rounded-2xl overflow-hidden bg-card">
+      <CardHeader className="space-y-1 pb-4 text-center">
+        <CardTitle className="text-2xl font-semibold tracking-tight text-foreground">
+          Finishing sign in…
+        </CardTitle>
+        <CardDescription className="text-muted-foreground">
+          Verifying your link and signing you in.
+        </CardDescription>
+      </CardHeader>
+
+      {status === 'loading' && (
+        <CardContent className="flex flex-col items-center gap-3 py-8">
+          <Loader2 size={28} className="animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">This should only take a moment.</p>
+        </CardContent>
+      )}
+
+      {status === 'error' && (
+        <CardContent className="space-y-4">
+          <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3">
+            <p role="alert" className="text-sm text-destructive">
+              {error}
             </p>
           </div>
-        </div>
+          <p className="text-xs text-muted-foreground">
+            Request a new sign-in link from the sign-in form and try again.
+          </p>
+          <Button asChild className="w-full h-11">
+            <a href="/auth/sign-in">Back to sign in</a>
+          </Button>
+        </CardContent>
+      )}
 
-        <Card className="border-0 shadow-[0_2px_4px_rgba(30,20,10,0.04),0_8px_24px_rgba(30,20,10,0.08)] rounded-2xl overflow-hidden bg-card">
-          <CardHeader className="space-y-1 pb-4 text-center">
-            <CardTitle className="text-2xl font-semibold tracking-tight text-foreground">
-              Finishing sign in…
-            </CardTitle>
-            <CardDescription className="text-muted-foreground">
-              Verifying your link and signing you in.
-            </CardDescription>
-          </CardHeader>
-
-          {status === 'loading' && (
-            <CardContent className="flex flex-col items-center gap-3 py-8">
-              <Loader2 size={28} className="animate-spin text-primary" />
-              <p className="text-sm text-muted-foreground">This should only take a moment.</p>
-            </CardContent>
-          )}
-
-          {status === 'error' && (
-            <CardContent className="space-y-4">
-              <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3">
-                <p role="alert" className="text-sm text-destructive">
-                  {error}
-                </p>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Request a new sign-in link from the sign-in form and try again.
+      {status === 'idle' && (
+        <CardContent className="space-y-4">
+          <div className="flex items-start gap-2 rounded-lg bg-muted/50 p-3 text-sm text-muted-foreground">
+            <Mail size={16} className="mt-0.5 shrink-0 text-primary" />
+            <p>
+              Your email wasn’t saved in this browser. Enter the email you used and the code from
+              the email to sign in.
+            </p>
+          </div>
+          <form onSubmit={handleManualSubmit} className="space-y-4" noValidate>
+            <div className="space-y-1">
+              <label htmlFor="cb-email" className="text-sm font-medium text-foreground">
+                Email
+              </label>
+              <Input
+                id="cb-email"
+                type="email"
+                autoComplete="email"
+                placeholder="admin@eventnu.et"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="h-11"
+              />
+            </div>
+            <div className="space-y-1">
+              <label htmlFor="cb-code" className="text-sm font-medium text-foreground">
+                Verification code
+              </label>
+              <Input
+                id="cb-code"
+                type="text"
+                autoComplete="one-time-code"
+                placeholder="e.g. 8AB2K9DXHN"
+                value={code}
+                onChange={(e) => setCode(e.target.value.toUpperCase())}
+                className="h-11 font-mono tracking-[0.2em] text-center"
+              />
+            </div>
+            {error && (
+              <p role="alert" className="text-sm text-destructive">
+                {error}
               </p>
-              <Button asChild className="w-full h-11">
-                <a href="/auth/sign-in">Back to sign in</a>
-              </Button>
-            </CardContent>
-          )}
-
-          {status === 'idle' && (
-            <CardContent className="space-y-4">
-              <div className="flex items-start gap-2 rounded-lg bg-muted/50 p-3 text-sm text-muted-foreground">
-                <Mail size={16} className="mt-0.5 shrink-0 text-primary" />
-                <p>
-                  Your email wasn’t saved in this browser. Enter the email you used and the code
-                  from the email to sign in.
-                </p>
-              </div>
-              <form onSubmit={handleManualSubmit} className="space-y-4" noValidate>
-                <div className="space-y-1">
-                  <Input
-                    id="cb-email"
-                    type="email"
-                    autoComplete="email"
-                    placeholder="admin@eventnu.et"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="h-11"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Input
-                    id="cb-code"
-                    type="text"
-                    autoComplete="one-time-code"
-                    placeholder="e.g. 8AB2K9DX"
-                    value={code}
-                    onChange={(e) => setCode(e.target.value.toUpperCase())}
-                    className="h-11 font-mono tracking-[0.2em] text-center"
-                  />
-                </div>
-                {error && (
-                  <p role="alert" className="text-sm text-destructive">
-                    {error}
-                  </p>
-                )}
-                <Button className="w-full h-11" type="submit">
-                  Verify and sign in
-                </Button>
-              </form>
-            </CardContent>
-          )}
-        </Card>
-
-        <p className="text-center text-xs text-muted-foreground mt-6">Admin access only.</p>
-      </div>
-    </div>
+            )}
+            <Button className="w-full h-11" type="submit">
+              Verify and sign in
+            </Button>
+          </form>
+        </CardContent>
+      )}
+    </Card>
   )
 }
 

@@ -29,6 +29,9 @@ export const submitContact = mutation({
     if (email.length === 0 || email.length > 254) {
       throw new Error('Email must be between 1 and 254 characters')
     }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      throw new Error('Invalid email format')
+    }
 
     const message = args.message.trim()
     if (message.length === 0 || message.length > 5000) {

@@ -4,6 +4,7 @@ import { IdleTimeout } from '@/components/layout/IdleTimeout'
 import { AccountRestrictedScreen } from '@/components/layout/AccountRestrictedScreen'
 import { getCurrentAdminProfile } from '@/lib/actions/session'
 import { getNavCounts } from '@/lib/actions/dashboard'
+import { logError } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,7 +17,7 @@ export default async function AppLayout({
   try {
     profile = await getCurrentAdminProfile()
   } catch (err) {
-    console.error('Failed to load admin profile:', err)
+    logError('admin/layout:profile', err)
   }
   if (!profile) redirect('/auth/sign-in')
   if (profile.suspended) return <AccountRestrictedScreen reason="suspended" />
@@ -26,7 +27,7 @@ export default async function AppLayout({
   try {
     navCounts = await getNavCounts()
   } catch (err) {
-    console.error('Failed to load nav counts:', err)
+    logError('admin/layout:navCounts', err)
   }
 
   return (

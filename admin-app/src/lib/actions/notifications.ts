@@ -1,7 +1,7 @@
 'use server'
 
 import { fetchQuery, fetchMutation } from '@/lib/actions/authedFetch'
-import type { Id } from '@eventnu/convex/_generated/dataModel'
+import type { Doc, Id } from '@eventnu/convex/_generated/dataModel'
 import { api } from '@eventnu/convex/_generated/api'
 import { revalidatePath } from 'next/cache'
 import { mapNotification } from '../mappers'
@@ -20,7 +20,10 @@ export async function getNotifications(params: {
     read: params.read,
   })
   return {
-    items: (result.page ?? []).map((n) => mapNotification(n, n.profile)),
+    items: (result.page ?? []).map(
+      (n: Doc<'notifications'> & { profile: Doc<'profiles'> | null }) =>
+        mapNotification(n, n.profile),
+    ),
     nextCursor: (result.continueCursor ?? null) as string | null,
     isDone: result.isDone,
   }

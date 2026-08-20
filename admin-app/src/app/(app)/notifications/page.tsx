@@ -1,5 +1,6 @@
 import { getNotifications } from '@/lib/actions/notifications'
 import { NotificationsClient } from '@/components/notifications/NotificationsClient'
+import { logError } from '@/lib/logger'
 
 export default async function NotificationsPage({
   searchParams,
@@ -23,7 +24,7 @@ export default async function NotificationsPage({
       read,
     })
   } catch (err) {
-    console.error('Failed to load notifications:', err)
+    logError('admin/notifications', err)
   }
 
   return (

@@ -1,7 +1,14 @@
 import { v } from 'convex/values'
 import { query, mutation } from './_generated/server'
-import { patchDefined, requireAdmin, requireUser, insertModerationLog } from './helpers'
+import {
+  patchDefined,
+  requireAdmin,
+  requireUser,
+  insertModerationLog,
+  validateUrl,
+} from './helpers'
 import { paginationOptsValidator } from 'convex/server'
+import { rateLimiter } from './rateLimiter'
 
 export const list = query({
   args: {
@@ -109,11 +116,24 @@ export const create = mutation({
     logoUrl: v.optional(v.string()),
     website: v.optional(v.string()),
     contactEmail: v.optional(v.string()),
-    socialLinks: v.optional(v.any()),
+    socialLinks: v.optional(
+      v.object({
+        twitter: v.optional(v.string()),
+        facebook: v.optional(v.string()),
+        instagram: v.optional(v.string()),
+        tiktok: v.optional(v.string()),
+        youtube: v.optional(v.string()),
+        linkedin: v.optional(v.string()),
+      }),
+    ),
+    kind: v.optional(v.union(v.literal('organizer'), v.literal('venue'))),
+    locationText: v.optional(v.string()),
     managementMode: v.optional(v.union(v.literal('admin_managed'), v.literal('organizer_managed'))),
   },
   handler: async (ctx, args) => {
     const profile = await requireUser(ctx)
+    await rateLimiter.limit(ctx, 'organizerCreate', { key: profile._id, throws: true })
+    if (args.website) validateUrl(args.website, 'Website')
     const existing = await ctx.db
       .query('organizerProfiles')
       .withIndex('by_profile', (q) => q.eq('profileId', profile._id))
@@ -138,6 +158,8 @@ export const create = mutation({
       website: args.website ?? undefined,
       contactEmail: args.contactEmail ?? undefined,
       socialLinks: args.socialLinks ?? undefined,
+      kind: args.kind ?? undefined,
+      locationText: args.locationText ?? undefined,
       managementMode,
       applicationStatus: profile.role === 'admin' ? 'approved' : 'pending_review',
       followerCount: 0,
@@ -155,13 +177,24 @@ export const update = mutation({
     logoUrl: v.optional(v.string()),
     website: v.optional(v.string()),
     contactEmail: v.optional(v.string()),
-    socialLinks: v.optional(v.any()),
+    socialLinks: v.optional(
+      v.object({
+        twitter: v.optional(v.string()),
+        facebook: v.optional(v.string()),
+        instagram: v.optional(v.string()),
+        tiktok: v.optional(v.string()),
+        youtube: v.optional(v.string()),
+        linkedin: v.optional(v.string()),
+      }),
+    ),
   },
   handler: async (ctx, args) => {
     const profile = await requireUser(ctx)
     if (profile.role !== 'admin' && profile._id !== args.profileId) {
       throw new Error('Not authorized')
     }
+    await rateLimiter.limit(ctx, 'organizerUpdate', { key: profile._id, throws: true })
+    if (args.website) validateUrl(args.website, 'Website')
     const { profileId, ...fields } = args
     const updates = patchDefined(fields)
     const existing = await ctx.db

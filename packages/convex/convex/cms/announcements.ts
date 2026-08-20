@@ -28,6 +28,18 @@ export const getAnnouncements = query({
   },
 })
 
+function validateLinkUrl(url: string | undefined): string | undefined {
+  if (!url) return undefined
+  if (url.startsWith('/')) return url
+  try {
+    const parsed = new URL(url)
+    if (parsed.protocol === 'https:' || parsed.protocol === 'http:') return url
+  } catch {
+    // not a full URL, reject unless it's a relative path
+  }
+  throw new Error('Invalid link URL: must be a relative path or HTTPS URL')
+}
+
 export const createAnnouncement = mutation({
   args: {
     title: v.string(),
@@ -44,7 +56,7 @@ export const createAnnouncement = mutation({
     return await ctx.db.insert('announcements', {
       title: args.title,
       message: args.message ?? undefined,
-      linkUrl: args.linkUrl ?? undefined,
+      linkUrl: validateLinkUrl(args.linkUrl),
       linkText: args.linkText ?? undefined,
       isActive: args.isActive ?? false,
       startsAt: args.startsAt ?? undefined,
@@ -69,7 +81,10 @@ export const updateAnnouncement = mutation({
   handler: async (ctx, args) => {
     await requireAdmin(ctx)
     const { announcementId, ...fields } = args
-    const updates = patchDefined(fields)
+    const updates = patchDefined({
+      ...fields,
+      linkUrl: fields.linkUrl !== undefined ? validateLinkUrl(fields.linkUrl) : undefined,
+    })
     await ctx.db.patch('announcements', announcementId, updates)
   },
 })

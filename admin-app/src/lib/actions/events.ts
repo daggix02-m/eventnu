@@ -35,7 +35,7 @@ export async function getEvents(params: {
 export async function updateEventStatus(eventId: string, status: string, note?: string) {
   await fetchMutation(api.events.moderation.updateStatus, {
     eventId: eventId as Id<'events'>,
-    status,
+    status: status as Doc<'events'>['status'],
     note,
   })
   revalidatePath('/events')
@@ -45,7 +45,7 @@ export async function updateEventStatus(eventId: string, status: string, note?: 
 export async function bulkUpdateEventStatus(eventIds: string[], status: string) {
   await fetchMutation(api.events.moderation.bulkUpdateStatus, {
     eventIds: eventIds as Id<'events'>[],
-    status,
+    status: status as Doc<'events'>['status'],
   })
   revalidatePath('/events')
   revalidatePath('/')
@@ -54,7 +54,7 @@ export async function bulkUpdateEventStatus(eventIds: string[], status: string) 
 export async function featureEvent(eventId: string, section: string, until: string | null) {
   await fetchMutation(api.events.moderation.feature, {
     eventId: eventId as Id<'events'>,
-    section,
+    section: section as 'editors_choice' | 'trending' | 'popular' | 'new_and_noteworthy',
     until: until ? new Date(until).getTime() : undefined,
   })
   revalidatePath('/events')
@@ -75,8 +75,10 @@ export async function getEventById(eventId: string) {
   const result = await fetchQuery(api.events.read.getById, { eventId: eventId as Id<'events'> })
   return {
     event: result.event ? mapEvent(result.event) : null,
-    categories: (result.categories ?? []).map((c, i) => mapEventCategory(c, i)),
-    images: (result.images ?? []).map((img) => ({
+    categories: (result.categories ?? []).map((c: Doc<'categories'> | null, i: number) =>
+      mapEventCategory(c, i),
+    ),
+    images: (result.images ?? []).map((img: Doc<'eventImages'>) => ({
       url: img.url,
       storageId: img.storageId ?? null,
       filter: img.filter ?? '',
@@ -115,7 +117,7 @@ export async function getUploadUrl() {
 }
 
 export async function resolveStorageUrls(storageIds: string[]) {
-  return await fetchQuery(api.events.read.getStorageUrls, {
+  return await fetchQuery(api.events.read.resolveStorageUrls, {
     storageIds: storageIds.filter(Boolean),
   })
 }

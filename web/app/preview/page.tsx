@@ -3,8 +3,6 @@ import { FeaturedCarousel } from '@/components/events/FeaturedCarousel'
 import { getActiveAnnouncements } from '@/lib/api/announcements'
 import { getPublishedEvents } from '@/lib/api/events'
 
-export const dynamic = 'force-dynamic'
-
 export default async function PreviewPage() {
   const [events, announcements] = await Promise.all([
     getPublishedEvents(),

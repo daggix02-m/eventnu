@@ -9,7 +9,7 @@ import {
   Sparkles,
   Compass,
 } from 'lucide-react'
-import { formatEventDate, formatEventDateShort, isEventPast } from '@/lib/utils'
+import { formatEventDate, formatEventDateShort, isEventPast, isSafeUrl } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { EventGallery } from '@/components/events/EventGallery'
@@ -96,7 +96,8 @@ export function EventHero({ event }: EventHeroProps) {
                 <ChevronRight className="w-3 h-3 text-white/40" />
                 <Link
                   href={`/categories/${category.slug}`}
-                  className="text-primary hover:underline truncate max-w-[140px]"
+                  className="text-primary hover:underline truncate max-w-[180px]"
+                  title={category.name}
                 >
                   {category.name}
                 </Link>
@@ -192,7 +193,7 @@ export function EventHero({ event }: EventHeroProps) {
                 <Button disabled size="lg" className="min-w-[180px] rounded-xl font-bold">
                   Event Ended
                 </Button>
-              ) : event.external_link ? (
+              ) : event.external_link && isSafeUrl(event.external_link) ? (
                 <Button
                   asChild
                   size="lg"

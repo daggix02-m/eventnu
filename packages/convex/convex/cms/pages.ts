@@ -2,6 +2,9 @@ import { v } from 'convex/values'
 import { query, mutation } from '../_generated/server'
 import { patchDefined, requireAdmin } from '../helpers'
 
+/** Maximum bodyHtml size to prevent excessive storage consumption (500KB). */
+const MAX_BODY_HTML_LENGTH = 500_000
+
 export const getPublishedPages = query({
   args: {},
   handler: async (ctx) => {
@@ -53,6 +56,9 @@ export const createPage = mutation({
   },
   handler: async (ctx, args) => {
     await requireAdmin(ctx)
+    if (args.bodyHtml && args.bodyHtml.length > MAX_BODY_HTML_LENGTH) {
+      throw new Error(`bodyHtml must not exceed ${MAX_BODY_HTML_LENGTH} characters`)
+    }
     return await ctx.db.insert('pages', {
       slug: args.slug,
       title: args.title,
@@ -80,6 +86,9 @@ export const updatePage = mutation({
   },
   handler: async (ctx, args) => {
     await requireAdmin(ctx)
+    if (args.bodyHtml && args.bodyHtml.length > MAX_BODY_HTML_LENGTH) {
+      throw new Error(`bodyHtml must not exceed ${MAX_BODY_HTML_LENGTH} characters`)
+    }
     const { pageId, ...fields } = args
     const updates = patchDefined(fields)
     await ctx.db.patch('pages', pageId, updates)

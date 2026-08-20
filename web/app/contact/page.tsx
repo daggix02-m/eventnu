@@ -9,6 +9,9 @@ export const metadata = {
   description: 'Get in touch with the Event Nu team.',
 }
 
+export const revalidate = 300
+export const dynamic = 'force-static'
+
 export default function ContactPage() {
   return (
     <Container className="py-xl">

@@ -197,9 +197,37 @@ export const listMine = query({
 })
 
 export const getStorageUrls = query({
+  args: { eventId: v.id('events') },
+  handler: async (ctx, args) => {
+    const profile = await requireUser(ctx)
+    const event = await ctx.db.get('events', args.eventId)
+    if (!event) throw new Error('Event not found')
+    if (event.status !== 'published') {
+      // event.ownerId is an organizerProfiles ID; resolve from profile
+      const org = await ctx.db
+        .query('organizerProfiles')
+        .withIndex('by_profile', (q) => q.eq('profileId', profile._id))
+        .first()
+      if (!org || event.ownerId !== org._id) {
+        throw new Error('Not authorized')
+      }
+    }
+    const images = await ctx.db
+      .query('eventImages')
+      .withIndex('by_eventId_and_sortOrder', (q) => q.eq('eventId', args.eventId))
+      .take(10)
+    return Promise.all(
+      images
+        .filter((img) => img.storageId)
+        .map((img) => ctx.storage.getUrl(img.storageId as Id<'_storage'>)),
+    )
+  },
+})
+
+export const resolveStorageUrls = query({
   args: { storageIds: v.array(v.string()) },
   handler: async (ctx, args) => {
-    await requireUser(ctx)
+    await requireAdmin(ctx)
     return Promise.all(
       args.storageIds.map((storageId) =>
         storageId ? ctx.storage.getUrl(storageId as Id<'_storage'>) : null,

@@ -8,6 +8,7 @@ import { getInstagramStatus } from '@/lib/actions/instagram'
 import { getCurrentAdminProfile } from '@/lib/actions/session'
 import type { Doc } from '@eventnu/convex/_generated/dataModel'
 import type { NotificationPrefs } from '@/components/settings/types'
+import { logError } from '@/lib/logger'
 
 export default async function SettingsPage({
   searchParams,
@@ -43,7 +44,7 @@ export default async function SettingsPage({
       notificationPrefs = await getAdminNotificationPrefs()
     }
   } catch (err) {
-    console.error('Failed to load settings:', err)
+    logError('admin/settings', err)
   }
 
   const flag = params.instagram

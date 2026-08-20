@@ -6,6 +6,7 @@ import { useConvexAuth } from '@convex-dev/auth/react'
 import { CreateExperienceForm } from '@/components/experiences/CreateExperienceForm'
 import { ExperiencePostCard } from '@/components/experiences/ExperiencePostCard'
 import { Skeleton } from '@/components/ui/skeleton'
+import type { FunctionReturnType } from 'convex/server'
 
 export function ExperiencesClient({ eventSlug }: { eventSlug?: string }) {
   const { isAuthenticated, isLoading: authLoading } = useConvexAuth()
@@ -13,7 +14,9 @@ export function ExperiencesClient({ eventSlug }: { eventSlug?: string }) {
   const me = useQuery(api.profiles.getMe)
   const events = useQuery(api.events.read.getPublished)
 
-  const preselectedEvent = events?.find((e) => e.slug === eventSlug)
+  const preselectedEvent = events?.find(
+    (e: FunctionReturnType<typeof api.events.read.getPublished>[number]) => e.slug === eventSlug,
+  )
   const initialEventId = preselectedEvent?._id
 
   return (
@@ -52,11 +55,13 @@ export function ExperiencesClient({ eventSlug }: { eventSlug?: string }) {
           </div>
         ) : (
           <ul className="space-y-md">
-            {posts.map((post) => (
-              <li key={post.id}>
-                <ExperiencePostCard post={post} canDelete={post.userId === me?._id} />
-              </li>
-            ))}
+            {posts.map(
+              (post: FunctionReturnType<typeof api.experiencePosts.listRecent>[number]) => (
+                <li key={post.id}>
+                  <ExperiencePostCard post={post} canDelete={post.userId === me?._id} />
+                </li>
+              ),
+            )}
           </ul>
         )}
       </section>

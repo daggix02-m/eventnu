@@ -23,18 +23,22 @@ export const create = mutation({
     message: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    await rateLimiter.limit(ctx, 'reservationCreate', { key: 'global', throws: true })
-    await rateLimiter.limit(ctx, 'reservationPerEmail', { key: args.email, throws: true })
-
     const name = args.name.trim()
     if (name.length === 0 || name.length > 200) {
       throw new Error('Name must be between 1 and 200 characters')
     }
 
-    const email = args.email.trim()
+    const email = args.email.trim().toLowerCase()
     if (email.length === 0 || email.length > 254) {
       throw new Error('Email must be between 1 and 254 characters')
     }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      throw new Error('Please provide a valid email address')
+    }
+
+    await rateLimiter.limit(ctx, 'reservationCreate', { key: 'global', throws: true })
+    await rateLimiter.limit(ctx, 'reservationPerEmail', { key: email, throws: true })
+    await rateLimiter.limit(ctx, 'reservationPerEvent', { key: args.eventId, throws: true })
 
     const event = await ctx.db.get('events', args.eventId)
     if (!event) throw new Error('Event not found')

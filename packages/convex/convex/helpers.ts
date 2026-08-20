@@ -84,6 +84,35 @@ export function escapeHtml(value: string): string {
     .replace(/'/g, '&#39;')
 }
 
+/** Validate that a URL uses only safe schemes for use in href attributes. */
+export function sanitizeHref(url: string): string {
+  try {
+    const parsed = new URL(url)
+    if (parsed.protocol === 'https:' || parsed.protocol === 'http:') return url
+  } catch {
+    // not a valid absolute URL — likely a relative path
+    if (url.startsWith('/')) return url
+  }
+  return '#'
+}
+
+/**
+ * Validate that a URL is safe (http/https only). Throws on invalid URLs.
+ * Use this in mutations to reject malicious URLs before storage.
+ */
+export function validateUrl(url: string, fieldName = 'URL'): void {
+  if (!url) return
+  try {
+    const parsed = new URL(url)
+    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+      throw new Error(`${fieldName} must use http or https protocol`)
+    }
+  } catch (e) {
+    if (e instanceof Error && e.message.includes('protocol')) throw e
+    throw new Error(`${fieldName} is not a valid URL`)
+  }
+}
+
 export type EventImageInput = { url: string; storageId?: string | null; filter?: string | null }
 
 /** Insert event images in order, replacing any existing ones and cleaning up orphaned storage. */

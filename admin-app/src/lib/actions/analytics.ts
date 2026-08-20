@@ -12,11 +12,11 @@ export async function getAnalytics() {
   ])
 
   return {
-    eventsPerWeek: (weekly.eventsPerWeek ?? []).map((w) => ({
+    eventsPerWeek: (weekly.eventsPerWeek ?? []).map((w: { week: string; count: number }) => ({
       week_start: w.week ? `${w.week}-01` : '',
       event_count: w.count ?? 0,
     })),
-    usersPerWeek: (weekly.usersPerWeek ?? []).map((w) => ({
+    usersPerWeek: (weekly.usersPerWeek ?? []).map((w: { week: string; count: number }) => ({
       week_start: w.week ? `${w.week}-01` : '',
       user_count: w.count ?? 0,
     })),

@@ -2,6 +2,7 @@
 
 import { useQuery } from 'convex/react'
 import { api } from '@eventnu/convex/_generated/api'
+import type { FunctionReturnType } from 'convex/server'
 import type { Id } from '@eventnu/convex/_generated/dataModel'
 import { MessagesSquare } from 'lucide-react'
 import { ExperiencePostCard } from '@/components/experiences/ExperiencePostCard'
@@ -33,7 +34,7 @@ export function EventExperiences({ eventId }: { eventId: string }) {
         </div>
       ) : (
         <ul className="space-y-md">
-          {posts.map((post) => (
+          {posts.map((post: FunctionReturnType<typeof api.experiencePosts.listByEvent>[number]) => (
             <li key={post.id}>
               <ExperiencePostCard post={post} canDelete={post.userId === me?._id} />
             </li>

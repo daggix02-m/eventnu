@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { EventCard } from './EventCard'
+import { BulkSocialProvider } from '@/components/social/EventSocialActions'
 import type { Event, Category } from '@/types'
 
 const CATEGORY_ICONS: Record<string, LucideIcon> = {
@@ -204,11 +205,17 @@ export function CategoryEventShelf({
           ref={scrollRef}
           className="flex gap-3 sm:gap-4 overflow-x-auto overscroll-x-contain scrollbar-none snap-x snap-mandatory py-1 scroll-smooth touch-auto"
         >
-          {events.map((event, index) => (
-            <div key={event.id} className="w-[260px] sm:w-[290px] md:w-[320px] shrink-0 snap-start">
-              <EventCard event={event} priority={priorityFirst && index === 0} className="h-full" />
-            </div>
-          ))}
+          <BulkSocialProvider eventIds={events.map((event) => event.id)}>
+            {events.map((event, index) => (
+              <div key={event.id} className="w-52 md:w-64 lg:w-72 shrink-0 snap-start">
+                <EventCard
+                  event={event}
+                  priority={priorityFirst && index === 0}
+                  className="h-full"
+                />
+              </div>
+            ))}
+          </BulkSocialProvider>
         </div>
       </div>
     </section>

@@ -63,6 +63,7 @@ export function SecuritySection() {
             value={passwordForm.current}
             onChange={(e) => setPasswordForm({ ...passwordForm, current: e.target.value })}
             placeholder="Enter current password"
+            autoComplete="current-password"
           />
         </div>
         <div className="grid grid-cols-2 gap-4">
@@ -73,6 +74,7 @@ export function SecuritySection() {
               value={passwordForm.new}
               onChange={(e) => setPasswordForm({ ...passwordForm, new: e.target.value })}
               placeholder="Min 8 characters"
+              autoComplete="new-password"
             />
           </div>
           <div className="space-y-2">
@@ -82,6 +84,7 @@ export function SecuritySection() {
               value={passwordForm.confirm}
               onChange={(e) => setPasswordForm({ ...passwordForm, confirm: e.target.value })}
               placeholder="Confirm new password"
+              autoComplete="new-password"
             />
           </div>
         </div>

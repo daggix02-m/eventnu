@@ -7,7 +7,7 @@ vi.mock('../helpers', () => ({
   getUserProfile: vi.fn(),
 }))
 
-const { list } = await import('./read')
+const { list, getStorageUrls } = await import('./read')
 
 type ListHandler = (ctx: unknown, args: unknown) => Promise<{ page: Array<Partial<Doc<'events'>>> }>
 const listHandler = (list as unknown as { _handler: ListHandler })._handler
@@ -187,5 +187,78 @@ describe('events list filters', () => {
     const ctx = { db } as unknown as Parameters<ListHandler>[0]
     const result = await listHandler(ctx, { paginationOpts: { cursor: null, numItems: 10 } })
     expect(result.page).toHaveLength(3)
+  })
+})
+
+describe('getStorageUrls IDOR protection', () => {
+  type GetStorageUrlsHandler = (ctx: unknown, args: unknown) => Promise<unknown[]>
+  const getStorageUrlsHandler = (getStorageUrls as unknown as { _handler: GetStorageUrlsHandler })
+    ._handler
+
+  function makeCtx(
+    event: Doc<'events'> | null,
+    images: Array<{ storageId?: string }> = [],
+    orgProfile: { _id: string } | null = null,
+  ) {
+    const db = {
+      get: vi.fn(async () => event),
+      query: (table: string) => {
+        if (table === 'organizerProfiles') {
+          return {
+            withIndex: () => ({
+              first: vi.fn(async () => orgProfile),
+            }),
+          }
+        }
+        return {
+          withIndex: () => ({
+            take: vi.fn(async () => images),
+          }),
+        }
+      },
+    }
+    const storage = { getUrl: vi.fn(async () => 'https://signed-url') }
+    return { db, storage }
+  }
+
+  it('allows access to published events', async () => {
+    const { db, storage } = makeCtx(
+      { _id: 'events_1', status: 'published', ownerId: 'other_user' } as Doc<'events'>,
+      [{ storageId: 'storage_1' }],
+    )
+    const ctx = { db, storage } as unknown as Parameters<GetStorageUrlsHandler>[0]
+    const result = await getStorageUrlsHandler(ctx, { eventId: 'events_1' })
+    expect(result).toEqual(['https://signed-url'])
+  })
+
+  it('blocks access to draft events owned by another user', async () => {
+    const { db, storage } = makeCtx(
+      { _id: 'events_1', status: 'draft', ownerId: 'org_other' } as Doc<'events'>,
+      [{ storageId: 'storage_1' }],
+      null, // no matching organizer profile
+    )
+    const ctx = { db, storage } as unknown as Parameters<GetStorageUrlsHandler>[0]
+    await expect(getStorageUrlsHandler(ctx, { eventId: 'events_1' })).rejects.toThrow(
+      'Not authorized',
+    )
+  })
+
+  it('allows access to own draft events via organizer profile lookup', async () => {
+    const { db, storage } = makeCtx(
+      { _id: 'events_1', status: 'draft', ownerId: 'org_123' } as Doc<'events'>,
+      [{ storageId: 'storage_1' }],
+      { _id: 'org_123' }, // matching organizer profile
+    )
+    const ctx = { db, storage } as unknown as Parameters<GetStorageUrlsHandler>[0]
+    const result = await getStorageUrlsHandler(ctx, { eventId: 'events_1' })
+    expect(result).toEqual(['https://signed-url'])
+  })
+
+  it('blocks access to non-existent events', async () => {
+    const { db, storage } = makeCtx(null)
+    const ctx = { db, storage } as unknown as Parameters<GetStorageUrlsHandler>[0]
+    await expect(getStorageUrlsHandler(ctx, { eventId: 'events_1' })).rejects.toThrow(
+      'Event not found',
+    )
   })
 })

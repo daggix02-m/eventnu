@@ -13,7 +13,7 @@ import {
   Images,
   Instagram,
 } from 'lucide-react'
-import { cn, formatEventDate, isEventPast } from '@/lib/utils'
+import { cn, formatEventDate, isEventPast, isSafeUrl } from '@/lib/utils'
 import { filterStyle, sortedImages } from '@/lib/media'
 import { Button } from '@/components/ui/button'
 import type { Event } from '@/types'
@@ -165,6 +165,9 @@ export function FeaturedCarousel({ events }: FeaturedCarouselProps) {
               ? [{ url: event.poster_url, filter: null }]
               : []
         const activeMedia = index === current ? Math.min(img, posters.length - 1) : 0
+        const prevIdx = (current - 1 + events.length) % events.length
+        const nextIdx = (current + 1) % events.length
+        const shouldRenderImages = index === current || index === prevIdx || index === nextIdx
         return (
           <div
             key={event.id}
@@ -177,22 +180,23 @@ export function FeaturedCarousel({ events }: FeaturedCarouselProps) {
               index === current ? 'opacity-100 z-10' : 'opacity-0 z-0',
             )}
           >
-            {posters.map((m, i) => (
-              <Image
-                key={`${event.id}-${i}`}
-                src={m.url}
-                alt={event.title}
-                fill
-                priority={index === 0 && i === 0}
-                draggable={false}
-                className={cn(
-                  'object-cover transition-opacity duration-1000',
-                  i === activeMedia ? 'opacity-100' : 'opacity-0',
-                )}
-                style={{ filter: filterStyle(m.filter) }}
-                sizes="100vw"
-              />
-            ))}
+            {shouldRenderImages &&
+              posters.map((m, i) => (
+                <Image
+                  key={`${event.id}-${i}`}
+                  src={m.url}
+                  alt={event.title}
+                  fill
+                  priority={index === 0 && i === 0}
+                  draggable={false}
+                  className={cn(
+                    'object-cover transition-opacity duration-1000',
+                    i === activeMedia ? 'opacity-100' : 'opacity-0',
+                  )}
+                  style={{ filter: filterStyle(m.filter) }}
+                  sizes="100vw"
+                />
+              ))}
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
           </div>
         )
@@ -272,18 +276,20 @@ export function FeaturedCarousel({ events }: FeaturedCarouselProps) {
       )}
 
       <div className="absolute top-gutter right-gutter z-30 flex items-center gap-sm">
-        {currentEvent && currentEvent.insta_permalink && (
-          <a
-            href={currentEvent.insta_permalink}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(e) => e.stopPropagation()}
-            className="flex items-center gap-xs px-sm py-1 rounded-full bg-black/50 backdrop-blur-md text-white font-label-sm text-label-sm hover:bg-[#E1306C]/80 transition-colors"
-          >
-            <Instagram className="w-3.5 h-3.5" />
-            Instagram
-          </a>
-        )}
+        {currentEvent &&
+          currentEvent.insta_permalink &&
+          isSafeUrl(currentEvent.insta_permalink) && (
+            <a
+              href={currentEvent.insta_permalink}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="flex items-center gap-xs px-sm py-1 rounded-full bg-black/50 backdrop-blur-md text-white font-label-sm text-label-sm hover:bg-[#E1306C]/80 transition-colors"
+            >
+              <Instagram className="w-3.5 h-3.5" />
+              Instagram
+            </a>
+          )}
         <span className="flex items-center gap-xs px-sm py-1 rounded-full bg-black/50 backdrop-blur-md text-white font-label-sm text-label-sm">
           <Images className="w-3.5 h-3.5" />
           {currentImageCount}

@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { fetchMutation } from 'convex/nextjs'
 import { api } from '@eventnu/convex/_generated/api'
 import { z } from 'zod'
+import { logError } from '@/lib/logger'
 
 const contactSchema = z.object({
   name: z.string().min(2, 'Name is required'),
@@ -36,7 +37,7 @@ export async function submitContactForm(
       message: parsed.data.message,
     })
   } catch (error) {
-    console.error('submitContactForm error:', error)
+    logError('actions/submitContact', error)
     let message = 'Something went wrong. Please try again later.'
     if (error instanceof Error) {
       const msg = error.message

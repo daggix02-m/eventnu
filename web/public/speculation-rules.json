@@ -1,0 +1,8 @@
+{
+  "prefetch": [
+    {
+      "source": "list",
+      "urls": ["/schedule", "/organizers", "/about"]
+    }
+  ]
+}

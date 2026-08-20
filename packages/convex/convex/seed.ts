@@ -120,6 +120,9 @@ export const seed = mutation({
   args: {},
   handler: async (ctx) => {
     await requireAdmin(ctx)
+    if (process.env.CONVEX_ENV === 'production') {
+      throw new Error('Seeding is not allowed in production')
+    }
     await ctx.runMutation(internal.seed.insertBaseData, {})
     return { seeded: true }
   },
@@ -198,6 +201,7 @@ const EVENTS: SeedEvent[] = [
     price: '200 ETB',
     dayOffset: 4,
     hour: 22,
+    featuredSection: 'editors_choice',
   },
   {
     title: 'Unity in Beats',
@@ -225,6 +229,7 @@ const EVENTS: SeedEvent[] = [
     price: '280 ETB',
     dayOffset: 6,
     hour: 19,
+    featuredSection: 'new_and_noteworthy',
   },
   {
     title: 'Ertib',
@@ -385,6 +390,7 @@ const EVENTS: SeedEvent[] = [
     price: '400 ETB',
     dayOffset: 8,
     hour: 17,
+    featuredSection: 'editors_choice',
   },
   {
     title: 'Sip & Paint',
@@ -491,6 +497,7 @@ const EVENTS: SeedEvent[] = [
     dayOffset: 15,
     hour: 10,
     secondaryCategory: 'family',
+    featuredSection: 'trending',
   },
   {
     title: 'Cycle Session',
@@ -531,6 +538,7 @@ const EVENTS: SeedEvent[] = [
     price: '300 ETB',
     dayOffset: 18,
     hour: 6,
+    featuredSection: 'editors_choice',
   },
   {
     title: 'Networking Night',
@@ -544,6 +552,7 @@ const EVENTS: SeedEvent[] = [
     price: null,
     dayOffset: 5,
     hour: 18,
+    featuredSection: 'new_and_noteworthy',
   },
   {
     title: 'Afterwork',
@@ -681,6 +690,9 @@ export const seedEvents = mutation({
   args: {},
   handler: async (ctx): Promise<{ created: number; skipped: number }> => {
     await requireAdmin(ctx)
+    if (process.env.CONVEX_ENV === 'production') {
+      throw new Error('Seeding is not allowed in production')
+    }
     const result: { created: number; skipped: number } = await ctx.runMutation(
       internal.seed.insertSeedEvents,
       {},

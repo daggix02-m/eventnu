@@ -1,7 +1,7 @@
 import { v } from 'convex/values'
 import { internalAction, internalQuery, env } from './_generated/server'
 import { internal } from './_generated/api'
-import { escapeHtml } from './helpers'
+import { escapeHtml, sanitizeHref } from './helpers'
 
 const RESEND_BASE = 'https://api.resend.com'
 const FROM = 'eventnu <hello@eventnu.et>'
@@ -11,6 +11,10 @@ function getResendApiKey(): string {
   const key = e.RESEND_API_KEY
   if (!key) throw new Error('RESEND_API_KEY not configured')
   return key
+}
+
+function isValidEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 }
 
 async function resendFetch(
@@ -27,7 +31,8 @@ async function resendFetch(
   })
   if (!res.ok) {
     const text = await res.text()
-    throw new Error(`Resend error ${res.status}: ${text}`)
+    console.error(`Resend API error ${res.status}: ${text}`)
+    throw new Error('Failed to send email')
   }
   return res.json()
 }
@@ -76,6 +81,7 @@ export const sendReservationConfirmation = internalAction({
       reservationId: args.reservationId,
     })
     if (!reservation) return
+    if (!isValidEmail(reservation.email)) return
 
     const event = await ctx.runQuery(internal.email.getEvent, { eventId: reservation.eventId })
     if (!event) return
@@ -95,7 +101,7 @@ export const sendReservationConfirmation = internalAction({
           <p style="margin:0 0 8px"><strong>Location:</strong> ${location}</p>
           <p style="margin:0"><strong>Status:</strong> ${escapeHtml(reservation.status)}</p>
         </div>
-        ${event.venueMapLink ? `<p><a href="${escapeHtml(event.venueMapLink)}" style="color:#2563eb">View on map</a></p>` : ''}
+        ${event.venueMapLink ? `<p><a href="${escapeHtml(sanitizeHref(event.venueMapLink))}" style="color:#2563eb">View on map</a></p>` : ''}
         <p style="color:#666;font-size:14px;margin-top:24px">You'll receive updates as the event approaches.</p>
       </div>
     `

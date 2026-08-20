@@ -2,7 +2,7 @@ import type { MetadataRoute } from 'next'
 import { getPublishedEvents, getCategories, getPublishedPages } from '@/lib/api/events'
 import { getSiteUrl } from '@/lib/site'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 3600
 
 const baseUrl = getSiteUrl()
 

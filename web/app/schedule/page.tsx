@@ -2,8 +2,6 @@ import type { Metadata } from 'next'
 import { getPublishedEvents, getCategories } from '@/lib/api/events'
 import { ScheduleClient } from '@/components/schedule/ScheduleClient'
 
-export const dynamic = 'force-dynamic'
-
 export const metadata: Metadata = {
   title: 'Event Schedule & Calendar — Event Nu',
   description:
@@ -19,10 +17,7 @@ interface SchedulePageProps {
 
 export default async function SchedulePage({ searchParams }: SchedulePageProps) {
   const params = await searchParams
-  const [events, categories] = await Promise.all([
-    getPublishedEvents(),
-    getCategories(),
-  ])
+  const [events, categories] = await Promise.all([getPublishedEvents(), getCategories()])
 
   return (
     <>

@@ -9,10 +9,22 @@ import type { EventImage } from '@/types'
 interface EventPhotoGridProps {
   images: EventImage[]
   eventTitle: string
+  imageAspectRatio?: string | null
 }
 
-export function EventPhotoGrid({ images, eventTitle }: EventPhotoGridProps) {
+function getLightboxDimensions(imageAspectRatio?: string | null) {
+  const [widthRatio, heightRatio] = (imageAspectRatio ?? '').split(':').map(Number)
+  if (widthRatio > 0 && heightRatio > 0) {
+    const width = 1600
+    return { width, height: Math.round((width * heightRatio) / widthRatio) }
+  }
+
+  return { width: 1600, height: 2000 }
+}
+
+export function EventPhotoGrid({ images, eventTitle, imageAspectRatio }: EventPhotoGridProps) {
   const sorted = sortedImages(images)
+  const lightboxDimensions = getLightboxDimensions(imageAspectRatio)
   const [openIndex, setOpenIndex] = useState<number | null>(null)
   const triggerRefs = useRef<(HTMLButtonElement | null)[]>([])
   const dialogRef = useRef<HTMLDivElement>(null)
@@ -134,8 +146,8 @@ export function EventPhotoGrid({ images, eventTitle }: EventPhotoGridProps) {
                 key={active.id}
                 src={active.url}
                 alt={`${eventTitle} photo ${openIndex + 1}`}
-                width={1600}
-                height={2000}
+                width={lightboxDimensions.width}
+                height={lightboxDimensions.height}
                 priority
                 className="w-auto h-full max-h-[80vh] mx-auto object-contain rounded-lg"
                 style={{ filter: filterStyle(active.filter) }}

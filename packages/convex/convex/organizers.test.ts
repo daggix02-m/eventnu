@@ -8,6 +8,10 @@ vi.mock('./helpers', () => ({
   insertModerationLog: vi.fn(async () => 'moderationLogs_test'),
 }))
 
+vi.mock('./rateLimiter', () => ({
+  rateLimiter: { limit: vi.fn(async () => ({ ok: true })) },
+}))
+
 const {
   create,
   update,

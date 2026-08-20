@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '@eventnu/convex/_generated/api'
+import type { FunctionReturnType } from 'convex/server'
 import type { Id } from '@eventnu/convex/_generated/dataModel'
 import { ImagePlus, Loader2, Send } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -117,11 +118,13 @@ export function CreateExperienceForm({
           className="w-full max-w-[18rem] rounded-lg border border-outline bg-surface-container-lowest px-sm py-2 font-body-md text-on-surface focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40 sm:w-auto"
         >
           <option value="">No specific event</option>
-          {(events ?? []).map((event) => (
-            <option key={event._id as string} value={event._id as string}>
-              {event.title}
-            </option>
-          ))}
+          {(events ?? []).map(
+            (event: FunctionReturnType<typeof api.events.read.getPublished>[number]) => (
+              <option key={event._id as string} value={event._id as string}>
+                {event.title}
+              </option>
+            ),
+          )}
         </select>
       </div>
 

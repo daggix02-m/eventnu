@@ -7,7 +7,8 @@ import { getPageBySlug } from '@/lib/api/events'
 import { sanitizeHtml } from '@/lib/sanitize'
 import { LEGAL_PAGES, LEGAL_PAGE_SLUGS } from '@/lib/legal'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 300
+export const dynamic = 'force-static'
 
 interface InfoPageProps {
   params: Promise<{ slug: string }>
