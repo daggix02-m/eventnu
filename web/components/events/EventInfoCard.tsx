@@ -113,7 +113,7 @@ export function EventInfoCard({ event }: EventInfoCardProps) {
 
   const mapTarget = hasCoordinates ? `${event.venue_lat},${event.venue_lng}` : mapQuery
   const mapExternalUrl =
-    event.venue_map_link ||
+    (event.venue_map_link && isSafeUrl(event.venue_map_link) ? event.venue_map_link : null) ||
     (mapTarget ? `https://maps.google.com/maps?q=${encodeURIComponent(mapTarget)}` : null)
 
   const handleCopyAddress = useCallback(() => {

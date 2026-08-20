@@ -14,8 +14,9 @@ export function isSafeUrl(url: string): boolean {
     const parsed = new URL(url)
     return parsed.protocol === 'https:' || parsed.protocol === 'http:'
   } catch {
-    // Not an absolute URL — allow relative paths starting with /
-    return url.startsWith('/')
+    // Not an absolute URL — allow relative paths starting with /, but reject
+    // protocol-relative URLs (//host) which resolve to the attacker's origin.
+    return url.startsWith('/') && !url.startsWith('//')
   }
 }
 

@@ -312,7 +312,7 @@ describe('ResetPasswordPage', () => {
       })
     })
 
-    it('redirects to /auth/sign-in on success when signingIn is false', async () => {
+    it('redirects to /auth?mode=signin on success when signingIn is false', async () => {
       const user = userEvent.setup()
       mockSignIn.mockResolvedValue({ signingIn: false })
 
@@ -331,7 +331,7 @@ describe('ResetPasswordPage', () => {
       await user.click(screen.getByRole('button', { name: /reset password/i }))
 
       await waitFor(() => {
-        expect(mockPush).toHaveBeenCalledWith('/auth/sign-in')
+        expect(mockPush).toHaveBeenCalledWith('/auth?mode=signin')
         expect(mockRefresh).toHaveBeenCalled()
       })
     })

@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest'
-import { cn, formatPrice, formatEventDate, formatEventDateShort, isEventPast } from './utils'
+import {
+  cn,
+  formatPrice,
+  formatEventDate,
+  formatEventDateShort,
+  isEventPast,
+  isSafeUrl,
+} from './utils'
 
 describe('cn', () => {
   it('merges class names', () => {
@@ -77,6 +84,33 @@ describe('formatEventDateShort', () => {
   it('returns uppercase month abbreviation', () => {
     const result = formatEventDateShort('2025-01-01T00:00:00Z')
     expect(result).toMatch(/^[A-Z]+ \d+$/)
+  })
+})
+
+describe('isSafeUrl', () => {
+  it('accepts absolute http/https URLs', () => {
+    expect(isSafeUrl('https://example.com')).toBe(true)
+    expect(isSafeUrl('http://example.com/path?q=1')).toBe(true)
+  })
+
+  it('rejects dangerous schemes', () => {
+    expect(isSafeUrl('javascript:alert(1)')).toBe(false)
+    expect(isSafeUrl('data:text/html,<script>1</script>')).toBe(false)
+    expect(isSafeUrl('ftp://example.com')).toBe(false)
+  })
+
+  it('accepts same-origin relative paths', () => {
+    expect(isSafeUrl('/events/123')).toBe(true)
+    expect(isSafeUrl('/')).toBe(true)
+  })
+
+  it('rejects protocol-relative URLs', () => {
+    expect(isSafeUrl('//evil.com')).toBe(false)
+    expect(isSafeUrl('//evil.com/path')).toBe(false)
+  })
+
+  it('rejects empty strings', () => {
+    expect(isSafeUrl('')).toBe(false)
   })
 })
 

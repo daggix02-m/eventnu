@@ -91,7 +91,7 @@ function ResetPasswordInner() {
         router.push('/')
         router.refresh()
       } else {
-        router.push('/auth/sign-in')
+        router.push('/auth?mode=signin')
         router.refresh()
       }
     } catch (err: unknown) {

@@ -31,7 +31,7 @@ export function ProfileClient() {
   )
   const [selectedFolder, setSelectedFolder] = useState<string>('all')
   const me = useQuery(api.profiles.getMe)
-  const bookmarks = useQuery(api.bookmarks.listByUser)
+  const bookmarks = useQuery(api.bookmarks.listByUser, isAuthenticated ? {} : 'skip')
   const folders = useQuery(api.bookmarks.listFolders, isAuthenticated ? {} : 'skip')
   const folderBookmarks = useQuery(
     api.bookmarks.listByFolder,
