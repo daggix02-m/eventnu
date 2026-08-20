@@ -109,7 +109,13 @@ async function getRecentEvents(
 }
 
 export async function getOrganizerRecentEvents(profileId: string) {
-  return getRecentEvents(api.events.read.listByOwner, 'ownerId', profileId)
+  // Resolve the linked organizer profile first: events.ownerId stores
+  // organizerProfiles._id, not the profiles._id the caller holds.
+  const organizer = await fetchQuery(api.organizers.getById, {
+    profileId: profileId as Id<'profiles'>,
+  })
+  if (!organizer) return []
+  return getRecentEvents(api.events.read.listByOwner, 'ownerId', organizer._id)
 }
 
 export async function getUploadUrl() {
