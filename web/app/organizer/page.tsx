@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { OrganizerDashboard } from '@/components/organizer/OrganizerDashboard'
+import { OrganizerDashboard } from '@/components/organizer-dashboard/OrganizerDashboard'
 
 export const metadata: Metadata = {
   title: 'Organizer Dashboard | Event Nu',
