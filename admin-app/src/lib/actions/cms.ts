@@ -5,8 +5,7 @@ import type { Doc, Id } from '@eventnu/convex/_generated/dataModel'
 import { api } from '@eventnu/convex/_generated/api'
 import { revalidatePath } from 'next/cache'
 import { mapAnnouncement, mapContactSubmission, mapPage } from '../mappers'
-import type { MappedUser } from '../mappers'
-import { getAllUsers } from './users'
+import { resolveUserNames } from './users'
 
 export async function getPages() {
   const pages = await fetchQuery(api.cms.pages.getPages)
@@ -78,10 +77,15 @@ export async function deletePage(id: string) {
 
 export async function getAnnouncements() {
   const announcements = await fetchQuery(api.cms.announcements.getAnnouncements)
-  const users = await getAllUsers({ status: 'all' })
-  const byId = new Map(
-    users.filter((u: MappedUser) => u.profileId).map((u: MappedUser) => [u.profileId, u]),
-  )
+  const targetIds = [
+    ...new Set(
+      announcements
+        .map((a) => a.targetUserId)
+        .filter((id): id is Id<'profiles'> => id !== undefined),
+    ),
+  ]
+  const users = await resolveUserNames(targetIds)
+  const byId = new Map(users.map((u) => [u.profileId, u]))
   return announcements.map((a: Doc<'announcements'>) => {
     const mapped = mapAnnouncement(a)
     const target = mapped.target_user_id ? (byId.get(mapped.target_user_id) ?? null) : null

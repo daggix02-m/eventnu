@@ -133,6 +133,10 @@ export const remove = mutation({
     if (post.userId !== profile._id && profile.role !== 'admin') {
       throw new Error('Not authorized')
     }
+    if (post.isDeleted) return // idempotent — already removed
     await ctx.db.patch('experiencePosts', args.postId, { isDeleted: true })
+    // Keep the engagement counter in sync so verification eligibility can't
+    // retain credit for deleted content.
+    await incrementEngagementCounter(ctx, post.userId, 'posts', -1)
   },
 })

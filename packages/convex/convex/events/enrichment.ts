@@ -102,6 +102,7 @@ export type PublicEvent = {
   likeCount: number
   reservationEnabled: boolean
   reservationLimit?: number
+  reservationCount?: number
   timezone: string
   categories: Array<Doc<'categories'>>
   images: Array<Doc<'eventImages'>>
@@ -146,6 +147,7 @@ export function toPublicEvent(
     likeCount: event.likeCount,
     reservationEnabled: event.reservationEnabled,
     reservationLimit: event.reservationLimit,
+    reservationCount: event.reservationCount,
     timezone: event.timezone,
     categories,
     images,

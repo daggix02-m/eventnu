@@ -29,7 +29,7 @@ export const countByFollower = query({
 
 export const listFollowers = query({
   args: {
-    followingId: v.id('profiles'),
+    followingId: v.union(v.id('profiles'), v.id('organizerProfiles')),
     followType: v.union(v.literal('organizer'), v.literal('user')),
   },
   handler: async (ctx, args) => {
@@ -47,22 +47,19 @@ export const listFollowers = query({
 
 async function adjustFollowerCount(
   ctx: MutationCtx,
-  followingId: Id<'profiles'>,
+  followingId: Id<'profiles'> | Id<'organizerProfiles'>,
   followType: string,
   delta: 1 | -1,
 ): Promise<void> {
   if (followType === 'organizer') {
-    const org = await ctx.db.get(
-      'organizerProfiles',
-      followingId as unknown as Id<'organizerProfiles'>,
-    )
+    const org = await ctx.db.get('organizerProfiles', followingId as Id<'organizerProfiles'>)
     if (org) {
       await ctx.db.patch('organizerProfiles', org._id, {
         followerCount: Math.max(0, org.followerCount + delta),
       })
     }
   } else if (followType === 'user') {
-    const user = await ctx.db.get('profiles', followingId)
+    const user = await ctx.db.get('profiles', followingId as Id<'profiles'>)
     if (user) {
       await ctx.db.patch('profiles', user._id, {
         followerCount: Math.max(0, (user.followerCount ?? 0) + delta),
@@ -73,7 +70,9 @@ async function adjustFollowerCount(
 
 export const toggle = mutation({
   args: {
-    followingId: v.id('profiles'),
+    // The followed target is an organizerProfiles id for organizer follows and
+    // a profiles id for user follows, so accept both and resolve by followType.
+    followingId: v.union(v.id('profiles'), v.id('organizerProfiles')),
     followType: v.union(v.literal('organizer'), v.literal('user')),
   },
   handler: async (ctx, args) => {

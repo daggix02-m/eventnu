@@ -24,7 +24,9 @@ export function ReservationForm({ event }: ReservationFormProps) {
   const [error, setError] = useState('')
 
   const remaining =
-    event.reservation_enabled && event.reservation_limit != null ? event.reservation_limit : null
+    event.reservation_enabled && event.reservation_limit != null && event.reservation_count != null
+      ? Math.max(0, event.reservation_limit - event.reservation_count)
+      : null
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

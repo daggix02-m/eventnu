@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Check, ChevronsUpDown, Search, UserX } from 'lucide-react'
-import { getAllUsers } from '@/lib/actions/users'
+import { searchUsers } from '@/lib/actions/users'
 import type { MappedUser } from '@/lib/mappers'
 import { UserAvatar } from '@/components/list/UserAvatar'
 import { cn } from '@/lib/utils'
@@ -27,17 +27,29 @@ export function UserCombobox({
 
   const selected = users?.find((u) => u.profileId === value) ?? null
 
+  const loadUsers = async (search: string) => {
+    setLoading(true)
+    try {
+      setUsers(await searchUsers({ status: 'all', search: search || undefined }))
+    } catch {
+      setUsers([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Debounced server-side search: each keystroke re-queries the backend so
+  // the combobox can find older users, not just the most recent page.
+  useEffect(() => {
+    if (!open) return
+    const id = setTimeout(() => void loadUsers(query), 400)
+    return () => clearTimeout(id)
+  }, [query, open])
+
   const openDropdown = async () => {
     setOpen(true)
     if (users === null) {
-      setLoading(true)
-      try {
-        setUsers(await getAllUsers({ status: 'all' }))
-      } catch {
-        setUsers([])
-      } finally {
-        setLoading(false)
-      }
+      await loadUsers('')
     }
     setHighlighted(0)
   }

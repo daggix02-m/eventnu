@@ -9,7 +9,14 @@ vi.mock('../helpers', () => ({
 
 const { list, getStorageUrls } = await import('./read')
 
-type ListHandler = (ctx: unknown, args: unknown) => Promise<{ page: Array<Partial<Doc<'events'>>> }>
+type ListHandler = (
+  ctx: unknown,
+  args: unknown,
+) => Promise<{
+  page: Array<Partial<Doc<'events'>>>
+  isDone: boolean
+  continueCursor: string | null
+}>
 const listHandler = (list as unknown as { _handler: ListHandler })._handler
 
 type FilterExpr = {
@@ -46,11 +53,29 @@ function resolve(expr: FilterExpr, doc: Record<string, unknown>): boolean {
 function makeListDb(events: Array<Partial<Doc<'events'>>>) {
   let predicate: ((f: typeof builder) => FilterExpr) | null = null
   const usedIndexes: string[] = []
+  let searchIndexName: string | null = null
+  let searchPredicate: (() => unknown) | null = null
+  const searchSpy = vi.fn((_field: string, q: string) => ({ field: _field, q }))
   const db = {
     query: () => ({
       withIndex: (name: string, _pred?: unknown) => {
         usedIndexes.push(name)
         return chain
+      },
+      withSearchIndex: (
+        name: string,
+        pred: (q: { search: (f: string, q: string) => { eq: () => unknown } }) => unknown,
+      ) => {
+        usedIndexes.push(name)
+        searchIndexName = name
+        // Proxy the builder's `search` call so the mock can see the query
+        // string the handler passed, then delegate to the real predicate.
+        const proxyBuilder = {
+          search: searchSpy,
+          eq: (field: unknown, value: unknown) => ({ type: 'eq', field, value }),
+        }
+        searchPredicate = () => pred(proxyBuilder as never)
+        return searchChain
       },
       order: () => chain,
       filter: (pred: (f: typeof builder) => FilterExpr) => {
@@ -71,6 +96,23 @@ function makeListDb(events: Array<Partial<Doc<'events'>>>) {
     order: db.query().order,
     filter: db.query().filter,
     paginate: db.query().paginate,
+  }
+  const searchChain = {
+    take: async () => {
+      if (!searchPredicate) return events
+      // The real runtime evaluates the predicate when the query runs; invoke it
+      // here so the spy captures the query string the handler passed.
+      searchPredicate()
+      const q = searchSpy.mock.calls.at(-1)?.[1] ?? ''
+      return events.filter((e) =>
+        (searchIndexName === 'search_description'
+          ? String(e.description ?? '')
+          : String(e.title ?? '')
+        )
+          .toLowerCase()
+          .includes(q),
+      )
+    },
   }
   return { db, getUsedIndexes: () => usedIndexes }
 }
@@ -167,19 +209,29 @@ describe('events list filters', () => {
     expect(result.page.map((e) => e._id)).toEqual(['events_c'])
   })
 
-  it('applies a substring search after pagination', async () => {
-    const { db } = makeListDb(events)
-    const ctx = { db } as unknown as Parameters<ListHandler>[0]
-    const result = await listHandler(ctx, {
-      paginationOpts: { cursor: null, numItems: 10 },
-      search: 'afro',
-    })
+  it('routes text search through the search index as a single page', async () => {
+    const search = async (term: string) => {
+      const { db, getUsedIndexes } = makeListDb(events)
+      const ctx = { db } as unknown as Parameters<ListHandler>[0]
+      const result = await listHandler(ctx, {
+        paginationOpts: { cursor: null, numItems: 10 },
+        search: term,
+      })
+      return { result, indexes: getUsedIndexes() }
+    }
+
+    const { result, indexes } = await search('afro')
+    expect(indexes).toContain('search_title')
+    expect(indexes).toContain('search_description')
+    // Search results are relevance-ranked and bounded; they are returned as
+    // one page (isDone true) rather than paginated (the old code filtered the
+    // current page AFTER pagination and silently missed older matches).
     expect(result.page.map((e) => e._id)).toEqual(['events_a', 'events_b', 'events_c'])
-    const none = await listHandler(ctx, {
-      paginationOpts: { cursor: null, numItems: 10 },
-      search: 'nope',
-    })
-    expect(none.page).toEqual([])
+    expect(result.isDone).toBe(true)
+    expect(result.continueCursor).toBeNull()
+
+    const none = await search('nope')
+    expect(none.result.page).toEqual([])
   })
 
   it('returns everything when no filters are given', async () => {

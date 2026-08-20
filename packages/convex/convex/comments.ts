@@ -56,6 +56,10 @@ export const remove = mutation({
     if (comment.userId !== profile._id && profile.role !== 'admin') {
       throw new Error('Not authorized')
     }
+    if (comment.isDeleted) return // idempotent — already removed
     await ctx.db.patch('eventComments', args.commentId, { isDeleted: true })
+    // Keep the engagement counter in sync so verification eligibility can't
+    // retain credit for deleted content.
+    await incrementEngagementCounter(ctx, comment.userId, 'comments', -1)
   },
 })

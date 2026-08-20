@@ -15,6 +15,7 @@ export async function getOrganizers(params: {
   const result = await fetchQuery(api.organizers.list, {
     paginationOpts: { numItems: DEFAULT_PAGE_SIZE, cursor: params.cursor ?? null },
     search: params.search,
+    verified: params.verified,
   })
   const rows = result.page ?? []
   const profileIds = [
@@ -32,12 +33,9 @@ export async function getOrganizers(params: {
   const profileById = new Map(
     profiles.filter((p): p is Doc<'profiles'> => p !== null).map((p) => [p._id, p]),
   )
-  let items = rows.map((o: Doc<'organizerProfiles'>) =>
+  const items = rows.map((o: Doc<'organizerProfiles'>) =>
     mapOrganizer(o, o.profileId ? profileById.get(o.profileId) : null),
   )
-  if (params.verified !== undefined) {
-    items = items.filter((o) => o.verified === params.verified)
-  }
   return {
     items,
     nextCursor: (result.continueCursor ?? null) as string | null,
@@ -46,15 +44,10 @@ export async function getOrganizers(params: {
 }
 
 export async function getAllOrganizers() {
-  const items: Awaited<ReturnType<typeof getOrganizers>>['items'] = []
-  let cursor: string | null = null
-  for (let i = 0; i < 50; i++) {
-    const page = await getOrganizers({ cursor })
-    items.push(...page.items)
-    if (page.isDone || !page.nextCursor) break
-    cursor = page.nextCursor
-  }
-  return items
+  // Bounded picklist for the event-form select: a single recent page instead
+  // of paging through up to 1,000 rows on every event create/edit load.
+  const page = await getOrganizers({ cursor: null })
+  return page.items
 }
 
 export async function verifyOrganizer(profileId: string) {

@@ -64,6 +64,7 @@ export interface Event {
   reminder_sent?: boolean
   reservation_enabled?: boolean
   reservation_limit?: number | null
+  reservation_count?: number
   timezone?: string
   video_aspect_ratio?: string | null
   created_at?: string

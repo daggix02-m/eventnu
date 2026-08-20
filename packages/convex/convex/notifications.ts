@@ -36,21 +36,40 @@ export const listAll = query({
   handler: async (ctx, args) => {
     await requireAdmin(ctx)
     const q = args.search?.toLowerCase()
-    const page = await ctx.db.query('notifications').order('desc').paginate(args.paginationOpts)
 
-    let rows = page.page
-    if (args.type && args.type !== 'all') {
-      rows = rows.filter((n) => n.type === args.type)
-    }
-    if (args.read !== undefined) {
-      rows = rows.filter((n) => n.read === args.read)
-    }
+    // Text search must scan the full table, so run it through the search
+    // index and return it as a single (bounded, relevance-ranked) page. The
+    // no-search path paginates the filtered query with type/read pushed into
+    // the predicate so filters apply to the paginated set.
     if (q) {
-      rows = rows.filter(
-        (n) => n.title.toLowerCase().includes(q) || n.body.toLowerCase().includes(q),
+      const results = await ctx.db
+        .query('notifications')
+        .withSearchIndex('search_title', (ix) => ix.search('title', q))
+        .take(100)
+      const userIds = [...new Set(results.map((n) => n.userId))]
+      const profiles = await Promise.all(userIds.map((userId) => ctx.db.get('profiles', userId)))
+      const profileMap = new Map(
+        profiles.filter((p): p is Doc<'profiles'> => p !== null).map((p) => [p._id, p]),
       )
+      return {
+        page: results.map((n) => ({ ...n, profile: profileMap.get(n.userId) ?? null })),
+        isDone: true,
+        continueCursor: null,
+      }
     }
 
+    const page = await ctx.db
+      .query('notifications')
+      .order('desc')
+      .filter((f) =>
+        f.and(
+          ...(args.type && args.type !== 'all' ? [f.eq(f.field('type'), args.type)] : []),
+          ...(args.read !== undefined ? [f.eq(f.field('read'), args.read)] : []),
+        ),
+      )
+      .paginate(args.paginationOpts)
+
+    const rows = page.page
     const userIds = [...new Set(rows.map((n) => n.userId))]
     const profiles = await Promise.all(userIds.map((userId) => ctx.db.get('profiles', userId)))
     const profileMap = new Map(

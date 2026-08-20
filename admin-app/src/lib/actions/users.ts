@@ -1,10 +1,10 @@
 'use server'
 
 import { fetchQuery, fetchMutation } from '@/lib/actions/authedFetch'
-import type { Id } from '@eventnu/convex/_generated/dataModel'
+import type { Doc, Id } from '@eventnu/convex/_generated/dataModel'
 import { api } from '@eventnu/convex/_generated/api'
 import { revalidatePath } from 'next/cache'
-import { mapAdminUser, mapProfile } from '../mappers'
+import { mapAdminUser, mapProfile, usernameFromEmail } from '../mappers'
 import { DEFAULT_PAGE_SIZE } from '@/lib/pagination'
 
 export async function getUsers(params: {
@@ -28,16 +28,31 @@ export async function getUsers(params: {
   }
 }
 
-export async function getAllUsers(params: { status?: string } = {}) {
-  const items: Awaited<ReturnType<typeof getUsers>>['items'] = []
-  let cursor: string | null = null
-  for (let i = 0; i < 50; i++) {
-    const page = await getUsers({ status: params.status, cursor })
-    items.push(...page.items)
-    if (page.isDone || !page.nextCursor) break
-    cursor = page.nextCursor
-  }
-  return items
+export async function searchUsers(params: { status?: string; search?: string } = {}) {
+  // Bounded picklist: a single page whose search is applied server-side, so a
+  // typo search can find older users instead of only the most recent rows.
+  const result = await getUsers({
+    status: params.status ?? 'all',
+    search: params.search,
+    cursor: null,
+  })
+  return result.items
+}
+
+/** Resolve a small set of profile ids to display names (announcement targets etc). */
+export async function resolveUserNames(profileIds: Id<'profiles'>[]) {
+  const unique = [...new Set(profileIds)].slice(0, 50)
+  const profiles = await Promise.all(
+    unique.map((profileId) => fetchQuery(api.profiles.getById, { profileId })),
+  )
+  return profiles
+    .filter((p): p is Doc<'profiles'> => p !== null)
+    .map((p) => ({
+      profileId: p._id,
+      full_name: p.fullName ?? '',
+      username: usernameFromEmail(p.email),
+      email: p.email ?? '',
+    }))
 }
 
 export async function getAdminStats() {

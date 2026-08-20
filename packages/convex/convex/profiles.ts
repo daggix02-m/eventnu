@@ -142,34 +142,46 @@ export const listUsers = query({
   },
   handler: async (ctx, args) => {
     await requireAdmin(ctx)
-    const page = await ctx.db.query('users').order('desc').paginate(args.paginationOpts)
+    const q = args.search?.trim().toLowerCase()
+    const numItems = Math.min(Math.max(1, args.paginationOpts.numItems), 100)
+
+    // Filtering happens on a bounded candidate set BEFORE slicing the page:
+    // the previous code paginated the raw table and then filtered in memory,
+    // so searches for older users or status filters silently returned wrong
+    // (mostly empty) pages. The candidate scan is capped at 1000 rows; within
+    // that cap the pagination is exact.
+    const users = await ctx.db.query('users').order('desc').take(1000)
+    const allProfiles = await ctx.db.query('profiles').take(1000)
     const profileByAuth = new Map<Id<'users'>, Doc<'profiles'>>()
-    for (const user of page.page) {
-      const profile = await getProfileByAuthUserId(ctx, user._id)
-      if (profile) profileByAuth.set(user._id, profile)
+    for (const p of allProfiles) {
+      if (p.authUserId) profileByAuth.set(p.authUserId, p)
     }
 
-    let rows = page.page.map((user) => toUserRow(user, profileByAuth.get(user._id)))
+    const rows = users
+      .map((u) => toUserRow(u, profileByAuth.get(u._id)))
+      .filter((row) => {
+        if (args.status === 'active') return row.hasProfile && !row.suspended
+        if (args.status === 'suspended') return row.hasProfile && row.suspended
+        if (args.status === 'no_profile') return !row.hasProfile
+        return true
+      })
+      .filter((row) => {
+        if (!q) return true
+        return (
+          row.email.toLowerCase().includes(q) ||
+          (row.fullName ?? '').toLowerCase().includes(q) ||
+          (row.name ?? '').toLowerCase().includes(q)
+        )
+      })
 
-    if (args.status === 'active') {
-      rows = rows.filter((r) => r.hasProfile && !r.suspended)
-    } else if (args.status === 'suspended') {
-      rows = rows.filter((r) => r.hasProfile && r.suspended)
-    } else if (args.status === 'no_profile') {
-      rows = rows.filter((r) => !r.hasProfile)
+    const offset = args.paginationOpts.cursor ? Number.parseInt(args.paginationOpts.cursor, 10) : 0
+    const pageRows = rows.slice(offset, offset + numItems)
+    const nextOffset = offset + numItems
+    return {
+      page: pageRows,
+      continueCursor: nextOffset < rows.length ? String(nextOffset) : null,
+      isDone: nextOffset >= rows.length,
     }
-
-    if (args.search) {
-      const q = args.search.trim().toLowerCase()
-      rows = rows.filter(
-        (r) =>
-          r.email.toLowerCase().includes(q) ||
-          (r.fullName ?? '').toLowerCase().includes(q) ||
-          (r.name ?? '').toLowerCase().includes(q),
-      )
-    }
-
-    return { ...page, page: rows }
   },
 })
 

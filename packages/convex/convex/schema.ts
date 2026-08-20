@@ -21,7 +21,8 @@ const schema = defineSchema({
   })
     .index('by_auth_user', ['authUserId'])
     .index('by_role', ['role'])
-    .index('by_verified', ['verified']),
+    .index('by_verified', ['verified'])
+    .searchIndex('search_full_name', { searchField: 'fullName', filterFields: ['suspended'] }),
 
   verificationScores: defineTable({
     profileId: v.id('profiles'),
@@ -103,7 +104,15 @@ const schema = defineSchema({
     .index('by_owner', ['ownerId'])
     .index('by_owner_and_status', ['ownerId', 'status'])
     .index('by_isFeatured_and_startDate', ['isFeatured', 'startDate'])
-    .index('by_insta_post', ['instaPostId']),
+    .index('by_insta_post', ['instaPostId'])
+    .searchIndex('search_title', {
+      searchField: 'title',
+      filterFields: ['status', 'source', 'isFeatured', 'frequencyType'],
+    })
+    .searchIndex('search_description', {
+      searchField: 'description',
+      filterFields: ['status', 'source', 'isFeatured', 'frequencyType'],
+    }),
 
   eventCategories: defineTable({
     eventId: v.id('events'),
@@ -188,7 +197,8 @@ const schema = defineSchema({
     verified: v.boolean(),
   })
     .index('by_profile', ['profileId'])
-    .index('by_handle', ['organizerHandle']),
+    .index('by_handle', ['organizerHandle'])
+    .searchIndex('search_organizer_name', { searchField: 'organizerName' }),
 
   organizerSettings: defineTable({
     profileId: v.id('profiles'),
@@ -219,7 +229,9 @@ const schema = defineSchema({
 
   follows: defineTable({
     followerId: v.id('profiles'),
-    followingId: v.id('profiles'),
+    // Organizer follows store an organizerProfiles id here, so the column
+    // accepts both id namespaces.
+    followingId: v.union(v.id('profiles'), v.id('organizerProfiles')),
     followType: v.string(),
   })
     .index('by_follower', ['followerId'])
@@ -302,7 +314,8 @@ const schema = defineSchema({
     read: v.boolean(),
   })
     .index('by_user', ['userId'])
-    .index('by_userId_and_read', ['userId', 'read']),
+    .index('by_userId_and_read', ['userId', 'read'])
+    .searchIndex('search_title', { searchField: 'title' }),
 
   reports: defineTable({
     reporterId: v.id('profiles'),

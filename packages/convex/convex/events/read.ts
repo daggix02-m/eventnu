@@ -130,6 +130,53 @@ export const list = query({
             .withIndex('by_status', (ix) => ix.eq('status', status as Doc<'events'>['status']))
         : ctx.db.query('events')
 
+    // Text search needs the full table, not just the current page — a
+    // post-pagination substring filter would silently miss matches on later
+    // pages. Run a search-index query for the search case and return it as a
+    // single (relevance-ranked) page; the no-search path paginates the
+    // filtered query below.
+    if (q) {
+      // Search both title and description indexes and merge (deduped) so a
+      // search term matches the same fields the old post-pagination filter did.
+      const byTitle = await ctx.db
+        .query('events')
+        .withSearchIndex('search_title', (ix) => {
+          let f = ix.search('title', q)
+          if (status && status !== 'all') f = f.eq('status', status as Doc<'events'>['status'])
+          if (source) f = f.eq('source', source)
+          if (featured !== undefined) f = f.eq('isFeatured', featured)
+          if (frequency) f = f.eq('frequencyType', frequency)
+          return f
+        })
+        .take(100)
+      const byDescription = await ctx.db
+        .query('events')
+        .withSearchIndex('search_description', (ix) => {
+          let f = ix.search('description', q)
+          if (status && status !== 'all') f = f.eq('status', status as Doc<'events'>['status'])
+          if (source) f = f.eq('source', source)
+          if (featured !== undefined) f = f.eq('isFeatured', featured)
+          if (frequency) f = f.eq('frequencyType', frequency)
+          return f
+        })
+        .take(100)
+      const seen = new Set<Id<'events'>>()
+      const results: Doc<'events'>[] = []
+      for (const e of byTitle) {
+        if (!seen.has(e._id)) {
+          seen.add(e._id)
+          results.push(e)
+        }
+      }
+      for (const e of byDescription) {
+        if (!seen.has(e._id)) {
+          seen.add(e._id)
+          results.push(e)
+        }
+      }
+      return { page: results, isDone: true, continueCursor: null }
+    }
+
     const page = await base
       .order('desc')
       .filter((f) =>
@@ -141,13 +188,7 @@ export const list = query({
       )
       .paginate(paginationOpts)
 
-    if (!q) return page
-    const pageItems = page.page.filter(
-      (e) =>
-        e.title.toLowerCase().includes(q) ||
-        (e.description && e.description.toLowerCase().includes(q)),
-    )
-    return { ...page, page: pageItems }
+    return page
   },
 })
 

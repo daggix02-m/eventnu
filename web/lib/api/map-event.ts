@@ -41,6 +41,7 @@ export function mapEvent(raw: RawEvent): Event {
     like_count: raw.likeCount,
     reservation_enabled: raw.reservationEnabled,
     reservation_limit: raw.reservationLimit,
+    reservation_count: raw.reservationCount,
     timezone: raw.timezone,
     start_date: new Date(raw.startDate).toISOString(),
     end_date: raw.endDate ? new Date(raw.endDate).toISOString() : null,

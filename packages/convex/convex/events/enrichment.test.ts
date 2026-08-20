@@ -114,7 +114,6 @@ describe('toPublicEvent', () => {
       'contactEmail',
       'instaPostId',
       'bookmarkCount',
-      'reservationCount',
       'isStandalone',
     ]) {
       expect(field in result).toBe(false)
@@ -130,6 +129,7 @@ describe('toPublicEvent', () => {
       instaPermalink: event.instaPermalink,
       reservationEnabled: true,
       reservationLimit: 50,
+      reservationCount: 11,
       isFeatured: true,
       likeCount: 7,
       source: 'admin',

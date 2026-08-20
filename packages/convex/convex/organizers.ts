@@ -14,16 +14,35 @@ export const list = query({
   args: {
     paginationOpts: paginationOptsValidator,
     search: v.optional(v.string()),
+    verified: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     await requireAdmin(ctx)
-    const page = await ctx.db.query('organizerProfiles').order('desc').paginate(args.paginationOpts)
-    let rows = page.page
-    if (args.search) {
-      const q = args.search.toLowerCase()
-      rows = rows.filter((o) => o.organizerName.toLowerCase().includes(q))
+    const q = args.search?.toLowerCase()
+
+    if (q) {
+      const results = await ctx.db
+        .query('organizerProfiles')
+        .withSearchIndex('search_organizer_name', (ix) => ix.search('organizerName', q))
+        .take(100)
+      return {
+        page:
+          args.verified !== undefined
+            ? results.filter((o) => o.verified === args.verified)
+            : results,
+        isDone: true,
+        continueCursor: null,
+      }
     }
-    return { ...page, page: rows }
+
+    const page = await ctx.db
+      .query('organizerProfiles')
+      .order('desc')
+      .filter((f) =>
+        f.and(...(args.verified !== undefined ? [f.eq(f.field('verified'), args.verified)] : [])),
+      )
+      .paginate(args.paginationOpts)
+    return page
   },
 })
 
