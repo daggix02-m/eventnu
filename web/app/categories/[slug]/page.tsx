@@ -3,7 +3,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { Container } from '@/components/layout/Container'
-import { EventList } from '@/components/events/EventList'
+import { EventList } from '@/components/events/cards/EventList'
 import { getCategoryBySlug, getEventsByCategory, getCategoriesWithCounts } from '@/lib/api/events'
 import { getCategoryIcon } from '@/lib/category-icons'
 

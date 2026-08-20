@@ -16,7 +16,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { EventCard } from './EventCard'
+import { EventCard } from '@/components/events/cards/EventCard'
 import { BulkSocialProvider } from '@/components/social/EventSocialActions'
 import type { Event, Category } from '@/types'
 

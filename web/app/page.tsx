@@ -1,10 +1,10 @@
 import type { Metadata } from 'next'
-import { DiscoverPageClient } from '@/components/events/DiscoverPageClient'
-import { FeaturedMarquee } from '@/components/events/FeaturedMarquee'
-import { FindYourzHeading } from '@/components/events/FindYourzHeading'
+import { DiscoverPageClient } from '@/components/discover/DiscoverPageClient'
+import { FeaturedMarquee } from '@/components/home/FeaturedMarquee'
+import { FindYourzHeading } from '@/components/home/FindYourzHeading'
 import { getPublishedEvents, getFeaturedEvents, getCategories } from '@/lib/api/events'
 import { getActiveAnnouncements } from '@/lib/api/announcements'
-import { AnnouncementBanner } from '@/components/events/AnnouncementBanner'
+import { AnnouncementBanner } from '@/components/layout/AnnouncementBanner'
 import type { Event } from '@/types'
 
 export const metadata: Metadata = {

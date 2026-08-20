@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { getActiveAnnouncements } from '@/lib/api/announcements'
 import { getPublishedEvents, getCategories } from '@/lib/api/events'
-import { AnnouncementBanner } from '@/components/events/AnnouncementBanner'
+import { AnnouncementBanner } from '@/components/layout/AnnouncementBanner'
 import type { OrganizerStat } from '@/components/organizers/StatBand'
 import { OrganizersClient } from './OrganizersClient'
 

@@ -1,4 +1,4 @@
-import { EventCard } from './EventCard'
+import { EventCard } from '@/components/events/cards/EventCard'
 import { isEventPast } from '@/lib/utils'
 import type { Event } from '@/types'
 import { BulkSocialProvider } from '@/components/social/EventSocialActions'

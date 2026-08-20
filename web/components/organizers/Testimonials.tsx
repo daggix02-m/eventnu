@@ -6,7 +6,7 @@ import { useGSAP } from '@gsap/react'
 import { gsap } from '@/lib/gsap'
 import { ArrowRight, Ticket } from 'lucide-react'
 import { Container } from '@/components/layout/Container'
-import { EventCard } from '@/components/events/EventCard'
+import { EventCard } from '@/components/events/cards/EventCard'
 import { BulkSocialProvider } from '@/components/social/EventSocialActions'
 import type { Event } from '@/types'
 

@@ -12,7 +12,7 @@ import {
 import { formatEventDate, formatEventDateShort, isEventPast, isSafeUrl } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { EventGallery } from '@/components/events/EventGallery'
+import { EventGallery } from '@/components/events/detail/EventGallery'
 import { hasGallery } from '@/lib/media'
 import { VerifiedBadge } from '@/components/verification/VerifiedBadge'
 import { ReportDialog } from '@/components/moderation/ReportDialog'

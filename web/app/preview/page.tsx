@@ -1,5 +1,5 @@
-import { AnnouncementBanner } from '@/components/events/AnnouncementBanner'
-import { FeaturedCarousel } from '@/components/events/FeaturedCarousel'
+import { AnnouncementBanner } from '@/components/layout/AnnouncementBanner'
+import { FeaturedCarousel } from '@/components/home/FeaturedCarousel'
 import { getActiveAnnouncements } from '@/lib/api/announcements'
 import { getPublishedEvents } from '@/lib/api/events'
 
