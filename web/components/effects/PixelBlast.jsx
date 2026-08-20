@@ -390,6 +390,10 @@ const PixelBlast = ({
       container.appendChild(renderer.domElement)
       if (transparent) renderer.setClearAlpha(0)
       else renderer.setClearColor(0x000000, 1)
+      // Render the buffer below CSS size on phones and upscale via CSS: the
+      // per-fragment shader cost drops by ~scale^2 for a barely-visible
+      // difference in a pixel-art effect.
+      const renderScale = lowPower ? 0.6 : 1
       const uniforms = {
         uResolution: { value: new THREE.Vector2(0, 0) },
         uTime: { value: 0 },
@@ -429,7 +433,11 @@ const PixelBlast = ({
       const setSize = () => {
         const w = container.clientWidth || 1
         const h = container.clientHeight || 1
-        renderer.setSize(w, h, false)
+        renderer.setSize(
+          Math.max(1, Math.round(w * renderScale)),
+          Math.max(1, Math.round(h * renderScale)),
+          false,
+        )
         uniforms.uResolution.value.set(renderer.domElement.width, renderer.domElement.height)
         if (threeRef.current?.composer)
           threeRef.current.composer.setSize(renderer.domElement.width, renderer.domElement.height)

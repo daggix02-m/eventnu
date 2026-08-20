@@ -72,7 +72,19 @@ export function FeaturedMarquee({ events }: FeaturedMarqueeProps) {
     }
     measure()
     window.addEventListener('resize', measure)
-    return () => window.removeEventListener('resize', measure)
+    // Images load slowly on mobile, and the track width grows as they decode.
+    // A stale width makes the infinite-loop wrap fire too early — visible as a
+    // jump/stutter on iPhones. Re-measure whenever the track resizes.
+    const track = trackRef.current
+    const ro = track ? new ResizeObserver(measure) : null
+    if (ro && track) ro.observe(track)
+    const onLoad = () => measure()
+    window.addEventListener('load', onLoad)
+    return () => {
+      window.removeEventListener('resize', measure)
+      window.removeEventListener('load', onLoad)
+      ro?.disconnect()
+    }
   }, [events.length])
 
   // Auto-scroll loop
@@ -222,14 +234,14 @@ export function FeaturedMarquee({ events }: FeaturedMarqueeProps) {
 
         {/* Category badge */}
         {category && (
-          <span className="absolute top-3 left-3 md:top-4 md:left-4 px-2.5 py-1 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-white font-mono text-[10px] md:text-[11px] font-bold uppercase tracking-wider z-10">
+          <span className="absolute top-3 left-3 md:top-4 md:left-4 px-2.5 py-1 rounded-full bg-black/80 border border-white/10 text-white font-mono text-[10px] md:text-[11px] font-bold uppercase tracking-wider z-10">
             {category.name}
           </span>
         )}
 
         {/* Date badge */}
         {dateLabel && (
-          <span className="absolute top-3 right-3 md:top-4 md:right-4 px-2 py-1 rounded-full bg-primary/80 backdrop-blur-md text-on-primary font-mono text-[10px] md:text-[11px] font-bold z-10">
+          <span className="absolute top-3 right-3 md:top-4 md:right-4 px-2 py-1 rounded-full bg-primary/90 text-on-primary font-mono text-[10px] md:text-[11px] font-bold z-10">
             {dateLabel}
           </span>
         )}
