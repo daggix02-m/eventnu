@@ -208,7 +208,7 @@ export const update = mutation({
       ...(fields.actionType !== undefined
         ? { reservationEnabled: fields.actionType === 'reservation' }
         : {}),
-      ...(images ? { posterUrl: images[0]?.url ?? null } : {}),
+      ...(images ? { posterUrl: images[0]?.url ?? undefined } : {}),
     } as Partial<Doc<'events'>>
     if (images && images.length > MAX_EVENT_IMAGES) {
       throw new Error(`Maximum ${MAX_EVENT_IMAGES} images allowed`)
