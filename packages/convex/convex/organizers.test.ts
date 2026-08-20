@@ -109,8 +109,10 @@ describe('organizer application review', () => {
 })
 
 describe('organizers.update (self-service)', () => {
-  it('allows a user to update their own organizer profile', async () => {
-    const { ctx, patch } = makeCtx({ existing: { _id: 'organizerProfiles_existing' } })
+  it('allows a user to update their own organizer-managed profile', async () => {
+    const { ctx, patch } = makeCtx({
+      existing: { _id: 'organizerProfiles_existing', managementMode: 'organizer_managed' },
+    })
     await updateHandler(ctx, { profileId: 'profiles_org', organizerName: 'New Name' })
     expect(patch).toHaveBeenCalledWith('organizerProfiles', 'organizerProfiles_existing', {
       organizerName: 'New Name',
@@ -122,6 +124,36 @@ describe('organizers.update (self-service)', () => {
     await expect(
       updateHandler(ctx, { profileId: 'profiles_other', organizerName: 'X' }),
     ).rejects.toThrow('Not authorized')
+  })
+
+  it('refuses to edit an admin-managed profile', async () => {
+    const { ctx } = makeCtx({
+      existing: { _id: 'organizerProfiles_existing', managementMode: 'admin_managed' },
+    })
+    await expect(
+      updateHandler(ctx, { profileId: 'profiles_org', organizerName: 'Tampered' }),
+    ).rejects.toThrow('managed by the Event Nu team')
+  })
+
+  it('throws when the organizer profile does not exist', async () => {
+    const { ctx } = makeCtx({ existing: null })
+    await expect(
+      updateHandler(ctx, { profileId: 'profiles_org', organizerName: 'X' }),
+    ).rejects.toThrow('Organizer profile not found')
+  })
+
+  it('allows an admin to edit any profile regardless of management mode', async () => {
+    vi.mocked(requireUser).mockResolvedValueOnce({
+      _id: 'profiles_admin',
+      role: 'admin',
+    } as Doc<'profiles'>)
+    const { ctx, patch } = makeCtx({
+      existing: { _id: 'organizerProfiles_existing', managementMode: 'admin_managed' },
+    })
+    await updateHandler(ctx, { profileId: 'profiles_org', organizerName: 'Admin Edit' })
+    expect(patch).toHaveBeenCalledWith('organizerProfiles', 'organizerProfiles_existing', {
+      organizerName: 'Admin Edit',
+    })
   })
 })
 

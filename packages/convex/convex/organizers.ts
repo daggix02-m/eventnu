@@ -195,15 +195,19 @@ export const update = mutation({
     }
     await rateLimiter.limit(ctx, 'organizerUpdate', { key: profile._id, throws: true })
     if (args.website) validateUrl(args.website, 'Website')
-    const { profileId, ...fields } = args
-    const updates = patchDefined(fields)
     const existing = await ctx.db
       .query('organizerProfiles')
-      .withIndex('by_profile', (q) => q.eq('profileId', profileId))
+      .withIndex('by_profile', (q) => q.eq('profileId', args.profileId))
       .first()
-    if (existing) {
-      await ctx.db.patch('organizerProfiles', existing._id, updates)
+    if (!existing) throw new Error('Organizer profile not found')
+    // Non-admin self-service may only edit organizer-managed profiles; the
+    // Event Nu team owns admin-managed profile content (see helpers.ts).
+    if (profile.role !== 'admin' && existing.managementMode !== 'organizer_managed') {
+      throw new Error('This organizer profile is managed by the Event Nu team')
     }
+    const { profileId, ...fields } = args
+    const updates = patchDefined(fields)
+    await ctx.db.patch('organizerProfiles', existing._id, updates)
   },
 })
 
