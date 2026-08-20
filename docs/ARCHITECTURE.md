@@ -56,8 +56,8 @@ admin-app/src/
 │   └── auth/                 sign-in, callback, password pages
 ├── components/               React components
 │   ├── ui/                   THE design-system primitive layer (buttons, dialogs, inputs)
-│   ├── shared/               skeletons, empty states, app-level pieces
-│   ├── layout/               shell, sidebar, nav
+│   ├── shared/               genuinely shared pieces (skeletons, StatCard)
+│   ├── layout/               shell, sidebar, nav, PageLayout
 │   ├── list/                 DataTable, FilterBar, StatusBadge, Pagination, ConfirmDialog
 │   ├── events/ · categories/ · cms/ · hosts/ · users/ · organizers/ ·
 │   │   reports/ · notifications/ · support/ · analytics/ · instagram/ · settings/
@@ -98,6 +98,35 @@ sequenceDiagram
 
 Reads flow server → TanStack Query (seeded with `initialData`); mutations call server
 actions, then `invalidateQueries` + `revalidatePath` (kept for the SSR seed).
+
+## Web-app module map
+
+```
+web/
+├── app/                      Next.js App Router routes (server components)
+│   ├── events/[slug]/        event detail page (force-static, revalidate 300)
+│   ├── discover/             discover page
+│   ├── schedule/             itinerary/schedule page
+│   ├── categories/ · organizer/ · organizers/ · experiences/ · profile/ · auth/ · info/ · about/ · contact/
+│   └── api/                  route handlers (csp-report)
+├── components/
+│   ├── ui/                   THE design-system primitive layer (buttons, inputs, dialogs)
+│   ├── layout/               TopNav, Footer, BottomTabBar, Container, MainContent, AnnouncementBanner
+│   ├── events/               event detail + list components
+│   │   ├── detail/           EventHero, EventDetails, EventGallery, EventInfoCard, ReservationForm, SimilarEvents, …
+│   │   └── cards/            EventCard, EventList, OrganizerCard
+│   ├── home/                 homepage sections (FeaturedCarousel, FeaturedMarquee, SearchBar, CategoryEventShelf, …)
+│   ├── discover/             DiscoverPageClient
+│   ├── organizer-dashboard/  signed-in organizer's dashboard (NOT the public organizers/ landing)
+│   ├── organizers/           public organizer landing sections (HeroSection, Testimonials, FAQSection, …)
+│   ├── auth/ · contact/ · moderation/ · profile/ · schedule/ · social/ · verification/ · experiences/ · pwa/ · effects/ · providers/
+├── lib/
+│   ├── actions/              server actions (contact form)
+│   ├── api/                  server-side data modules (events, organizers, public-client, map-event) — `server-only`
+│   ├── hooks/                useScrollReveal, usePrefersReducedMotion
+│   └── (top-level pure modules)  auth, dates, calendar, sanitize, media, site, utils, logger, …
+└── types/                    shared UI types (Event, Category, Page, …)
+```
 
 ## Convex module map (`packages/convex/convex`)
 

@@ -102,11 +102,16 @@ trailing commas on multiline. Do not hand-format; run `npm run format`.
 ## Components
 
 - Feature folders per domain: `components/events`, `components/categories`, etc.
+- A domain folder may subdivide when it mixes concerns: `components/events/detail/`
+  vs `components/events/cards/` (web), `components/events/event-form/` (admin-app).
+  Avoid singular/plural pairs that blur meaning (`organizer-dashboard/` vs
+  `organizers/` in web).
 - Cross-cutting categories:
   - `components/ui` — the single design-system primitive layer (buttons, dialogs, inputs)
   - `components/providers` — context / provider wiring
   - `components/layout` — shell, nav, footer
-  - `components/shared` (admin-app) — app-level shared pieces (skeletons, empty states)
+  - `components/shared` (admin-app) — genuinely shared pieces only (skeletons, StatCard);
+    page layout and domain-specific widgets live in their owning folders
 - One design system only: `components/ui`. Do not introduce a second one.
 
 ## Convex backend (`packages/convex/convex`)
