@@ -46,6 +46,9 @@ export function FeaturedMarquee({ events }: FeaturedMarqueeProps) {
   const touchRef = useRef({ active: false, startX: 0, lastX: 0 })
   const translateRef = useRef(0)
   const trackWidthRef = useRef(0)
+  // True when the device has a real pointer that hovers (mouse/trackpad).
+  // iOS/Android tap-to-hover emulation must NOT pause the auto-scroll.
+  const canHoverRef = useRef(false)
 
   useEffect(() => {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
@@ -53,6 +56,11 @@ export function FeaturedMarquee({ events }: FeaturedMarqueeProps) {
     const handler = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches)
     mq.addEventListener('change', handler)
     return () => mq.removeEventListener('change', handler)
+  }, [])
+
+  useEffect(() => {
+    const mqHover = window.matchMedia('(hover: hover)')
+    canHoverRef.current = mqHover.matches
   }, [])
 
   // Measure one track's width for the infinite-loop reset
@@ -74,7 +82,10 @@ export function FeaturedMarquee({ events }: FeaturedMarqueeProps) {
     let lastTime = performance.now()
 
     const tick = (now: number) => {
-      const dt = Math.min((now - lastTime) / 1000, 0.1)
+      // Clamp to 0.25s so a throttled rAF (iOS scroll/GPU contention) still
+      // advances the strip instead of stalling, without a huge jump after a
+      // long pause (tab switch).
+      const dt = Math.min((now - lastTime) / 1000, 0.25)
       lastTime = now
 
       if (!hoveredRef.current) {
@@ -102,18 +113,18 @@ export function FeaturedMarquee({ events }: FeaturedMarqueeProps) {
     return () => cancelAnimationFrame(rafRef.current)
   }, [])
 
-  // Hover: pause auto-scroll
+  // Hover: pause auto-scroll (desktop only — touch devices must not pause)
   const onMouseEnter = useCallback(() => {
-    hoveredRef.current = true
+    if (canHoverRef.current) hoveredRef.current = true
   }, [])
 
   const onMouseLeave = useCallback(() => {
-    hoveredRef.current = false
+    if (canHoverRef.current) hoveredRef.current = false
   }, [])
 
   // Wheel → horizontal scroll when hovered
   const onWheel = useCallback((e: React.WheelEvent) => {
-    if (!hoveredRef.current || !trackRef.current) return
+    if (!canHoverRef.current || !hoveredRef.current || !trackRef.current) return
 
     // Use deltaX if horizontal scroll, otherwise use deltaY
     const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY
@@ -155,10 +166,16 @@ export function FeaturedMarquee({ events }: FeaturedMarqueeProps) {
     trackRef.current.style.transform = `translate3d(${translateRef.current}px, 0, 0)`
   }, [])
 
-  const onTouchEnd = useCallback(() => {
+  // iOS Safari fires `touchcancel` (not `touchend`) when it takes over a
+  // gesture for page scrolling — without this the auto-scroll stayed paused
+  // forever on iPhones after the first touch.
+  const endTouch = useCallback(() => {
     touchRef.current.active = false
     hoveredRef.current = false
   }, [])
+
+  const onTouchEnd = endTouch
+  const onTouchCancel = endTouch
 
   // Render each card
   const renderCard = useCallback((event: Event, index: number) => {
@@ -247,6 +264,7 @@ export function FeaturedMarquee({ events }: FeaturedMarqueeProps) {
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
+        onTouchCancel={onTouchCancel}
         style={{ cursor: 'grab', touchAction: 'pan-y' }}
         aria-label="Featured events marquee"
         role="region"

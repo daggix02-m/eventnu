@@ -1,8 +1,16 @@
-import DOMPurify from 'isomorphic-dompurify'
+import sanitize from 'sanitize-html'
 
+/**
+ * Sanitize HTML for rendering in `dangerouslySetInnerHTML`.
+ *
+ * Uses `sanitize-html` (DOM-free, htmlparser2-based) instead of a jsdom-backed
+ * sanitizer: jsdom fails to load inside the Vercel serverless Node runtime on
+ * the `/info/*` routes, taking the whole page down with a 500. This parser runs
+ * anywhere Node runs.
+ */
 export function sanitizeHtml(html: string): string {
-  return DOMPurify.sanitize(html, {
-    ALLOWED_TAGS: [
+  return sanitize(html, {
+    allowedTags: [
       'p',
       'br',
       'h1',
@@ -35,6 +43,8 @@ export function sanitizeHtml(html: string): string {
       'span',
       'div',
     ],
-    ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'width', 'height', 'loading'],
+    allowedAttributes: {
+      '*': ['href', 'src', 'alt', 'title', 'class', 'width', 'height', 'loading'],
+    },
   })
 }

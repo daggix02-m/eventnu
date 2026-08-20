@@ -370,16 +370,23 @@ const PixelBlast = ({
           container.removeChild(t.renderer.domElement)
         threeRef.current = null
       }
+      // Low-power mode for phones/tablets: cap the frame rate, drop the GPU
+      // hint, reduce resolution and fragment count, and disable the per-fragment
+      // ripple loop. This keeps the shader from saturating mobile GPUs, which
+      // otherwise starves concurrent animations (e.g. the homepage marquee).
+      const lowPower =
+        typeof window !== 'undefined' &&
+        (window.matchMedia('(pointer: coarse)').matches || window.innerWidth < 768)
       const canvas = document.createElement('canvas')
       const renderer = new THREE.WebGLRenderer({
         canvas,
         antialias,
         alpha: true,
-        powerPreference: 'high-performance',
+        powerPreference: lowPower ? 'default' : 'high-performance',
       })
       renderer.domElement.style.width = '100%'
       renderer.domElement.style.height = '100%'
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, lowPower ? 1.5 : 2))
       container.appendChild(renderer.domElement)
       if (transparent) renderer.setClearAlpha(0)
       else renderer.setClearColor(0x000000, 1)
@@ -392,11 +399,13 @@ const PixelBlast = ({
         },
         uClickTimes: { value: new Float32Array(MAX_CLICKS) },
         uShapeType: { value: SHAPE_MAP[variant] ?? 0 },
-        uPixelSize: { value: pixelSize * renderer.getPixelRatio() },
+        uPixelSize: {
+          value: pixelSize * renderer.getPixelRatio() * (lowPower ? 1.6 : 1),
+        },
         uScale: { value: patternScale },
         uDensity: { value: patternDensity },
         uPixelJitter: { value: pixelSizeJitter },
-        uEnableRipples: { value: enableRipples ? 1 : 0 },
+        uEnableRipples: { value: enableRipples && !lowPower ? 1 : 0 },
         uRippleSpeed: { value: rippleSpeed },
         uRippleThickness: { value: rippleThickness },
         uRippleIntensity: { value: rippleIntensityScale },
@@ -424,7 +433,7 @@ const PixelBlast = ({
         uniforms.uResolution.value.set(renderer.domElement.width, renderer.domElement.height)
         if (threeRef.current?.composer)
           threeRef.current.composer.setSize(renderer.domElement.width, renderer.domElement.height)
-        uniforms.uPixelSize.value = pixelSize * renderer.getPixelRatio()
+        uniforms.uPixelSize.value = pixelSize * renderer.getPixelRatio() * (lowPower ? 1.6 : 1)
       }
       setSize()
       const ro = new ResizeObserver(setSize)
@@ -509,11 +518,13 @@ const PixelBlast = ({
         passive: true,
       })
       let raf = 0
+      let frameCount = 0
+      const frameInterval = lowPower ? 2 : 1 // ~30fps cap on phones/tablets
       const animate = () => {
-        if (autoPauseOffscreen && !visibilityRef.current.visible) {
-          raf = requestAnimationFrame(animate)
-          return
-        }
+        raf = requestAnimationFrame(animate)
+        if (autoPauseOffscreen && !visibilityRef.current.visible) return
+        frameCount += 1
+        if (frameCount % frameInterval !== 0) return
         uniforms.uTime.value = timeOffset + clock.getElapsedTime() * speedRef.current
         if (liquidEffect) liquidEffect.uniforms.get('uTime').value = uniforms.uTime.value
         if (composer) {
@@ -528,7 +539,6 @@ const PixelBlast = ({
           })
           composer.render()
         } else renderer.render(scene, camera)
-        raf = requestAnimationFrame(animate)
       }
       raf = requestAnimationFrame(animate)
       threeRef.current = {
@@ -546,16 +556,17 @@ const PixelBlast = ({
         composer,
         touch,
         liquidEffect,
+        lowPower,
       }
     } else {
       const t = threeRef.current
       t.uniforms.uShapeType.value = SHAPE_MAP[variant] ?? 0
-      t.uniforms.uPixelSize.value = pixelSize * t.renderer.getPixelRatio()
+      t.uniforms.uPixelSize.value = pixelSize * t.renderer.getPixelRatio() * (t.lowPower ? 1.6 : 1)
       t.uniforms.uColor.value.set(color)
       t.uniforms.uScale.value = patternScale
       t.uniforms.uDensity.value = patternDensity
       t.uniforms.uPixelJitter.value = pixelSizeJitter
-      t.uniforms.uEnableRipples.value = enableRipples ? 1 : 0
+      t.uniforms.uEnableRipples.value = enableRipples && !t.lowPower ? 1 : 0
       t.uniforms.uRippleIntensity.value = rippleIntensityScale
       t.uniforms.uRippleThickness.value = rippleThickness
       t.uniforms.uRippleSpeed.value = rippleSpeed

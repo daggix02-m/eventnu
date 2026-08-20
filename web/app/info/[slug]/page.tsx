@@ -35,7 +35,9 @@ export default async function InfoPage({ params }: InfoPageProps) {
 
   const title = page?.title ?? legal!.title
   const subtitle = page?.subtitle ?? legal!.subtitle
-  const bodyHtml = page?.body_html ?? legal!.bodyHtml
+  // Legal fallback content is first-party, version-controlled static text — no
+  // sanitization needed. Only CMS-authored pages go through the sanitizer.
+  const bodyHtml = page ? sanitizeHtml(page.body_html ?? '') : legal!.bodyHtml
   const heroImage = page?.hero_image_url ?? null
 
   return (
@@ -57,7 +59,7 @@ export default async function InfoPage({ params }: InfoPageProps) {
         {subtitle && <p className="text-on-surface-variant text-body-lg">{subtitle}</p>}
         <div
           className="prose prose-invert prose-lg max-w-none font-body-lg text-on-surface-variant leading-relaxed"
-          dangerouslySetInnerHTML={{ __html: sanitizeHtml(bodyHtml ?? '') }}
+          dangerouslySetInnerHTML={{ __html: bodyHtml }}
         />
         {LEGAL_PAGE_SLUGS.length > 0 && (
           <nav

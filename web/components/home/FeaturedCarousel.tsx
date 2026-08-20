@@ -38,6 +38,10 @@ export function FeaturedCarousel({ events }: FeaturedCarouselProps) {
   const [isPaused, setIsPaused] = useState(false)
   const [hovered, setHovered] = useState(false)
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
+  // Only pause on hover when the device has a real hover pointer. iOS/Android
+  // emulate `mouseenter` on tap and often never fire `mouseleave`, which used
+  // to leave the slideshow permanently paused after the first touch.
+  const [canHover, setCanHover] = useState(false)
   const sectionRef = useRef<HTMLElement | null>(null)
   const swipeRef = useRef<{ startX: number; startY: number; active: boolean }>({
     startX: 0,
@@ -45,7 +49,7 @@ export function FeaturedCarousel({ events }: FeaturedCarouselProps) {
     active: false,
   })
 
-  const paused = isPaused || hovered
+  const paused = isPaused || (canHover && hovered)
 
   const slideTicks = useCallback(
     (index: number) => {
@@ -71,6 +75,11 @@ export function FeaturedCarousel({ events }: FeaturedCarouselProps) {
     const handleChange = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches)
     mediaQuery.addEventListener('change', handleChange)
     return () => mediaQuery.removeEventListener('change', handleChange)
+  }, [])
+
+  useEffect(() => {
+    const mqHover = window.matchMedia('(hover: hover)')
+    setCanHover(mqHover.matches)
   }, [])
 
   useEffect(() => {
@@ -126,6 +135,7 @@ export function FeaturedCarousel({ events }: FeaturedCarouselProps) {
 
   const cancelSwipe = () => {
     swipeRef.current.active = false
+    setHovered(false)
   }
 
   if (events.length === 0) return null
