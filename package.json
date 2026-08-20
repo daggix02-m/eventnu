@@ -24,7 +24,8 @@
     "web/**/*.{ts,tsx}": "eslint --fix --config web/eslint.config.mjs"
   },
   "allowScripts": {
-    "esbuild@0.27.0": true
+    "esbuild@0.27.0": true,
+    "unrs-resolver@1.12.2": true
   },
   "devDependencies": {
     "@types/react": "19.2.17",
