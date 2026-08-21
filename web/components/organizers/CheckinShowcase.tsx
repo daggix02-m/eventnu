@@ -5,7 +5,7 @@ import { useGSAP } from '@gsap/react'
 import { gsap } from '@/lib/gsap'
 import { QrCode, Wifi, Shield, Zap, ArrowDownToLine } from 'lucide-react'
 import { Container } from '@/components/layout/Container'
-import { usePrefersReducedMotion } from '@/lib/hooks/usePrefersReducedMotion'
+import { useMotionPreference } from '@/lib/hooks/useMotionPreference'
 
 const FEATURES = [
   {
@@ -43,31 +43,36 @@ export function OrganizersCheckinShowcase() {
   const textRef = useRef<HTMLDivElement>(null)
   const mockupRef = useRef<HTMLDivElement>(null)
   const [scanState, setScanState] = useState<'idle' | 'scanning' | 'valid'>('idle')
-  const prefersReducedMotion = usePrefersReducedMotion()
+  const motion = useMotionPreference()
+  const prefersReducedMotion = motion === 'subtle'
+  // Reduced-motion users still see the scan feedback cycle, just slower and
+  // calmer, rather than a frozen mockup under iOS Reduce Motion.
+  const SCAN_CYCLE_MS = prefersReducedMotion ? 10000 : 6000
 
   // Cycle through scan animation states
   useEffect(() => {
-    if (prefersReducedMotion) return
     const cycle = () => {
       setScanState('scanning')
-      const t1 = setTimeout(() => setScanState('valid'), 2500)
-      const t2 = setTimeout(() => setScanState('idle'), 4500)
+      const t1 = setTimeout(() => setScanState('valid'), prefersReducedMotion ? 3500 : 2500)
+      const t2 = setTimeout(() => setScanState('idle'), prefersReducedMotion ? 7000 : 4500)
       return () => {
         clearTimeout(t1)
         clearTimeout(t2)
       }
     }
-    const interval = setInterval(cycle, 6000)
+    const interval = setInterval(cycle, SCAN_CYCLE_MS)
     cycle()
     return () => clearInterval(interval)
-  }, [prefersReducedMotion])
+  }, [prefersReducedMotion, SCAN_CYCLE_MS])
 
   useGSAP(
     () => {
+      // Reduced-motion users get opacity-only fades (no lateral glide) so
+      // nothing slides around under iOS Reduce Motion.
       if (mockupRef.current) {
         gsap.fromTo(
           mockupRef.current,
-          { opacity: 0, x: -24, scale: 0.96 },
+          prefersReducedMotion ? { opacity: 0 } : { opacity: 0, x: -24, scale: 0.96 },
           {
             opacity: 1,
             x: 0,
@@ -85,22 +90,18 @@ export function OrganizersCheckinShowcase() {
       if (textRef.current) {
         const textEls = textRef.current.querySelectorAll('h2, p, .text-feature-grid')
         if (textEls.length) {
-          gsap.fromTo(
-            textEls,
-            { opacity: 0, x: 24 },
-            {
-              opacity: 1,
-              x: 0,
-              duration: 0.5,
-              stagger: 0.1,
-              ease: 'power2.out',
-              scrollTrigger: {
-                trigger: textRef.current,
-                start: 'top 80%',
-                toggleActions: 'play none none none',
-              },
+          gsap.fromTo(textEls, prefersReducedMotion ? { opacity: 0 } : { opacity: 0, x: 24 }, {
+            opacity: 1,
+            x: 0,
+            duration: 0.5,
+            stagger: 0.1,
+            ease: 'power2.out',
+            scrollTrigger: {
+              trigger: textRef.current,
+              start: 'top 80%',
+              toggleActions: 'play none none none',
             },
-          )
+          })
         }
       }
     },

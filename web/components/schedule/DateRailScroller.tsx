@@ -5,6 +5,7 @@ import { CalendarDays, ChevronLeft, ChevronRight, Flame } from 'lucide-react'
 import { MiniCalendarModal } from './MiniCalendarModal'
 import { cn } from '@/lib/utils'
 import { toDateString, nextFriday } from '@/lib/dates'
+import { canSmoothScroll } from '@/lib/utils'
 
 interface DateRailScrollerProps {
   selectedDate: string // 'YYYY-MM-DD'
@@ -75,7 +76,7 @@ export function DateRailScroller({
     )
     if (activeEl) {
       activeEl.scrollIntoView({
-        behavior: 'smooth',
+        behavior: canSmoothScroll() ? 'smooth' : 'auto',
         inline: 'center',
         block: 'nearest',
       })
@@ -84,13 +85,19 @@ export function DateRailScroller({
 
   const scrollLeft = () => {
     if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({ left: -260, behavior: 'smooth' })
+      scrollContainerRef.current.scrollBy({
+        left: -260,
+        behavior: canSmoothScroll() ? 'smooth' : 'auto',
+      })
     }
   }
 
   const scrollRight = () => {
     if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({ left: 260, behavior: 'smooth' })
+      scrollContainerRef.current.scrollBy({
+        left: 260,
+        behavior: canSmoothScroll() ? 'smooth' : 'auto',
+      })
     }
   }
 

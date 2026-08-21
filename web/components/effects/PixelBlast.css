@@ -4,3 +4,16 @@
   position: relative;
   overflow: hidden;
 }
+
+/*
+ * Static reduced-motion fallback for the full-screen background. Rendered in
+ * place of the animated shader when `prefers-reduced-motion: reduce` is on
+ * (e.g. iOS Reduce Motion): keeps a subtle violet frame for depth but never
+ * moves and never boots WebGL.
+ */
+.pixel-blast-container.static-frame {
+  background:
+    radial-gradient(ellipse at 20% 15%, rgba(176, 151, 207, 0.16) 0%, transparent 55%),
+    radial-gradient(ellipse at 80% 85%, rgba(176, 151, 207, 0.1) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(109, 59, 215, 0.08) 0%, transparent 60%);
+}

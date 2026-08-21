@@ -1,17 +1,23 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
 import { filterStyle, sortedImages } from '@/lib/media'
+import { useMotionPreference } from '@/lib/hooks/useMotionPreference'
 import type { Event } from '@/types'
 
 interface FeaturedMarqueeProps {
   events: Event[]
 }
 
+// Full-motion drift speed. When the user prefers reduced motion we still let
+// the strip drift — but much more slowly and gently — instead of freezing it.
+// This restores the marquee on iOS (where Reduce Motion is commonly enabled)
+// while honoring the "fewer and gentler animations" contract.
 const PX_PER_SECOND = 80
+const PX_PER_SECOND_SUBTLE = 24
 
 function getPrimaryCategory(event: Event) {
   return (
@@ -38,46 +44,47 @@ function formatShortDate(dateStr?: string | null): string | null {
  * converted to horizontal movement. On mouse leave the auto-scroll resumes.
  */
 export function FeaturedMarquee({ events }: FeaturedMarqueeProps) {
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
+  const motion = useMotionPreference()
+  const prefersReducedMotion = motion === 'subtle'
   const containerRef = useRef<HTMLDivElement | null>(null)
-  const trackRef = useRef<HTMLDivElement | null>(null)
+  // Track A and Track B are separate elements, each its own composited layer.
+  // A single `width: max-content` layer for the whole strip can exceed iOS
+  // Safari's composited-layer size limit (~4096px on older iPhones), which
+  // makes WebKit drop GPU compositing and the rAF-driven translate3d appears
+  // frozen on iOS while the same loop is smooth on Android/desktop.
+  const trackARef = useRef<HTMLDivElement | null>(null)
+  const trackBRef = useRef<HTMLDivElement | null>(null)
   const rafRef = useRef<number>(0)
   const hoveredRef = useRef(false)
   const touchRef = useRef({ active: false, startX: 0, lastX: 0 })
   const translateRef = useRef(0)
+  // Width of ONE row (track A), including its trailing gap. This is the loop
+  // period: track B sits exactly one period to the right of track A.
   const trackWidthRef = useRef(0)
   // True when the device has a real pointer that hovers (mouse/trackpad).
   // iOS/Android tap-to-hover emulation must NOT pause the auto-scroll.
   const canHoverRef = useRef(false)
 
   useEffect(() => {
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
-    setPrefersReducedMotion(mq.matches)
-    const handler = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches)
-    mq.addEventListener('change', handler)
-    return () => mq.removeEventListener('change', handler)
-  }, [])
-
-  useEffect(() => {
     const mqHover = window.matchMedia('(hover: hover)')
     canHoverRef.current = mqHover.matches
   }, [])
 
-  // Measure one track's width for the infinite-loop reset
+  // Measure one row's width for the infinite-loop reset
   useEffect(() => {
     const measure = () => {
-      if (!trackRef.current) return
-      const row = trackRef.current.parentElement
-      if (row) trackWidthRef.current = row.scrollWidth / 2
+      if (!trackARef.current) return
+      // Width of ONE row (track A), including its trailing gap. Images load
+      // slowly on mobile and the row width grows as they decode; a stale
+      // width makes the wrap fire too early — visible as a jump/stutter on
+      // iPhones. Re-measure whenever the row resizes.
+      trackWidthRef.current = trackARef.current.scrollWidth
     }
     measure()
     window.addEventListener('resize', measure)
-    // Images load slowly on mobile, and the track width grows as they decode.
-    // A stale width makes the infinite-loop wrap fire too early — visible as a
-    // jump/stutter on iPhones. Re-measure whenever the track resizes.
-    const track = trackRef.current
-    const ro = track ? new ResizeObserver(measure) : null
-    if (ro && track) ro.observe(track)
+    const trackA = trackARef.current
+    const ro = trackA ? new ResizeObserver(measure) : null
+    if (ro && trackA) ro.observe(trackA)
     const onLoad = () => measure()
     window.addEventListener('load', onLoad)
     return () => {
@@ -87,10 +94,26 @@ export function FeaturedMarquee({ events }: FeaturedMarqueeProps) {
     }
   }, [events.length])
 
+  // Apply the shared translation to both rows. Track B is positioned exactly
+  // one period (row width + trailing gap) to the right of track A, so the two
+  // layers together form the same seamless loop as one big track — but each
+  // composited layer stays within one row's width (iOS layer-size limit).
+  const applyTranslate = useCallback(() => {
+    const t = translateRef.current
+    if (trackARef.current) {
+      trackARef.current.style.transform = `translate3d(${t}px, 0, 0)`
+    }
+    if (trackBRef.current) {
+      trackBRef.current.style.transform = `translate3d(${t + trackWidthRef.current}px, 0, 0)`
+    }
+  }, [])
+
   // Auto-scroll loop
   useEffect(() => {
-    if (events.length === 0 || prefersReducedMotion) return
+    if (events.length === 0) return
 
+    // Reduced-motion users still get the drift, just far slower and gentler.
+    const speed = prefersReducedMotion ? PX_PER_SECOND_SUBTLE : PX_PER_SECOND
     let lastTime = performance.now()
 
     const tick = (now: number) => {
@@ -101,7 +124,7 @@ export function FeaturedMarquee({ events }: FeaturedMarqueeProps) {
       lastTime = now
 
       if (!hoveredRef.current) {
-        translateRef.current -= PX_PER_SECOND * dt
+        translateRef.current -= speed * dt
 
         const tw = trackWidthRef.current
         if (tw > 0 && Math.abs(translateRef.current) >= tw) {
@@ -109,16 +132,14 @@ export function FeaturedMarquee({ events }: FeaturedMarqueeProps) {
         }
       }
 
-      if (trackRef.current) {
-        trackRef.current.style.transform = `translate3d(${translateRef.current}px, 0, 0)`
-      }
+      applyTranslate()
 
       rafRef.current = requestAnimationFrame(tick)
     }
 
     rafRef.current = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(rafRef.current)
-  }, [events.length, prefersReducedMotion])
+  }, [events.length, prefersReducedMotion, applyTranslate])
 
   // Cleanup on unmount
   useEffect(() => {
@@ -135,24 +156,27 @@ export function FeaturedMarquee({ events }: FeaturedMarqueeProps) {
   }, [])
 
   // Wheel → horizontal scroll when hovered
-  const onWheel = useCallback((e: React.WheelEvent) => {
-    if (!canHoverRef.current || !hoveredRef.current || !trackRef.current) return
+  const onWheel = useCallback(
+    (e: React.WheelEvent) => {
+      if (!canHoverRef.current || !hoveredRef.current) return
 
-    // Use deltaX if horizontal scroll, otherwise use deltaY
-    const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY
-    if (delta === 0) return
+      // Use deltaX if horizontal scroll, otherwise use deltaY
+      const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY
+      if (delta === 0) return
 
-    translateRef.current -= delta
+      translateRef.current -= delta
 
-    // Snap during manual scroll
-    const tw = trackWidthRef.current
-    if (tw > 0) {
-      if (translateRef.current <= -tw) translateRef.current += tw
-      if (translateRef.current > 0) translateRef.current -= tw
-    }
+      // Snap during manual scroll
+      const tw = trackWidthRef.current
+      if (tw > 0) {
+        if (translateRef.current <= -tw) translateRef.current += tw
+        if (translateRef.current > 0) translateRef.current -= tw
+      }
 
-    trackRef.current.style.transform = `translate3d(${translateRef.current}px, 0, 0)`
-  }, [])
+      applyTranslate()
+    },
+    [applyTranslate],
+  )
 
   // Touch handlers — pause auto-scroll on touch, allow manual swipe
   const onTouchStart = useCallback((e: React.TouchEvent) => {
@@ -160,23 +184,26 @@ export function FeaturedMarquee({ events }: FeaturedMarqueeProps) {
     touchRef.current = { active: true, startX: e.touches[0].clientX, lastX: e.touches[0].clientX }
   }, [])
 
-  const onTouchMove = useCallback((e: React.TouchEvent) => {
-    if (!touchRef.current.active || !trackRef.current) return
+  const onTouchMove = useCallback(
+    (e: React.TouchEvent) => {
+      if (!touchRef.current.active) return
 
-    const dx = e.touches[0].clientX - touchRef.current.lastX
-    touchRef.current.lastX = e.touches[0].clientX
+      const dx = e.touches[0].clientX - touchRef.current.lastX
+      touchRef.current.lastX = e.touches[0].clientX
 
-    translateRef.current += dx
+      translateRef.current += dx
 
-    // Snap during manual scroll
-    const tw = trackWidthRef.current
-    if (tw > 0) {
-      if (translateRef.current <= -tw) translateRef.current += tw
-      if (translateRef.current > 0) translateRef.current -= tw
-    }
+      // Snap during manual scroll
+      const tw = trackWidthRef.current
+      if (tw > 0) {
+        if (translateRef.current <= -tw) translateRef.current += tw
+        if (translateRef.current > 0) translateRef.current -= tw
+      }
 
-    trackRef.current.style.transform = `translate3d(${translateRef.current}px, 0, 0)`
-  }, [])
+      applyTranslate()
+    },
+    [applyTranslate],
+  )
 
   // iOS Safari fires `touchcancel` (not `touchend`) when it takes over a
   // gesture for page scrolling — without this the auto-scroll stayed paused
@@ -281,17 +308,23 @@ export function FeaturedMarquee({ events }: FeaturedMarqueeProps) {
         aria-label="Featured events marquee"
         role="region"
       >
-        <div
-          ref={trackRef}
-          className="flex gap-3 md:gap-4 lg:gap-5 will-change-transform"
-          style={{ width: 'max-content' }}
-        >
+        {/* Two row layers: each is independently composited so no single
+            layer exceeds iOS Safari's composited-layer size limit. The
+            trailing padding on each row provides the inter-row gap, making
+            the loop period exactly one row width. */}
+        <div className="flex" style={{ width: 'max-content' }}>
           {/* Track A */}
-          <div className="flex gap-3 md:gap-4 lg:gap-5 shrink-0">
+          <div
+            ref={trackARef}
+            className="flex gap-3 md:gap-4 lg:gap-5 shrink-0 pr-3 md:pr-4 lg:pr-5"
+          >
             {events.map((event, i) => renderCard(event, i))}
           </div>
           {/* Track B — identical clone for seamless infinite loop */}
-          <div className="flex gap-3 md:gap-4 lg:gap-5 shrink-0">
+          <div
+            ref={trackBRef}
+            className="flex gap-3 md:gap-4 lg:gap-5 shrink-0 pr-3 md:pr-4 lg:pr-5"
+          >
             {events.map((event, i) => renderCard(event, i + events.length))}
           </div>
         </div>

@@ -11,6 +11,7 @@ import { ItineraryFloatingDock } from './ItineraryFloatingDock'
 import { EmptyScheduleState } from './EmptyScheduleState'
 import type { Event, Category } from '@/types'
 import { toDateString, getTodayString, nextFriday, getHourInTimeZone } from '@/lib/dates'
+import { canSmoothScroll } from '@/lib/utils'
 
 interface ScheduleClientProps {
   events: Event[]
@@ -169,7 +170,7 @@ export function ScheduleClient({
         setTimeout(() => {
           const el = document.getElementById(`event-card-${picked.id}`)
           if (el) {
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            el.scrollIntoView({ behavior: canSmoothScroll() ? 'smooth' : 'auto', block: 'center' })
           }
         }, 100)
 

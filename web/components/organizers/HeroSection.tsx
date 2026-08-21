@@ -8,7 +8,7 @@ import { gsap } from '@/lib/gsap'
 import { ArrowRight, Ticket, CheckCircle2, MapPin, Banknote } from 'lucide-react'
 import { Container } from '@/components/layout/Container'
 import { Button } from '@/components/ui/button'
-import { usePrefersReducedMotion } from '@/lib/hooks/usePrefersReducedMotion'
+import { useMotionPreference } from '@/lib/hooks/useMotionPreference'
 import { formatPrice, formatEventDateShort } from '@/lib/utils'
 import type { Event } from '@/types'
 
@@ -34,7 +34,10 @@ export function OrganizersHero({ contactUrl, events, categoryCount }: Organizers
   const miniStatsRef = useRef<HTMLDivElement>(null)
   const mockupRef = useRef<HTMLDivElement>(null)
   const [currentPreview, setCurrentPreview] = useState(0)
-  const prefersReducedMotion = usePrefersReducedMotion()
+  const motion = useMotionPreference()
+  const prefersReducedMotion = motion === 'subtle'
+  // Reduced-motion users get a slower, calmer preview rotation.
+  const PREVIEW_INTERVAL_MS = prefersReducedMotion ? 8000 : 4000
 
   const previews: PreviewEvent[] = events.map((event) => ({
     title: event.title,
@@ -58,53 +61,50 @@ export function OrganizersHero({ contactUrl, events, categoryCount }: Organizers
   const nextPreview = previews[(currentPreview + 1) % Math.max(previews.length, 1)]
 
   useEffect(() => {
-    if (prefersReducedMotion || !hasPreviews) return
+    if (!hasPreviews) return
     const interval = setInterval(() => {
       setCurrentPreview((prev) => (prev + 1) % previews.length)
-    }, 4000)
+    }, PREVIEW_INTERVAL_MS)
     return () => clearInterval(interval)
-  }, [prefersReducedMotion, hasPreviews, previews.length])
+  }, [prefersReducedMotion, PREVIEW_INTERVAL_MS, hasPreviews, previews.length])
 
   useGSAP(
     () => {
+      // Reduced-motion users get gentle opacity-only fades (no spatial
+      // movement), so nothing jumps or glides under iOS Reduce Motion.
+      const from = prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 16 }
+      const to = prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }
       const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
       const heroWords = sectionRef.current?.querySelectorAll('.hero-word')
       if (heroWords?.length) {
-        tl.fromTo(
-          heroWords,
-          { opacity: 0, y: 16 },
-          { opacity: 1, y: 0, duration: 0.35, stagger: 0.04 },
-        )
+        tl.fromTo(heroWords, { ...from }, { ...to, duration: 0.35, stagger: 0.04 })
       }
       if (subRef.current) {
-        tl.fromTo(
-          subRef.current,
-          { opacity: 0, y: 14 },
-          { opacity: 1, y: 0, duration: 0.4 },
-          '-=0.1',
-        )
+        tl.fromTo(subRef.current, { ...from }, { ...to, duration: 0.4 }, '-=0.1')
       }
       if (ctaRef.current) {
         tl.fromTo(
           ctaRef.current.children,
-          { opacity: 0, y: 12 },
-          { opacity: 1, y: 0, duration: 0.35, stagger: 0.08 },
+          { ...from },
+          { ...to, duration: 0.35, stagger: 0.08 },
           '-=0.15',
         )
       }
       if (miniStatsRef.current) {
         tl.fromTo(
           miniStatsRef.current.children,
-          { opacity: 0, y: 12 },
-          { opacity: 1, y: 0, duration: 0.3, stagger: 0.06 },
+          { ...from },
+          { ...to, duration: 0.3, stagger: 0.06 },
           '-=0.1',
         )
       }
       if (mockupRef.current) {
         tl.fromTo(
           mockupRef.current,
-          { opacity: 0, x: 20, scale: 0.98 },
-          { opacity: 1, x: 0, scale: 1, duration: 0.6, ease: 'power2.out' },
+          prefersReducedMotion ? { opacity: 0 } : { opacity: 0, x: 20, scale: 0.98 },
+          prefersReducedMotion
+            ? { opacity: 1 }
+            : { opacity: 1, x: 0, scale: 1, duration: 0.6, ease: 'power2.out' },
           '-=0.4',
         )
       }

@@ -51,3 +51,22 @@ export function formatEventDateShort(dateString: string): string {
 export function isEventPast(startDate: string): boolean {
   return new Date(startDate) < new Date()
 }
+
+/**
+ * Whether it is safe to request `behavior: 'smooth'` programmatic scrolling.
+ *
+ * WebKit (iOS Safari) is unreliable at smooth `scrollIntoView`/`scrollBy`
+ * into nested scroll containers — especially right after a state update or
+ * when combined with `scroll-snap-type` — and it frequently drops the scroll
+ * entirely, which reads as a "blocked" page. Coarse-pointer devices (touch)
+ * should fall back to `'auto'` so the scroll always happens.
+ *
+ * Callers should use the returned boolean:
+ *   el.scrollIntoView({ behavior: canSmoothScroll() ? 'smooth' : 'auto', ... })
+ */
+export function canSmoothScroll(): boolean {
+  if (typeof window === 'undefined') return false
+  if (!('scrollBehavior' in document.documentElement.style)) return false
+  if (window.matchMedia('(pointer: coarse)').matches) return false
+  return true
+}

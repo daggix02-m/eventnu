@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Megaphone, X } from 'lucide-react'
 import { cn, isSafeUrl } from '@/lib/utils'
-import { usePrefersReducedMotion } from '@/lib/hooks/usePrefersReducedMotion'
+import { useMotionPreference } from '@/lib/hooks/useMotionPreference'
 import type { Announcement } from '@/types'
 
 interface AnnouncementBannerProps {
@@ -13,6 +13,8 @@ interface AnnouncementBannerProps {
 
 const STORAGE_KEY = 'eventnu-dismissed-announcements'
 const ROTATE_MS = 6000
+// Reduced-motion users get a calmer rotation cadence instead of a hard stop.
+const ROTATE_MS_SUBTLE = 10000
 
 function readDismissed(): string[] {
   if (typeof window === 'undefined') return []
@@ -25,7 +27,9 @@ function readDismissed(): string[] {
 }
 
 export function AnnouncementBanner({ announcements }: AnnouncementBannerProps) {
-  const prefersReducedMotion = usePrefersReducedMotion()
+  const motion = useMotionPreference()
+  const prefersReducedMotion = motion === 'subtle'
+  const rotateMs = prefersReducedMotion ? ROTATE_MS_SUBTLE : ROTATE_MS
   const [dismissed, setDismissed] = useState<string[]>([])
   const [index, setIndex] = useState(0)
   const [paused, setPaused] = useState(false)
@@ -44,12 +48,12 @@ export function AnnouncementBanner({ announcements }: AnnouncementBannerProps) {
   }, [index, visible.length])
 
   useEffect(() => {
-    if (visible.length <= 1 || paused || prefersReducedMotion) return
+    if (visible.length <= 1 || paused) return
     const timer = setInterval(() => {
       setIndex((i) => (i + 1) % visible.length)
-    }, ROTATE_MS)
+    }, rotateMs)
     return () => clearInterval(timer)
-  }, [visible.length, paused, prefersReducedMotion])
+  }, [visible.length, paused, rotateMs])
 
   if (!current) return null
 

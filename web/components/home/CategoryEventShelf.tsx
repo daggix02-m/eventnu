@@ -16,6 +16,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { canSmoothScroll } from '@/lib/utils'
 import { EventCard } from '@/components/events/cards/EventCard'
 import { BulkSocialProvider } from '@/components/social/EventSocialActions'
 import type { Event, Category } from '@/types'
@@ -121,7 +122,7 @@ export function CategoryEventShelf({
     const scrollAmount = el.clientWidth * 0.75
     el.scrollBy({
       left: direction === 'left' ? -scrollAmount : scrollAmount,
-      behavior: 'smooth',
+      behavior: canSmoothScroll() ? 'smooth' : 'auto',
     })
   }
 

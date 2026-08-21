@@ -211,9 +211,14 @@
   }
 }
 
-html {
-  scroll-behavior: smooth;
-}
+/*
+ * NOTE: do NOT add `scroll-behavior: smooth` on the root scroller.
+ * On iOS Safari it conflicts with programmatic smooth scrolls
+ * (`scrollIntoView`/`scrollBy`), with `scroll-snap-type` containers,
+ * and with GSAP ScrollTrigger measurements — the page feels blocked.
+ * Smooth scrolling is applied per-container (see `scroll-smooth`
+ * on the date rail / shelves) or per-interaction via canSmoothScroll().
+ */
 
 body {
   background-color: var(--color-background);
@@ -404,13 +409,42 @@ textarea:focus-visible {
   }
 }
 
+/*
+ * Reduced-motion contract (e.g. iOS Reduce Motion).
+ *
+ * The contract is "fewer and gentler animations", not "disable all motion":
+ * meaningful fades, state changes, and the JS-driven loops (marquee, carousel,
+ * banner, previews) still animate — just slower and calmer. We no longer force
+ * every animation/transition to 0.01ms, so inline/JS-set durations are
+ * respected. Only genuinely continuous decorative loops are slowed down.
+ */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  .animate-pulse,
+  .animate-ping,
+  .equalizer-bar {
+    animation-duration: 4s !important;
+  }
+}
+
+/*
+ * Touch devices (incl. all iPhones): drop backdrop-filter from sticky/fixed
+ * chrome. WebKit re-rasterizes backdrop-filter layers on every frame during
+ * scroll, which makes page scrolling janky on iOS. The chrome elements all
+ * carry semi-opaque backgrounds, so removing the blur is visually subtle.
+ * (See also the marquee: the same rationale removed backdrop-blur from the
+ * animated badges.)
+ */
+@media (pointer: coarse) {
+  header,
+  [class*='backdrop-blur'],
+  [class*='backdrop-saturate'] {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
   }
 }

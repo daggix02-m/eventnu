@@ -34,25 +34,43 @@ export function useScrollReveal<T extends HTMLElement = HTMLDivElement>({
 
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
+    let observer: IntersectionObserver | null = null
+    let fallbackTimer = 0
+
+    const reveal = () => {
+      el.style.opacity = '1'
+      el.style.transform = 'translateY(0)'
+      observer?.disconnect()
+      window.clearTimeout(fallbackTimer)
+    }
+
     el.style.opacity = '0'
     el.style.transform = `translateY(${y}px)`
     el.style.transition = `opacity ${duration}s ease, transform ${duration}s ease`
     if (delay > 0) el.style.transitionDelay = `${delay}s`
 
-    const observer = new IntersectionObserver(
+    observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
           if (entry.isIntersecting) {
-            el.style.opacity = '1'
-            el.style.transform = 'translateY(0)'
-            observer.disconnect()
+            reveal()
+            return
           }
         }
       },
       { rootMargin: '0px 0px -12% 0px' },
     )
     observer.observe(el)
-    return () => observer.disconnect()
+
+    // Fallback: if the observer entry never arrives (throttled observers on
+    // iOS during initial load, or an element already in view when attached),
+    // force the reveal so content can never stay invisible ("blocked").
+    fallbackTimer = window.setTimeout(reveal, 1500)
+
+    return () => {
+      observer?.disconnect()
+      window.clearTimeout(fallbackTimer)
+    }
   }, [y, duration, delay])
 
   return ref

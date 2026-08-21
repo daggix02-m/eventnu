@@ -90,7 +90,7 @@ export default function RootLayout({
   )
 
   return (
-    <html lang="en" className="dark" data-scroll-behavior="smooth">
+    <html lang="en" className="dark">
       <head>
         {convexOrigins.flatMap((origin) => [
           <link

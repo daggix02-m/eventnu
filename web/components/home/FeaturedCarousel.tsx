@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { cn, formatEventDate, isEventPast, isSafeUrl } from '@/lib/utils'
 import { filterStyle, sortedImages } from '@/lib/media'
+import { useMotionPreference } from '@/lib/hooks/useMotionPreference'
 import { Button } from '@/components/ui/button'
 import type { Event } from '@/types'
 
@@ -23,6 +24,10 @@ interface FeaturedCarouselProps {
 }
 
 const IMAGE_STEP_MS = 3000
+// When the user prefers reduced motion we still auto-advance the slideshow,
+// but at a much slower, calmer cadence instead of freezing it (fixes the
+// frozen carousel on iOS where Reduce Motion is commonly enabled).
+const IMAGE_STEP_MS_SUBTLE = 5000
 const SWIPE_THRESHOLD = 60
 
 function getPrimaryCategory(event: Event) {
@@ -37,7 +42,8 @@ export function FeaturedCarousel({ events }: FeaturedCarouselProps) {
   const [img, setImg] = useState(0)
   const [isPaused, setIsPaused] = useState(false)
   const [hovered, setHovered] = useState(false)
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
+  const motion = useMotionPreference()
+  const prefersReducedMotion = motion === 'subtle'
   // Only pause on hover when the device has a real hover pointer. iOS/Android
   // emulate `mouseenter` on tap and often never fire `mouseleave`, which used
   // to leave the slideshow permanently paused after the first touch.
@@ -51,12 +57,15 @@ export function FeaturedCarousel({ events }: FeaturedCarouselProps) {
 
   const paused = isPaused || (canHover && hovered)
 
+  // Slower, calmer cadence for reduced-motion users (e.g. iOS Reduce Motion).
+  const stepMs = prefersReducedMotion ? IMAGE_STEP_MS_SUBTLE : IMAGE_STEP_MS
+
   const slideTicks = useCallback(
     (index: number) => {
       const count = Math.max(1, sortedImages(events[index]?.images).length)
-      return Math.max(2, count) * (IMAGE_STEP_MS / 1000)
+      return Math.max(2, count) * (stepMs / 1000)
     },
-    [events],
+    [events, stepMs],
   )
 
   const next = useCallback(() => {
@@ -70,23 +79,15 @@ export function FeaturedCarousel({ events }: FeaturedCarouselProps) {
   }, [events.length])
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
-    setPrefersReducedMotion(mediaQuery.matches)
-    const handleChange = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches)
-    mediaQuery.addEventListener('change', handleChange)
-    return () => mediaQuery.removeEventListener('change', handleChange)
-  }, [])
-
-  useEffect(() => {
     const mqHover = window.matchMedia('(hover: hover)')
     setCanHover(mqHover.matches)
   }, [])
 
   useEffect(() => {
-    if (events.length <= 1 || paused || prefersReducedMotion) return
+    if (events.length <= 1 || paused) return
     const activeImages = sortedImages(events[current]?.images)
     const imageCount = Math.max(1, activeImages.length)
-    const rotateEvery = Math.round(IMAGE_STEP_MS / 1000)
+    const rotateEvery = Math.round(stepMs / 1000)
     const advanceEvery = Math.max(2, imageCount) * rotateEvery
 
     let tick = 0
@@ -101,7 +102,7 @@ export function FeaturedCarousel({ events }: FeaturedCarouselProps) {
       }
     }, 1000)
     return () => clearInterval(timer)
-  }, [events, current, paused, prefersReducedMotion])
+  }, [events, current, paused, stepMs])
 
   useEffect(() => {
     const el = sectionRef.current
