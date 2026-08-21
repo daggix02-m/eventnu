@@ -26,7 +26,7 @@ export function formatPrice(priceDisplay?: string | null, isFree = false): strin
   return priceDisplay
 }
 
-export function formatEventDate(dateString: string): string {
+export function formatEventDate(dateString: string, timeZone?: string): string {
   const date = new Date(dateString)
   return date.toLocaleDateString('en-US', {
     weekday: 'long',
@@ -35,6 +35,7 @@ export function formatEventDate(dateString: string): string {
     hour: 'numeric',
     minute: '2-digit',
     hour12: true,
+    ...(timeZone ? { timeZone } : {}),
   })
 }
 

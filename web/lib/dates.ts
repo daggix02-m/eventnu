@@ -48,6 +48,39 @@ function timeFormatter(timeZone?: string): Intl.DateTimeFormat {
   return fmt
 }
 
+const shortDateFormatterCache = new Map<string, Intl.DateTimeFormat>()
+
+function shortDateFormatter(timeZone?: string): Intl.DateTimeFormat {
+  const key = timeZone ?? 'local'
+  let fmt = shortDateFormatterCache.get(key)
+  if (!fmt) {
+    fmt = new Intl.DateTimeFormat('en-US', {
+      month: 'short',
+      day: 'numeric',
+      ...(timeZone ? { timeZone } : {}),
+    })
+    shortDateFormatterCache.set(key, fmt)
+  }
+  return fmt
+}
+
+/**
+ * Format an instant as "Aug 21" in the event's timezone (falls back to local).
+ *
+ * IMPORTANT — hydration safety: always pass the event timezone. Without it the
+ * server (UTC) and a client in another timezone (e.g. Africa/Addis_Ababa,
+ * UTC+3) format midnight-straddling instants to DIFFERENT dates, which crashes
+ * React hydration (error #418) and blanks client components like the marquee.
+ */
+export function formatShortDate(isoString?: string | null, timeZone?: string): string | null {
+  if (!isoString) return null
+  try {
+    return shortDateFormatter(timeZone).format(new Date(isoString))
+  } catch {
+    return null
+  }
+}
+
 /**
  * Format an instant's clock time in the event's timezone (falls back to local).
  */

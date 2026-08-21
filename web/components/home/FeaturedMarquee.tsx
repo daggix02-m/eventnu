@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { cn } from '@/lib/utils'
 import { filterStyle, sortedImages } from '@/lib/media'
 import { useMotionPreference } from '@/lib/hooks/useMotionPreference'
+import { formatShortDate } from '@/lib/dates'
 import type { Event } from '@/types'
 
 interface FeaturedMarqueeProps {
@@ -24,15 +25,6 @@ function getPrimaryCategory(event: Event) {
     event.event_categories?.find((ec) => ec.is_primary)?.categories ??
     event.event_categories?.[0]?.categories
   )
-}
-
-function formatShortDate(dateStr?: string | null): string | null {
-  if (!dateStr) return null
-  try {
-    return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-  } catch {
-    return null
-  }
 }
 
 /**
@@ -224,7 +216,7 @@ export function FeaturedMarquee({ events }: FeaturedMarqueeProps) {
     const imgFilter = cover?.filter ?? null
     const category = getPrimaryCategory(event)
     const href = event.slug ? `/events/${event.slug}` : null
-    const dateLabel = formatShortDate(event.start_date)
+    const dateLabel = formatShortDate(event.start_date, event.timezone)
 
     return (
       <Link

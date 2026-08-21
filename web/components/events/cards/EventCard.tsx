@@ -6,6 +6,7 @@ import { useMemo } from 'react'
 import { MapPin } from 'lucide-react'
 import { cn, formatPrice, isEventPast } from '@/lib/utils'
 import { filterStyle, sortedImages } from '@/lib/media'
+import { formatShortDate } from '@/lib/dates'
 import { CardQuickActions } from '@/components/social/EventSocialActions'
 import { VerifiedBadge } from '@/components/verification/VerifiedBadge'
 import type { Event } from '@/types'
@@ -22,15 +23,6 @@ function getPrimaryCategory(event: Event) {
     event.event_categories?.find((ec) => ec.is_primary)?.categories ??
     event.event_categories?.[0]?.categories
   )
-}
-
-function formatShortDate(dateStr?: string | null): string | null {
-  if (!dateStr) return null
-  try {
-    return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-  } catch {
-    return null
-  }
 }
 
 /**
@@ -54,7 +46,7 @@ export function EventCard({
   const imgFilter = cover?.filter ?? null
   const href = event.slug ? `/events/${event.slug}` : null
   const category = getPrimaryCategory(event)
-  const dateLabel = formatShortDate(event.start_date)
+  const dateLabel = formatShortDate(event.start_date, event.timezone)
 
   const cardContent = (
     <>
