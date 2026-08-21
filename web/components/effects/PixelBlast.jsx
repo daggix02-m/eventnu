@@ -384,13 +384,23 @@ const PixelBlast = ({
         typeof window !== 'undefined' &&
         (window.matchMedia('(pointer: coarse)').matches || window.innerWidth < 768)
       const canvas = document.createElement('canvas')
-      const renderer = new THREE.WebGLRenderer({
-        canvas,
-        // AA is pointless for a pixel-art effect and costs fill rate on mobile.
-        antialias: lowPower ? false : antialias,
-        alpha: true,
-        powerPreference: lowPower ? 'default' : 'high-performance',
-      })
+      let renderer
+      try {
+        renderer = new THREE.WebGLRenderer({
+          canvas,
+          // AA is pointless for a pixel-art effect and costs fill rate on mobile.
+          antialias: lowPower ? false : antialias,
+          alpha: true,
+          powerPreference: lowPower ? 'default' : 'high-performance',
+        })
+      } catch (err) {
+        // Context creation can fail outright (iOS Safari hits its WebGL context
+        // limit under memory pressure). Degrade to the static frame instead of
+        // letting the throw crash the whole page.
+        console.error('PixelBlast: WebGL context creation failed, using static frame', err)
+        container.classList.add('static-frame')
+        return
+      }
       renderer.domElement.style.width = '100%'
       renderer.domElement.style.height = '100%'
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, lowPower ? 1.5 : 2))

@@ -1,0 +1,99 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { render, screen, act } from '@testing-library/react'
+import React from 'react'
+import { SiteBackground } from './SiteBackground'
+
+const FULL_SPEED = 0.5
+const SUBTLE_SPEED = 0.12
+
+// SiteBackground loads PixelBlast via next/dynamic. In jsdom there is no WebGL
+// context, so swap the dynamic loader for a plain component that echoes props.
+// The behaviour under test is SiteBackground's own branching, not WebGL.
+function PixelBlastMock(props: Record<string, unknown>) {
+  return <div data-testid="pixel-blast" {...props} />
+}
+
+vi.mock('next/dynamic', () => ({
+  __esModule: true,
+  default: () => PixelBlastMock,
+}))
+
+class MockIntersectionObserver {
+  static instances: MockIntersectionObserver[] = []
+  callback: IntersectionObserverCallback
+  constructor(callback: IntersectionObserverCallback) {
+    this.callback = callback
+    MockIntersectionObserver.instances.push(this)
+  }
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+
+function fireIntersection(isIntersecting: boolean) {
+  const observer = MockIntersectionObserver.instances[0]
+  observer.callback(
+    [{ isIntersecting } as IntersectionObserverEntry],
+    observer as unknown as IntersectionObserver,
+  )
+}
+
+function stubMatchMedia(matches: boolean) {
+  vi.stubGlobal(
+    'matchMedia',
+    vi.fn().mockReturnValue({
+      matches,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+    }),
+  )
+}
+
+beforeEach(() => {
+  MockIntersectionObserver.instances = []
+  vi.stubGlobal('IntersectionObserver', MockIntersectionObserver)
+  vi.useRealTimers()
+})
+
+afterEach(() => {
+  vi.unstubAllGlobals()
+  vi.useRealTimers()
+})
+
+describe('SiteBackground', () => {
+  it('renders the fallback frame with explicit dimensions before the shader mounts', () => {
+    stubMatchMedia(false)
+    render(<SiteBackground />)
+    const frame = document.querySelector('.static-frame')
+    expect(frame).toBeInTheDocument()
+    expect(frame).toHaveStyle('position: absolute')
+    expect(frame).toHaveStyle('inset: 0')
+  })
+
+  it('mounts the shader at a slow subtle speed for reduced-motion users', async () => {
+    stubMatchMedia(true)
+    render(<SiteBackground />)
+    act(() => fireIntersection(true))
+    const shader = await screen.findByTestId('pixel-blast')
+    expect(shader.getAttribute('speed')).toBe(String(SUBTLE_SPEED))
+  })
+
+  it('mounts the shader at full speed without a reduced-motion preference', async () => {
+    stubMatchMedia(false)
+    render(<SiteBackground />)
+    act(() => fireIntersection(true))
+    const shader = await screen.findByTestId('pixel-blast')
+    expect(shader.getAttribute('speed')).toBe(String(FULL_SPEED))
+  })
+
+  it('mounts the shader via a fallback timer when the observer callback never fires (iOS guard)', () => {
+    stubMatchMedia(false)
+    vi.useFakeTimers()
+    render(<SiteBackground />)
+    expect(document.querySelector('.static-frame')).toBeInTheDocument()
+    act(() => vi.advanceTimersByTime(1000))
+    expect(screen.getByTestId('pixel-blast')).toBeInTheDocument()
+  })
+})
