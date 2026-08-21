@@ -147,7 +147,6 @@ uniform float uRippleSpeed;
 uniform float uRippleThickness;
 uniform float uRippleIntensity;
 uniform float uEdgeFade;
-uniform int   uOctaves;
 
 uniform int   uShapeType;
 const int SHAPE_SQUARE   = 0;
@@ -201,10 +200,13 @@ float fbm2(vec2 uv, float t){
   float amp = 1.0;
   float freq = 1.0;
   float sum = 1.0;
-  // uOctaves lets the host cap the FBM cost on low-power devices (phones),
-  // keeping the shader cheap enough not to starve concurrent rAF loops
-  // (e.g. the homepage marquee on iPhones).
-  for (int i = 0; i < uOctaves; ++i){
+  // NOTE: keep this loop bound a compile-time constant. iOS Safari's shader
+  // compiler rejects non-constant loop bounds in fragment shaders (a dynamic
+  // uniform int bound here made the whole shader fail to compile on iPhones,
+  // rendering a black/empty canvas). Mobile cost is controlled by the host
+  // instead: lower render scale, FPS cap, larger pixel cells, no antialias,
+  // no ripples.
+  for (int i = 0; i < FBM_OCTAVES; ++i){
     sum  += amp * vnoise(p * freq);
     freq *= FBM_LACUNARITY;
     amp  *= FBM_GAIN;
@@ -393,6 +395,17 @@ const PixelBlast = ({
       renderer.domElement.style.height = '100%'
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, lowPower ? 1.5 : 2))
       container.appendChild(renderer.domElement)
+      // If the GPU context is lost (iOS is prone to this under memory
+      // pressure or after many WebGL contexts), degrade to the static frame
+      // instead of leaving a black/empty canvas on screen.
+      const onContextLost = (event) => {
+        event.preventDefault()
+        if (renderer.domElement.parentElement === container) {
+          container.removeChild(renderer.domElement)
+        }
+        container.classList.add('static-frame')
+      }
+      renderer.domElement.addEventListener('webglcontextlost', onContextLost)
       if (transparent) renderer.setClearAlpha(0)
       else renderer.setClearColor(0x000000, 1)
       // Render the buffer below CSS size on phones and upscale via CSS: the
@@ -419,7 +432,6 @@ const PixelBlast = ({
         uRippleThickness: { value: rippleThickness },
         uRippleIntensity: { value: rippleIntensityScale },
         uEdgeFade: { value: edgeFade },
-        uOctaves: { value: lowPower ? 4 : 5 },
       }
       const scene = new THREE.Scene()
       const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1)
@@ -573,6 +585,7 @@ const PixelBlast = ({
         touch,
         liquidEffect,
         lowPower,
+        onContextLost,
       }
     } else {
       const t = threeRef.current
@@ -609,6 +622,7 @@ const PixelBlast = ({
       t.composer?.dispose()
       t.renderer.dispose()
       t.renderer.forceContextLoss()
+      t.renderer.domElement.removeEventListener('webglcontextlost', t.onContextLost)
       if (t.renderer.domElement.parentElement === container)
         container.removeChild(t.renderer.domElement)
       threeRef.current = null

@@ -30,14 +30,26 @@ export function SiteBackground() {
 
   // Reduced-motion users get the static violet frame so the page still has
   // depth — but nothing moves and no GPU/WebGL runs.
+  // NOTE: the gradient is inlined because `.static-frame` styles live in the
+  // dynamically-loaded PixelBlast CSS chunk, which never loads for reduced-
+  // motion users (PixelBlast is never mounted) — without the inline styles
+  // the frame would render unstyled/invisible, i.e. a "dark" background.
   // NOTE: PixelBlast itself runs a low-power path on coarse-pointer / small
-  // screens (lower resolution, FPS cap, fewer FBM octaves, no ripples) so the
-  // shader can coexist with the marquee rAF loop on iPhones without starving
-  // it. Do NOT disable the shader on touch here — that kills the background.
+  // screens (lower resolution, FPS cap, larger pixel cells, no ripples, no
+  // AA) so the shader can coexist with the marquee rAF loop on iPhones
+  // without starving it.
+  const staticFrameBackground =
+    'radial-gradient(ellipse at 20% 15%, rgba(176,151,207,0.38) 0%, transparent 55%),' +
+    'radial-gradient(ellipse at 80% 85%, rgba(176,151,207,0.28) 0%, transparent 50%),' +
+    'radial-gradient(ellipse at 50% 50%, rgba(109,59,215,0.24) 0%, transparent 60%)'
+
   return (
     <div ref={sentinelRef} className="fixed inset-0 z-[-1] pointer-events-none" aria-hidden="true">
       {reducedMotion ? (
-        <div className="pixel-blast-container static-frame" />
+        <div
+          className="pixel-blast-container static-frame"
+          style={{ background: staticFrameBackground }}
+        />
       ) : (
         inView && (
           <PixelBlast
