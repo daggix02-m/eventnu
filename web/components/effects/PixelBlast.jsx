@@ -147,6 +147,7 @@ uniform float uRippleSpeed;
 uniform float uRippleThickness;
 uniform float uRippleIntensity;
 uniform float uEdgeFade;
+uniform int   uOctaves;
 
 uniform int   uShapeType;
 const int SHAPE_SQUARE   = 0;
@@ -200,7 +201,10 @@ float fbm2(vec2 uv, float t){
   float amp = 1.0;
   float freq = 1.0;
   float sum = 1.0;
-  for (int i = 0; i < FBM_OCTAVES; ++i){
+  // uOctaves lets the host cap the FBM cost on low-power devices (phones),
+  // keeping the shader cheap enough not to starve concurrent rAF loops
+  // (e.g. the homepage marquee on iPhones).
+  for (int i = 0; i < uOctaves; ++i){
     sum  += amp * vnoise(p * freq);
     freq *= FBM_LACUNARITY;
     amp  *= FBM_GAIN;
@@ -380,7 +384,8 @@ const PixelBlast = ({
       const canvas = document.createElement('canvas')
       const renderer = new THREE.WebGLRenderer({
         canvas,
-        antialias,
+        // AA is pointless for a pixel-art effect and costs fill rate on mobile.
+        antialias: lowPower ? false : antialias,
         alpha: true,
         powerPreference: lowPower ? 'default' : 'high-performance',
       })
@@ -393,7 +398,7 @@ const PixelBlast = ({
       // Render the buffer below CSS size on phones and upscale via CSS: the
       // per-fragment shader cost drops by ~scale^2 for a barely-visible
       // difference in a pixel-art effect.
-      const renderScale = lowPower ? 0.6 : 1
+      const renderScale = lowPower ? 0.45 : 1
       const uniforms = {
         uResolution: { value: new THREE.Vector2(0, 0) },
         uTime: { value: 0 },
@@ -404,7 +409,7 @@ const PixelBlast = ({
         uClickTimes: { value: new Float32Array(MAX_CLICKS) },
         uShapeType: { value: SHAPE_MAP[variant] ?? 0 },
         uPixelSize: {
-          value: pixelSize * renderer.getPixelRatio() * (lowPower ? 1.6 : 1),
+          value: pixelSize * renderer.getPixelRatio() * (lowPower ? 2.0 : 1),
         },
         uScale: { value: patternScale },
         uDensity: { value: patternDensity },
@@ -414,6 +419,7 @@ const PixelBlast = ({
         uRippleThickness: { value: rippleThickness },
         uRippleIntensity: { value: rippleIntensityScale },
         uEdgeFade: { value: edgeFade },
+        uOctaves: { value: lowPower ? 4 : 5 },
       }
       const scene = new THREE.Scene()
       const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1)
@@ -441,7 +447,7 @@ const PixelBlast = ({
         uniforms.uResolution.value.set(renderer.domElement.width, renderer.domElement.height)
         if (threeRef.current?.composer)
           threeRef.current.composer.setSize(renderer.domElement.width, renderer.domElement.height)
-        uniforms.uPixelSize.value = pixelSize * renderer.getPixelRatio() * (lowPower ? 1.6 : 1)
+        uniforms.uPixelSize.value = pixelSize * renderer.getPixelRatio() * (lowPower ? 2.0 : 1)
       }
       setSize()
       const ro = new ResizeObserver(setSize)
@@ -527,7 +533,9 @@ const PixelBlast = ({
       })
       let raf = 0
       let frameCount = 0
-      const frameInterval = lowPower ? 2 : 1 // ~30fps cap on phones/tablets
+      // ~20fps cap on phones/tablets: keeps the shader from saturating
+      // mobile GPUs and starving concurrent rAF loops (homepage marquee).
+      const frameInterval = lowPower ? 3 : 1
       const animate = () => {
         raf = requestAnimationFrame(animate)
         if (autoPauseOffscreen && !visibilityRef.current.visible) return
@@ -569,7 +577,7 @@ const PixelBlast = ({
     } else {
       const t = threeRef.current
       t.uniforms.uShapeType.value = SHAPE_MAP[variant] ?? 0
-      t.uniforms.uPixelSize.value = pixelSize * t.renderer.getPixelRatio() * (t.lowPower ? 1.6 : 1)
+      t.uniforms.uPixelSize.value = pixelSize * t.renderer.getPixelRatio() * (t.lowPower ? 2.0 : 1)
       t.uniforms.uColor.value.set(color)
       t.uniforms.uScale.value = patternScale
       t.uniforms.uDensity.value = patternDensity
