@@ -63,6 +63,9 @@ export function describeError(err: unknown): string {
     if (msg.includes('Account not found')) {
       return 'No account found for this email.'
     }
+    if (msg.includes('already exists')) {
+      return 'An account with this email already exists. Please sign in instead.'
+    }
     return 'Something went wrong. Please try again.'
   }
   return 'Something went wrong. Please try again.'
@@ -398,7 +401,16 @@ export function AuthPage() {
         setView({ name: 'verify', email: email.trim().toLowerCase() })
       }
     } catch (err) {
-      setFormError(describeError(err))
+      if (err instanceof Error && err.message.includes('already exists')) {
+        // The email already has a password account — route the user to sign in
+        // instead of leaving them on a dead-end sign-up form.
+        storeEmail(email)
+        clearAllPending()
+        switchTo({ name: 'signin' })
+        setFormError('An account with this email already exists. Please sign in instead.')
+      } else {
+        setFormError(describeError(err))
+      }
     } finally {
       setLoading(false)
     }

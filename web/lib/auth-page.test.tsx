@@ -44,6 +44,15 @@ describe('describeError', () => {
     expect(describeError(new Error('Account not found'))).toBe('No account found for this email.')
   })
 
+  it('returns friendly message for an account that already exists', () => {
+    expect(describeError(new Error('Account foo@bar.com already exists'))).toBe(
+      'An account with this email already exists. Please sign in instead.',
+    )
+    expect(describeError(new Error('already exists'))).toBe(
+      'An account with this email already exists. Please sign in instead.',
+    )
+  })
+
   it('returns generic message for other errors', () => {
     expect(describeError(new Error('Something weird'))).toBe(
       'Something went wrong. Please try again.',

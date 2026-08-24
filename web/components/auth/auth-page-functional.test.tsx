@@ -69,6 +69,8 @@ const mockSignIn = vi.fn()
 const mockEnsureProfile = vi.fn()
 const mockAcceptTerms = vi.fn()
 const mockCreateOrganizer = vi.fn()
+const mockStoreEmail = vi.fn()
+const mockClearAllPending = vi.fn()
 
 vi.mock('convex/react', () => ({
   useMutation: () => {
@@ -91,10 +93,10 @@ vi.mock('@/lib/auth', () => ({
 }))
 
 vi.mock('@/lib/auth-storage', () => ({
-  storeEmail: vi.fn(),
+  storeEmail: (email: string) => mockStoreEmail(email),
   storePendingTerms: vi.fn(),
   storePendingOrg: vi.fn(),
-  clearAllPending: vi.fn(),
+  clearAllPending: () => mockClearAllPending(),
   getEmail: vi.fn(),
 }))
 
@@ -864,7 +866,7 @@ describe('AuthPage — Functional Tests', () => {
       expect(mockSignIn).not.toHaveBeenCalled()
     })
 
-    it('shows error when sign-up API fails', async () => {
+    it('routes to sign-in when the account already exists', async () => {
       const user = userEvent.setup()
       mockSignIn.mockRejectedValue(new Error('Account already exists'))
 
@@ -879,8 +881,12 @@ describe('AuthPage — Functional Tests', () => {
       await user.click(screen.getByRole('button', { name: /create account/i }))
 
       await waitFor(() => {
-        expect(screen.getByText('Something went wrong. Please try again.')).toBeInTheDocument()
+        expect(screen.getByRole('heading', { name: /welcome back/i })).toBeInTheDocument()
       })
+      expect(
+        screen.getByText('An account with this email already exists. Please sign in instead.'),
+      ).toBeInTheDocument()
+      expect(mockStoreEmail).toHaveBeenCalled()
     })
   })
 })
