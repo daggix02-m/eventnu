@@ -13,7 +13,7 @@ interface ReservationFormProps {
 }
 
 const inputClass =
-  'w-full rounded-xl border border-outline-variant/60 bg-surface-container-low px-4 py-3 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors'
+  'w-full rounded-xl border border-outline-variant/60 bg-surface-container-low px-4 py-3 text-base text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors'
 
 export function ReservationForm({ event }: ReservationFormProps) {
   const createReservation = useMutation(api.reservations.create)

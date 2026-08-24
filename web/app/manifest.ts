@@ -10,7 +10,7 @@ export default function manifest(): MetadataRoute.Manifest {
     id: '/',
     scope: '/',
     display: 'standalone',
-    display_override: ['standalone', 'window-controls-overlay', 'minimal-ui'],
+    display_override: ['standalone', 'minimal-ui'],
     background_color: '#151318',
     theme_color: '#151318',
     orientation: 'portrait-primary',
@@ -25,6 +25,14 @@ export default function manifest(): MetadataRoute.Manifest {
       {
         src: '/icons/icon-512x512.png',
         sizes: '512x512',
+        type: 'image/png',
+        purpose: 'any',
+      },
+      {
+        // Largest asset also improves iOS's auto-generated launch splash
+        // (iOS 15.4+ zooms the icon onto the background color).
+        src: '/icons/icon-1024x1024.png',
+        sizes: '1024x1024',
         type: 'image/png',
         purpose: 'any',
       },

@@ -83,7 +83,7 @@ export default async function EventPage({ params }: EventPageProps) {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }} />
       <EventHero event={event} />
-      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 pb-28 md:pb-16">
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 pb-52 md:pb-16">
         <div className="flex flex-col lg:grid lg:grid-cols-12 gap-8 lg:gap-10 items-start w-full">
           {/* Left / Main Content Column */}
           <div className="w-full lg:col-span-7 xl:col-span-8 space-y-8 min-w-0">

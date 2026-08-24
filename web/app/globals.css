@@ -98,6 +98,10 @@
   --text-display-sm--line-height: 36px;
   --text-display-md: 40px;
   --text-display-md--line-height: 48px;
+  --text-headline-sm: 20px;
+  --text-headline-sm--line-height: 28px;
+  --text-body-sm: 14px;
+  --text-body-sm--line-height: 20px;
 }
 
 @utility text-body-lg {
@@ -447,4 +451,28 @@ textarea:focus-visible {
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
   }
+
+  /*
+   * iOS Safari auto-zooms the page when a form control with font-size < 16px
+   * receives focus. Pin form controls to 16px on touch devices so focusing a
+   * field never zooms the viewport (ReservationForm, ReportDialog, auth, etc.).
+   */
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+/* Kill the default gray tap highlight on iOS so the active:scale-* feedback
+ * (not the browser's flash) is what users see when tapping. */
+body,
+a,
+button,
+[role='button'],
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }

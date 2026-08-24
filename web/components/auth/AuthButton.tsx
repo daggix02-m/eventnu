@@ -26,7 +26,7 @@ export function AuthButton() {
   const profile = useQuery(api.profiles.getMe)
 
   if (isLoading) {
-    return <Skeleton className="h-9 w-24 rounded-xl" aria-hidden="true" />
+    return <Skeleton className="h-11 w-24 rounded-xl" aria-hidden="true" />
   }
 
   if (!isAuthenticated) {
@@ -34,6 +34,7 @@ export function AuthButton() {
       <Button
         variant="outline"
         size="sm"
+        className="min-h-11"
         onClick={() => {
           rememberAuthRedirect(window.location.pathname, window.location.search)
           router.push('/auth?mode=signin')
@@ -56,10 +57,10 @@ export function AuthButton() {
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className="flex h-9 w-9 items-center justify-center rounded-full"
+          className="flex h-11 w-11 items-center justify-center rounded-full"
           aria-label="Account menu"
         >
-          <Avatar className="h-9 w-9">
+          <Avatar className="h-10 w-10">
             {profile?.avatarUrl ? (
               <AvatarImage src={profile.avatarUrl} alt={profile.fullName ?? 'Profile'} />
             ) : null}

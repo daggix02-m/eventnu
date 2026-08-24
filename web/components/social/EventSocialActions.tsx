@@ -448,11 +448,14 @@ export function CardQuickActions({
         className={cn(
           'rounded-full text-white transition-colors',
           compact || transparent ? 'hover:text-error' : 'hover:bg-white/10',
-          compact ? 'p-1.5' : 'p-2',
+          compact ? 'p-3' : transparent ? 'p-2.5' : 'p-2',
         )}
       >
         <Heart
-          className={cn(compact ? 'h-3.5 w-3.5' : 'h-4 w-4', liked && 'fill-error text-error')}
+          className={cn(
+            compact || transparent ? 'h-4 w-4' : 'h-4 w-4',
+            liked && 'fill-error text-error',
+          )}
           aria-hidden="true"
         />
       </button>
@@ -465,11 +468,14 @@ export function CardQuickActions({
         className={cn(
           'rounded-full text-white transition-colors',
           compact || transparent ? 'hover:text-primary' : 'hover:bg-white/10',
-          compact ? 'p-1.5' : 'p-2',
+          compact ? 'p-3' : transparent ? 'p-2.5' : 'p-2',
         )}
       >
         <Bookmark
-          className={cn(compact ? 'h-3.5 w-3.5' : 'h-4 w-4', saved && 'fill-primary text-primary')}
+          className={cn(
+            compact || transparent ? 'h-4 w-4' : 'h-4 w-4',
+            saved && 'fill-primary text-primary',
+          )}
           aria-hidden="true"
         />
       </button>
@@ -481,10 +487,10 @@ export function CardQuickActions({
           className={cn(
             'rounded-full text-white transition-colors',
             compact || transparent ? 'hover:text-primary' : 'hover:bg-white/10',
-            compact ? 'p-1.5' : 'p-2',
+            compact ? 'p-3' : transparent ? 'p-2.5' : 'p-2',
           )}
         >
-          <Share2 className={compact ? 'h-3.5 w-3.5' : 'h-4 w-4'} aria-hidden="true" />
+          <Share2 className={compact || transparent ? 'h-4 w-4' : 'h-4 w-4'} aria-hidden="true" />
         </button>
       )}
     </div>

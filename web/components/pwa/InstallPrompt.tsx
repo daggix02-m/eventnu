@@ -40,20 +40,27 @@ export function InstallPrompt() {
     setIsStandalone(isAppStandalone)
     if (isAppStandalone) return
 
-    // Check if dismissed in the last 7 days
-    const lastDismissed = localStorage.getItem('eventnu_pwa_dismissed')
-    if (lastDismissed) {
-      const dismissedTime = parseInt(lastDismissed, 10)
-      if (Date.now() - dismissedTime < 7 * 24 * 60 * 60 * 1000) {
-        return
-      }
+    // Guarded storage reads — Safari private mode / blocked storage can throw.
+    let neverShow = false
+    let lastDismissed: number | null = null
+    try {
+      neverShow = window.localStorage.getItem('eventnu_pwa_never_show') === '1'
+      const raw = window.localStorage.getItem('eventnu_pwa_dismissed')
+      lastDismissed = raw ? parseInt(raw, 10) : null
+    } catch {
+      /* storage unavailable — treat as a fresh visitor */
+    }
+    if (neverShow) return
+    if (lastDismissed && Date.now() - lastDismissed < 7 * 24 * 60 * 60 * 1000) {
+      return
     }
 
-    // Detect iOS
+    // Detect iOS. Any iOS browser (Safari, Chrome, Firefox, Edge) supports
+    // "Add to Home Screen" and none of them fire `beforeinstallprompt`, so
+    // show the share-sheet guide for every iOS browser.
     const userAgent = window.navigator.userAgent.toLowerCase()
     const isAppleDevice = /iphone|ipad|ipod/.test(userAgent)
-    const isSafari = /safari/.test(userAgent) && !/chrome|crios|fxios/.test(userAgent)
-    if (isAppleDevice && isSafari) {
+    if (isAppleDevice) {
       setIsIOS(true)
       setDismissed(false)
       return
@@ -85,7 +92,9 @@ export function InstallPrompt() {
     const choiceResult = await deferredPrompt.userChoice
 
     if (choiceResult.outcome === 'accepted') {
-      console.log('[PWA] User accepted the install prompt')
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[PWA] User accepted the install prompt')
+      }
       setDeferredPrompt(null)
       setDismissed(true)
     }
@@ -94,7 +103,23 @@ export function InstallPrompt() {
   const handleDismiss = () => {
     setDismissed(true)
     setShowIOSGuide(false)
-    localStorage.setItem('eventnu_pwa_dismissed', Date.now().toString())
+    try {
+      window.localStorage.setItem('eventnu_pwa_dismissed', Date.now().toString())
+    } catch {
+      /* storage unavailable — the banner simply won't remember */
+    }
+  }
+
+  // Permanent opt-out: never show the install prompt on this device again.
+  const handleNeverShow = () => {
+    setDismissed(true)
+    setShowIOSGuide(false)
+    try {
+      window.localStorage.setItem('eventnu_pwa_never_show', '1')
+      window.localStorage.setItem('eventnu_pwa_dismissed', Date.now().toString())
+    } catch {
+      /* ignore */
+    }
   }
 
   const isSchedulePage = pathname === '/schedule'
@@ -186,14 +211,23 @@ export function InstallPrompt() {
             </div>
           </div>
 
-          <DialogClose asChild>
+          <div className="flex flex-col gap-2">
+            <DialogClose asChild>
+              <button
+                type="button"
+                className="w-full bg-primary text-on-primary font-semibold py-2.5 rounded-xl hover:bg-primary/90 transition-all text-sm cursor-pointer"
+              >
+                Got it
+              </button>
+            </DialogClose>
             <button
               type="button"
-              className="w-full bg-primary text-on-primary font-semibold py-2.5 rounded-xl hover:bg-primary/90 transition-all text-sm cursor-pointer"
+              onClick={handleNeverShow}
+              className="w-full text-on-surface-variant hover:text-on-surface text-xs font-semibold py-2 rounded-xl transition-colors cursor-pointer"
             >
-              Got it
+              Don&apos;t show again
             </button>
-          </DialogClose>
+          </div>
         </DialogContent>
       </Dialog>
     </>

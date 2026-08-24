@@ -10,6 +10,7 @@ import {
   Compass,
 } from 'lucide-react'
 import { formatEventDate, formatEventDateShort, isEventPast, isSafeUrl } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { EventGallery } from '@/components/events/detail/EventGallery'
@@ -23,6 +24,85 @@ interface EventHeroProps {
   event: Event
 }
 
+export interface HeroCta {
+  kind: 'ended' | 'external' | 'reservation' | null
+  label: string
+  href?: string
+}
+
+/**
+ * Decide what primary action the hero should offer for an event.
+ *
+ * `kind === null` means there is no actionable CTA (no external link and no
+ * reservation flow) — the hero should not render a button at all.
+ *
+ * Kept as a pure function so both the desktop hero CTA and the mobile sticky
+ * bar render from the exact same decision, and so the logic is unit-testable.
+ */
+export function getHeroCta(event: Event): HeroCta {
+  if (isEventPast(event.start_date)) return { kind: 'ended', label: 'Event Ended' }
+
+  const externalLabel =
+    event.external_link_label?.trim() || (event.is_free ? 'More Info' : 'Get Tickets')
+  if (event.external_link && isSafeUrl(event.external_link)) {
+    return { kind: 'external', label: externalLabel, href: event.external_link }
+  }
+
+  if (event.action_type === 'reservation') {
+    return { kind: 'reservation', label: 'Reserve a Spot', href: '#reserve' }
+  }
+
+  return { kind: null, label: '' }
+}
+
+function HeroCtaButton({ cta, className }: { cta: HeroCta; className?: string }) {
+  if (cta.kind === 'ended') {
+    return (
+      <Button disabled size="lg" className={cn('min-w-[180px] rounded-xl font-bold', className)}>
+        Event Ended
+      </Button>
+    )
+  }
+
+  if (cta.kind === 'external' && cta.href) {
+    return (
+      <Button
+        asChild
+        size="lg"
+        className={cn(
+          'min-w-[180px] rounded-xl font-bold gap-2 shadow-lg shadow-black/40',
+          className,
+        )}
+      >
+        <a href={cta.href} target="_blank" rel="noopener noreferrer">
+          <ExternalLink className="w-4 h-4" />
+          <span>{cta.label}</span>
+        </a>
+      </Button>
+    )
+  }
+
+  if (cta.kind === 'reservation' && cta.href) {
+    return (
+      <Button
+        asChild
+        size="lg"
+        className={cn(
+          'min-w-[180px] rounded-xl font-bold gap-2 shadow-lg shadow-black/40',
+          className,
+        )}
+      >
+        <a href={cta.href}>
+          <Ticket className="w-4 h-4" />
+          <span>{cta.label}</span>
+        </a>
+      </Button>
+    )
+  }
+
+  return null
+}
+
 function getPrimaryCategory(event: Event) {
   return (
     event.event_categories?.find((ec) => ec.is_primary)?.categories ??
@@ -32,9 +112,7 @@ function getPrimaryCategory(event: Event) {
 
 export function EventHero({ event }: EventHeroProps) {
   const category = getPrimaryCategory(event)
-  const externalLabel =
-    event.external_link_label?.trim() || (event.is_free ? 'More Info' : 'Get Tickets')
-  const ended = isEventPast(event.start_date)
+  const cta = getHeroCta(event)
   const showGallery = hasGallery(event.images)
 
   return (
@@ -43,7 +121,7 @@ export function EventHero({ event }: EventHeroProps) {
       <div className="relative w-full min-h-[380px] sm:min-h-[460px] md:min-h-[540px] lg:min-h-[600px] flex flex-col justify-between">
         {showGallery ? (
           <div className="absolute inset-0 z-0">
-            <EventGallery event={event} className="w-full h-full" />
+            <EventGallery event={event} variant="hero" className="w-full h-full" />
           </div>
         ) : event.poster_url ? (
           <div className="absolute inset-0 z-0">
@@ -108,7 +186,7 @@ export function EventHero({ event }: EventHeroProps) {
           {/* Status & Date Badges */}
           <div className="flex items-center gap-2 ml-auto">
             <ReportDialog targetType="event" targetId={event.id} />
-            {ended ? (
+            {cta.kind === 'ended' ? (
               <span className="bg-error text-on-error font-mono text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-md">
                 Event Ended
               </span>
@@ -189,37 +267,21 @@ export function EventHero({ event }: EventHeroProps) {
 
             {/* Action CTA Button on Hero (Desktop) */}
             <div className="hidden md:flex flex-col sm:flex-row items-center gap-3 shrink-0">
-              {ended ? (
-                <Button disabled size="lg" className="min-w-[180px] rounded-xl font-bold">
-                  Event Ended
-                </Button>
-              ) : event.external_link && isSafeUrl(event.external_link) ? (
-                <Button
-                  asChild
-                  size="lg"
-                  className="min-w-[180px] rounded-xl font-bold gap-2 shadow-lg shadow-black/40"
-                >
-                  <a href={event.external_link} target="_blank" rel="noopener noreferrer">
-                    <ExternalLink className="w-4 h-4" />
-                    <span>{externalLabel}</span>
-                  </a>
-                </Button>
-              ) : event.action_type === 'reservation' ? (
-                <Button
-                  asChild
-                  size="lg"
-                  className="min-w-[180px] rounded-xl font-bold gap-2 shadow-lg shadow-black/40"
-                >
-                  <a href="#reserve">
-                    <Ticket className="w-4 h-4" />
-                    <span>Reserve a Spot</span>
-                  </a>
-                </Button>
-              ) : null}
+              <HeroCtaButton cta={cta} />
             </div>
           </div>
         </div>
       </div>
+
+      {/* Mobile-only sticky action bar — the primary ticket/reserve CTA must
+          be reachable on a phone without scrolling through the whole page. */}
+      {cta.kind && (
+        <div className="fixed bottom-[calc(5.5rem_+_env(safe-area-inset-bottom))] inset-x-0 z-50 md:hidden px-4 pointer-events-none">
+          <div className="pointer-events-auto w-full max-w-[32rem] mx-auto">
+            <HeroCtaButton cta={cta} className="w-full min-w-0" />
+          </div>
+        </div>
+      )}
     </section>
   )
 }

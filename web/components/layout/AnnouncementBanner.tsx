@@ -87,7 +87,7 @@ export function AnnouncementBanner({ announcements }: AnnouncementBannerProps) {
           aria-atomic="true"
           className="announcement-in flex min-w-0 flex-1 items-center gap-sm text-body-md"
         >
-          <strong className="shrink-0 text-secondary">{current.title}</strong>
+          <strong className="min-w-0 truncate text-secondary">{current.title}</strong>
           {current.message && (
             <span className="truncate text-on-surface-variant">{current.message}</span>
           )}
@@ -113,7 +113,7 @@ export function AnnouncementBanner({ announcements }: AnnouncementBannerProps) {
           onClick={() => dismiss(current.id)}
           aria-label="Dismiss announcement"
           className={cn(
-            'shrink-0 rounded-full p-1 text-on-surface-variant transition-colors',
+            'shrink-0 rounded-full p-2.5 text-on-surface-variant transition-colors',
             'hover:bg-surface-container-high hover:text-on-surface',
           )}
         >

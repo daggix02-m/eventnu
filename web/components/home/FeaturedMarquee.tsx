@@ -20,6 +20,43 @@ interface FeaturedMarqueeProps {
 const PX_PER_SECOND = 80
 const PX_PER_SECOND_SUBTLE = 24
 
+export interface TapGuard {
+  start: () => void
+  move: (dx: number) => void
+  end: () => void
+  shouldSuppressClick: () => boolean
+}
+
+/**
+ * Distinguishes a tap from a drag for touch interactions.
+ *
+ * The marquee tracks horizontal finger movement manually, which means a drag
+ * released over a card fires a `click` on the card's <Link> — on a phone,
+ * swiping through the strip could navigate into random event pages. This guard
+ * remembers how far the finger travelled since touchstart; if it exceeded the
+ * tap slop by the time the touch ended, the subsequent click must be
+ * suppressed. Kept pure so the tap-vs-drag rule is unit-testable.
+ */
+export function createTapGuard(tapSlop = 10): TapGuard {
+  let moved = 0
+  let suppress = false
+  return {
+    start() {
+      moved = 0
+      suppress = false
+    },
+    move(dx: number) {
+      moved += Math.abs(dx)
+    },
+    end() {
+      suppress = moved > tapSlop
+    },
+    shouldSuppressClick() {
+      return suppress
+    },
+  }
+}
+
 function getPrimaryCategory(event: Event) {
   return (
     event.event_categories?.find((ec) => ec.is_primary)?.categories ??
@@ -50,6 +87,10 @@ export function FeaturedMarquee({ events }: FeaturedMarqueeProps) {
   const hoveredRef = useRef(false)
   const touchRef = useRef({ active: false, startX: 0, lastX: 0 })
   const translateRef = useRef(0)
+  // Distinguishes a tap from a swipe so a drag released over a card does not
+  // fire the card's click (which would navigate into a random event page).
+  const tapGuardRef = useRef(createTapGuard())
+  const suppressResetTimerRef = useRef<number>(0)
   // Width of ONE row (track A), including its trailing gap. This is the loop
   // period: track B sits exactly one period to the right of track A.
   const trackWidthRef = useRef(0)
@@ -135,7 +176,10 @@ export function FeaturedMarquee({ events }: FeaturedMarqueeProps) {
 
   // Cleanup on unmount
   useEffect(() => {
-    return () => cancelAnimationFrame(rafRef.current)
+    return () => {
+      cancelAnimationFrame(rafRef.current)
+      window.clearTimeout(suppressResetTimerRef.current)
+    }
   }, [])
 
   // Hover: pause auto-scroll (desktop only — touch devices must not pause)
@@ -174,6 +218,7 @@ export function FeaturedMarquee({ events }: FeaturedMarqueeProps) {
   const onTouchStart = useCallback((e: React.TouchEvent) => {
     hoveredRef.current = true
     touchRef.current = { active: true, startX: e.touches[0].clientX, lastX: e.touches[0].clientX }
+    tapGuardRef.current.start()
   }, [])
 
   const onTouchMove = useCallback(
@@ -182,6 +227,7 @@ export function FeaturedMarquee({ events }: FeaturedMarqueeProps) {
 
       const dx = e.touches[0].clientX - touchRef.current.lastX
       touchRef.current.lastX = e.touches[0].clientX
+      tapGuardRef.current.move(dx)
 
       translateRef.current += dx
 
@@ -203,10 +249,30 @@ export function FeaturedMarquee({ events }: FeaturedMarqueeProps) {
   const endTouch = useCallback(() => {
     touchRef.current.active = false
     hoveredRef.current = false
+    tapGuardRef.current.end()
+    // A click fires immediately after touchend; suppress it if the finger
+    // actually dragged. Reset shortly after so the NEXT genuine tap is not
+    // eaten (browsers that suppress clicks after a drag never reach us here).
+    if (tapGuardRef.current.shouldSuppressClick()) {
+      window.clearTimeout(suppressResetTimerRef.current)
+      suppressResetTimerRef.current = window.setTimeout(() => {
+        tapGuardRef.current.start()
+      }, 400)
+    }
   }, [])
 
   const onTouchEnd = endTouch
   const onTouchCancel = endTouch
+
+  // Suppress clicks that follow a drag (the finger moved beyond the tap slop),
+  // so swiping the marquee never navigates into a card. Runs in the capture
+  // phase so it beats the Link's own click handling.
+  const onClickCapture = useCallback((e: React.MouseEvent) => {
+    if (!tapGuardRef.current.shouldSuppressClick()) return
+    e.preventDefault()
+    e.stopPropagation()
+    tapGuardRef.current.start()
+  }, [])
 
   // Render each card
   const renderCard = useCallback((event: Event, index: number) => {
@@ -296,6 +362,7 @@ export function FeaturedMarquee({ events }: FeaturedMarqueeProps) {
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
         onTouchCancel={onTouchCancel}
+        onClickCapture={onClickCapture}
         style={{ cursor: 'grab', touchAction: 'pan-y' }}
         aria-label="Featured events marquee"
         role="region"

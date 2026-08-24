@@ -26,7 +26,7 @@ export function OrganizersClient({
   stats,
 }: OrganizersClientProps) {
   return (
-    <div className="relative min-h-screen bg-background text-on-background overflow-hidden selection:bg-primary/30 selection:text-white">
+    <div className="relative min-h-dvh bg-background text-on-background overflow-hidden selection:bg-primary/30 selection:text-white">
       <OrganizersHero contactUrl={contactUrl} events={events} categoryCount={categoryCount} />
       <OrganizersTrustBar />
       <OrganizersValuePillars />

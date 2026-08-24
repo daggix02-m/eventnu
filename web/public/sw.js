@@ -55,39 +55,59 @@ self.addEventListener('fetch', (event) => {
   if (
     url.pathname.startsWith('/api/') ||
     url.hostname.includes('convex.cloud') ||
-    url.hostname.includes('convex.site') ||
-    url.searchParams.has('_rsc')
+    url.hostname.includes('convex.site')
   ) {
     return
   }
 
-  // Navigation requests (HTML pages) -> Network-first with cache/offline fallback
-  if (request.mode === 'navigate') {
+  const isNavigation = request.mode === 'navigate'
+  const isRsc = url.searchParams.has('_rsc')
+  const isStaticAsset =
+    url.pathname.startsWith('/icons/') ||
+    url.pathname.startsWith('/images/') ||
+    url.pathname.match(/\.(png|jpg|jpeg|svg|webp|gif|woff2|woff|ttf|css|js)$/i)
+
+  // Navigation + RSC payloads (client-side route transitions) share a strategy:
+  // network-first with cache fallback, so offline navigation is instant instead
+  // of flashing a loading skeleton. Cache keys are normalized to the pathname —
+  // query strings (`/schedule?date=X`) and the rotating `_rsc` nonce would
+  // otherwise grow the cache without bound on low-end Android devices.
+  if (isNavigation || isRsc) {
+    const cacheKey = url.pathname
     event.respondWith(
       fetch(request)
         .then((response) => {
-          if (response.status === 200) {
+          if (response.status === 200 && response.type === 'basic') {
             const responseClone = response.clone()
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, responseClone))
+            caches.open(CACHE_NAME).then((cache) => cache.put(cacheKey, responseClone))
           }
           return response
         })
         .catch(async () => {
-          const cachedResponse = await caches.match(request)
+          const cachedResponse = await caches.match(cacheKey)
           if (cachedResponse) return cachedResponse
+          if (isRsc) {
+            // Let the Next.js router fall back to a full (cached) navigation.
+            return new Response('', {
+              status: 503,
+              headers: { 'Content-Type': 'application/json' },
+            })
+          }
           const offlinePage = await caches.match(OFFLINE_URL)
-          return offlinePage || new Response('Offline', { status: 503, headers: { 'Content-Type': 'text/plain' } })
+          return (
+            offlinePage ||
+            new Response('Offline', {
+              status: 503,
+              headers: { 'Content-Type': 'text/plain' },
+            })
+          )
         }),
     )
     return
   }
 
   // Static assets (images, fonts, scripts, styles) -> Stale-while-revalidate
-  if (
-    url.pathname.startsWith('/icons/') ||
-    url.pathname.startsWith('/images/') ||
-    url.pathname.match(/\.(png|jpg|jpeg|svg|webp|gif|woff2|woff|ttf|css|js)$/i)
-  ) {
+  if (isStaticAsset) {
     event.respondWith(
       caches.match(request).then((cachedResponse) => {
         const fetchPromise = fetch(request)

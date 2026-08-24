@@ -12,6 +12,7 @@ import { EmptyScheduleState } from './EmptyScheduleState'
 import type { Event, Category } from '@/types'
 import { toDateString, getTodayString, nextFriday, getHourInTimeZone } from '@/lib/dates'
 import { canSmoothScroll } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 
 interface ScheduleClientProps {
   events: Event[]
@@ -204,7 +205,7 @@ export function ScheduleClient({
   }, [selectedDate])
 
   return (
-    <main
+    <section
       ref={containerRef}
       className="w-full max-w-container-max mx-auto px-4 md:px-gutter py-6 md:py-10 space-y-6 md:space-y-8"
     >
@@ -260,7 +261,16 @@ export function ScheduleClient({
 
       {/* Timeline Stream / Empty State */}
       {filteredEvents.length > 0 ? (
-        <div ref={listRef} className="w-full space-y-4">
+        <div
+          ref={listRef}
+          className={cn(
+            'w-full space-y-4',
+            // When the floating itinerary dock is visible it overlays the
+            // bottom of the timeline — pad the list so the last card can
+            // scroll above it (MainContent's tab-bar padding isn't enough).
+            plannedEvents.length > 0 && 'pb-44',
+          )}
+        >
           {filteredEvents.map((event) => {
             const isPlanned = plannedEvents.some((e) => e.id === event.id)
             const isHighlighted = highlightedEventId === event.id
@@ -291,6 +301,6 @@ export function ScheduleClient({
 
       {/* Sticky Floating Itinerary Dock */}
       <ItineraryFloatingDock plannedEvents={plannedEvents} onClearPlan={handleClearPlan} />
-    </main>
+    </section>
   )
 }

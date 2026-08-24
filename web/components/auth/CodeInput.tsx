@@ -139,7 +139,7 @@ export function CodeInput({
     <div
       role="group"
       aria-label="Verification code"
-      className={cn('flex gap-1.5 sm:gap-2', className)}
+      className={cn('flex gap-1.5 sm:gap-2 overflow-x-auto scrollbar-none', className)}
     >
       {chars.map((char, i) => (
         <input
@@ -158,7 +158,7 @@ export function CodeInput({
           aria-label={`Character ${i + 1} of ${length}`}
           aria-invalid={error || undefined}
           className={cn(
-            'h-12 w-8 sm:h-14 sm:w-10',
+            'h-12 w-9 min-w-9 sm:h-14 sm:w-10 sm:min-w-10',
             'rounded-xl border text-center font-mono text-lg font-semibold uppercase',
             'bg-surface-container-low text-on-surface',
             'placeholder:text-on-surface-variant',

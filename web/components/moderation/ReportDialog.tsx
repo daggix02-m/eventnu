@@ -100,7 +100,7 @@ export function ReportDialog({
               id="report-reason"
               value={reason}
               onChange={(event) => setReason(event.target.value as (typeof reasons)[number][0])}
-              className="w-full rounded-xl border border-outline-variant bg-surface-container px-3 py-2 text-sm text-on-surface"
+              className="w-full rounded-xl border border-outline-variant bg-surface-container px-3 py-2 text-base text-on-surface"
             >
               {reasons.map(([value, label]) => (
                 <option key={value} value={value}>
@@ -117,7 +117,7 @@ export function ReportDialog({
               onChange={(event) => setDetails(event.target.value)}
               maxLength={1000}
               rows={4}
-              className="w-full resize-none rounded-xl border border-outline-variant bg-surface-container px-3 py-2 text-sm text-on-surface"
+              className="w-full resize-none rounded-xl border border-outline-variant bg-surface-container px-3 py-2 text-base text-on-surface"
               placeholder="Add context that can help our review."
             />
             {message && (

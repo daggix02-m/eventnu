@@ -77,7 +77,7 @@ const FieldBox = React.forwardRef<HTMLInputElement, FieldBoxProps>(
                 : isActive
                   ? 'border-primary'
                   : 'border-outline-variant',
-              showPasswordToggle && 'pr-12',
+              showPasswordToggle && 'pr-14',
               className,
             )}
             {...props}
@@ -98,7 +98,7 @@ const FieldBox = React.forwardRef<HTMLInputElement, FieldBoxProps>(
               type="button"
               tabIndex={0}
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-2 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-on-surface-variant transition-colors hover:text-on-surface"
+              className="absolute right-2 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-lg text-on-surface-variant transition-colors hover:text-on-surface"
               aria-label={showPassword ? 'Hide password' : 'Show password'}
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}

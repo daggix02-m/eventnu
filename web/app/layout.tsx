@@ -13,6 +13,7 @@ import { AuthRedirectProvider } from '@/components/auth/AuthRedirectContext'
 import { MainContent } from '@/components/layout/MainContent'
 
 import { ServiceWorkerRegister } from '@/components/pwa/ServiceWorkerRegister'
+import { OfflineBanner } from '@/components/pwa/OfflineBanner'
 import { InstallPrompt } from '@/components/pwa/InstallPrompt'
 import { SiteBackground } from '@/components/layout/SiteBackground'
 
@@ -51,8 +52,11 @@ export const metadata: Metadata = {
       { url: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/png' },
     ],
     apple: [
-      { url: '/logo.png', sizes: '180x180', type: 'image/png' },
+      // NOTE: keep only square PNGs here. iOS reads apple-touch-icon links
+      // for the home-screen icon; a non-square image gets letterboxed.
       { url: '/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+      { url: '/icons/apple-touch-icon.png', sizes: '152x152', type: 'image/png' },
+      { url: '/icons/apple-touch-icon.png', sizes: '167x167', type: 'image/png' },
     ],
     shortcut: '/logo.png',
   },
@@ -60,6 +64,13 @@ export const metadata: Metadata = {
     capable: true,
     statusBarStyle: 'black-translucent',
     title: 'Event Nu',
+  },
+  // Next.js 16 renders `appleWebApp.capable` as the Android-only
+  // `mobile-web-app-capable` meta, which iOS Safari ignores — so emit the
+  // iOS tag explicitly. Without it iOS may open the home-screen icon inside
+  // a Safari tab instead of standalone full-screen mode.
+  other: {
+    'apple-mobile-web-app-capable': 'yes',
   },
   openGraph: {
     title: 'Event Nu — Discover Live Experiences in Addis',
@@ -111,6 +122,7 @@ export default function RootLayout({
               <SkipLink />
               <SiteBackground />
               <ServiceWorkerRegister />
+              <OfflineBanner />
               <TopNav />
               <MainContent>{children}</MainContent>
               <ConditionalFooter>

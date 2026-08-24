@@ -12,7 +12,7 @@ export function SimilarEvents({ events }: SimilarEventsProps) {
   if (upcoming.length === 0) return null
 
   return (
-    <section className="px-4 sm:px-6 lg:px-8 py-10 sm:py-14 pb-24 md:pb-14 bg-surface-container-lowest border-t border-outline-variant/30">
+    <section className="px-4 sm:px-6 lg:px-8 py-10 sm:py-14 pb-52 md:pb-14 bg-surface-container-lowest border-t border-outline-variant/30">
       <div className="w-full max-w-7xl mx-auto space-y-6">
         <div>
           <h2 className="font-display text-xl sm:text-2xl md:text-3xl font-extrabold text-on-surface">
