@@ -11,7 +11,9 @@
     "knip": "knip",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "perf": "npx @lhci/cli autorun --config=lighthouserc.json",
+    "build:analyze": "ANALYZE=true npm run build"
   },
   "dependencies": {
     "@auth/core": "^0.41.1",
