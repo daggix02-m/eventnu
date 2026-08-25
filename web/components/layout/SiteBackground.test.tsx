@@ -60,6 +60,7 @@ beforeEach(() => {
 afterEach(() => {
   vi.unstubAllGlobals()
   vi.useRealTimers()
+  Reflect.deleteProperty(navigator, 'deviceMemory')
 })
 
 describe('SiteBackground', () => {
@@ -95,5 +96,34 @@ describe('SiteBackground', () => {
     expect(document.querySelector('.static-frame')).toBeInTheDocument()
     act(() => vi.advanceTimersByTime(1000))
     expect(screen.getByTestId('pixel-blast')).toBeInTheDocument()
+  })
+
+  it('renders the static frame instead of the shader on very low-end devices', async () => {
+    stubMatchMedia(false)
+    Object.defineProperty(navigator, 'deviceMemory', { configurable: true, value: 2 })
+    render(<SiteBackground />)
+    act(() => fireIntersection(true))
+    await act(async () => {
+      await Promise.resolve()
+    })
+    expect(screen.queryByTestId('pixel-blast')).not.toBeInTheDocument()
+    expect(document.querySelector('.static-frame')).toBeInTheDocument()
+  })
+
+  it('still mounts the shader on capable devices', async () => {
+    stubMatchMedia(false)
+    Object.defineProperty(navigator, 'deviceMemory', { configurable: true, value: 8 })
+    render(<SiteBackground />)
+    act(() => fireIntersection(true))
+    expect(await screen.findByTestId('pixel-blast')).toBeInTheDocument()
+  })
+
+  it('tints the shader with the theme primary color', async () => {
+    stubMatchMedia(false)
+    document.documentElement.style.setProperty('--color-primary', '#d0bcff')
+    render(<SiteBackground />)
+    act(() => fireIntersection(true))
+    const shader = await screen.findByTestId('pixel-blast')
+    expect(shader.getAttribute('color')).toBe('#d0bcff')
   })
 })

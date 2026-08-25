@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 import { filterStyle, sortedImages } from '@/lib/media'
 import { useMotionPreference } from '@/lib/hooks/useMotionPreference'
 import { formatShortDate } from '@/lib/dates'
+import { shouldAnimateMarquee } from '@/lib/marquee'
 import type { Event } from '@/types'
 
 interface FeaturedMarqueeProps {
@@ -97,10 +98,41 @@ export function FeaturedMarquee({ events }: FeaturedMarqueeProps) {
   // True when the device has a real pointer that hovers (mouse/trackpad).
   // iOS/Android tap-to-hover emulation must NOT pause the auto-scroll.
   const canHoverRef = useRef(false)
+  // True while the strip intersects the viewport and the tab is visible.
+  // Default to true until told otherwise (observers are async) so the loop
+  // never starts paused.
+  const inViewRef = useRef(true)
+  const tabVisibleRef = useRef(true)
 
   useEffect(() => {
     const mqHover = window.matchMedia('(hover: hover)')
     canHoverRef.current = mqHover.matches
+  }, [])
+
+  // Pause the loop when the strip scrolls out of view or the tab is
+  // backgrounded. Continuous translate work for content nobody can see wastes
+  // CPU/GPU on iOS and competes with the background shader's own rAF loop.
+  // The tick still runs (cheaply) so it can resume instantly — see
+  // shouldAnimateMarquee in lib/marquee.ts.
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const onVisibility = () => {
+      tabVisibleRef.current = document.visibilityState === 'visible'
+    }
+    onVisibility()
+    document.addEventListener('visibilitychange', onVisibility)
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        inViewRef.current = entry.isIntersecting
+      },
+      { rootMargin: '200px' },
+    )
+    io.observe(el)
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility)
+      io.disconnect()
+    }
   }, [])
 
   // Measure one row's width for the infinite-loop reset
@@ -156,7 +188,13 @@ export function FeaturedMarquee({ events }: FeaturedMarqueeProps) {
       const dt = Math.min((now - lastTime) / 1000, 0.25)
       lastTime = now
 
-      if (!hoveredRef.current) {
+      if (
+        shouldAnimateMarquee({
+          inView: inViewRef.current,
+          tabVisible: tabVisibleRef.current,
+          hovered: hoveredRef.current,
+        })
+      ) {
         translateRef.current -= speed * dt
 
         const tw = trackWidthRef.current
@@ -304,6 +342,13 @@ export function FeaturedMarquee({ events }: FeaturedMarqueeProps) {
             src={imageUrl}
             alt={event.title}
             fill
+            // First cards above the fold load eagerly at high priority so the
+            // strip paints fast; the rest (incl. the whole clone track B, which
+            // reuses the same URLs and is a cache hit) stay at default lazy +
+            // low priority so they never compete with the LCP hero.
+            priority={index < 3}
+            fetchPriority={index < 3 ? undefined : 'low'}
+            decoding="async"
             className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
             style={{ filter: filterStyle(imgFilter) }}
             sizes="(max-width: 768px) 208px, (max-width: 1024px) 256px, 288px"
@@ -375,6 +420,7 @@ export function FeaturedMarquee({ events }: FeaturedMarqueeProps) {
           {/* Track A */}
           <div
             ref={trackARef}
+            data-track="a"
             className="flex gap-3 md:gap-4 lg:gap-5 shrink-0 pr-3 md:pr-4 lg:pr-5"
           >
             {events.map((event, i) => renderCard(event, i))}
@@ -382,6 +428,7 @@ export function FeaturedMarquee({ events }: FeaturedMarqueeProps) {
           {/* Track B — identical clone for seamless infinite loop */}
           <div
             ref={trackBRef}
+            data-track="b"
             className="flex gap-3 md:gap-4 lg:gap-5 shrink-0 pr-3 md:pr-4 lg:pr-5"
           >
             {events.map((event, i) => renderCard(event, i + events.length))}

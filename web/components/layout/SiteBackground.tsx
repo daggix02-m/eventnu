@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
+import { isLowEndDevice, readThemePrimary } from '@/lib/background'
 
 const PixelBlast = dynamic(() => import('@/components/effects/PixelBlast'), { ssr: false })
 
@@ -34,6 +35,13 @@ const staticFrameStyle = {
 export function SiteBackground() {
   const [reducedMotion, setReducedMotion] = useState(false)
   const [inView, setInView] = useState(false)
+  // Very low-end devices (≤2 GB RAM, or ≤4 GB with few cores) skip the shader
+  // entirely and get the CSS static frame — the WebGL loop would otherwise
+  // saturate their GPU. Everything else keeps the full ambient shader.
+  const [lowEndDevice, setLowEndDevice] = useState(false)
+  // Read the theme's --color-primary so the shader matches the marquee/button
+  // accents. Falls back to the previous violet until the stylesheet applies.
+  const [shaderColor, setShaderColor] = useState('#B497CF')
   const sentinelRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -42,6 +50,17 @@ export function SiteBackground() {
     const handler = (e: MediaQueryListEvent) => setReducedMotion(e.matches)
     mq.addEventListener('change', handler)
     return () => mq.removeEventListener('change', handler)
+  }, [])
+
+  useEffect(() => {
+    const nav = navigator as Navigator & { deviceMemory?: number }
+    setLowEndDevice(
+      isLowEndDevice({
+        deviceMemory: nav.deviceMemory,
+        hardwareConcurrency: navigator.hardwareConcurrency,
+      }),
+    )
+    setShaderColor(readThemePrimary('#B497CF'))
   }, [])
 
   useEffect(() => {
@@ -69,14 +88,17 @@ export function SiteBackground() {
 
   return (
     <div ref={sentinelRef} className="fixed inset-0 z-[-1] pointer-events-none" aria-hidden="true">
-      {inView ? (
+      {inView && !lowEndDevice ? (
         <PixelBlast
           variant="square"
           pixelSize={3}
-          color="#B497CF"
+          color={shaderColor}
           patternScale={2}
           patternDensity={1}
-          enableRipples
+          // This background is decorative only: the wrapper is pointer-events-none
+          // behind all content, so the pointer ripples can never fire here. Disable
+          // them so desktop GPUs don't run the per-fragment ripple loop for nothing.
+          enableRipples={false}
           rippleSpeed={0.3}
           rippleThickness={0.1}
           rippleIntensityScale={1}
