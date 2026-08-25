@@ -119,7 +119,7 @@ export function OrganizersCheckinShowcase() {
           <div ref={mockupRef} className="flex-1 w-full flex justify-center">
             <div className="relative">
               {/* Phone frame */}
-              <div className="relative w-[280px] md:w-[320px] h-[520px] rounded-[40px] border-[8px] border-surface-container-high bg-background shadow-2xl shadow-black/60 overflow-hidden flex flex-col">
+              <div className="relative w-full max-w-[280px] md:max-w-[320px] h-[520px] rounded-[40px] border-[8px] border-surface-container-high bg-background shadow-2xl shadow-black/60 overflow-hidden flex flex-col">
                 {/* Notch */}
                 <div
                   className="absolute top-2.5 left-1/2 -translate-x-1/2 w-24 h-4 bg-black rounded-full z-20"

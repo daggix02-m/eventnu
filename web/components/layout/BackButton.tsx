@@ -36,7 +36,7 @@ export function BackButton({ historyLength }: BackButtonProps) {
       type="button"
       onClick={() => router.back()}
       aria-label="Back"
-      className="inline-flex items-center gap-1 rounded-full bg-black/60 px-2.5 py-1.5 backdrop-blur-md border border-white/10 text-white/90 hover:text-white text-xs font-semibold transition-colors cursor-pointer"
+      className="inline-flex items-center gap-1 rounded-full bg-black/60 px-2.5 min-h-11 backdrop-blur-md border border-white/10 text-white/90 hover:text-white text-xs font-semibold transition-colors cursor-pointer"
     >
       <ChevronLeft className="w-4 h-4" aria-hidden="true" />
       <span>Back</span>

@@ -6,9 +6,10 @@ import { api } from '@eventnu/convex/_generated/api'
 import type { FunctionReturnType } from 'convex/server'
 import type { Id } from '@eventnu/convex/_generated/dataModel'
 import { useConvexAuth } from '@convex-dev/auth/react'
-import { Heart, Bookmark, Share2, Check, Loader2 } from 'lucide-react'
+import { Heart, Bookmark, Share2, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuthRedirect } from '@/components/auth/AuthRedirectContext'
+import { useOptimisticToggle } from '@/lib/hooks/useOptimisticToggle'
 import {
   Dialog,
   DialogContent,
@@ -46,7 +47,6 @@ export function BulkSocialProvider({
   children: React.ReactNode
 }) {
   const { isAuthenticated } = useConvexAuth()
-  // Dedupe + sort so the args are canonical (stable across re-renders).
   const ids = useMemo(() => [...new Set(eventIds)].sort() as Id<'events'>[], [eventIds])
   const liked = useQuery(api.likes.hasLikedBulk, isAuthenticated ? { eventIds: ids } : 'skip')
   const saved = useQuery(
@@ -74,27 +74,26 @@ function LikeButton({
   variant?: 'outline' | 'icon'
 }) {
   const { isAuthenticated, isLoading, openAuth } = useAuthGate()
-  const toggle = useMutation(api.likes.toggle)
   const liked = useQuery(
     api.likes.hasLiked,
     isAuthenticated ? { eventId: eventId as Id<'events'> } : 'skip',
   )
   const count = useQuery(api.likes.countByEvent, { eventId: eventId as Id<'events'> })
-  const [pending, setPending] = useState(false)
 
-  const handleClick = async () => {
+  const toggleLike = useOptimisticToggle({
+    eventId,
+    query: api.likes.hasLiked,
+    bulkQuery: api.likes.hasLikedBulk,
+    countQuery: api.likes.countByEvent,
+    mutation: api.likes.toggle,
+  })
+
+  const handleClick = () => {
     if (!isAuthenticated) {
       openAuth()
       return
     }
-    setPending(true)
-    try {
-      await toggle({ eventId: eventId as Id<'events'> })
-    } catch {
-      /* swallow */
-    } finally {
-      setPending(false)
-    }
+    toggleLike(liked ?? false)
   }
 
   const buttonClass =
@@ -111,16 +110,12 @@ function LikeButton({
     <button
       type="button"
       onClick={handleClick}
-      disabled={pending || isLoading}
+      disabled={isLoading}
       aria-pressed={!!liked}
       aria-label={liked ? 'Unlike this event' : 'Like this event'}
       className={cn(buttonClass, className)}
     >
-      {pending ? (
-        <Loader2 className="h-4 w-4 animate-spin" />
-      ) : (
-        <Heart className={cn('h-4 w-4', liked && 'fill-primary text-primary')} aria-hidden="true" />
-      )}
+      <Heart className={cn('h-4 w-4', liked && 'fill-primary text-primary')} aria-hidden="true" />
       {variant !== 'icon' && <span>{count ?? 0}</span>}
     </button>
   )
@@ -138,7 +133,6 @@ function BookmarkButton({
   label?: string
 }) {
   const { isAuthenticated, isLoading, openAuth } = useAuthGate()
-  const toggle = useMutation(api.bookmarks.toggle)
   const moveToFolder = useMutation(api.bookmarks.moveToFolder)
   const createFolder = useMutation(api.bookmarks.createFolder)
   const saved = useQuery(
@@ -146,25 +140,27 @@ function BookmarkButton({
     isAuthenticated ? { eventId: eventId as Id<'events'> } : 'skip',
   )
   const folders = useQuery(api.bookmarks.listFolders, isAuthenticated ? {} : 'skip')
-  const [pending, setPending] = useState(false)
   const [showFolderPicker, setShowFolderPicker] = useState(false)
   const [newFolderName, setNewFolderName] = useState('')
   const [folderPending, setFolderPending] = useState(false)
 
-  const handleClick = async () => {
+  const toggleBookmark = useOptimisticToggle({
+    eventId,
+    query: api.bookmarks.hasBookmarked,
+    bulkQuery: api.bookmarks.hasBookmarkedBulk,
+    countQuery: api.bookmarks.countByEvent,
+    mutation: api.bookmarks.toggle,
+  })
+
+  const handleClick = () => {
     if (!isAuthenticated) {
       openAuth()
       return
     }
-    setPending(true)
-    try {
-      const nextSaved = await toggle({ eventId: eventId as Id<'events'> })
-      if (nextSaved) setShowFolderPicker(true)
-    } catch {
-      /* swallow */
-    } finally {
-      setPending(false)
-    }
+    const wasSaved = saved ?? false
+    toggleBookmark(wasSaved)
+    // Show folder picker when saving (not when unsaving).
+    if (!wasSaved) setShowFolderPicker(true)
   }
 
   const buttonClass =
@@ -209,21 +205,17 @@ function BookmarkButton({
       <button
         type="button"
         onClick={handleClick}
-        disabled={pending || isLoading}
+        disabled={isLoading}
         aria-pressed={!!saved}
         aria-label={
           saved ? 'Remove from saved events' : `Save this event${label ? ` (${label})` : ''}`
         }
         className={cn(buttonClass, className)}
       >
-        {pending ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
-        ) : (
-          <Bookmark
-            className={cn('h-4 w-4', saved && 'fill-primary text-primary')}
-            aria-hidden="true"
-          />
-        )}
+        <Bookmark
+          className={cn('h-4 w-4', saved && 'fill-primary text-primary')}
+          aria-hidden="true"
+        />
         {variant !== 'icon' && <span>{label}</span>}
       </button>
       <Dialog open={showFolderPicker} onOpenChange={setShowFolderPicker}>
@@ -383,37 +375,63 @@ export function CardQuickActions({
   className?: string
 }) {
   const { isAuthenticated, isLoading, openAuth } = useAuthGate()
-  const toggleLike = useMutation(api.likes.toggle)
-  const toggleBookmark = useMutation(api.bookmarks.toggle)
   const bulk = useContext(BulkSocialContext)
   const coveredByBulk = bulk?.coveredIds.has(eventId) ?? false
-  const likedQuery = useQuery(
-    api.likes.hasLiked,
-    isAuthenticated && !coveredByBulk ? { eventId: eventId as Id<'events'> } : 'skip',
-  )
-  const savedQuery = useQuery(
-    api.bookmarks.hasBookmarked,
-    isAuthenticated && !coveredByBulk ? { eventId: eventId as Id<'events'> } : 'skip',
-  )
-  const liked = coveredByBulk ? (bulk?.likedIds.has(eventId) ?? false) : (likedQuery ?? false)
-  const saved = coveredByBulk ? (bulk?.savedIds.has(eventId) ?? false) : (savedQuery ?? false)
+
+  // For list pages, use the bulk context for instant reads.
+  // The optimistic toggle patches the bulk query cache directly.
+  const liked = coveredByBulk ? (bulk?.likedIds.has(eventId) ?? false) : undefined
+  const saved = coveredByBulk ? (bulk?.savedIds.has(eventId) ?? false) : undefined
+
+  const toggleLike = useOptimisticToggle({
+    eventId,
+    query: api.likes.hasLiked,
+    bulkQuery: api.likes.hasLikedBulk,
+    countQuery: api.likes.countByEvent,
+    mutation: api.likes.toggle,
+    feedQueries: [
+      api.events.read.getPublished,
+      api.events.read.getFeatured,
+      api.events.read.getByCategory,
+      api.events.read.getSimilar,
+    ],
+  })
+
+  const toggleBookmark = useOptimisticToggle({
+    eventId,
+    query: api.bookmarks.hasBookmarked,
+    bulkQuery: api.bookmarks.hasBookmarkedBulk,
+    countQuery: api.bookmarks.countByEvent,
+    mutation: api.bookmarks.toggle,
+    feedQueries: [
+      api.events.read.getPublished,
+      api.events.read.getFeatured,
+      api.events.read.getByCategory,
+      api.events.read.getSimilar,
+    ],
+  })
 
   const guard = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
   }
 
-  const handle = async (e: React.MouseEvent, action: () => Promise<unknown>) => {
+  const handleLike = (e: React.MouseEvent) => {
     guard(e)
     if (!isAuthenticated) {
       openAuth()
       return
     }
-    try {
-      await action()
-    } catch {
-      /* swallow */
+    toggleLike(liked ?? false)
+  }
+
+  const handleBookmark = (e: React.MouseEvent) => {
+    guard(e)
+    if (!isAuthenticated) {
+      openAuth()
+      return
     }
+    toggleBookmark(saved ?? false)
   }
 
   const share = async (e: React.MouseEvent) => {
@@ -441,41 +459,30 @@ export function CardQuickActions({
     >
       <button
         type="button"
-        onClick={(e) => handle(e, () => toggleLike({ eventId: eventId as Id<'events'> }))}
+        onClick={handleLike}
         disabled={isLoading}
         aria-pressed={!!liked}
         aria-label={liked ? 'Unlike this event' : 'Like this event'}
         className={cn(
-          'rounded-full text-white transition-colors',
+          'inline-flex h-11 w-11 items-center justify-center rounded-full text-white transition-colors',
           compact || transparent ? 'hover:text-error' : 'hover:bg-white/10',
-          compact ? 'p-3' : transparent ? 'p-2.5' : 'p-2',
         )}
       >
-        <Heart
-          className={cn(
-            compact || transparent ? 'h-4 w-4' : 'h-4 w-4',
-            liked && 'fill-error text-error',
-          )}
-          aria-hidden="true"
-        />
+        <Heart className={cn('h-4 w-4', liked && 'fill-error text-error')} aria-hidden="true" />
       </button>
       <button
         type="button"
-        onClick={(e) => handle(e, () => toggleBookmark({ eventId: eventId as Id<'events'> }))}
+        onClick={handleBookmark}
         disabled={isLoading}
         aria-pressed={!!saved}
         aria-label={saved ? 'Remove from saved events' : 'Save this event'}
         className={cn(
-          'rounded-full text-white transition-colors',
+          'inline-flex h-11 w-11 items-center justify-center rounded-full text-white transition-colors',
           compact || transparent ? 'hover:text-primary' : 'hover:bg-white/10',
-          compact ? 'p-3' : transparent ? 'p-2.5' : 'p-2',
         )}
       >
         <Bookmark
-          className={cn(
-            compact || transparent ? 'h-4 w-4' : 'h-4 w-4',
-            saved && 'fill-primary text-primary',
-          )}
+          className={cn('h-4 w-4', saved && 'fill-primary text-primary')}
           aria-hidden="true"
         />
       </button>
@@ -485,12 +492,11 @@ export function CardQuickActions({
           onClick={share}
           aria-label="Share this event"
           className={cn(
-            'rounded-full text-white transition-colors',
+            'inline-flex h-11 w-11 items-center justify-center rounded-full text-white transition-colors',
             compact || transparent ? 'hover:text-primary' : 'hover:bg-white/10',
-            compact ? 'p-3' : transparent ? 'p-2.5' : 'p-2',
           )}
         >
-          <Share2 className={compact || transparent ? 'h-4 w-4' : 'h-4 w-4'} aria-hidden="true" />
+          <Share2 className="h-4 w-4" />
         </button>
       )}
     </div>

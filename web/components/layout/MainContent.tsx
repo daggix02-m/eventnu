@@ -10,7 +10,7 @@ export function MainContent({ children }: { children: ReactNode }) {
   return (
     <main
       id="main-content"
-      className={isAuth ? 'overflow-x-clip' : 'min-h-dvh pb-24 md:pb-0 overflow-x-clip'}
+      className={isAuth ? 'overflow-x-clip' : 'min-h-dvh pb-tabbar-safe md:pb-0 overflow-x-clip'}
       tabIndex={-1}
     >
       {children}

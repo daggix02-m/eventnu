@@ -186,7 +186,7 @@ export function ScheduleEventCard({
               type="button"
               onClick={() => onTogglePlan(event)}
               className={cn(
-                'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 select-none border',
+                'inline-flex items-center gap-1.5 px-3 py-1.5 min-h-11 rounded-xl text-xs font-semibold transition-all duration-200 select-none border',
                 isPlanned
                   ? 'bg-secondary/20 text-secondary border-secondary/50 font-semibold'
                   : 'bg-surface-container-highest/60 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest border-outline-variant/40',
@@ -211,7 +211,7 @@ export function ScheduleEventCard({
               <DropdownMenuTrigger asChild>
                 <button
                   type="button"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 transition-all duration-200"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-11 rounded-xl text-xs font-semibold bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 transition-all duration-200"
                 >
                   <CalendarPlus className="w-3.5 h-3.5" />
                   <span>Add to Calendar</span>
@@ -284,7 +284,7 @@ export function ScheduleEventCard({
             {/* View Event Link */}
             <Link
               href={`/events/${event.slug || event.id}`}
-              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold bg-surface-container-highest hover:bg-surface-container text-on-surface border border-outline-variant/50 transition-colors"
+              className="inline-flex items-center gap-1 px-3 py-1.5 min-h-11 rounded-xl text-xs font-semibold bg-surface-container-highest hover:bg-surface-container text-on-surface border border-outline-variant/50 transition-colors"
             >
               <span>Details</span>
             </Link>

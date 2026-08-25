@@ -5,7 +5,7 @@ import { useMutation } from 'convex/react'
 import { api } from '@eventnu/convex/_generated/api'
 import type { Id } from '@eventnu/convex/_generated/dataModel'
 import { Button } from '@/components/ui/button'
-import { Ticket, Loader2, CheckCircle2, AlertCircle } from 'lucide-react'
+import { Ticket, Clock, CheckCircle2, AlertCircle } from 'lucide-react'
 import type { Event } from '@/types'
 
 interface ReservationFormProps {
@@ -20,7 +20,7 @@ export function ReservationForm({ event }: ReservationFormProps) {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [message, setMessage] = useState('')
-  const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
+  const [status, setStatus] = useState<'idle' | 'pending' | 'done' | 'error'>('idle')
   const [error, setError] = useState('')
 
   const remaining =
@@ -35,7 +35,7 @@ export function ReservationForm({ event }: ReservationFormProps) {
       setError('Please provide your name and email.')
       return
     }
-    setStatus('loading')
+    setStatus('pending')
     setError('')
     try {
       await createReservation({
@@ -178,11 +178,11 @@ export function ReservationForm({ event }: ReservationFormProps) {
           type="submit"
           size="lg"
           className="w-full font-bold text-sm rounded-xl"
-          disabled={status === 'loading'}
+          disabled={status === 'pending'}
         >
-          {status === 'loading' ? (
+          {status === 'pending' ? (
             <>
-              <Loader2 className="w-4 h-4 animate-spin mr-2" /> Submitting Request...
+              <Clock className="w-4 h-4 mr-2 animate-pulse" /> Reservation Pending...
             </>
           ) : (
             'Confirm Reservation'
