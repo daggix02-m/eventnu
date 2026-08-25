@@ -17,6 +17,7 @@ import { EventGallery } from '@/components/events/detail/EventGallery'
 import { hasGallery } from '@/lib/media'
 import { VerifiedBadge } from '@/components/verification/VerifiedBadge'
 import { ReportDialog } from '@/components/moderation/ReportDialog'
+import { BackButton } from '@/components/layout/BackButton'
 import { CardQuickActions } from '@/components/social/EventSocialActions'
 import type { Event } from '@/types'
 
@@ -185,6 +186,12 @@ export function EventHero({ event }: EventHeroProps) {
 
           {/* Status & Date Badges */}
           <div className="flex items-center gap-2 ml-auto">
+            {/* Visible back control on mobile — iOS standalone PWAs have no
+                browser chrome, so without this a phone user on a detail page
+                has no way back except the home logo. */}
+            <span className="sm:hidden">
+              <BackButton />
+            </span>
             <ReportDialog targetType="event" targetId={event.id} />
             {cta.kind === 'ended' ? (
               <span className="bg-error text-on-error font-mono text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-md">

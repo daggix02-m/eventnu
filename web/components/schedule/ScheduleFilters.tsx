@@ -6,7 +6,7 @@ import type { Category } from '@/types'
 
 export type TimeOfDayFilter = 'all' | 'daylight' | 'golden' | 'midnight'
 
-interface ScheduleFiltersProps {
+export interface ScheduleFiltersProps {
   timeFilter: TimeOfDayFilter
   onTimeFilterChange: (filter: TimeOfDayFilter) => void
   selectedCategory: string | null
@@ -58,6 +58,7 @@ export function ScheduleFilters({
                 key={item.id}
                 type="button"
                 onClick={() => onTimeFilterChange(item.id)}
+                aria-pressed={isActive}
                 className={cn(
                   'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 shrink-0 select-none',
                   isActive
@@ -104,6 +105,7 @@ export function ScheduleFilters({
           <button
             type="button"
             onClick={() => onCategoryChange(null)}
+            aria-pressed={selectedCategory === null}
             className={cn(
               'px-3 py-1 rounded-full text-xs font-medium transition-colors shrink-0',
               selectedCategory === null
@@ -120,6 +122,7 @@ export function ScheduleFilters({
                 key={cat.id}
                 type="button"
                 onClick={() => onCategoryChange(isCatActive ? null : cat.slug)}
+                aria-pressed={isCatActive}
                 className={cn(
                   'px-3 py-1 rounded-full text-xs font-medium transition-colors shrink-0',
                   isCatActive

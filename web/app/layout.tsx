@@ -34,6 +34,10 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: 'cover',
   themeColor: '#151318',
+  // iOS 16.4+: resize the layout viewport when the keyboard opens so focused
+  // inputs scroll fully above it (previously the centered auth card could be
+  // pushed behind the keyboard). Android ignores the value.
+  interactiveWidget: 'resizes-content',
 }
 
 export const metadata: Metadata = {
