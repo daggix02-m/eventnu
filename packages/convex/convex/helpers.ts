@@ -1,6 +1,23 @@
 import { getAuthUserId } from '@convex-dev/auth/server'
 import { MutationCtx, QueryCtx } from './_generated/server'
 import { Doc, Id } from './_generated/dataModel'
+import { LIKE_COUNT_SHARDS } from './constants'
+
+/**
+ * Sum the sharded like-count for an event. This is the canonical like count
+ * for an event; `events.likeCount` is a legacy/seed field and must not be
+ * read for live counts.
+ */
+export async function sumLikeShards(
+  ctx: QueryCtx | MutationCtx,
+  eventId: Id<'events'>,
+): Promise<number> {
+  const shards = await ctx.db
+    .query('likeCountShards')
+    .withIndex('by_eventId_and_shard', (q) => q.eq('eventId', eventId))
+    .take(LIKE_COUNT_SHARDS)
+  return shards.reduce((sum, s) => sum + s.count, 0)
+}
 
 export async function getUserProfile(ctx: QueryCtx | MutationCtx): Promise<Doc<'profiles'> | null> {
   const userId = await getAuthUserId(ctx)

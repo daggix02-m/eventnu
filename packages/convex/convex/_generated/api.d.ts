@@ -44,6 +44,7 @@ import type * as notifications from "../notifications.js";
 import type * as organizerSettings from "../organizerSettings.js";
 import type * as organizers from "../organizers.js";
 import type * as profiles from "../profiles.js";
+import type * as publicEventCards from "../publicEventCards.js";
 import type * as rateLimiter from "../rateLimiter.js";
 import type * as reports from "../reports.js";
 import type * as reservations from "../reservations.js";
@@ -95,6 +96,7 @@ declare const fullApi: ApiFromModules<{
   organizerSettings: typeof organizerSettings;
   organizers: typeof organizers;
   profiles: typeof profiles;
+  publicEventCards: typeof publicEventCards;
   rateLimiter: typeof rateLimiter;
   reports: typeof reports;
   reservations: typeof reservations;

@@ -153,3 +153,32 @@ web/
   nav counts are server-seeded.
 - Admin search inputs debounce ~400ms; TanStack Query `staleTime` is consistent
   (30s) across list pages.
+
+## Target architecture (scaled to 1M concurrent users)
+
+Planned target state; see `tasks/plan.md` for the phased delivery and
+`docs/decisions/ADR-0005-scale-architecture.md` for the decision. Convex stays the source
+of truth; caching, CDN, durability, and realtime fan-out are pushed to the edge.
+
+```mermaid
+flowchart LR
+  U[End user] --> E[CDN Edge<br/>images/static/ISR]
+  E --> A[Vercel / Next.js app<br/>ISR + RSC streaming]
+  A --> R[(Upstash Redis<br/>hot feed cache + rate limit)]
+  A --> C[Convex<br/>source of truth + read replicas]
+  C --> S[(R2/S3 multi-region<br/>CRR + versioning + PITR)]
+  A -->|WebSocket gateway| P[Redis Pub/Sub<br/>timeline fan-out]
+  C -->|publish on update| P
+  P --> U
+```
+
+Key additions over the current topology:
+
+| Component | Role |
+|---|---|
+| `publicEventCards` (Convex table) | Materialized read model; kills the N+1 fan-out in `events/enrichment.ts` |
+| CDN + ISR + Redis cache | Serve public feeds/static; cache-misses only hit Convex; writes bypass cache |
+| WebSocket gateway + Redis Pub/Sub | Per-user timeline fan-out at 1M connections; reconnect backfill |
+| `eventFeed` (Convex table) | Append-only per-user log for durable delivery + backfill |
+| R2/S3 multi-region CRR + PITR | Zero data loss for photos/profile data; proven by restore drill |
+| `useOptimisticToggle` (web) | Optimistic like/save/follow (no spinner); reservation keeps explicit pending state |

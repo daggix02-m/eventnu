@@ -1,6 +1,6 @@
 import { v } from 'convex/values'
-import { mutation } from '../_generated/server'
-import { Doc } from '../_generated/dataModel'
+import { mutation, internalMutation } from '../_generated/server'
+import { Doc, Id } from '../_generated/dataModel'
 import {
   assertUniqueEventSlug,
   insertEventImages,
@@ -16,6 +16,7 @@ import {
 import { rateLimiter } from '../rateLimiter'
 import { MAX_EVENT_IMAGES } from '../constants'
 import { eventImageValidator, getEventImages } from './enrichment'
+import { internal } from '../_generated/api'
 
 export const generateUploadUrl = mutation({
   args: {},
@@ -144,6 +145,11 @@ export const create = mutation({
       targetId: eventId,
     })
 
+    // Keep the denormalized read model in sync.
+    if (typeof ctx.runMutation === 'function') {
+      await ctx.runMutation(internal.publicEventCards.rebuildCard, { eventId })
+    }
+
     return eventId
   },
 })
@@ -238,6 +244,12 @@ export const update = mutation({
     if (images) {
       await replaceEventImages(ctx, eventId, images)
     }
+
+    // Keep the denormalized read model in sync.
+    if (typeof ctx.runMutation === 'function') {
+      await ctx.runMutation(internal.publicEventCards.rebuildCard, { eventId })
+    }
+
     return eventId
   },
 })
@@ -290,6 +302,11 @@ export const deleteEvent = mutation({
       await ctx.db.delete('reservationRequests', row._id)
     }
     await ctx.db.delete('events', args.eventId)
+
+    // Remove the denormalized read model.
+    if (typeof ctx.runMutation === 'function') {
+      await ctx.runMutation(internal.publicEventCards.removeCard, { eventId: args.eventId })
+    }
   },
 })
 
@@ -383,6 +400,11 @@ export const createSelf = mutation({
 
     await insertEventImages(ctx, eventId, images)
 
+    // Keep the denormalized read model in sync.
+    if (typeof ctx.runMutation === 'function') {
+      await ctx.runMutation(internal.publicEventCards.rebuildCard, { eventId })
+    }
+
     return eventId
   },
 })
@@ -424,6 +446,12 @@ export const updateSelf = mutation({
         : {}),
     } as Partial<Doc<'events'>>
     await ctx.db.patch('events', eventId, updates)
+
+    // Keep the denormalized read model in sync.
+    if (typeof ctx.runMutation === 'function') {
+      await ctx.runMutation(internal.publicEventCards.rebuildCard, { eventId })
+    }
+
     return eventId
   },
 })

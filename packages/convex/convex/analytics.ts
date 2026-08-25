@@ -1,6 +1,6 @@
 import { v } from 'convex/values'
 import { query } from './_generated/server'
-import { requireAdmin } from './helpers'
+import { requireAdmin, sumLikeShards } from './helpers'
 import { STATS_SCAN_CAP } from './constants'
 
 export const getStats = query({
@@ -70,6 +70,12 @@ export const getTopEvents = query({
       .query('events')
       .withIndex('by_status', (q) => q.eq('status', 'published'))
       .take(200)
-    return events.sort((a, b) => (b.likeCount ?? 0) - (a.likeCount ?? 0)).slice(0, limit)
+    // Rank by the sharded like-count (canonical), not the stale legacy field.
+    const counts = await Promise.all(events.map((e) => sumLikeShards(ctx, e._id)))
+    return events
+      .map((e, i) => ({ e, likeCount: counts[i] }))
+      .sort((a, b) => b.likeCount - a.likeCount)
+      .slice(0, limit)
+      .map(({ e }) => e)
   },
 })

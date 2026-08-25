@@ -1,6 +1,7 @@
 import { v } from 'convex/values'
 import { mutation } from '../_generated/server'
 import { requireAdmin, insertModerationLog } from '../helpers'
+import { internal } from '../_generated/api'
 
 const eventStatus = v.union(
   v.literal('draft'),
@@ -37,6 +38,9 @@ export const updateStatus = mutation({
       targetId: args.eventId,
       note: args.note ?? args.status,
     })
+    if (typeof ctx.runMutation === 'function') {
+      await ctx.runMutation(internal.publicEventCards.rebuildCard, { eventId: args.eventId })
+    }
   },
 })
 
@@ -59,6 +63,11 @@ export const bulkUpdateStatus = mutation({
       targetId: args.eventIds.join(','),
       note: args.status,
     })
+    for (const eventId of args.eventIds) {
+      if (typeof ctx.runMutation === 'function') {
+        await ctx.runMutation(internal.publicEventCards.rebuildCard, { eventId })
+      }
+    }
   },
 })
 
@@ -82,6 +91,9 @@ export const feature = mutation({
       targetId: args.eventId,
       note: args.section,
     })
+    if (typeof ctx.runMutation === 'function') {
+      await ctx.runMutation(internal.publicEventCards.rebuildCard, { eventId: args.eventId })
+    }
   },
 })
 
@@ -100,5 +112,8 @@ export const unfeature = mutation({
       targetType: 'event',
       targetId: args.eventId,
     })
+    if (typeof ctx.runMutation === 'function') {
+      await ctx.runMutation(internal.publicEventCards.rebuildCard, { eventId: args.eventId })
+    }
   },
 })

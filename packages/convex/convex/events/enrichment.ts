@@ -2,6 +2,7 @@ import { v } from 'convex/values'
 import { QueryCtx, MutationCtx } from '../_generated/server'
 import { Doc, Id } from '../_generated/dataModel'
 import { MAX_EVENT_IMAGES } from '../constants'
+import { sumLikeShards } from '../helpers'
 
 export const eventImageValidator = v.object({
   url: v.string(),
@@ -115,6 +116,7 @@ export function toPublicEvent(
   categories: Array<Doc<'categories'>>,
   images: Array<Doc<'eventImages'>>,
   organizer: PublicOrganizer | null,
+  likeCountOverride?: number,
 ): PublicEvent {
   return {
     _id: event._id,
@@ -144,7 +146,7 @@ export function toPublicEvent(
     venueMapLink: event.venueMapLink,
     venueLat: event.venueLat,
     venueLng: event.venueLng,
-    likeCount: event.likeCount,
+    likeCount: likeCountOverride ?? event.likeCount,
     reservationEnabled: event.reservationEnabled,
     reservationLimit: event.reservationLimit,
     reservationCount: event.reservationCount,
@@ -173,7 +175,8 @@ export async function enrichPublicEvent(
     const profile = org?.profileId ? await ctx.db.get('profiles', org.profileId) : null
     organizer = toPublicOrganizer(org, profile)
   }
-  return toPublicEvent(event, categories, images, organizer)
+  const likeCount = await sumLikeShards(ctx, event._id)
+  return toPublicEvent(event, categories, images, organizer, likeCount)
 }
 
 export async function enrichPublicEvents(
@@ -199,6 +202,9 @@ export async function enrichPublicEvents(
   const imagesByEvent = await Promise.all(
     events.map(async (event) => resolveImageUrls(ctx, await getEventImages(ctx, event._id))),
   )
+
+  // Sharded like-counts — `events.likeCount` is legacy/seed and stale.
+  const likeCountsByEvent = await Promise.all(events.map((event) => sumLikeShards(ctx, event._id)))
 
   const ownerIds = [
     ...new Set(
@@ -230,6 +236,12 @@ export async function enrichPublicEvents(
       .filter((c): c is Doc<'categories'> => c !== undefined)
     const org = event.ownerId ? (orgById.get(event.ownerId) ?? null) : null
     const profile = org?.profileId ? (profileById.get(org.profileId) ?? null) : null
-    return toPublicEvent(event, categories, imagesByEvent[i], toPublicOrganizer(org, profile))
+    return toPublicEvent(
+      event,
+      categories,
+      imagesByEvent[i],
+      toPublicOrganizer(org, profile),
+      likeCountsByEvent[i],
+    )
   })
 }

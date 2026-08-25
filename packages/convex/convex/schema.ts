@@ -375,6 +375,88 @@ const schema = defineSchema({
     cursor: v.optional(v.string()),
     updatedAt: v.number(),
   }).index('by_key', ['key']),
+
+  // Denormalized read model for public event cards — kills the N+1 fan-out in
+  // events/enrichment.ts. Rebuilt by internal.publicEventCards.rebuild* on
+  // publish/update/delete. Regenerable from canonical tables, so this is a cache,
+  // not a second source of truth.
+  publicEventCards: defineTable({
+    eventId: v.id('events'),
+    createdAt: v.number(), // mirror of events._creationTime for PublicEvent._creationTime
+    status: v.union(
+      v.literal('draft'),
+      v.literal('pending_review'),
+      v.literal('published'),
+      v.literal('rejected'),
+      v.literal('cancelled'),
+      v.literal('archived'),
+    ),
+    startDate: v.number(),
+    endDate: v.optional(v.number()),
+    isFeatured: v.boolean(),
+    title: v.string(),
+    slug: v.optional(v.string()),
+    subtitle: v.optional(v.string()),
+    description: v.string(),
+    posterUrl: v.optional(v.string()),
+    imageAspectRatio: v.optional(v.string()),
+    teaserVideoUrl: v.optional(v.string()),
+    videoAspectRatio: v.optional(v.string()),
+    priceDisplay: v.optional(v.string()),
+    isFree: v.boolean(),
+    actionType: v.union(
+      v.literal('open_entry'),
+      v.literal('reservation'),
+      v.literal('external_link'),
+      v.literal('contact'),
+    ),
+    source: v.string(),
+    frequencyType: v.string(),
+    timezone: v.string(),
+    venueName: v.string(),
+    venueAddress: v.optional(v.string()),
+    venueMapLink: v.optional(v.string()),
+    venueLat: v.optional(v.number()),
+    venueLng: v.optional(v.number()),
+    likeCount: v.number(),
+    reservationCount: v.optional(v.number()),
+    reservationEnabled: v.boolean(),
+    reservationLimit: v.optional(v.number()),
+    externalLink: v.optional(v.string()),
+    externalLinkLabel: v.optional(v.string()),
+    contactEmail: v.optional(v.string()),
+    instaPermalink: v.optional(v.string()),
+    // Denormalized image storage IDs — enables batch URL resolution without per-event queries.
+    imageStorageIds: v.optional(v.array(v.string())),
+    // Denormalized organizer fields — eliminates a separate query per event.
+    organizerName: v.optional(v.string()),
+    organizerHandle: v.optional(v.string()),
+    organizerLogoUrl: v.optional(v.string()),
+    organizerVerified: v.optional(v.boolean()),
+    organizerFollowerCount: v.optional(v.number()),
+    organizerProfileId: v.optional(v.id('profiles')),
+  })
+    .index('by_status_and_startDate', ['status', 'startDate'])
+    .index('by_isFeatured_and_startDate', ['isFeatured', 'startDate'])
+    .index('by_slug', ['slug'])
+    .index('by_eventId', ['eventId'])
+    .index('by_status', ['status'])
+    .searchIndex('search_title', {
+      searchField: 'title',
+      filterFields: ['status', 'source', 'isFeatured', 'frequencyType'],
+    })
+    .searchIndex('search_description', {
+      searchField: 'description',
+      filterFields: ['status', 'source', 'isFeatured', 'frequencyType'],
+    }),
+
+  // Sharded like-count counter — distributes write contention across N documents
+  // per event so concurrent likes don't serialize on a single row.
+  likeCountShards: defineTable({
+    eventId: v.id('events'),
+    shard: v.number(),
+    count: v.number(),
+  }).index('by_eventId_and_shard', ['eventId', 'shard']),
 })
 
 export default schema

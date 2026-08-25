@@ -1,13 +1,18 @@
 import { v } from 'convex/values'
-import { query, mutation } from './_generated/server'
+import { query, mutation, MutationCtx } from './_generated/server'
+import { Id } from './_generated/dataModel'
 import { getUserProfile, requireUser, incrementEngagementCounter } from './helpers'
 import { rateLimiter } from './rateLimiter'
+import { LIKE_COUNT_SHARDS } from './constants'
 
 export const countByEvent = query({
   args: { eventId: v.id('events') },
   handler: async (ctx, args) => {
-    const event = await ctx.db.get('events', args.eventId)
-    return event?.likeCount ?? 0
+    const shards = await ctx.db
+      .query('likeCountShards')
+      .withIndex('by_eventId_and_shard', (q) => q.eq('eventId', args.eventId))
+      .take(LIKE_COUNT_SHARDS)
+    return shards.reduce((sum, s) => sum + s.count, 0)
   },
 })
 
@@ -50,6 +55,48 @@ export const hasLikedBulk = query({
   },
 })
 
+/**
+ * Ensure the sharded counter rows exist for an event. Idempotent per shard:
+ * each shard index is created only if missing, so concurrent first-likes on a
+ * brand-new event cannot create duplicate shards. The first shard seeds the
+ * legacy `events.likeCount` value once.
+ */
+async function ensureShardsExist(ctx: MutationCtx, eventId: Id<'events'>) {
+  const event = await ctx.db.get('events', eventId)
+  const seed = event?.likeCount ?? 0
+
+  for (let i = 0; i < LIKE_COUNT_SHARDS; i++) {
+    const existing = await ctx.db
+      .query('likeCountShards')
+      .withIndex('by_eventId_and_shard', (q) => q.eq('eventId', eventId).eq('shard', i))
+      .first()
+    if (!existing) {
+      await ctx.db.insert('likeCountShards', {
+        eventId,
+        shard: i,
+        count: i === 0 ? seed : 0,
+      })
+    }
+  }
+}
+
+/**
+ * Increment a pseudo-random shard by `delta`. This is the hot write path: N
+ * shards per event distribute concurrent likes across separate documents so
+ * they don't serialize on a single counter row.
+ */
+async function incrementShard(ctx: MutationCtx, eventId: Id<'events'>, delta: number) {
+  await ensureShardsExist(ctx, eventId)
+  const shard = Math.floor(Math.random() * LIKE_COUNT_SHARDS)
+  const doc = await ctx.db
+    .query('likeCountShards')
+    .withIndex('by_eventId_and_shard', (q) => q.eq('eventId', eventId).eq('shard', shard))
+    .first()
+  if (doc) {
+    await ctx.db.patch('likeCountShards', doc._id, { count: doc.count + delta })
+  }
+}
+
 export const toggle = mutation({
   args: { eventId: v.id('events') },
   handler: async (ctx, args) => {
@@ -63,12 +110,7 @@ export const toggle = mutation({
     if (existing) {
       await ctx.db.delete('eventLikes', existing._id)
       await incrementEngagementCounter(ctx, userId, 'likes', -1)
-      const event = await ctx.db.get('events', args.eventId)
-      if (event) {
-        await ctx.db.patch('events', args.eventId, {
-          likeCount: Math.max(0, (event.likeCount ?? 0) - 1),
-        })
-      }
+      await incrementShard(ctx, args.eventId, -1)
       return false
     } else {
       await ctx.db.insert('eventLikes', {
@@ -76,12 +118,7 @@ export const toggle = mutation({
         eventId: args.eventId,
       })
       await incrementEngagementCounter(ctx, userId, 'likes', 1)
-      const event = await ctx.db.get('events', args.eventId)
-      if (event) {
-        await ctx.db.patch('events', args.eventId, {
-          likeCount: (event.likeCount ?? 0) + 1,
-        })
-      }
+      await incrementShard(ctx, args.eventId, 1)
       return true
     }
   },
@@ -104,17 +141,11 @@ export const setLiked = mutation({
     if (args.liked && !existing) {
       await ctx.db.insert('eventLikes', { userId: profile._id, eventId: args.eventId })
       await incrementEngagementCounter(ctx, profile._id, 'likes', 1)
-      const event = await ctx.db.get('events', args.eventId)
-      if (event) await ctx.db.patch('events', args.eventId, { likeCount: event.likeCount + 1 })
+      await incrementShard(ctx, args.eventId, 1)
     } else if (!args.liked && existing) {
       await ctx.db.delete('eventLikes', existing._id)
       await incrementEngagementCounter(ctx, profile._id, 'likes', -1)
-      const event = await ctx.db.get('events', args.eventId)
-      if (event) {
-        await ctx.db.patch('events', args.eventId, {
-          likeCount: Math.max(0, event.likeCount - 1),
-        })
-      }
+      await incrementShard(ctx, args.eventId, -1)
     }
 
     return args.liked
