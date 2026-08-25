@@ -10,6 +10,7 @@ import { Email } from '@convex-dev/auth/providers/Email'
 import { action, env } from './_generated/server'
 import { internal } from './_generated/api'
 import { escapeHtml } from './helpers'
+import { toClientAuthError } from './authErrors'
 
 const RESEND_BASE = 'https://api.resend.com'
 const DEFAULT_FROM = 'EventNu <onboarding@resend.dev>'
@@ -128,28 +129,62 @@ const resetProvider = {
   },
 }
 
+/**
+ * The runtime provider returned by `Password()` keeps the real `authorize`
+ * implementation under `.options` (the public type only exposes a stub).
+ * The public `ConvexCredentialsConfig` type does not declare `.options`,
+ * so type it narrowly here.
+ */
+type PasswordProvider = ReturnType<typeof Password> & {
+  options: {
+    authorize: (
+      credentials: Record<string, unknown>,
+      ctx: unknown,
+    ) => Promise<{ userId: string; sessionId?: string } | null>
+  }
+}
+
+const basePassword = Password({
+  profile(params): { email: string } & Record<string, string> {
+    const name = String(params.name ?? '').trim()
+    return name
+      ? {
+          email: String(params.email ?? '')
+            .trim()
+            .toLowerCase(),
+          name,
+        }
+      : {
+          email: String(params.email ?? '')
+            .trim()
+            .toLowerCase(),
+        }
+  },
+  reset: Email(resetProvider),
+})
+
+const passwordProvider: PasswordProvider = {
+  ...basePassword,
+  options: {
+    ...(basePassword as PasswordProvider).options,
+    // Expected auth failures (wrong password, unknown account, duplicate
+    // sign-up, rate limit) throw plain Errors which Convex redacts to a
+    // generic "Server Error" in production. Rethrow them as ConvexErrors
+    // carrying a client-safe code so the web app can show a real message.
+    authorize: async (credentials, ctx) => {
+      try {
+        return await (basePassword as PasswordProvider).options.authorize(credentials, ctx)
+      } catch (error) {
+        const mapped = toClientAuthError(error)
+        if (mapped instanceof Error) throw mapped
+        throw error
+      }
+    },
+  },
+}
+
 export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
-  providers: [
-    Password({
-      profile(params): { email: string } & Record<string, string> {
-        const name = String(params.name ?? '').trim()
-        return name
-          ? {
-              email: String(params.email ?? '')
-                .trim()
-                .toLowerCase(),
-              name,
-            }
-          : {
-              email: String(params.email ?? '')
-                .trim()
-                .toLowerCase(),
-            }
-      },
-      reset: Email(resetProvider),
-    }),
-    Email(signInProvider),
-  ],
+  providers: [passwordProvider, Email(signInProvider)],
 })
 
 const MIN_PASSWORD_LENGTH = 8

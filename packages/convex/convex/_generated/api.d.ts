@@ -12,6 +12,7 @@ import type * as admin from "../admin.js";
 import type * as adminSettings from "../adminSettings.js";
 import type * as analytics from "../analytics.js";
 import type * as auth from "../auth.js";
+import type * as authErrors from "../authErrors.js";
 import type * as bookmarks from "../bookmarks.js";
 import type * as categories from "../categories.js";
 import type * as cms_announcements from "../cms/announcements.js";
@@ -62,6 +63,7 @@ declare const fullApi: ApiFromModules<{
   adminSettings: typeof adminSettings;
   analytics: typeof analytics;
   auth: typeof auth;
+  authErrors: typeof authErrors;
   bookmarks: typeof bookmarks;
   categories: typeof categories;
   "cms/announcements": typeof cms_announcements;

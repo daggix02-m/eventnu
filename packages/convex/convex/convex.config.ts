@@ -10,6 +10,7 @@ const app = defineApp({
     INSTAGRAM_ENCRYPTION_KEY: v.optional(v.string()),
     ADMIN_APP_URL: v.optional(v.string()),
     CONVEX_SITE_URL: v.optional(v.string()),
+    SITE_URL: v.optional(v.string()),
     ADMIN_BOOTSTRAP_KEY: v.optional(v.string()),
     ADMIN_BOOTSTRAP_PASSWORD: v.optional(v.string()),
     ADMIN_EMAIL: v.optional(v.string()),

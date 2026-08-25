@@ -36,6 +36,7 @@ type Env = {
   readonly INSTAGRAM_VERIFY_TOKEN: string | undefined;
   readonly RESEND_API_KEY: string | undefined;
   readonly RESEND_FROM: string | undefined;
+  readonly SITE_URL: string | undefined;
 };
 
 /**
