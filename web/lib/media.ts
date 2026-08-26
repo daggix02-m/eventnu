@@ -29,3 +29,16 @@ export function sortedImages(images?: EventImage[] | null): EventImage[] {
 export function hasGallery(images?: EventImage[] | null): boolean {
   return !!images && images.length > 1
 }
+
+/**
+ * Rewrite a local event poster path from `.png` to `.webp`. The static poster
+ * files in `public/images/events` were converted to WebP, but events seeded
+ * before the conversion (or cached ISR pages) may still reference `.png` URLs.
+ * Organizer-uploaded `*.convex.site` storage URLs are never touched.
+ */
+export function toWebpImageUrl(url: string | null | undefined): string | null | undefined {
+  if (url && url.startsWith('/images/events/') && url.endsWith('.png')) {
+    return url.slice(0, -4) + '.webp'
+  }
+  return url
+}

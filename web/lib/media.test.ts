@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { filterStyle, aspectClass, sortedImages, hasGallery } from './media'
+import { filterStyle, aspectClass, sortedImages, hasGallery, toWebpImageUrl } from './media'
 import type { EventImage } from '../types'
 
 describe('filterStyle', () => {
@@ -112,6 +112,34 @@ describe('sortedImages', () => {
     ]
     sortedImages(images)
     expect(images[0].id).toBe('1')
+  })
+})
+
+describe('toWebpImageUrl', () => {
+  it('rewrites local event poster .png to .webp', () => {
+    expect(toWebpImageUrl('/images/events/july-01-05/afro-heat.png')).toBe(
+      '/images/events/july-01-05/afro-heat.webp',
+    )
+  })
+
+  it('leaves local .webp URLs untouched', () => {
+    expect(toWebpImageUrl('/images/events/july-01-05/afro-heat.webp')).toBe(
+      '/images/events/july-01-05/afro-heat.webp',
+    )
+  })
+
+  it('leaves organizer-uploaded storage URLs untouched', () => {
+    expect(toWebpImageUrl('https://foo.convex.site/storage/blah.png')).toBe(
+      'https://foo.convex.site/storage/blah.png',
+    )
+  })
+
+  it('returns null for null', () => {
+    expect(toWebpImageUrl(null)).toBeNull()
+  })
+
+  it('returns undefined for undefined', () => {
+    expect(toWebpImageUrl(undefined)).toBeUndefined()
   })
 })
 

@@ -9,25 +9,6 @@ const cookieConfig = { maxAge: 60 * 60 * 12 }
 
 const authMiddleware = convexAuthNextjsMiddleware(undefined, { cookieConfig })
 
-function buildCsp(nonce: string): string {
-  const isDev = process.env.NODE_ENV === 'development'
-  return [
-    "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ''}`,
-    "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: blob: https://lh3.googleusercontent.com https://images.unsplash.com https://*.convex.cloud https://*.convex.site",
-    "font-src 'self' data:",
-    "connect-src 'self' https://*.convex.cloud wss://*.convex.cloud https://*.convex.site https://nominatim.openstreetmap.org",
-    "frame-src 'self' https://www.openstreetmap.org",
-    "worker-src 'self' blob:",
-    "object-src 'none'",
-    "base-uri 'self'",
-    "form-action 'self'",
-    "frame-ancestors 'self'",
-    `report-uri /api/csp-report`,
-  ].join('; ')
-}
-
 /* ---------------------------------------------------------------------------
  * Auth proxy
  *
@@ -199,16 +180,9 @@ async function proxyAuthActionToConvex(request: NextRequest) {
 }
 
 export default async function proxy(request: NextRequest, event: NextFetchEvent) {
-  const nonce = Buffer.from(crypto.randomUUID()).toString('base64')
-  const csp = buildCsp(nonce)
-
-  const requestHeaders = new Headers(request.headers)
-  requestHeaders.set('x-nonce', nonce)
-  requestHeaders.set('Content-Security-Policy', csp)
-
   const nextRequest = new NextRequest(request.url, {
     method: request.method,
-    headers: requestHeaders,
+    headers: request.headers,
     body: request.body,
     cache: request.cache,
     credentials: request.credentials,
@@ -225,7 +199,6 @@ export default async function proxy(request: NextRequest, event: NextFetchEvent)
     ? await proxyAuthActionToConvex(nextRequest)
     : await authMiddleware(nextRequest, event)
   if (!response) return NextResponse.next()
-  response.headers.set('Content-Security-Policy', csp)
   return response
 }
 

@@ -2,6 +2,7 @@ import type { FunctionReturnType } from 'convex/server'
 import { api } from '@eventnu/convex/_generated/api'
 import type { Doc } from '@eventnu/convex/_generated/dataModel'
 import type { Event } from '@/types'
+import { toWebpImageUrl } from '@/lib/media'
 
 type RawEvent = FunctionReturnType<typeof api.events.read.getPublished>[number]
 
@@ -12,11 +13,11 @@ export function mapEvent(raw: RawEvent): Event {
     slug: raw.slug,
     subtitle: raw.subtitle,
     description: raw.description,
-    poster_url: raw.posterUrl,
+    poster_url: toWebpImageUrl(raw.posterUrl),
     image_aspect_ratio: raw.imageAspectRatio,
     images: (raw.images ?? []).map((img: Doc<'eventImages'>) => ({
       id: img._id,
-      url: img.url,
+      url: toWebpImageUrl(img.url) ?? '',
       storage_id: img.storageId,
       filter: img.filter,
       sort_order: img.sortOrder,

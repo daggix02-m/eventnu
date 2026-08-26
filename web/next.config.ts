@@ -1,4 +1,7 @@
 import type { NextConfig } from 'next'
+import { buildCsp } from './lib/csp'
+
+const isDev = process.env.NODE_ENV === 'development'
 
 let config: NextConfig = {
   experimental: {
@@ -48,6 +51,7 @@ let config: NextConfig = {
               'camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=(), midi=(), autoplay=(), encrypted-media=(), picture-in-picture=(), screen-wake-lock=()',
           },
           { key: 'Speculation-Rules', value: '"/speculation-rules.json"' },
+          { key: 'Content-Security-Policy', value: buildCsp(isDev) },
         ],
       },
       {
