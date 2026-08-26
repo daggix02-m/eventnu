@@ -6,6 +6,7 @@ import { api } from '@eventnu/convex/_generated/api'
 import type { FunctionReturnType } from 'convex/server'
 import type { Id } from '@eventnu/convex/_generated/dataModel'
 import { ImagePlus, Loader2, Send } from 'lucide-react'
+import { compressImage } from '@eventnu/image'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
@@ -46,11 +47,12 @@ export function CreateExperienceForm({
     let imageStorageId: string | undefined
     if (imageFile) {
       try {
+        const fileToUpload = await compressImage(imageFile)
         const uploadUrl = await getUploadUrl()
         const res = await fetch(uploadUrl, {
           method: 'POST',
-          headers: { 'Content-Type': imageFile.type },
-          body: imageFile,
+          headers: { 'Content-Type': fileToUpload.type },
+          body: fileToUpload,
         })
         if (!res.ok) throw new Error(`Upload failed (HTTP ${res.status})`)
         const { storageId } = await res.json()

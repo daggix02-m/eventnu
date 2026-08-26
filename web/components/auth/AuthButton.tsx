@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useQuery } from 'convex/react'
 import { api } from '@eventnu/convex/_generated/api'
 import { useAuthActions, useConvexAuth } from '@convex-dev/auth/react'
-import { LogOut, Bookmark, User } from 'lucide-react'
+import { LogOut, Bookmark, User, Settings } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   DropdownMenu,
@@ -23,7 +23,9 @@ export function AuthButton() {
   const { isAuthenticated, isLoading } = useConvexAuth()
   const { signOut } = useAuthActions()
   const router = useRouter()
-  const profile = useQuery(api.profiles.getMe)
+  // Skip the getMe round-trip entirely for logged-out visitors (the most
+  // common case) — the profile is only used once the user is signed in.
+  const profile = useQuery(api.profiles.getMe, isAuthenticated ? {} : 'skip')
 
   if (isLoading) {
     return <Skeleton className="h-11 w-24 rounded-xl" aria-hidden="true" />
@@ -84,8 +86,13 @@ export function AuthButton() {
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href="/profile?tab=bookmarks">
+          <Link href="/saved">
             <Bookmark className="h-4 w-4" /> Saved events
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/profile/settings">
+            <Settings className="h-4 w-4" /> Settings
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />

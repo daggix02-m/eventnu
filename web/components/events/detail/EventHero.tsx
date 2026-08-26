@@ -151,6 +151,7 @@ export function EventHero({ event }: EventHeroProps) {
           eventId={event.id}
           title={event.title}
           shareUrl={`/events/${event.slug}`}
+          likeCount={event.like_count}
           transparent
           className="absolute bottom-8 right-4 z-30 sm:right-8"
         />

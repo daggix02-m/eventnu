@@ -3,17 +3,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import {
-  ChevronLeft,
-  ChevronRight,
-  Calendar,
-  MapPin,
-  Pause,
-  Play,
-  Images,
-  Instagram,
-} from 'lucide-react'
-import { cn, formatEventDate, isEventPast, isSafeUrl } from '@/lib/utils'
+import { ChevronLeft, ChevronRight, Calendar, MapPin, Pause, Play, Images } from 'lucide-react'
+import { cn, formatEventDate, isEventPast } from '@/lib/utils'
 import { filterStyle, sortedImages } from '@/lib/media'
 import { useMotionPreference } from '@/lib/hooks/useMotionPreference'
 import { Button } from '@/components/ui/button'
@@ -288,20 +279,6 @@ export function FeaturedCarousel({ events }: FeaturedCarouselProps) {
       )}
 
       <div className="absolute top-gutter right-gutter z-30 flex items-center gap-sm">
-        {currentEvent &&
-          currentEvent.insta_permalink &&
-          isSafeUrl(currentEvent.insta_permalink) && (
-            <a
-              href={currentEvent.insta_permalink}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
-              className="flex items-center gap-xs px-sm py-1 rounded-full bg-black/50 backdrop-blur-md text-white font-label-sm text-label-sm hover:bg-[#E1306C]/80 transition-colors"
-            >
-              <Instagram className="w-3.5 h-3.5" />
-              Instagram
-            </a>
-          )}
         <span className="flex items-center gap-xs px-sm py-1 rounded-full bg-black/50 backdrop-blur-md text-white font-label-sm text-label-sm">
           <Images className="w-3.5 h-3.5" />
           {currentImageCount}

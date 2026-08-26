@@ -4,10 +4,10 @@ import { useState } from 'react'
 import { CalendarCheck, Download, Trash2, Check, Sparkles } from 'lucide-react'
 import { buildBatchIcs, downloadIcsFile } from '@/lib/calendar'
 import { cn } from '@/lib/utils'
-import type { Event } from '@/types'
+import type { DiscoverEvent } from '@/types'
 
 interface ItineraryFloatingDockProps {
-  plannedEvents: Event[]
+  plannedEvents: DiscoverEvent[]
   onClearPlan: () => void
   onRemoveItem?: (eventId: string) => void
 }

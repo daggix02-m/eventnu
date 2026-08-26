@@ -26,7 +26,7 @@ const reasons = [
   ['other', 'Other'],
 ] as const
 
-type TargetType = 'event' | 'organizer'
+type TargetType = 'event' | 'organizer' | 'story'
 
 export function ReportDialog({
   targetType,
@@ -86,7 +86,12 @@ export function ReportDialog({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              Report {targetType === 'event' ? 'this event' : 'this organizer'}
+              Report{' '}
+              {targetType === 'event'
+                ? 'this event'
+                : targetType === 'story'
+                  ? 'this story'
+                  : 'this organizer'}
             </DialogTitle>
             <DialogDescription>
               Tell us what regulatory or community standard may have been violated.

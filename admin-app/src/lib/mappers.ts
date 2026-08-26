@@ -65,8 +65,6 @@ export function mapEvent(e: Doc<'events'> | null | undefined) {
     end_date: toDateTimeLocal(e?.endDate),
     poster_url: e?.posterUrl,
     image_aspect_ratio: e?.imageAspectRatio,
-    insta_permalink: e?.instaPermalink,
-    insta_post_id: e?.instaPostId,
     teaser_video_url: e?.teaserVideoUrl,
     video_aspect_ratio: e?.videoAspectRatio,
     external_link: e?.externalLink,
@@ -274,6 +272,7 @@ export function mapReportTargetPreview(
     | Doc<'events'>
     | Doc<'organizerProfiles'>
     | Doc<'profiles'>
+    | Doc<'stories'>
     | null
     | undefined,
 ):
@@ -281,8 +280,11 @@ export function mapReportTargetPreview(
   | { target_type: 'event'; poster_url?: string; title: string; status: string }
   | { target_type: 'user'; avatar_url?: string; full_name: string; username: string }
   | { target_type: 'organizer'; logo_url?: string; name: string; status: string }
+  | { target_type: 'story'; media_url?: string; kind: string }
   | null {
   if (!p) return null
+  if ('mediaUrl' in p)
+    return { target_type: 'story', media_url: p.mediaUrl, kind: p.kind ?? 'photo' }
   if ('content' in p) return { target_type: 'comment', content: p.content ?? '' }
   if ('title' in p)
     return {

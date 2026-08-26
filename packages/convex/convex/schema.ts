@@ -13,6 +13,17 @@ const schema = defineSchema({
     verifiedBy: v.optional(v.id('profiles')),
     fullName: v.optional(v.string()),
     avatarUrl: v.optional(v.string()),
+    avatarStorageId: v.optional(v.string()),
+    username: v.optional(v.string()),
+    bio: v.optional(v.string()),
+    locationText: v.optional(v.string()),
+    website: v.optional(v.string()),
+    privateProfile: v.optional(v.boolean()),
+    emailNotifications: v.optional(v.boolean()),
+    pushNotifications: v.optional(v.boolean()),
+    themePreference: v.optional(
+      v.union(v.literal('system'), v.literal('light'), v.literal('dark')),
+    ),
     email: v.optional(v.string()),
     followerCount: v.optional(v.number()),
     suspended: v.boolean(),
@@ -22,6 +33,7 @@ const schema = defineSchema({
     .index('by_auth_user', ['authUserId'])
     .index('by_role', ['role'])
     .index('by_verified', ['verified'])
+    .index('by_username', ['username'])
     .searchIndex('search_full_name', { searchField: 'fullName', filterFields: ['suspended'] }),
 
   verificationScores: defineTable({
@@ -56,8 +68,6 @@ const schema = defineSchema({
     endDate: v.optional(v.number()),
     posterUrl: v.optional(v.string()),
     imageAspectRatio: v.optional(v.string()),
-    instaPostId: v.optional(v.string()),
-    instaPermalink: v.optional(v.string()),
     teaserVideoUrl: v.optional(v.string()),
     videoAspectRatio: v.optional(v.string()),
     externalLink: v.optional(v.string()),
@@ -104,7 +114,6 @@ const schema = defineSchema({
     .index('by_owner', ['ownerId'])
     .index('by_owner_and_status', ['ownerId', 'status'])
     .index('by_isFeatured_and_startDate', ['isFeatured', 'startDate'])
-    .index('by_insta_post', ['instaPostId'])
     .searchIndex('search_title', {
       searchField: 'title',
       filterFields: ['status', 'source', 'isFeatured', 'frequencyType'],
@@ -129,32 +138,6 @@ const schema = defineSchema({
     filter: v.optional(v.string()),
     sortOrder: v.number(),
   }).index('by_eventId_and_sortOrder', ['eventId', 'sortOrder']),
-
-  instagramConnections: defineTable({
-    igUserId: v.string(),
-    igUsername: v.string(),
-    accessTokenEncrypted: v.string(),
-    tokenExpiresAt: v.number(),
-    syncEnabled: v.boolean(),
-    autoPublish: v.boolean(),
-    lastSyncedAt: v.optional(v.number()),
-    connectedAt: v.number(),
-    adminId: v.optional(v.id('profiles')),
-  }),
-
-  instagramConnectStates: defineTable({
-    state: v.string(),
-    adminId: v.id('profiles'),
-    createdAt: v.number(),
-  }).index('by_state', ['state']),
-
-  instagramSyncLogs: defineTable({
-    direction: v.union(v.literal('in'), v.literal('out')),
-    status: v.union(v.literal('success'), v.literal('error')),
-    igMediaId: v.optional(v.string()),
-    eventId: v.optional(v.id('events')),
-    message: v.optional(v.string()),
-  }).index('by_direction', ['direction']),
 
   categories: defineTable({
     name: v.string(),
@@ -273,6 +256,30 @@ const schema = defineSchema({
   })
     .index('by_user', ['userId'])
     .index('by_event', ['eventId']),
+
+  stories: defineTable({
+    userId: v.id('profiles'),
+    kind: v.union(v.literal('photo'), v.literal('video')),
+    mediaStorageId: v.string(),
+    mediaUrl: v.string(),
+    mediaType: v.optional(v.string()),
+    caption: v.optional(v.string()),
+    eventId: v.optional(v.id('events')),
+    isDeleted: v.boolean(),
+    expiresAt: v.number(),
+    moderationStatus: v.union(v.literal('approved'), v.literal('rejected')),
+  })
+    .index('by_user', ['userId'])
+    .index('by_moderation', ['moderationStatus'])
+    .index('by_expiresAt', ['expiresAt']),
+
+  storyViews: defineTable({
+    storyId: v.id('stories'),
+    viewerId: v.id('profiles'),
+    viewedAt: v.number(),
+  })
+    .index('by_story', ['storyId'])
+    .index('by_storyId_and_viewerId', ['storyId', 'viewerId']),
 
   pages: defineTable({
     slug: v.string(),
@@ -425,7 +432,6 @@ const schema = defineSchema({
     externalLink: v.optional(v.string()),
     externalLinkLabel: v.optional(v.string()),
     contactEmail: v.optional(v.string()),
-    instaPermalink: v.optional(v.string()),
     // Denormalized image storage IDs — enables batch URL resolution without per-event queries.
     imageStorageIds: v.optional(v.array(v.string())),
     // Denormalized organizer fields — eliminates a separate query per event.

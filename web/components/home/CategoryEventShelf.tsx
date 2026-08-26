@@ -19,7 +19,7 @@ import { cn } from '@/lib/utils'
 import { canSmoothScroll } from '@/lib/utils'
 import { EventCard } from '@/components/events/cards/EventCard'
 import { BulkSocialProvider } from '@/components/social/EventSocialActions'
-import type { Event, Category } from '@/types'
+import type { DiscoverEvent, Category } from '@/types'
 
 const CATEGORY_ICONS: Record<string, LucideIcon> = {
   music: Music,
@@ -71,7 +71,7 @@ const CATEGORY_COLORS: Record<string, { bg: string; text: string; border: string
 
 interface CategoryEventShelfProps {
   category: Category | { slug: string; name: string; id?: string }
-  events: Event[]
+  events: DiscoverEvent[]
   onSelectCategory?: (slug: string) => void
   priorityFirst?: boolean
   className?: string

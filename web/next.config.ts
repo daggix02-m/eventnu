@@ -1,11 +1,14 @@
 import type { NextConfig } from 'next'
 
-const nextConfig: NextConfig = {
+let config: NextConfig = {
   experimental: {
     optimizePackageImports: ['lucide-react'],
   },
   images: {
     formats: ['image/avif', 'image/webp'],
+    // Optimized images are immutable (hashed URLs in production); caching them
+    // for a year avoids re-optimizing the same source on every cache miss.
+    minimumCacheTTL: 31536000,
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     remotePatterns: [
@@ -55,4 +58,10 @@ const nextConfig: NextConfig = {
   },
 }
 
-export default nextConfig
+// ANALYZE=true npm run build opens the bundle analyzer after the build.
+if (process.env.ANALYZE === 'true') {
+  const withBundleAnalyzer = require('@next/bundle-analyzer')
+  config = withBundleAnalyzer({ enabled: true })(config)
+}
+
+export default config

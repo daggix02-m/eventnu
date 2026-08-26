@@ -3,16 +3,15 @@
 import { useEffect, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { isLowEndDevice, readThemePrimary } from '@/lib/background'
+import { useIdleDefer } from '@/lib/hooks/useIdleDefer'
 
 const PixelBlast = dynamic(() => import('@/components/effects/PixelBlast'), { ssr: false })
 
-// Subtle shader speed for reduced-motion users. Following the site's
-// "fewer and gentler animations" contract (see useMotionPreference), the
-// marquee and carousel still drift slowly for these users — the background
-// should too, instead of freezing into a static frame. iOS Safari commonly
-// ships with Reduce Motion enabled, so this is what iPhones see.
+// Shader speed. Kept as one constant so the background flicker runs at the
+// same pace on every device — the perceived "calmer background on iPhone" was
+// the reduced-motion path, which iOS enables by default. Consistency wins over
+// the gentler cadence for reduced-motion users.
 const FULL_SPEED = 0.5
-const SUBTLE_SPEED = 0.12
 
 // Fallback frame shown while the shader is booting or if WebGL never mounts.
 // The gradient is inlined because `.static-frame`/`.pixel-blast-container`
@@ -33,24 +32,19 @@ const staticFrameStyle = {
 } as const
 
 export function SiteBackground() {
-  const [reducedMotion, setReducedMotion] = useState(false)
   const [inView, setInView] = useState(false)
   // Very low-end devices (≤2 GB RAM, or ≤4 GB with few cores) skip the shader
   // entirely and get the CSS static frame — the WebGL loop would otherwise
   // saturate their GPU. Everything else keeps the full ambient shader.
   const [lowEndDevice, setLowEndDevice] = useState(false)
+  // The PixelBlast chunk (~130 KB gz of three.js) stays off the critical path:
+  // it is fetched only once the browser reports idle, so it never competes
+  // with LCP resources. The static CSS frame paints immediately regardless.
+  const deferUntilIdle = useIdleDefer(2000)
   // Read the theme's --color-primary so the shader matches the marquee/button
   // accents. Falls back to the previous violet until the stylesheet applies.
   const [shaderColor, setShaderColor] = useState('#B497CF')
   const sentinelRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
-    setReducedMotion(mq.matches)
-    const handler = (e: MediaQueryListEvent) => setReducedMotion(e.matches)
-    mq.addEventListener('change', handler)
-    return () => mq.removeEventListener('change', handler)
-  }, [])
 
   useEffect(() => {
     const nav = navigator as Navigator & { deviceMemory?: number }
@@ -88,7 +82,7 @@ export function SiteBackground() {
 
   return (
     <div ref={sentinelRef} className="fixed inset-0 z-[-1] pointer-events-none" aria-hidden="true">
-      {inView && !lowEndDevice ? (
+      {inView && !lowEndDevice && deferUntilIdle ? (
         <PixelBlast
           variant="square"
           pixelSize={3}
@@ -102,7 +96,7 @@ export function SiteBackground() {
           rippleSpeed={0.3}
           rippleThickness={0.1}
           rippleIntensityScale={1}
-          speed={reducedMotion ? SUBTLE_SPEED : FULL_SPEED}
+          speed={FULL_SPEED}
           transparent
           edgeFade={0.5}
         />

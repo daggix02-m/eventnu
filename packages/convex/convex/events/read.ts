@@ -90,7 +90,6 @@ function cardToPublicEvent(
     endDate: card.endDate,
     posterUrl: card.posterUrl,
     imageAspectRatio: card.imageAspectRatio,
-    instaPermalink: card.instaPermalink,
     teaserVideoUrl: card.teaserVideoUrl,
     videoAspectRatio: card.videoAspectRatio,
     externalLink: card.externalLink,
@@ -163,6 +162,17 @@ export const getFeatured = query({
       upcoming.map((c) => c.eventId),
     )
     return upcoming.map((card) => cardToPublicEvent(card, catMap.get(card.eventId) ?? []))
+  },
+})
+
+export const getPublishedCount = query({
+  args: {},
+  handler: async (ctx) => {
+    const cards = await ctx.db
+      .query('publicEventCards')
+      .withIndex('by_status_and_startDate', (q) => q.eq('status', 'published'))
+      .collect()
+    return cards.length
   },
 })
 

@@ -21,7 +21,6 @@ export function mapEvent(raw: RawEvent): Event {
       filter: img.filter,
       sort_order: img.sortOrder,
     })),
-    insta_permalink: raw.instaPermalink,
     teaser_video_url: raw.teaserVideoUrl,
     video_aspect_ratio: raw.videoAspectRatio,
     external_link: raw.externalLink,

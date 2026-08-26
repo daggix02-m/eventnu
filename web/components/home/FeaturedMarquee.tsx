@@ -5,7 +5,6 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
 import { filterStyle, sortedImages } from '@/lib/media'
-import { useMotionPreference } from '@/lib/hooks/useMotionPreference'
 import { formatShortDate } from '@/lib/dates'
 import { shouldAnimateMarquee } from '@/lib/marquee'
 import type { Event } from '@/types'
@@ -14,12 +13,11 @@ interface FeaturedMarqueeProps {
   events: Event[]
 }
 
-// Full-motion drift speed. When the user prefers reduced motion we still let
-// the strip drift — but much more slowly and gently — instead of freezing it.
-// This restores the marquee on iOS (where Reduce Motion is commonly enabled)
-// while honoring the "fewer and gentler animations" contract.
+// Drift speed. Kept as one constant so the marquee runs at the same pace on
+// every device — the perceived "slow marquee on iPhone" was the reduced-motion
+// path, which iOS enables by default. Consistency wins over the gentler
+// cadence for reduced-motion users.
 const PX_PER_SECOND = 80
-const PX_PER_SECOND_SUBTLE = 24
 
 export interface TapGuard {
   start: () => void
@@ -74,8 +72,6 @@ function getPrimaryCategory(event: Event) {
  * converted to horizontal movement. On mouse leave the auto-scroll resumes.
  */
 export function FeaturedMarquee({ events }: FeaturedMarqueeProps) {
-  const motion = useMotionPreference()
-  const prefersReducedMotion = motion === 'subtle'
   const containerRef = useRef<HTMLDivElement | null>(null)
   // Track A and Track B are separate elements, each its own composited layer.
   // A single `width: max-content` layer for the whole strip can exceed iOS
@@ -177,8 +173,8 @@ export function FeaturedMarquee({ events }: FeaturedMarqueeProps) {
   useEffect(() => {
     if (events.length === 0) return
 
-    // Reduced-motion users still get the drift, just far slower and gentler.
-    const speed = prefersReducedMotion ? PX_PER_SECOND_SUBTLE : PX_PER_SECOND
+    // One consistent pace on every device.
+    const speed = PX_PER_SECOND
     let lastTime = performance.now()
 
     const tick = (now: number) => {
@@ -210,7 +206,7 @@ export function FeaturedMarquee({ events }: FeaturedMarqueeProps) {
 
     rafRef.current = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(rafRef.current)
-  }, [events.length, prefersReducedMotion, applyTranslate])
+  }, [events.length, applyTranslate])
 
   // Cleanup on unmount
   useEffect(() => {

@@ -30,6 +30,7 @@ import {
   hideEventFromReport,
   hideOrganizerFromReport,
   deleteCommentFromReport,
+  hideStoryFromReport,
   saveReportNote,
   getReportTargetPreview,
 } from '@/lib/actions/reports'
@@ -52,6 +53,7 @@ const targetTypeOptions = [
   { value: 'host', label: 'Host' },
   { value: 'user', label: 'User' },
   { value: 'comment', label: 'Comment' },
+  { value: 'story', label: 'Story' },
 ]
 
 const statusBadgeStyles: Record<string, string> = {
@@ -159,6 +161,8 @@ export function ReportsClient({
         await hideOrganizerFromReport(selectedReport.target_id, selectedReport.id)
       } else if (action === 'delete_comment') {
         await deleteCommentFromReport(selectedReport.target_id, selectedReport.id)
+      } else if (action === 'hide_story') {
+        await hideStoryFromReport(selectedReport.target_id, selectedReport.id)
       }
       await refresh()
       toast.success('Action taken successfully')
@@ -459,6 +463,40 @@ export function ReportsClient({
                           </div>
                         </div>
                       )}
+                      {targetPreview.target_type === 'story' && (
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 rounded-lg bg-surface-container-high flex items-center justify-center overflow-hidden">
+                            {targetPreview.media_url ? (
+                              targetPreview.kind === 'video' ? (
+                                <video
+                                  src={targetPreview.media_url}
+                                  muted
+                                  playsInline
+                                  preload="metadata"
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <img
+                                  src={targetPreview.media_url}
+                                  alt=""
+                                  width={48}
+                                  height={48}
+                                  loading="lazy"
+                                  className="w-full h-full object-cover"
+                                />
+                              )
+                            ) : (
+                              <MessageSquare size={18} className="text-muted-foreground" />
+                            )}
+                          </div>
+                          <div>
+                            <p className="font-semibold text-sm">Community story</p>
+                            <p className="text-xs text-muted-foreground">
+                              {targetPreview.kind === 'video' ? 'Video' : 'Photo'}
+                            </p>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
@@ -520,6 +558,15 @@ export function ReportsClient({
                 >
                   <EyeOff size={16} className="mr-1" />
                   Hide Event
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-10 border-warning text-warning hover:bg-warning/10"
+                  onClick={() => handleAction('hide_story')}
+                  disabled={loading || selectedReport.target_type !== 'story'}
+                >
+                  <EyeOff size={16} className="mr-1" />
+                  Hide Story
                 </Button>
                 <Button
                   className="h-10 bg-destructive text-white hover:bg-destructive/90"

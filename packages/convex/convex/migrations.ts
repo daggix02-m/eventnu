@@ -1,5 +1,6 @@
 import { mutation } from './_generated/server'
 import { internalMutation } from './_generated/server'
+import { internal } from './_generated/api'
 import { Id } from './_generated/dataModel'
 import { requireAdmin } from './helpers'
 
@@ -223,5 +224,41 @@ export const backfillEventCategories = internalMutation({
       }
     }
     return { processed: events.length }
+  },
+})
+
+/**
+ * Rewrite seed poster paths from `.png` to `.webp`. The static poster files in
+ * `web/public/images/events` were converted to WebP (285MB -> 14MB), but
+ * events seeded before the conversion still store `/images/events/*.png` URLs.
+ * Only local `/images/events/` paths are rewritten — organizer-uploaded
+ * `*.convex.site` storage URLs are never touched. The materialized
+ * `publicEventCards` view is refreshed per event so the homepage picks up the
+ * new URLs immediately.
+ */
+export const backfillWebpPosters = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    let eventsPatched = 0
+    let imagesPatched = 0
+
+    for await (const event of ctx.db.query('events')) {
+      const url = event.posterUrl
+      if (url && url.startsWith('/images/events/') && url.endsWith('.png')) {
+        await ctx.db.patch('events', event._id, { posterUrl: url.slice(0, -4) + '.webp' })
+        await ctx.runMutation(internal.publicEventCards.rebuildCard, { eventId: event._id })
+        eventsPatched++
+      }
+    }
+
+    for await (const img of ctx.db.query('eventImages')) {
+      const url = img.url
+      if (url && url.startsWith('/images/events/') && url.endsWith('.png')) {
+        await ctx.db.patch('eventImages', img._id, { url: url.slice(0, -4) + '.webp' })
+        imagesPatched++
+      }
+    }
+
+    return { eventsPatched, imagesPatched }
   },
 })

@@ -1,5 +1,5 @@
 import { v } from 'convex/values'
-import { action, internalMutation } from './_generated/server'
+import { action, internalMutation, internalQuery } from './_generated/server'
 import { env } from './_generated/server'
 import { internal } from './_generated/api'
 import { createAccount, modifyAccountCredentials } from '@convex-dev/auth/server'
@@ -51,9 +51,6 @@ const ALL_TABLES: TableNames[] = [
   'engagementCounters',
   'organizerSettings',
   'cronCheckpoints',
-  'instagramConnections',
-  'instagramConnectStates',
-  'instagramSyncLogs',
 ]
 
 function normalizeEmail(email: string): string {
@@ -84,13 +81,24 @@ function requireAdminPassword(): string {
   return env.ADMIN_BOOTSTRAP_PASSWORD
 }
 
+export const listAdmins = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    const admins = await ctx.db
+      .query('profiles')
+      .withIndex('by_role', (q) => q.eq('role', 'admin'))
+      .take(50)
+    return admins.map((p) => ({ profileId: p._id, email: p.email ?? null }))
+  },
+})
+
 export const getAdminInfo = action({
   args: { key: v.string() },
   handler: async (ctx, args) => {
     await rateLimiter.limit(ctx, 'bootstrapAction', { key: 'global', throws: true })
     validateBootstrapKey(args.key)
     const adminEmail = requireAdminEmail()
-    const admins: AdminInfo[] = await ctx.runQuery(internal.instagram.connect.listAdmins)
+    const admins: AdminInfo[] = await ctx.runQuery(internal.admin.listAdmins)
     return {
       admins: admins.map((p: AdminInfo) => ({
         email: p.email ?? null,
@@ -114,7 +122,7 @@ export const createAdminUser = action({
       throw new Error('Only the pinned admin email can be created')
     }
 
-    const admins: AdminInfo[] = await ctx.runQuery(internal.instagram.connect.listAdmins)
+    const admins: AdminInfo[] = await ctx.runQuery(internal.admin.listAdmins)
     if (admins.length > 0) {
       throw new Error('An admin already exists. Admin creation is bootstrap-only.')
     }
@@ -142,7 +150,7 @@ export const setAdminPassword = action({
     validateBootstrapKey(args.key)
 
     const adminEmail = requireAdminEmail()
-    const admins: AdminInfo[] = await ctx.runQuery(internal.instagram.connect.listAdmins)
+    const admins: AdminInfo[] = await ctx.runQuery(internal.admin.listAdmins)
     const admin = admins.find((a: AdminInfo) => a.email === adminEmail)
     if (!admin) {
       throw new Error('Pinned admin does not exist')

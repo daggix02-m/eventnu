@@ -9,19 +9,19 @@ const valueCards = [
     icon: Users,
     title: 'Community First',
     description: 'Building bridges between local talent and global audiences.',
-    imageUrl: '/images/events/july-13-19/feta-socity.png',
+    imageUrl: '/images/events/july-13-19/feta-socity.webp',
   },
   {
     icon: Zap,
     title: 'Radical Simplicity',
     description: 'Removing every friction point between you and the experience.',
-    imageUrl: '/images/events/july-01-05/utopia-night.png',
+    imageUrl: '/images/events/july-01-05/utopia-night.webp',
   },
   {
     icon: Shield,
     title: 'Trust & Security',
     description: 'Secure QR tickets, transparent listings, and clear info before you buy.',
-    imageUrl: '/images/events/july-20-26/bloom-week.png',
+    imageUrl: '/images/events/july-20-26/bloom-week.webp',
   },
 ]
 
@@ -86,7 +86,7 @@ export function AboutContent({ eventCount, categoryCount }: AboutContentProps) {
         </div>
         <div className="relative z-10 hidden md:block w-64 h-64 rounded-xl rotate-3 overflow-hidden shadow-2xl border-4 border-white/20">
           <Image
-            src="/images/events/july-20-26/night-shift.png"
+            src="/images/events/july-20-26/night-shift.webp"
             alt="Addis Ababa nightlife"
             fill
             priority

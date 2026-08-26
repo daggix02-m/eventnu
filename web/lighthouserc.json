@@ -1,7 +1,7 @@
 {
   "ci": {
     "collect": {
-      "url": ["http://localhost:3000/", "http://localhost:3000/events"],
+      "url": ["http://localhost:3000/", "http://localhost:3000/schedule"],
       "numberOfRuns": 1,
       "startServerCommand": "npm run start",
       "startServerReadyPattern": "Ready on",

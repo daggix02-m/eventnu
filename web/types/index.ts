@@ -46,7 +46,6 @@ export interface Event {
   poster_url?: string | null
   image_aspect_ratio?: string | null
   images?: EventImage[]
-  insta_permalink?: string | null
   teaser_video_url?: string | null
   external_link?: string | null
   external_link_label?: string | null
@@ -76,6 +75,59 @@ export interface Event {
   // Joined data
   event_categories?: EventCategory[]
   organizer?: Profile | null
+}
+
+/**
+ * Slimmed event shape sent to the home/discover client tree. The full `Event`
+ * carries fields the cards never render (venue map links, reservation state,
+ * video URLs, audit timestamps…); serializing all of them for ~100 events
+ * bloats the RSC payload for every anonymous visitor. Components that render
+ * event cards accept `DiscoverEvent`, and full `Event`s remain assignable to
+ * it, so this only shrinks the home payload without touching other routes.
+ */
+export interface DiscoverImage {
+  id: string
+  url: string
+  filter?: string | null
+}
+
+export interface DiscoverOrganizer {
+  id: string
+  full_name?: string | null
+  handle?: string | null
+  logo_url?: string | null
+  verified?: boolean
+}
+
+export interface DiscoverCategory {
+  id: string
+  slug: string
+  name: string
+}
+
+export interface DiscoverEventCategory {
+  is_primary: boolean
+  categories?: DiscoverCategory
+}
+
+export interface DiscoverEvent {
+  id: string
+  title: string
+  slug?: string | null
+  subtitle?: string | null
+  description: string
+  poster_url?: string | null
+  images?: DiscoverImage[]
+  start_date: string
+  end_date?: string | null
+  timezone?: string
+  venue_name: string
+  venue_address?: string | null
+  price_display?: string | null
+  is_free: boolean
+  like_count?: number
+  organizer?: DiscoverOrganizer | null
+  event_categories?: DiscoverEventCategory[]
 }
 
 export interface Page {

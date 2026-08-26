@@ -6,7 +6,7 @@ import { paginationOptsValidator } from 'convex/server'
 import { STATS_SCAN_CAP } from './constants'
 import { rateLimiter } from './rateLimiter'
 
-const reportTargetType = v.union(v.literal('event'), v.literal('organizer'))
+const reportTargetType = v.union(v.literal('event'), v.literal('organizer'), v.literal('story'))
 const reportReason = v.union(
   v.literal('fraud_or_scam'),
   v.literal('illegal_activity'),
@@ -30,7 +30,9 @@ export const submit = mutation({
     const target =
       args.targetType === 'event'
         ? await ctx.db.get('events', args.targetId as Id<'events'>)
-        : await ctx.db.get('organizerProfiles', args.targetId as Id<'organizerProfiles'>)
+        : args.targetType === 'story'
+          ? await ctx.db.get('stories', args.targetId as Id<'stories'>)
+          : await ctx.db.get('organizerProfiles', args.targetId as Id<'organizerProfiles'>)
     if (!target) throw new Error('Report target not found')
     const duplicate = await ctx.db
       .query('reports')
@@ -66,6 +68,7 @@ export const list = query({
         v.literal('host'),
         v.literal('user'),
         v.literal('comment'),
+        v.literal('story'),
       ),
     ),
   },
@@ -131,6 +134,7 @@ export const getTargetPreview = query({
       v.literal('host'),
       v.literal('user'),
       v.literal('comment'),
+      v.literal('story'),
     ),
     targetId: v.string(),
   },
@@ -150,6 +154,9 @@ export const getTargetPreview = query({
     }
     if (args.targetType === 'comment') {
       return await ctx.db.get('eventComments', args.targetId as Id<'eventComments'>)
+    }
+    if (args.targetType === 'story') {
+      return await ctx.db.get('stories', args.targetId as Id<'stories'>)
     }
     return null
   },
@@ -179,6 +186,7 @@ export const actionReport = mutation({
       hide_event: ['event'],
       hide_organizer: ['organizer', 'host'],
       delete_comment: ['comment'],
+      hide_story: ['story'],
     }
     if (
       args.action &&
@@ -243,6 +251,16 @@ export const deleteCommentFromReport = mutation({
   handler: async (ctx, args) => {
     await requireAdmin(ctx)
     await ctx.db.patch('eventComments', args.commentId, { isDeleted: true })
+  },
+})
+
+export const hideStoryFromReport = mutation({
+  args: { storyId: v.id('stories') },
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx)
+    const story = await ctx.db.get('stories', args.storyId)
+    if (!story) throw new Error('Story not found')
+    await ctx.db.patch('stories', args.storyId, { moderationStatus: 'rejected' })
   },
 })
 

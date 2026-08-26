@@ -1,4 +1,5 @@
 import 'server-only'
+import { cache } from 'react'
 import { fetchQuery } from 'convex/nextjs'
 import type { FunctionReturnType } from 'convex/server'
 import { convexAuthNextjsToken } from '@convex-dev/auth/nextjs/server'
@@ -10,7 +11,7 @@ type RawAnnouncement = FunctionReturnType<
   typeof api.cms.announcements.getActiveAnnouncements
 >[number]
 
-export async function getActiveAnnouncements(): Promise<Announcement[]> {
+export const getActiveAnnouncements = cache(async (): Promise<Announcement[]> => {
   try {
     const token = await convexAuthNextjsToken()
     const announcements = await fetchQuery(
@@ -33,4 +34,4 @@ export async function getActiveAnnouncements(): Promise<Announcement[]> {
     logError('announcements/getActive', err)
     return []
   }
-}
+})

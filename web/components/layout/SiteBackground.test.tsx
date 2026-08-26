@@ -4,7 +4,6 @@ import React from 'react'
 import { SiteBackground } from './SiteBackground'
 
 const FULL_SPEED = 0.5
-const SUBTLE_SPEED = 0.12
 
 // SiteBackground loads PixelBlast via next/dynamic. In jsdom there is no WebGL
 // context, so swap the dynamic loader for a plain component that echoes props.
@@ -51,9 +50,23 @@ function stubMatchMedia(matches: boolean) {
   )
 }
 
+// requestIdleCallback is absent in jsdom; make it fire immediately so the
+// idle-deferral gate opens as soon as effects run.
+function stubIdleCallback() {
+  vi.stubGlobal(
+    'requestIdleCallback',
+    vi.fn((cb: () => void) => {
+      cb()
+      return 1
+    }),
+  )
+  vi.stubGlobal('cancelIdleCallback', vi.fn())
+}
+
 beforeEach(() => {
   MockIntersectionObserver.instances = []
   vi.stubGlobal('IntersectionObserver', MockIntersectionObserver)
+  stubIdleCallback()
   vi.useRealTimers()
 })
 
@@ -73,12 +86,12 @@ describe('SiteBackground', () => {
     expect(frame).toHaveStyle('inset: 0')
   })
 
-  it('mounts the shader at a slow subtle speed for reduced-motion users', async () => {
+  it('mounts the shader at full speed regardless of reduced-motion preference', async () => {
     stubMatchMedia(true)
     render(<SiteBackground />)
     act(() => fireIntersection(true))
     const shader = await screen.findByTestId('pixel-blast')
-    expect(shader.getAttribute('speed')).toBe(String(SUBTLE_SPEED))
+    expect(shader.getAttribute('speed')).toBe(String(FULL_SPEED))
   })
 
   it('mounts the shader at full speed without a reduced-motion preference', async () => {
@@ -116,6 +129,17 @@ describe('SiteBackground', () => {
     render(<SiteBackground />)
     act(() => fireIntersection(true))
     expect(await screen.findByTestId('pixel-blast')).toBeInTheDocument()
+  })
+
+  it('keeps the shader unmounted until the browser is idle (off the critical path)', () => {
+    stubMatchMedia(false)
+    vi.stubGlobal('requestIdleCallback', undefined)
+    vi.useFakeTimers()
+    render(<SiteBackground />)
+    act(() => fireIntersection(true))
+    expect(screen.queryByTestId('pixel-blast')).not.toBeInTheDocument()
+    act(() => vi.advanceTimersByTime(2000))
+    expect(screen.getByTestId('pixel-blast')).toBeInTheDocument()
   })
 
   it('tints the shader with the theme primary color', async () => {

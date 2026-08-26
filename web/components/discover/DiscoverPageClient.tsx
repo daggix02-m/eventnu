@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { Building2, LayoutGrid, Rows3 } from 'lucide-react'
 import { Container } from '@/components/layout/Container'
 import { EventList } from '@/components/events/cards/EventList'
@@ -8,14 +9,11 @@ import { CategoryEventShelf } from '@/components/home/CategoryEventShelf'
 import { SearchBar } from '@/components/home/SearchBar'
 import { SegmentedControl } from '@/components/ui/segmented-control'
 import { useScrollReveal } from '@/lib/hooks/useScrollReveal'
-import type { Event, Category } from '@/types'
+import type { DiscoverEvent, Category } from '@/types'
 
 interface DiscoverPageClientProps {
-  events: Event[]
+  events: DiscoverEvent[]
   categories: Category[]
-  initialSearch?: string
-  initialCategory?: string
-  initialStatus?: string
 }
 
 type EventStatus = 'all' | 'upcoming' | 'ended'
@@ -32,13 +30,11 @@ function matchesStatus(eventDate: Date, status: EventStatus): boolean {
   return status === 'upcoming' ? eventDate >= now : eventDate < now
 }
 
-export function DiscoverPageClient({
-  events,
-  categories,
-  initialSearch = '',
-  initialCategory,
-  initialStatus,
-}: DiscoverPageClientProps) {
+export function DiscoverPageClient({ events, categories }: DiscoverPageClientProps) {
+  const searchParams = useSearchParams()
+  const initialSearch = searchParams.get('q') ?? ''
+  const initialCategory = searchParams.get('category') ?? undefined
+  const initialStatus = searchParams.get('date') ?? 'all'
   const [search, setSearch] = useState(initialSearch)
   const [activeCategory, setActiveCategory] = useState<string | undefined>(initialCategory)
   const [status, setStatus] = useState<EventStatus>(() => toStatus(initialStatus))
@@ -89,7 +85,7 @@ export function DiscoverPageClient({
     if (activeCategory || search.trim()) return []
 
     // Grouping
-    const shelves: { category: Category; events: Event[] }[] = []
+    const shelves: { category: Category; events: DiscoverEvent[] }[] = []
 
     categories.forEach((cat) => {
       const catEvents = statusFilteredEvents.filter((event) => {
@@ -112,7 +108,7 @@ export function DiscoverPageClient({
 
   const organizerShelves = useMemo(() => {
     if (activeCategory || search.trim()) return []
-    const groups = new Map<string, { name: string; events: Event[] }>()
+    const groups = new Map<string, { name: string; events: DiscoverEvent[] }>()
     for (const event of statusFilteredEvents) {
       const key = event.organizer?.id ?? 'independent'
       const existing = groups.get(key)

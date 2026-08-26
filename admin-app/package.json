@@ -16,6 +16,7 @@
     "@auth/core": "^0.41.1",
     "@convex-dev/auth": "^0.0.94",
     "@eventnu/convex": "*",
+    "@eventnu/image": "*",
     "@radix-ui/react-avatar": "^1.1.11",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-separator": "^1.1.8",

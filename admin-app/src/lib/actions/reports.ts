@@ -7,7 +7,7 @@ import { revalidatePath } from 'next/cache'
 import { mapReport, mapReportTargetPreview } from '../mappers'
 import { DEFAULT_PAGE_SIZE } from '@/lib/pagination'
 
-export type ReportTargetType = 'event' | 'organizer' | 'host' | 'user' | 'comment'
+export type ReportTargetType = 'event' | 'organizer' | 'host' | 'user' | 'comment' | 'story'
 
 export async function getReports(params: {
   status?: string
@@ -79,6 +79,11 @@ export async function deleteCommentFromReport(commentId: string, reportId: strin
     commentId: commentId as Id<'eventComments'>,
   })
   await actionReport(reportId, 'delete_comment')
+}
+
+export async function hideStoryFromReport(storyId: string, reportId: string) {
+  await fetchMutation(api.reports.hideStoryFromReport, { storyId: storyId as Id<'stories'> })
+  await actionReport(reportId, 'hide_story')
 }
 
 export async function saveReportNote(reportId: string, note?: string) {

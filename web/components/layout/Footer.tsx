@@ -63,7 +63,7 @@ export async function Footer() {
           <div className="sm:col-span-2 lg:col-span-4 space-y-4">
             <Link href="/" className="inline-flex items-center gap-3 group">
               <Image
-                src="/asset-2.png"
+                src="/asset-2.webp"
                 alt="Event Nu"
                 width={794}
                 height={672}
@@ -76,7 +76,9 @@ export async function Footer() {
               Discover live experiences in Addis Ababa.{' '}
               <span className="text-primary">All events in one place.</span>
             </h2>
-            <p className="text-sm text-on-surface-variant max-w-[24rem] leading-relaxed">{SITE.tagline}</p>
+            <p className="text-sm text-on-surface-variant max-w-[24rem] leading-relaxed">
+              {SITE.tagline}
+            </p>
             <div>
               <Link
                 href="/organizers"
@@ -111,9 +113,7 @@ export async function Footer() {
           {/* Column 3: Contact */}
           <div
             className={`${
-              categories.length > 0
-                ? 'sm:col-span-1 lg:col-span-3'
-                : 'sm:col-span-1 lg:col-span-4'
+              categories.length > 0 ? 'sm:col-span-1 lg:col-span-3' : 'sm:col-span-1 lg:col-span-4'
             } space-y-3.5`}
           >
             <p className="font-mono text-xs font-semibold text-secondary uppercase tracking-wider">
@@ -125,7 +125,10 @@ export async function Footer() {
                   href={`mailto:${SITE.email}`}
                   className="inline-flex items-center gap-2.5 text-sm text-on-surface-variant hover:text-primary transition-colors group"
                 >
-                  <Mail className="w-4 h-4 text-outline group-hover:text-primary transition-colors shrink-0" aria-hidden="true" />
+                  <Mail
+                    className="w-4 h-4 text-outline group-hover:text-primary transition-colors shrink-0"
+                    aria-hidden="true"
+                  />
                   <span className="break-all">{SITE.email}</span>
                 </a>
               </li>
@@ -134,7 +137,10 @@ export async function Footer() {
                   href={`tel:${SITE.phones[0].tel}`}
                   className="inline-flex items-center gap-2.5 text-sm text-on-surface-variant hover:text-primary transition-colors group"
                 >
-                  <Phone className="w-4 h-4 text-outline group-hover:text-primary transition-colors shrink-0" aria-hidden="true" />
+                  <Phone
+                    className="w-4 h-4 text-outline group-hover:text-primary transition-colors shrink-0"
+                    aria-hidden="true"
+                  />
                   <span>{SITE.phones[0].label}</span>
                 </a>
               </li>
@@ -148,7 +154,10 @@ export async function Footer() {
                       rel={link.external ? 'noopener noreferrer' : undefined}
                       className="inline-flex items-center gap-2.5 text-sm text-on-surface-variant hover:text-primary transition-colors group"
                     >
-                      <Icon className="w-4 h-4 text-outline group-hover:text-primary transition-colors shrink-0" aria-hidden="true" />
+                      <Icon
+                        className="w-4 h-4 text-outline group-hover:text-primary transition-colors shrink-0"
+                        aria-hidden="true"
+                      />
                       <span>{link.label}</span>
                     </a>
                   </li>
@@ -164,9 +173,7 @@ export async function Footer() {
           {/* Column 4: Info & Legal */}
           <div
             className={`${
-              categories.length > 0
-                ? 'sm:col-span-1 lg:col-span-2'
-                : 'sm:col-span-1 lg:col-span-4'
+              categories.length > 0 ? 'sm:col-span-1 lg:col-span-2' : 'sm:col-span-1 lg:col-span-4'
             } space-y-3.5`}
           >
             <p className="font-mono text-xs font-semibold text-secondary uppercase tracking-wider">
@@ -188,9 +195,7 @@ export async function Footer() {
 
         {/* Bottom bar */}
         <div className="pt-8 mt-12 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-outline-variant/30 text-xs text-on-surface-variant">
-          <p>
-            &copy; {new Date().getFullYear()} Event Nu. All rights reserved.
-          </p>
+          <p>&copy; {new Date().getFullYear()} Event Nu. All rights reserved.</p>
           <p className="inline-flex items-center gap-1.5 text-on-surface-variant/70">
             <CalendarHeart className="w-3.5 h-3.5 text-primary/70" aria-hidden="true" />
             Made in {SITE.location}

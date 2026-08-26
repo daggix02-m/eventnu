@@ -1,12 +1,12 @@
 import Link from 'next/link'
 import { CalendarX } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import type { Event } from '@/types'
+import type { DiscoverEvent } from '@/types'
 import { EventCard } from './EventCard'
 import { BulkSocialProvider } from '@/components/social/EventSocialActions'
 
 interface EventListProps {
-  events: Event[]
+  events: DiscoverEvent[]
   className?: string
   emptyMessage?: string
   showViewAll?: boolean

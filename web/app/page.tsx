@@ -1,20 +1,22 @@
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
 import { DiscoverPageClient } from '@/components/discover/DiscoverPageClient'
 import { FeaturedMarquee } from '@/components/home/FeaturedMarquee'
 import { FindYourzHeading } from '@/components/home/FindYourzHeading'
+import { StoriesRail } from '@/components/stories/StoriesRail'
 import { getPublishedEvents, getFeaturedEvents, getCategories } from '@/lib/api/events'
 import { getActiveAnnouncements } from '@/lib/api/announcements'
 import { AnnouncementBanner } from '@/components/layout/AnnouncementBanner'
+import { toDiscoverEvent } from '@/lib/discover'
 import type { Event } from '@/types'
+
+export const revalidate = 300
+export const dynamic = 'force-static'
 
 export const metadata: Metadata = {
   title: 'Event Nu — Discover Live Experiences in Addis',
   description:
     'Discover concerts, arts, nightlife, and cultural experiences across Addis Ababa. All events in one place.',
-}
-
-interface PageProps {
-  searchParams: Promise<{ q?: string; category?: string; date?: string }>
 }
 
 /**
@@ -53,42 +55,95 @@ function buildCarouselEvents(featured: Event[], allPublished: Event[], maxItems 
   return result
 }
 
-export default async function HomePage({ searchParams }: PageProps) {
-  const params = await searchParams
-  const [events, featured, categories, announcements] = await Promise.allSettled([
-    getPublishedEvents(),
-    getFeaturedEvents(20),
-    getCategories(),
-    getActiveAnnouncements(),
-  ]).then(
-    (
-      results,
-    ): [
-      Awaited<ReturnType<typeof getPublishedEvents>>,
-      Awaited<ReturnType<typeof getFeaturedEvents>>,
-      Awaited<ReturnType<typeof getCategories>>,
-      Awaited<ReturnType<typeof getActiveAnnouncements>>,
-    ] => results.map((r) => (r.status === 'fulfilled' ? r.value : [])) as never,
-  )
+// Each data-fetching section is its own async server component wrapped in a
+// <Suspense> boundary, so the shell streams before the slowest Convex query
+// resolves. The `cache()`-wrapped helpers dedupe the overlapping fetches
+// (featured + discover both read getPublishedEvents) within one render pass.
 
-  // Rich carousel: featured events + upcoming non-featured events
+async function AnnouncementsSection() {
+  const announcements = await getActiveAnnouncements()
+  return <AnnouncementBanner announcements={announcements} />
+}
+
+async function FeaturedSection() {
+  const [events, featured] = await Promise.all([getPublishedEvents(), getFeaturedEvents(20)])
   const carouselEvents = buildCarouselEvents(featured, events)
-
+  if (carouselEvents.length === 0) return null
   return (
     <>
-      <AnnouncementBanner announcements={announcements} />
+      <FindYourzHeading />
+      <FeaturedMarquee events={carouselEvents} />
+    </>
+  )
+}
 
-      {/* Featured events heading — show for any carousel content */}
-      {carouselEvents.length > 0 && <FindYourzHeading />}
+function FeaturedSkeleton() {
+  return (
+    <div className="py-lg" aria-hidden="true">
+      <div className="mx-auto w-full max-w-container-max px-4 md:px-gutter space-y-md">
+        <div className="h-8 w-64 bg-surface-container-high rounded animate-pulse" />
+        <div className="flex gap-md overflow-hidden">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div
+              key={i}
+              className="shrink-0 w-64 h-36 bg-surface-container-high rounded-2xl animate-pulse"
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
 
-      {carouselEvents.length > 0 && <FeaturedMarquee events={carouselEvents} />}
-      <DiscoverPageClient
-        events={events}
-        categories={categories}
-        initialSearch={typeof params.q === 'string' ? params.q : ''}
-        initialCategory={typeof params.category === 'string' ? params.category : undefined}
-        initialStatus={typeof params.date === 'string' ? params.date : 'all'}
-      />
+async function DiscoverSection() {
+  const [events, categories] = await Promise.all([getPublishedEvents(), getCategories()])
+  const discoverEvents = events.map(toDiscoverEvent)
+  // DiscoverPageClient reads ?q=, ?category= and ?date= itself via
+  // useSearchParams (filtering is fully client-side), so the home route
+  // needs no searchParams to stay ISR-cacheable. The Suspense boundary
+  // keeps that read from opting the whole route into dynamic rendering.
+  return <DiscoverPageClient events={discoverEvents} categories={categories} />
+}
+
+function DiscoverSkeleton() {
+  return (
+    <div className="py-lg" aria-hidden="true">
+      <div className="mx-auto w-full max-w-container-max px-4 md:px-gutter grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-md">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div
+            key={i}
+            className="bg-surface-container border border-outline-variant rounded-xl overflow-hidden animate-pulse"
+          >
+            <div className="h-48 bg-surface-container-high" />
+            <div className="p-md space-y-sm">
+              <div className="h-5 w-3/4 bg-surface-container-high rounded" />
+              <div className="h-4 w-1/2 bg-surface-container-high rounded" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+export default function HomePage() {
+  return (
+    <>
+      <Suspense fallback={null}>
+        <AnnouncementsSection />
+      </Suspense>
+
+      <Suspense fallback={null}>
+        <StoriesRail />
+      </Suspense>
+
+      <Suspense fallback={<FeaturedSkeleton />}>
+        <FeaturedSection />
+      </Suspense>
+
+      <Suspense fallback={<DiscoverSkeleton />}>
+        <DiscoverSection />
+      </Suspense>
     </>
   )
 }

@@ -1,4 +1,4 @@
-import type { Event } from '@/types'
+import type { DiscoverEvent } from '@/types'
 
 function escapeIcs(value: string): string {
   return value.replace(/[\n;,\\]/g, (m) => `\\${m}`)
@@ -12,7 +12,7 @@ function toIcsDate(iso: string): string {
 /**
  * Generate an RFC-5545 .ics string for a single event
  */
-export function buildIcs(event: Event): string {
+export function buildIcs(event: DiscoverEvent): string {
   const dtStart = toIcsDate(event.start_date)
   const dtEnd = event.end_date
     ? toIcsDate(event.end_date)
@@ -46,7 +46,10 @@ export function buildIcs(event: Event): string {
 /**
  * Generate a single .ics calendar containing multiple events (e.g. Weekend Itinerary)
  */
-export function buildBatchIcs(events: Event[], calendarName = 'My EventNu Itinerary'): string {
+export function buildBatchIcs(
+  events: DiscoverEvent[],
+  calendarName = 'My EventNu Itinerary',
+): string {
   const eventBlocks = events.map((event) => {
     const dtStart = toIcsDate(event.start_date)
     const dtEnd = event.end_date
@@ -101,7 +104,7 @@ export function downloadIcsFile(filename: string, icsContent: string): void {
 /**
  * Generate a direct Google Calendar web event creation URL
  */
-export function buildGoogleCalendarUrl(event: Event): string {
+export function buildGoogleCalendarUrl(event: DiscoverEvent): string {
   const dtStart = toIcsDate(event.start_date)
   const dtEnd = event.end_date
     ? toIcsDate(event.end_date)
@@ -129,7 +132,7 @@ export function buildGoogleCalendarUrl(event: Event): string {
 /**
  * Generate an Outlook.live.com web calendar event URL
  */
-export function buildOutlookCalendarUrl(event: Event): string {
+export function buildOutlookCalendarUrl(event: DiscoverEvent): string {
   const start = new Date(event.start_date).toISOString()
   const end = event.end_date
     ? new Date(event.end_date).toISOString()
@@ -152,7 +155,7 @@ export function buildOutlookCalendarUrl(event: Event): string {
 /**
  * Generate Yahoo Calendar web link
  */
-export function buildYahooCalendarUrl(event: Event): string {
+export function buildYahooCalendarUrl(event: DiscoverEvent): string {
   const dtStart = toIcsDate(event.start_date)
   const dtEnd = event.end_date
     ? toIcsDate(event.end_date)

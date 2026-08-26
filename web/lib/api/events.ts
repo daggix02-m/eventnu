@@ -36,6 +36,16 @@ export const getFeaturedEvents = cache(async (limit = 5): Promise<Event[]> => {
   }
 })
 
+export const getPublishedEventCount = cache(async (): Promise<number> => {
+  try {
+    const count = await createPublicClient().query(api.events.read.getPublishedCount, {})
+    return typeof count === 'number' ? count : 0
+  } catch (err) {
+    logError('events/getPublishedEventCount', err)
+    return 0
+  }
+})
+
 export const getEventBySlug = cache(async (slug: string): Promise<Event | null> => {
   try {
     const event = await createPublicClient().query(api.events.read.getBySlug, { slug })
@@ -46,7 +56,7 @@ export const getEventBySlug = cache(async (slug: string): Promise<Event | null> 
   }
 })
 
-export async function getSimilarEvents(event: Event, limit = 3): Promise<Event[]> {
+export const getSimilarEvents = cache(async (event: Event, limit = 3): Promise<Event[]> => {
   try {
     const events = await createPublicClient().query(api.events.read.getSimilar, {
       eventId: event.id as Id<'events'>,
@@ -57,7 +67,7 @@ export async function getSimilarEvents(event: Event, limit = 3): Promise<Event[]
     logError('events/getSimilarEvents', err)
     return []
   }
-}
+})
 
 export const getCategories = cache(async (): Promise<Category[]> => {
   try {

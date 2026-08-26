@@ -16,6 +16,7 @@
     "typecheck": "npm -w @eventnu/convex run typecheck && npm -w web run typecheck && npm -w admin-app run typecheck",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "check:images": "npm -w web run check:images",
     "prepare": "husky"
   },
   "lint-staged": {

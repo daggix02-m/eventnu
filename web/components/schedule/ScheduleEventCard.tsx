@@ -29,12 +29,12 @@ import {
 } from '@/lib/calendar'
 import { formatPrice, cn } from '@/lib/utils'
 import { formatEventTime } from '@/lib/dates'
-import type { Event } from '@/types'
+import type { DiscoverEvent } from '@/types'
 
 interface ScheduleEventCardProps {
-  event: Event
+  event: DiscoverEvent
   isPlanned?: boolean
-  onTogglePlan?: (event: Event) => void
+  onTogglePlan?: (event: DiscoverEvent) => void
   isHighlighted?: boolean
 }
 

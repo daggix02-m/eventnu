@@ -7,18 +7,18 @@ import { MapPin } from 'lucide-react'
 import { cn, formatPrice, isEventPast } from '@/lib/utils'
 import { filterStyle, sortedImages } from '@/lib/media'
 import { formatShortDate } from '@/lib/dates'
-import { CardQuickActions } from '@/components/social/EventSocialActions'
+import { CardQuickActions, useCardLike } from '@/components/social/EventSocialActions'
 import { VerifiedBadge } from '@/components/verification/VerifiedBadge'
-import type { Event } from '@/types'
+import type { DiscoverEvent } from '@/types'
 
 interface EventCardProps {
-  event: Event
+  event: DiscoverEvent
   className?: string
   size?: 'lg' | 'default'
   priority?: boolean
 }
 
-function getPrimaryCategory(event: Event) {
+function getPrimaryCategory(event: DiscoverEvent) {
   return (
     event.event_categories?.find((ec) => ec.is_primary)?.categories ??
     event.event_categories?.[0]?.categories
@@ -47,6 +47,17 @@ export function EventCard({
   const href = event.slug ? `/events/${event.slug}` : null
   const category = getPrimaryCategory(event)
   const dateLabel = formatShortDate(event.start_date, event.timezone)
+
+  const { toggle: toggleLike } = useCardLike(event.id)
+
+  // Instagram-style double-tap to like. The visible action buttons already
+  // stop propagation on click, and this skips interactive targets so a
+  // double-tap on the like button or a link never fires a second toggle.
+  const handleCardDoubleClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement
+    if (target.closest('a, button, [role="button"]')) return
+    toggleLike()
+  }
 
   const cardContent = (
     <>
@@ -102,13 +113,15 @@ export function EventCard({
           </span>
         )}
 
-        {/* Social actions — like / bookmark / share */}
+        {/* Social actions — like / bookmark / share, horizontal row */}
         <div className="pointer-events-auto">
           <CardQuickActions
             eventId={event.id}
             title={event.title}
             shareUrl={href ?? undefined}
+            likeCount={event.like_count}
             compact
+            direction="row"
             className="absolute bottom-3 right-3 z-10"
           />
         </div>
@@ -125,7 +138,10 @@ export function EventCard({
             )}
           >
             {href ? (
-              <Link href={href} className="focus-visible:outline-none">
+              <Link
+                href={href}
+                className="rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              >
                 {event.title}
               </Link>
             ) : (
@@ -197,9 +213,16 @@ export function EventCard({
   const cardClass = cn(
     'group flex flex-col bg-surface-container-high/80 border border-outline-variant/50 rounded-2xl overflow-hidden',
     'hover:border-primary/60 hover:shadow-[0_8px_40px_rgba(0,0,0,0.5)] transition-all duration-300',
+    // Double-tap-to-like needs fast taps (no zoom delay) and no text selection
+    // when the double-click fires on a phone.
+    'select-none touch-manipulation',
     isLg && 'lg:col-span-2',
     className,
   )
 
-  return <div className={cardClass}>{cardContent}</div>
+  return (
+    <div className={cardClass} onDoubleClick={handleCardDoubleClick}>
+      {cardContent}
+    </div>
+  )
 }

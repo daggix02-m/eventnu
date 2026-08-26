@@ -52,8 +52,6 @@ function makeEvent(overrides: Partial<MappedEvent>): MappedEvent {
     end_date: '',
     poster_url: undefined,
     image_aspect_ratio: undefined,
-    insta_permalink: undefined,
-    insta_post_id: undefined,
     teaser_video_url: undefined,
     video_aspect_ratio: undefined,
     external_link: undefined,

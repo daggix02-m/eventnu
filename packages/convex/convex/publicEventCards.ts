@@ -90,7 +90,6 @@ async function buildCardData(
     externalLink: event.externalLink,
     externalLinkLabel: event.externalLinkLabel,
     contactEmail: event.contactEmail,
-    instaPermalink: event.instaPermalink,
     imageStorageIds: imageStorageIds.length > 0 ? imageStorageIds : undefined,
     organizerName,
     organizerHandle,

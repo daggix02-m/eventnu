@@ -37,8 +37,6 @@ import {
   deleteEvent,
 } from '@/lib/actions/events'
 import { PickedImage } from '@/components/media/ImagePicker'
-import { PublishToInstagramDialog } from '@/components/instagram/PublishToInstagramDialog'
-import { Instagram } from 'lucide-react'
 import { EventForm } from '@/components/events/EventForm'
 import type {
   Category,
@@ -257,28 +255,12 @@ export function EventDetailClient({
               <Badge variant="outline" className="capitalize">
                 {sourceType}
               </Badge>
-              {event.source === 'instagram' && (
-                <Badge variant="outline" className="flex items-center gap-1">
-                  <Instagram size={11} />
-                  Instagram
-                </Badge>
-              )}
               <Badge variant="outline" className="capitalize">
                 {event.frequency_type?.replace('_', ' ')}
               </Badge>
             </div>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
-            {!editMode && (
-              <PublishToInstagramDialog
-                eventId={event.id}
-                title={initialForm.title ?? ''}
-                description={initialForm.description ?? ''}
-                venueName={initialForm.venue_name ?? ''}
-                imageCount={initialForm.images?.length ?? 0}
-                instaPermalink={event.insta_permalink}
-              />
-            )}
             <Button variant="outline" onClick={() => setEditMode(!editMode)} className="gap-2">
               {editMode ? <Eye size={16} /> : <Edit size={16} />}
               {editMode ? 'View Mode' : 'Edit'}

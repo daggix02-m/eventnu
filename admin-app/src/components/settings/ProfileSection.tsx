@@ -8,6 +8,7 @@ import { toast } from 'sonner'
 import { getUploadUrl, resolveStorageUrls } from '@/lib/actions/events'
 import { updateProfile } from '@/lib/actions/users'
 import { getErrorMessage } from '@/lib/errors'
+import { compressImage, AVATAR_MAX_DIMENSION } from '@eventnu/image'
 import { User, Save, Camera, Loader2 } from 'lucide-react'
 import { SettingsCard } from './SettingsCard'
 import type { AdminProfile } from './types'
@@ -31,6 +32,7 @@ export function ProfileSection({ profile }: ProfileSectionProps) {
     if (!file) return
     setUploadingAvatar(true)
     try {
+      const fileToUpload = await compressImage(file, { maxDimension: AVATAR_MAX_DIMENSION })
       const uploadUrl = await getUploadUrl()
       let parsed: URL
       try {
@@ -43,8 +45,8 @@ export function ProfileSection({ profile }: ProfileSectionProps) {
       }
       const res = await fetch(uploadUrl, {
         method: 'POST',
-        headers: { 'Content-Type': file.type },
-        body: file,
+        headers: { 'Content-Type': fileToUpload.type },
+        body: fileToUpload,
         credentials: 'omit',
       })
       if (!res.ok) throw new Error('Upload failed')

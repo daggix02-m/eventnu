@@ -1,6 +1,11 @@
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
 import { getPublishedEvents, getCategories } from '@/lib/api/events'
 import { ScheduleClient } from '@/components/schedule/ScheduleClient'
+import { toDiscoverEvent } from '@/lib/discover'
+
+export const revalidate = 300
+export const dynamic = 'force-static'
 
 export const metadata: Metadata = {
   title: 'Event Schedule & Calendar — Event Nu',
@@ -8,25 +13,15 @@ export const metadata: Metadata = {
     'Explore upcoming events and live experiences in Addis Ababa by date. Add events directly to Google Calendar, Apple iCal, and Outlook in one tap.',
 }
 
-interface SchedulePageProps {
-  searchParams: Promise<{
-    date?: string
-    category?: string
-  }>
+async function ScheduleSection() {
+  const [events, categories] = await Promise.all([getPublishedEvents(), getCategories()])
+  return <ScheduleClient events={events.map(toDiscoverEvent)} categories={categories} />
 }
 
-export default async function SchedulePage({ searchParams }: SchedulePageProps) {
-  const params = await searchParams
-  const [events, categories] = await Promise.all([getPublishedEvents(), getCategories()])
-
+export default function SchedulePage() {
   return (
-    <>
-      <ScheduleClient
-        events={events}
-        categories={categories}
-        initialDate={typeof params.date === 'string' ? params.date : undefined}
-        initialCategory={typeof params.category === 'string' ? params.category : undefined}
-      />
-    </>
+    <Suspense fallback={null}>
+      <ScheduleSection />
+    </Suspense>
   )
 }

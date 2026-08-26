@@ -72,17 +72,17 @@ describe('compressImage', () => {
     await expect(compressImage(pdf)).resolves.toBe(pdf)
   })
 
-  it('downscales oversized images and re-encodes as jpeg', async () => {
+  it('downscales oversized images and re-encodes as webp', async () => {
     const { convertToBlob, canvasDims, close } = stubImagePipeline(4000, 3000)
     const file = new File(['x'], 'photo.png', { type: 'image/png' })
 
     const out = await compressImage(file)
 
-    expect(canvasDims).toEqual([[2000, 1500]])
-    expect(convertToBlob).toHaveBeenCalledWith({ type: 'image/jpeg', quality: 0.85 })
+    expect(canvasDims).toEqual([[1920, 1440]])
+    expect(convertToBlob).toHaveBeenCalledWith({ type: 'image/webp', quality: 0.8 })
     expect(close).toHaveBeenCalled()
-    expect(out.name).toBe('photo.jpg')
-    expect(out.type).toBe('image/jpeg')
+    expect(out.name).toBe('photo.webp')
+    expect(out.type).toBe('image/webp')
   })
 
   it('keeps images within the max dimension at original size', async () => {
@@ -92,6 +92,6 @@ describe('compressImage', () => {
     const out = await compressImage(file)
 
     expect(canvasDims).toEqual([[100, 80]])
-    expect(out.name).toBe('photo.jpg')
+    expect(out.name).toBe('photo.webp')
   })
 })

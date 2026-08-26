@@ -38,7 +38,8 @@ Confirmed functionality (must keep working):
 - Pricing: free toggle, free-text price display.
 - Action types: `open_entry`, `reservation` (with limit), `external_link` (URL + label), `contact` (email).
 - Featured sections: `editors_choice`, `trending`, `popular`, `new_and_noteworthy`.
-- Platform features surfaced to admins: likes, comments, reservations, reports/moderation, notifications, CMS pages, announcements, analytics, Instagram publishing, timezone default `Africa/Addis_Ababa`.
+- Platform features surfaced to admins: likes, comments, reservations, reports/moderation, notifications, CMS pages, announcements, analytics, timezone default `Africa/Addis_Ababa`.
+- Consumer features: saved events with folders (`/saved`), user profile settings (`/profile/settings` — photo, bio, username, change password, privacy, theme), and community **Stories** (`/stories`) — ephemeral 24h photo/video posts with post-then-report moderation and no public interactivity.
 
 Technical constraints:
 

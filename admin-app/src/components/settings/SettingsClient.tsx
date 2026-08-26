@@ -4,10 +4,6 @@ import { Card } from '@/components/ui'
 import { AlertTriangle } from 'lucide-react'
 import { usernameFromEmail } from '@/lib/mappers'
 import type { Doc } from '@eventnu/convex/_generated/dataModel'
-import {
-  InstagramSettingsCard,
-  type InstagramStatus,
-} from '@/components/instagram/InstagramSettingsCard'
 import { ProfileSection } from './ProfileSection'
 import { SecuritySection } from './SecuritySection'
 import { FeaturedSectionsSection } from './FeaturedSectionsSection'
@@ -22,9 +18,6 @@ interface SettingsClientProps {
   featuredSections: FeaturedSection[]
   adminStats: AdminStats
   notificationPrefs: NotificationPrefs
-  instagramStatus?: InstagramStatus | null
-  instagramNotice?: string | null
-  instagramErrorNotice?: string | null
 }
 
 export function SettingsClient({
@@ -32,9 +25,6 @@ export function SettingsClient({
   featuredSections = [],
   adminStats,
   notificationPrefs,
-  instagramStatus,
-  instagramNotice,
-  instagramErrorNotice,
 }: SettingsClientProps) {
   const profile: AdminProfile | null = profileData
     ? {
@@ -80,11 +70,6 @@ export function SettingsClient({
           <div className="space-y-6">
             <NotificationsSection prefs={notificationPrefs} />
             <AdminStatsSection stats={adminStats} />
-            <InstagramSettingsCard
-              initialStatus={instagramStatus ?? null}
-              notice={instagramNotice}
-              errorNotice={instagramErrorNotice}
-            />
             <AccountInfoSection profile={profile} />
           </div>
         </div>

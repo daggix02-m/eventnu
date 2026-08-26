@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { MapPin, ExternalLink, MessageSquarePlus, Copy, Check, Navigation } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { EventSocialActions } from '@/components/social/EventSocialActions'
 import { SITE } from '@/lib/site'
 import { formatPrice, isEventPast, isSafeUrl } from '@/lib/utils'
 import type { Event } from '@/types'
@@ -162,6 +163,13 @@ export function EventInfoCard({ event }: EventInfoCardProps) {
             </Button>
           )}
         </div>
+
+        {/* Like / Save (folder picker) / Share — labeled action bar with live counts */}
+        <EventSocialActions
+          eventId={event.id}
+          title={event.title}
+          className="w-full justify-center border-t border-outline-variant/30 pt-4"
+        />
       </div>
 
       {/* Venue & Location Map Card */}

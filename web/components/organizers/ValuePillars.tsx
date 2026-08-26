@@ -3,7 +3,7 @@
 import { useRef } from 'react'
 import { useGSAP } from '@gsap/react'
 import { gsap } from '@/lib/gsap'
-import { Wallet, Search, BarChart3, CreditCard, Instagram } from 'lucide-react'
+import { Wallet, Search, BarChart3, CreditCard } from 'lucide-react'
 import { Container } from '@/components/layout/Container'
 
 const PILLARS = [
@@ -38,14 +38,6 @@ const PILLARS = [
     iconBg: 'bg-primary/10 border-primary/25',
     title: 'Real-Time Analytics',
     body: 'Insights into ticket buyer origins, demographics, referral pathways, and payout logs—all in one real-time cockpit.',
-    featured: false,
-  },
-  {
-    icon: Instagram,
-    iconColor: 'text-secondary',
-    iconBg: 'bg-secondary/10 border-secondary/25',
-    title: 'Instagram Publishing',
-    body: 'Publish events directly to your Instagram feed from the platform. One click promotion that reaches your existing audience without leaving Event Nu.',
     featured: false,
   },
 ] as const

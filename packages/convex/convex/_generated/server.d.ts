@@ -30,10 +30,6 @@ type Env = {
   readonly ADMIN_BOOTSTRAP_PASSWORD: string | undefined;
   readonly ADMIN_EMAIL: string | undefined;
   readonly CONVEX_SITE_URL: string | undefined;
-  readonly FACEBOOK_APP_ID: string | undefined;
-  readonly FACEBOOK_APP_SECRET: string | undefined;
-  readonly INSTAGRAM_ENCRYPTION_KEY: string | undefined;
-  readonly INSTAGRAM_VERIFY_TOKEN: string | undefined;
   readonly RESEND_API_KEY: string | undefined;
   readonly RESEND_FROM: string | undefined;
   readonly SITE_URL: string | undefined;

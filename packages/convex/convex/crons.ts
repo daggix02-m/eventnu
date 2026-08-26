@@ -4,17 +4,14 @@ import { internal } from './_generated/api'
 const crons = cronJobs()
 
 crons.interval(
-  'check instagram token expiry',
-  { hours: 24 },
-  internal.instagram.connect.checkTokens,
-  {},
-)
-
-crons.interval(
   'evaluate verification eligibility',
   { hours: 24 },
   internal.verification.evaluateEligibility,
   {},
 )
+
+crons.interval('expire stories', { hours: 1 }, internal.stories.expireStories, {
+  now: Date.now(),
+})
 
 export default crons

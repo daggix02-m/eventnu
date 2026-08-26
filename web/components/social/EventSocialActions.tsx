@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useMemo, useState } from 'react'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '@eventnu/convex/_generated/api'
 import type { FunctionReturnType } from 'convex/server'
@@ -24,6 +24,15 @@ function useAuthGate() {
   const { isAuthenticated, isLoading } = useConvexAuth()
   const { openAuth } = useAuthRedirect()
   return { isAuthenticated, isLoading, openAuth }
+}
+
+/** Light tactile feedback on tap, where the platform supports it. */
+function haptic() {
+  try {
+    navigator.vibrate?.(8)
+  } catch {
+    /* vibration unsupported — ignore */
+  }
 }
 
 /**
@@ -93,14 +102,15 @@ function LikeButton({
       openAuth()
       return
     }
+    haptic()
     toggleLike(liked ?? false)
   }
 
   const buttonClass =
     variant === 'icon'
-      ? 'inline-flex items-center justify-center rounded-full p-2 transition-colors'
+      ? 'inline-flex items-center justify-center rounded-full p-2 transition-all active:scale-90'
       : cn(
-          'inline-flex items-center gap-xs rounded-xl border px-md py-2 text-body-md font-bold transition-all',
+          'inline-flex items-center gap-xs rounded-xl border px-md py-2 text-body-md font-bold transition-all active:scale-95',
           liked
             ? 'border-primary/50 bg-primary/10 text-primary'
             : 'border-outline-variant text-on-surface-variant hover:text-primary hover:border-primary/50',
@@ -157,6 +167,7 @@ function BookmarkButton({
       openAuth()
       return
     }
+    haptic()
     const wasSaved = saved ?? false
     toggleBookmark(wasSaved)
     // Show folder picker when saving (not when unsaving).
@@ -165,9 +176,9 @@ function BookmarkButton({
 
   const buttonClass =
     variant === 'icon'
-      ? 'inline-flex items-center justify-center rounded-full p-2 transition-colors'
+      ? 'inline-flex items-center justify-center rounded-full p-2 transition-all active:scale-90'
       : cn(
-          'inline-flex items-center gap-xs rounded-xl border px-md py-2 text-body-md font-bold transition-all',
+          'inline-flex items-center gap-xs rounded-xl border px-md py-2 text-body-md font-bold transition-all active:scale-95',
           saved
             ? 'border-primary/50 bg-primary/10 text-primary'
             : 'border-outline-variant text-on-surface-variant hover:text-primary hover:border-primary/50',
@@ -293,6 +304,7 @@ function ShareButton({
   const [copied, setCopied] = useState(false)
 
   const share = async () => {
+    haptic()
     const url = window.location.href
     try {
       await track({ eventId: eventId as Id<'events'>, platform: 'native' })
@@ -359,29 +371,17 @@ export function EventSocialActions({
   )
 }
 
-export function CardQuickActions({
-  eventId,
-  title,
-  shareUrl,
-  compact = false,
-  transparent = false,
-  className,
-}: {
-  eventId: string
-  title?: string
-  shareUrl?: string
-  compact?: boolean
-  transparent?: boolean
-  className?: string
-}) {
+/** Shared like state for cards and the card double-tap gesture. */
+export function useCardLike(eventId: string) {
   const { isAuthenticated, isLoading, openAuth } = useAuthGate()
   const bulk = useContext(BulkSocialContext)
   const coveredByBulk = bulk?.coveredIds.has(eventId) ?? false
 
-  // For list pages, use the bulk context for instant reads.
-  // The optimistic toggle patches the bulk query cache directly.
+  // On list pages the bulk query is the instant read and the optimistic patch
+  // targets it; no per-card subscription is needed (that is the whole point of
+  // `BulkSocialProvider`). Outside bulk coverage the value stays unknown until
+  // the user taps — same behavior as the pre-refactor card actions.
   const liked = coveredByBulk ? (bulk?.likedIds.has(eventId) ?? false) : undefined
-  const saved = coveredByBulk ? (bulk?.savedIds.has(eventId) ?? false) : undefined
 
   const toggleLike = useOptimisticToggle({
     eventId,
@@ -397,6 +397,86 @@ export function CardQuickActions({
     ],
   })
 
+  const toggle = useCallback(() => {
+    if (!isAuthenticated) {
+      openAuth()
+      return
+    }
+    haptic()
+    toggleLike(liked ?? false)
+  }, [isAuthenticated, openAuth, liked, toggleLike])
+
+  return { liked, isLoading, toggle }
+}
+
+const cardActionButtonClass = (hoverClass: string, compact: boolean, transparent: boolean) =>
+  cn(
+    'inline-flex h-11 w-11 items-center justify-center rounded-full text-white transition-all active:scale-90',
+    compact || transparent ? hoverClass : 'hover:bg-white/10',
+  )
+
+/** Card like button — separate, self-contained, bulk-context aware. */
+export function CardLikeButton({
+  eventId,
+  likeCount,
+  compact = false,
+  transparent = false,
+  className,
+}: {
+  eventId: string
+  likeCount?: number
+  compact?: boolean
+  transparent?: boolean
+  className?: string
+}) {
+  const { liked, isLoading, toggle } = useCardLike(eventId)
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    toggle()
+  }
+
+  const showCount = typeof likeCount === 'number' && likeCount > 0
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={handleClick}
+        disabled={isLoading}
+        aria-pressed={!!liked}
+        aria-label={liked ? 'Unlike this event' : 'Like this event'}
+        className={cn(cardActionButtonClass('hover:text-error', compact, transparent), className)}
+      >
+        <Heart className={cn('h-4 w-4', liked && 'fill-error text-error')} aria-hidden="true" />
+      </button>
+      {showCount && (
+        <span className="pointer-events-none absolute -bottom-0.5 left-1/2 -translate-x-1/2 rounded-full bg-black/60 px-1.5 py-px font-mono text-[10px] font-bold tabular-nums text-white">
+          {likeCount}
+        </span>
+      )}
+    </div>
+  )
+}
+
+/** Card bookmark button — plain optimistic toggle (no folder picker). */
+export function CardBookmarkButton({
+  eventId,
+  compact = false,
+  transparent = false,
+  className,
+}: {
+  eventId: string
+  compact?: boolean
+  transparent?: boolean
+  className?: string
+}) {
+  const { isAuthenticated, isLoading, openAuth } = useAuthGate()
+  const bulk = useContext(BulkSocialContext)
+  const coveredByBulk = bulk?.coveredIds.has(eventId) ?? false
+  const saved = coveredByBulk ? (bulk?.savedIds.has(eventId) ?? false) : undefined
+
   const toggleBookmark = useOptimisticToggle({
     eventId,
     query: api.bookmarks.hasBookmarked,
@@ -411,31 +491,56 @@ export function CardQuickActions({
     ],
   })
 
-  const guard = (e: React.MouseEvent) => {
+  const handleClick = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-  }
-
-  const handleLike = (e: React.MouseEvent) => {
-    guard(e)
     if (!isAuthenticated) {
       openAuth()
       return
     }
-    toggleLike(liked ?? false)
-  }
-
-  const handleBookmark = (e: React.MouseEvent) => {
-    guard(e)
-    if (!isAuthenticated) {
-      openAuth()
-      return
-    }
+    haptic()
     toggleBookmark(saved ?? false)
   }
 
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      disabled={isLoading}
+      aria-pressed={!!saved}
+      aria-label={saved ? 'Remove from saved events' : 'Save this event'}
+      className={cn(cardActionButtonClass('hover:text-primary', compact, transparent), className)}
+    >
+      <Bookmark
+        className={cn('h-4 w-4', saved && 'fill-primary text-primary')}
+        aria-hidden="true"
+      />
+    </button>
+  )
+}
+
+/** Card share button — native share sheet, clipboard fallback, tracked. */
+export function CardShareButton({
+  eventId,
+  title,
+  shareUrl,
+  compact = false,
+  transparent = false,
+  className,
+}: {
+  eventId: string
+  title?: string
+  shareUrl?: string
+  compact?: boolean
+  transparent?: boolean
+  className?: string
+}) {
+  const trackShare = useMutation(api.shares.track)
+
   const share = async (e: React.MouseEvent) => {
-    guard(e)
+    e.preventDefault()
+    e.stopPropagation()
+    haptic()
     const url = shareUrl ? `${window.location.origin}${shareUrl}` : window.location.href
     try {
       if (navigator.share) {
@@ -446,58 +551,72 @@ export function CardQuickActions({
     } catch {
       /* sharing is best-effort */
     }
+    try {
+      await trackShare({ eventId: eventId as Id<'events'>, platform: 'native' })
+    } catch {
+      /* share tracking is best-effort */
+    }
   }
 
   return (
+    <button
+      type="button"
+      onClick={share}
+      aria-label="Share this event"
+      className={cn(cardActionButtonClass('hover:text-primary', compact, transparent), className)}
+    >
+      <Share2 className="h-4 w-4" aria-hidden="true" />
+    </button>
+  )
+}
+
+export function CardQuickActions({
+  eventId,
+  title,
+  shareUrl,
+  compact = false,
+  transparent = false,
+  likeCount,
+  direction = 'column',
+  className,
+}: {
+  eventId: string
+  title?: string
+  shareUrl?: string
+  compact?: boolean
+  transparent?: boolean
+  /** Live like count rendered as a badge on the heart. Optimistic toggles patch it in place. */
+  likeCount?: number
+  /** 'column' keeps the classic vertical stack (hero); 'row' lays the actions out horizontally. */
+  direction?: 'column' | 'row'
+  className?: string
+}) {
+  return (
     <div
+      role="group"
+      aria-label="Event actions"
       className={cn(
-        'flex flex-col items-center rounded-full backdrop-blur-md',
+        'flex items-center rounded-full backdrop-blur-md',
+        direction === 'row' ? 'flex-row' : 'flex-col',
         compact || transparent ? 'gap-0.5 bg-transparent p-0' : 'gap-xs bg-black/50 p-xs',
         className,
       )}
-      onClick={(e) => e.preventDefault()}
     >
-      <button
-        type="button"
-        onClick={handleLike}
-        disabled={isLoading}
-        aria-pressed={!!liked}
-        aria-label={liked ? 'Unlike this event' : 'Like this event'}
-        className={cn(
-          'inline-flex h-11 w-11 items-center justify-center rounded-full text-white transition-colors',
-          compact || transparent ? 'hover:text-error' : 'hover:bg-white/10',
-        )}
-      >
-        <Heart className={cn('h-4 w-4', liked && 'fill-error text-error')} aria-hidden="true" />
-      </button>
-      <button
-        type="button"
-        onClick={handleBookmark}
-        disabled={isLoading}
-        aria-pressed={!!saved}
-        aria-label={saved ? 'Remove from saved events' : 'Save this event'}
-        className={cn(
-          'inline-flex h-11 w-11 items-center justify-center rounded-full text-white transition-colors',
-          compact || transparent ? 'hover:text-primary' : 'hover:bg-white/10',
-        )}
-      >
-        <Bookmark
-          className={cn('h-4 w-4', saved && 'fill-primary text-primary')}
-          aria-hidden="true"
-        />
-      </button>
+      <CardLikeButton
+        eventId={eventId}
+        likeCount={likeCount}
+        compact={compact}
+        transparent={transparent}
+      />
+      <CardBookmarkButton eventId={eventId} compact={compact} transparent={transparent} />
       {title && (
-        <button
-          type="button"
-          onClick={share}
-          aria-label="Share this event"
-          className={cn(
-            'inline-flex h-11 w-11 items-center justify-center rounded-full text-white transition-colors',
-            compact || transparent ? 'hover:text-primary' : 'hover:bg-white/10',
-          )}
-        >
-          <Share2 className="h-4 w-4" />
-        </button>
+        <CardShareButton
+          eventId={eventId}
+          title={title}
+          shareUrl={shareUrl}
+          compact={compact}
+          transparent={transparent}
+        />
       )}
     </div>
   )

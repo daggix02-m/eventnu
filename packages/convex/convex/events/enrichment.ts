@@ -83,7 +83,6 @@ export type PublicEvent = {
   endDate?: number
   posterUrl?: string
   imageAspectRatio?: string
-  instaPermalink?: string
   teaserVideoUrl?: string
   videoAspectRatio?: string
   externalLink?: string
@@ -129,7 +128,6 @@ export function toPublicEvent(
     endDate: event.endDate,
     posterUrl: images[0]?.url ?? event.posterUrl,
     imageAspectRatio: event.imageAspectRatio,
-    instaPermalink: event.instaPermalink,
     teaserVideoUrl: event.teaserVideoUrl,
     videoAspectRatio: event.videoAspectRatio,
     externalLink: event.externalLink,

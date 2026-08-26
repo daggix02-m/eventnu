@@ -1,10 +1,17 @@
 import { v } from 'convex/values'
 import { query, mutation, internalQuery } from './_generated/server'
 import { getAuthUserId } from '@convex-dev/auth/server'
-import { patchDefined, getUserProfile, requireAdmin, requireUser } from './helpers'
+import { patchDefined, getUserProfile, requireAdmin, requireUser, validateUrl } from './helpers'
 import { paginationOptsValidator } from 'convex/server'
+import { rateLimiter } from './rateLimiter'
 import type { Doc, Id } from './_generated/dataModel'
 import type { QueryCtx, MutationCtx } from './_generated/server'
+
+const USERNAME_RE = /^[a-z0-9_.]{3,30}$/
+const MAX_FULL_NAME_LENGTH = 100
+const MAX_BIO_LENGTH = 280
+const MAX_LOCATION_LENGTH = 100
+const VALID_THEMES = ['system', 'light', 'dark'] as const
 
 const USER_STATUS = v.union(
   v.literal('all'),
@@ -286,6 +293,101 @@ export const updateProfile = mutation({
     }
     const updates = patchDefined(fields)
     await ctx.db.patch('profiles', profileId, updates)
+  },
+})
+
+export const updateMe = mutation({
+  args: {
+    fullName: v.optional(v.string()),
+    bio: v.optional(v.string()),
+    username: v.optional(v.string()),
+    locationText: v.optional(v.string()),
+    website: v.optional(v.string()),
+    avatarStorageId: v.optional(v.string()),
+    emailNotifications: v.optional(v.boolean()),
+    pushNotifications: v.optional(v.boolean()),
+    privateProfile: v.optional(v.boolean()),
+    themePreference: v.optional(
+      v.union(v.literal('system'), v.literal('light'), v.literal('dark')),
+    ),
+  },
+  handler: async (ctx, args) => {
+    const profile = await requireUser(ctx)
+    await rateLimiter.limit(ctx, 'profileUpdate', { key: profile._id, throws: true })
+
+    const updates: Record<string, unknown> = {}
+
+    if (args.fullName !== undefined) {
+      const name = args.fullName.trim()
+      if (!name || name.length > MAX_FULL_NAME_LENGTH) {
+        throw new Error('Full name must be 1-100 characters')
+      }
+      updates.fullName = name
+    }
+
+    if (args.bio !== undefined) {
+      const bio = args.bio.trim()
+      if (bio.length > MAX_BIO_LENGTH) {
+        throw new Error('Bio must be 280 characters or fewer')
+      }
+      updates.bio = bio.length > 0 ? bio : undefined
+    }
+
+    if (args.username !== undefined) {
+      const username = args.username.trim().toLowerCase()
+      if (!USERNAME_RE.test(username)) {
+        throw new Error(
+          'Username must be 3-30 characters and use only letters, numbers, dots, or underscores',
+        )
+      }
+      const existing = await ctx.db
+        .query('profiles')
+        .withIndex('by_username', (q) => q.eq('username', username))
+        .first()
+      if (existing && existing._id !== profile._id) {
+        throw new Error('Username is already taken')
+      }
+      updates.username = username
+    }
+
+    if (args.locationText !== undefined) {
+      const location = args.locationText.trim()
+      if (location.length > MAX_LOCATION_LENGTH) {
+        throw new Error('Location must be 100 characters or fewer')
+      }
+      updates.locationText = location.length > 0 ? location : undefined
+    }
+
+    if (args.website !== undefined) {
+      const website = args.website.trim()
+      if (website) {
+        validateUrl(website, 'Website')
+      }
+      updates.website = website.length > 0 ? website : undefined
+    }
+
+    if (args.themePreference !== undefined) {
+      if (!(VALID_THEMES as readonly string[]).includes(args.themePreference)) {
+        throw new Error('Invalid theme preference')
+      }
+      updates.themePreference = args.themePreference
+    }
+
+    if (args.emailNotifications !== undefined) updates.emailNotifications = args.emailNotifications
+    if (args.pushNotifications !== undefined) updates.pushNotifications = args.pushNotifications
+    if (args.privateProfile !== undefined) updates.privateProfile = args.privateProfile
+
+    if (args.avatarStorageId !== undefined && args.avatarStorageId !== profile.avatarStorageId) {
+      const url = await ctx.storage.getUrl(args.avatarStorageId as Id<'_storage'>)
+      if (!url) throw new Error('Uploaded file not found')
+      if (profile.avatarStorageId) {
+        await ctx.storage.delete(profile.avatarStorageId as Id<'_storage'>)
+      }
+      updates.avatarUrl = url
+      updates.avatarStorageId = args.avatarStorageId
+    }
+
+    await ctx.db.patch('profiles', profile._id, updates)
   },
 })
 

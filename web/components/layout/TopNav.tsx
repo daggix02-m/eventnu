@@ -54,7 +54,6 @@ export function TopNav() {
                 height={672}
                 style={{ height: '36px', width: 'auto' }}
                 className="transition-transform duration-200 group-hover:scale-105"
-                priority
               />
               <span className="font-bold text-lg text-primary tracking-tight md:hidden">
                 Event Nu

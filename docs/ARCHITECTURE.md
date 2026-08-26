@@ -60,7 +60,7 @@ admin-app/src/
 │   ├── layout/               shell, sidebar, nav, PageLayout
 │   ├── list/                 DataTable, FilterBar, StatusBadge, Pagination, ConfirmDialog
 │   ├── events/ · categories/ · cms/ · hosts/ · users/ · organizers/ ·
-│   │   reports/ · notifications/ · support/ · analytics/ · instagram/ · settings/
+│   │   reports/ · notifications/ · support/ · analytics/ · settings/
 │   └── providers/            TanStack Query, theme, Convex auth client
 ├── lib/
 │   ├── actions/              server actions → Convex (mutations + list reads)
@@ -107,7 +107,7 @@ web/
 │   ├── events/[slug]/        event detail page (force-static, revalidate 300)
 │   ├── discover/             discover page
 │   ├── schedule/             itinerary/schedule page
-│   ├── categories/ · organizer/ · organizers/ · experiences/ · profile/ · auth/ · info/ · about/ · contact/
+│   ├── categories/ · organizer/ · organizers/ · experiences/ · profile/ · saved/ · stories/ · auth/ · info/ · about/ · contact/
 │   └── api/                  route handlers (csp-report)
 ├── components/
 │   ├── ui/                   THE design-system primitive layer (buttons, inputs, dialogs)
@@ -119,7 +119,7 @@ web/
 │   ├── discover/             DiscoverPageClient
 │   ├── organizer-dashboard/  signed-in organizer's dashboard (NOT the public organizers/ landing)
 │   ├── organizers/           public organizer landing sections (HeroSection, Testimonials, FAQSection, …)
-│   ├── auth/ · contact/ · moderation/ · profile/ · schedule/ · social/ · verification/ · experiences/ · pwa/ · effects/ · providers/
+│   ├── auth/ · contact/ · moderation/ · profile/ · saved/ · stories/ · schedule/ · social/ · verification/ · experiences/ · pwa/ · effects/ · providers/
 ├── lib/
 │   ├── actions/              server actions (contact form)
 │   ├── api/                  server-side data modules (events, organizers, public-client, map-event) — `server-only`
@@ -135,20 +135,21 @@ web/
 | `schema.ts` | Tables, compound indexes (`by_<field1>_and_<field2>`) |
 | `helpers.ts` / `constants.ts` | Shared primitives: `patchDefined`, slugify, `requireAdmin`, moderation-log/notification inserts, image batch insert |
 | `events/` | `read` · `write` · `moderation` · `enrichment` (split from one 592-line file) |
-| `instagram/` | `connect` · `publish` · `import` · `shared` · `crypto` |
 | `cms/` | `pages` · `announcements` · `contact` |
 | `auth.ts` / `auth.config.ts` | Convex Auth (Google OAuth + password) |
 | `http.ts` | HTTP endpoints / webhooks (validates `req.json()` as `unknown`) |
 | `admin.ts`, `adminSettings.ts`, `dashboard.ts`, `analytics.ts` | Admin surface + stats |
 | `categories.ts`, `hosts.ts`, `organizers.ts`, `profiles.ts`, `features.ts` | Content catalogs |
 | `reports.ts`, `moderation.ts`, `notifications.ts`, `support.ts` | Trust & safety |
-| `likes.ts`, `comments.ts`, `bookmarks.ts`, `follows.ts`, `shares.ts`, `reservations.ts`, `experiencePosts.ts`, `email.ts` | Consumer-site features |
+| `likes.ts`, `comments.ts`, `bookmarks.ts`, `follows.ts`, `shares.ts`, `reservations.ts`, `experiencePosts.ts`, `stories.ts`, `email.ts` | Consumer-site features |
 | `crons.ts`, `rateLimiter.ts`, `migrations.ts`, `seed.ts` | Ops |
 
 ## Routes & responsibilities
 
 - Consumer routes are **stable** (`/events`, `/events/[slug]`, `/categories/[slug]`,
-  `/info/[slug]`, …) — no link breakage allowed.
+  `/info/[slug]`, …) — no link breakage allowed. Added in the 2026-08 feature work:
+  `/saved` (bookmarks, formerly a `/profile?tab=bookmarks` alias), `/stories` (community
+  stories feed), and `/profile/settings` (profile/security/privacy/post management).
 - Admin routes live under `(app)/`; the role gate resolves in the layout, profile and
   nav counts are server-seeded.
 - Admin search inputs debounce ~400ms; TanStack Query `staleTime` is consistent

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { AboutContent } from './AboutContent'
-import { getCategories, getPublishedEvents } from '@/lib/api/events'
+import { getCategories, getPublishedEventCount } from '@/lib/api/events'
 
 export const revalidate = 300
 export const dynamic = 'force-static'
@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 }
 
 export default async function AboutPage() {
-  const [events, categories] = await Promise.all([getPublishedEvents(), getCategories()])
+  const [eventCount, categories] = await Promise.all([getPublishedEventCount(), getCategories()])
 
-  return <AboutContent eventCount={events.length} categoryCount={categories.length} />
+  return <AboutContent eventCount={eventCount} categoryCount={categories.length} />
 }

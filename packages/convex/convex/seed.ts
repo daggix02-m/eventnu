@@ -161,7 +161,7 @@ const EVENTS: SeedEvent[] = [
   {
     title: 'The House Party',
     slug: 'the-house-party',
-    poster: '/images/events/july-20-26/the-house-party.png',
+    poster: '/images/events/july-20-26/the-house-party.webp',
     category: 'nightlife',
     description:
       "Addis' biggest recurring house party returns — deep house, afro house, and amapiano on a proper soundsystem until late. First-come, first-served entry.",
@@ -176,7 +176,7 @@ const EVENTS: SeedEvent[] = [
   {
     title: 'Hip Hop Night',
     slug: 'hip-hop-night',
-    poster: '/images/events/june-22-28/hiphop.png',
+    poster: '/images/events/june-22-28/hiphop.webp',
     category: 'music',
     secondaryCategory: 'nightlife',
     description:
@@ -192,7 +192,7 @@ const EVENTS: SeedEvent[] = [
   {
     title: 'Afro Heat',
     slug: 'afro-heat',
-    poster: '/images/events/july-01-05/afro-heat.png',
+    poster: '/images/events/july-01-05/afro-heat.webp',
     category: 'music',
     description:
       'A night of afrobeats, amapiano, and East African bangers with resident DJs and a surprise guest lineup.',
@@ -206,7 +206,7 @@ const EVENTS: SeedEvent[] = [
   {
     title: 'Unity in Beats',
     slug: 'unity-in-beats',
-    poster: '/images/events/july-13-19/unity-in-beats.png',
+    poster: '/images/events/july-13-19/unity-in-beats.webp',
     category: 'music',
     description:
       'A celebration of pan-African rhythms — live percussion, sax, and bass lines that move the whole room.',
@@ -220,7 +220,7 @@ const EVENTS: SeedEvent[] = [
   {
     title: 'Evangadi',
     slug: 'evangadi',
-    poster: '/images/events/july-20-26/evangadi.png',
+    poster: '/images/events/july-20-26/evangadi.webp',
     category: 'music',
     description:
       'Traditional evangadi rhythms reimagined for a modern dancefloor, with a live band and resident dancers.',
@@ -234,7 +234,7 @@ const EVENTS: SeedEvent[] = [
   {
     title: 'Ertib',
     slug: 'ertib',
-    poster: '/images/events/july-13-19/ertib.png',
+    poster: '/images/events/july-13-19/ertib.webp',
     category: 'music',
     description:
       'An intimate night of soul and jazz covers from rising Addis vocalists, hosted in a candle-lit lounge.',
@@ -247,7 +247,7 @@ const EVENTS: SeedEvent[] = [
   {
     title: 'Night Shift',
     slug: 'night-shift',
-    poster: '/images/events/july-20-26/night-shift.png',
+    poster: '/images/events/july-20-26/night-shift.webp',
     category: 'nightlife',
     description:
       "The late-night crew's weekly — techno and minimal house from the city's sharpest selectors till sunrise.",
@@ -261,7 +261,7 @@ const EVENTS: SeedEvent[] = [
   {
     title: 'Shift',
     slug: 'shift',
-    poster: '/images/events/june-22-28/shift.png',
+    poster: '/images/events/june-22-28/shift.webp',
     category: 'nightlife',
     description:
       'A warehouse-style dance night with visuals, a smoke machine, and three rooms of electronic music.',
@@ -274,7 +274,7 @@ const EVENTS: SeedEvent[] = [
   {
     title: 'Utopia Night',
     slug: 'utopia-night',
-    poster: '/images/events/july-01-05/utopia-night.png',
+    poster: '/images/events/july-01-05/utopia-night.webp',
     category: 'nightlife',
     description:
       'Futuristic party night — neon visuals, afro-futurist installations, and heavy bass music all night.',
@@ -288,7 +288,7 @@ const EVENTS: SeedEvent[] = [
   {
     title: 'Caribbean & Afro Night',
     slug: 'caribbean-and-afro-night',
-    poster: '/images/events/july-20-26/carabian-and-afro-nigt.png',
+    poster: '/images/events/july-20-26/carabian-and-afro-nigt.webp',
     category: 'nightlife',
     description:
       'Dancehall, reggae, and afrobeats collide for a cross-cultural party with live DJs and MCs.',
@@ -301,7 +301,7 @@ const EVENTS: SeedEvent[] = [
   {
     title: 'Special Thursday',
     slug: 'special-thursday',
-    poster: '/images/events/june-22-28/25-special-thursday.png',
+    poster: '/images/events/june-22-28/25-special-thursday.webp',
     category: 'nightlife',
     description: 'The mid-week reset — open decks, happy-hour cocktails, and a laid-back crowd.',
     venue: 'Salon 5 Café',
@@ -313,7 +313,7 @@ const EVENTS: SeedEvent[] = [
   {
     title: 'Urban Friends',
     slug: 'urban-friends',
-    poster: '/images/events/june-22-28/urban-friends.png',
+    poster: '/images/events/june-22-28/urban-friends.webp',
     category: 'music',
     description:
       "A showcase of urban Ethiopian artists — rap, drill, and R&B from the scene's next wave.",
@@ -326,7 +326,7 @@ const EVENTS: SeedEvent[] = [
   {
     title: 'Wegdayt',
     slug: 'wegdayt',
-    poster: '/images/events/june-22-28/wegdayt.png',
+    poster: '/images/events/june-22-28/wegdayt.webp',
     category: 'music',
     description:
       'Live traditional fusion — krar and masenqo meet electric guitar in a high-energy set.',
@@ -339,7 +339,7 @@ const EVENTS: SeedEvent[] = [
   {
     title: 'Bedele Special',
     slug: 'bedele-special',
-    poster: '/images/events/july-20-26/bedele-special.png',
+    poster: '/images/events/july-20-26/bedele-special.webp',
     category: 'music',
     description:
       'An evening of mellow acoustic sessions and storytelling, celebrating Ethiopian songwriting.',
@@ -352,7 +352,7 @@ const EVENTS: SeedEvent[] = [
   {
     title: 'Anime Fest',
     slug: 'anime-fest',
-    poster: '/images/events/june-22-28/25-anime.png',
+    poster: '/images/events/june-22-28/25-anime.webp',
     category: 'arts-culture',
     secondaryCategory: 'family',
     description:
@@ -367,7 +367,7 @@ const EVENTS: SeedEvent[] = [
   {
     title: 'Anime Fest: Grand Finale',
     slug: 'anime-fest-finale',
-    poster: '/images/events/june-22-28/28-anime.png',
+    poster: '/images/events/june-22-28/28-anime.webp',
     category: 'arts-culture',
     secondaryCategory: 'family',
     description:
@@ -381,7 +381,7 @@ const EVENTS: SeedEvent[] = [
   {
     title: 'Fashion Lab',
     slug: 'fashion-lab',
-    poster: '/images/events/june-22-28/fashion-lab.png',
+    poster: '/images/events/june-22-28/fashion-lab.webp',
     category: 'arts-culture',
     description:
       'A runway showcase of emerging Ethiopian designers, with installations and a pop-up market.',
@@ -395,7 +395,7 @@ const EVENTS: SeedEvent[] = [
   {
     title: 'Sip & Paint',
     slug: 'sip-and-paint',
-    poster: '/images/events/july-01-05/sip-and-paint.png',
+    poster: '/images/events/july-01-05/sip-and-paint.webp',
     category: 'arts-culture',
     secondaryCategory: 'food-drink',
     description:
@@ -409,7 +409,7 @@ const EVENTS: SeedEvent[] = [
   {
     title: 'Affordable Art Fair',
     slug: 'affordable-art',
-    poster: '/images/events/july-01-05/affrodable-art.png',
+    poster: '/images/events/july-01-05/affrodable-art.webp',
     category: 'arts-culture',
     description:
       "Original works from 40+ local artists priced under 5,000 ETB — the city's most accessible art fair.",
@@ -422,7 +422,7 @@ const EVENTS: SeedEvent[] = [
   {
     title: 'Free Form Exhibition',
     slug: 'free-form',
-    poster: '/images/events/july-6-12/free-form.png',
+    poster: '/images/events/july-6-12/free-form.webp',
     category: 'arts-culture',
     description:
       'An experimental exhibition of abstract painting, sculpture, and sound installations.',
@@ -435,7 +435,7 @@ const EVENTS: SeedEvent[] = [
   {
     title: 'Photography Workshop',
     slug: 'photography-workshop',
-    poster: '/images/events/july-6-12/photography-woorkshope.png',
+    poster: '/images/events/july-6-12/photography-woorkshope.webp',
     category: 'arts-culture',
     description:
       'A hands-on street-photography workshop in the old city, followed by a group critique over coffee.',
@@ -448,7 +448,7 @@ const EVENTS: SeedEvent[] = [
   {
     title: 'Bloom Week',
     slug: 'bloom-week',
-    poster: '/images/events/july-20-26/bloom-week.png',
+    poster: '/images/events/july-20-26/bloom-week.webp',
     category: 'arts-culture',
     description:
       'A week-long celebration of flora in art — botanical illustration, floral installations, and workshops.',
@@ -461,7 +461,7 @@ const EVENTS: SeedEvent[] = [
   {
     title: 'Tea Gathering',
     slug: 'tea-gathering',
-    poster: '/images/events/june-22-28/27-tea.png',
+    poster: '/images/events/june-22-28/27-tea.webp',
     category: 'food-drink',
     description:
       'An afternoon of loose-leaf tea tastings, pastries, and quiet conversation in a garden setting.',
@@ -474,7 +474,7 @@ const EVENTS: SeedEvent[] = [
   {
     title: 'Feta Society',
     slug: 'feta-society',
-    poster: '/images/events/july-13-19/feta-socity.png',
+    poster: '/images/events/july-13-19/feta-socity.webp',
     category: 'food-drink',
     description:
       "A street-food crawl across the city's best night stalls — feta, suya, and everything in between.",
@@ -487,7 +487,7 @@ const EVENTS: SeedEvent[] = [
   {
     title: 'Dimket Fest',
     slug: 'dimket-fest',
-    poster: '/images/events/july-20-26/dimket-fest.png',
+    poster: '/images/events/july-20-26/dimket-fest.webp',
     category: 'food-drink',
     description:
       "A family-friendly food festival with live grills, traditional coffee ceremonies, and kids' activities.",
@@ -502,7 +502,7 @@ const EVENTS: SeedEvent[] = [
   {
     title: 'Cycle Session',
     slug: 'cycle-session',
-    poster: '/images/events/june-22-28/cycle.png',
+    poster: '/images/events/june-22-28/cycle.webp',
     category: 'sports-fitness',
     description:
       "A relaxed group ride through the city's green routes, with a coffee stop at the midpoint.",
@@ -515,7 +515,7 @@ const EVENTS: SeedEvent[] = [
   {
     title: 'Adventure Run',
     slug: 'adventure-run',
-    poster: '/images/events/july-01-05/adventure.png',
+    poster: '/images/events/july-01-05/adventure.webp',
     category: 'sports-fitness',
     description:
       'A 10K trail run with obstacles, music zones, and finisher medals. Timing chips provided.',
@@ -529,7 +529,7 @@ const EVENTS: SeedEvent[] = [
   {
     title: 'CBE Entoto Run',
     slug: 'cbe-entoto-run',
-    poster: '/images/events/july-01-05/cbe-entoto-run.png',
+    poster: '/images/events/july-01-05/cbe-entoto-run.webp',
     category: 'sports-fitness',
     description:
       "The city's biggest annual road race — 5K, 10K, and half-marathon routes through the hills of Entoto.",
@@ -543,7 +543,7 @@ const EVENTS: SeedEvent[] = [
   {
     title: 'Networking Night',
     slug: 'networking-night',
-    poster: '/images/events/july-13-19/networking-night.png',
+    poster: '/images/events/july-13-19/networking-night.webp',
     category: 'tech-innovation',
     description:
       'Founders, engineers, and investors meet over drinks — lightning talks followed by open networking.',
@@ -557,7 +557,7 @@ const EVENTS: SeedEvent[] = [
   {
     title: 'Afterwork',
     slug: 'afterwork',
-    poster: '/images/events/june-22-28/26-afterwork.png',
+    poster: '/images/events/june-22-28/26-afterwork.webp',
     category: 'tech-innovation',
     description:
       "The monthly professional mixer — grab a drink, meet people across Addis' tech and creative scene.",
@@ -570,7 +570,7 @@ const EVENTS: SeedEvent[] = [
   {
     title: 'Baby Disco',
     slug: 'baby-disco',
-    poster: '/images/events/july-01-05/baby-disco.png',
+    poster: '/images/events/july-01-05/baby-disco.webp',
     category: 'family',
     description:
       'A daytime dance party for toddlers and parents — soft lighting, bubbles, and kid-friendly tunes.',
@@ -583,7 +583,7 @@ const EVENTS: SeedEvent[] = [
   {
     title: 'Chimp Event',
     slug: 'chimp-event',
-    poster: '/images/events/july-20-26/chimp-event.png',
+    poster: '/images/events/july-20-26/chimp-event.webp',
     category: 'family',
     description:
       'An afternoon of primate-themed games, face painting, and a conservation talk for kids.',
@@ -596,7 +596,7 @@ const EVENTS: SeedEvent[] = [
   {
     title: 'Game Night',
     slug: 'game-night',
-    poster: '/images/events/before-22/june-19-game-night.png',
+    poster: '/images/events/before-22/june-19-game-night.webp',
     category: 'family',
     secondaryCategory: 'food-drink',
     description:

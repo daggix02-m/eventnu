@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo, useRef, useCallback } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { useGSAP } from '@gsap/react'
 import { gsap } from '@/lib/gsap'
 import { CalendarDays } from 'lucide-react'
@@ -9,13 +10,13 @@ import { ScheduleFilters, type TimeOfDayFilter } from './ScheduleFilters'
 import { ScheduleEventCard } from './ScheduleEventCard'
 import { ItineraryFloatingDock } from './ItineraryFloatingDock'
 import { EmptyScheduleState } from './EmptyScheduleState'
-import type { Event, Category } from '@/types'
+import type { DiscoverEvent, Category } from '@/types'
 import { toDateString, getTodayString, nextFriday, getHourInTimeZone } from '@/lib/dates'
 import { canSmoothScroll } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 
 interface ScheduleClientProps {
-  events: Event[]
+  events: DiscoverEvent[]
   categories: Category[]
   initialCategory?: string
   initialDate?: string
@@ -25,15 +26,15 @@ function toLocalDateString(isoString: string): string {
   return toDateString(new Date(isoString))
 }
 
-export function ScheduleClient({
-  events,
-  categories,
-  initialCategory,
-  initialDate,
-}: ScheduleClientProps) {
+export function ScheduleClient({ events, categories }: ScheduleClientProps) {
   const containerRef = useRef<HTMLElement>(null)
   const headerRef = useRef<HTMLDivElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
+  // Initial category/date come from the URL (?date=, ?category=). Filtering is
+  // entirely client-side, so reading them here keeps the route ISR-cacheable.
+  const searchParams = useSearchParams()
+  const initialDate = searchParams.get('date') ?? undefined
+  const initialCategory = searchParams.get('category') ?? undefined
 
   // Map of date string -> event count
   const eventDatesMap = useMemo(() => {
@@ -64,7 +65,7 @@ export function ScheduleClient({
 
   const [timeFilter, setTimeFilter] = useState<TimeOfDayFilter>('all')
   const [selectedCategory, setSelectedCategory] = useState<string | null>(initialCategory || null)
-  const [plannedEvents, setPlannedEvents] = useState<Event[]>([])
+  const [plannedEvents, setPlannedEvents] = useState<DiscoverEvent[]>([])
   const [highlightedEventId, setHighlightedEventId] = useState<string | null>(null)
   const [isRollingDice, setIsRollingDice] = useState(false)
 
@@ -131,7 +132,7 @@ export function ScheduleClient({
   )
 
   // Toggle planned event in custom itinerary
-  const handleTogglePlan = useCallback((event: Event) => {
+  const handleTogglePlan = useCallback((event: DiscoverEvent) => {
     setPlannedEvents((prev) => {
       const exists = prev.some((e) => e.id === event.id)
       if (exists) {

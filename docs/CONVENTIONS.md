@@ -119,6 +119,12 @@ trailing commas on multiline. Do not hand-format; run `npm run format`.
 Read `packages/convex/convex/_generated/ai/guidelines.md` before touching Convex code —
 it overrides training-data assumptions.
 
+- New or changed functions and schema are only visible to running apps after they are
+  **pushed to the deployment**. `npx convex codegen` regenerates local type bindings only —
+  it does not deploy. Run `npm -w @eventnu/convex run dev` (`convex dev`, targets the
+  `dev:` deployment in `.env.local`) and keep it running, or run a one-shot sync with a
+  short timeout to push functions + schema.
+
 - Validators on every query/mutation arg; `Doc` types from `_generated/dataModel`.
 - Compound index names use `by_<field1>_and_<field2>` (`schema.ts`).
 - Use `.paginate()` / `paginationResultValidator` for list queries; never `.take(1000)` +

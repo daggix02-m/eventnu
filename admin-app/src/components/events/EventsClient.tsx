@@ -15,7 +15,6 @@ import {
   Trash2,
   Eye,
   Edit,
-  Instagram,
   Plus,
 } from 'lucide-react'
 import { Button } from '@/components/ui'
@@ -59,7 +58,6 @@ const sourceOptions = [
   { value: 'admin', label: 'Admin Posted' },
   { value: 'organizer', label: 'Organizer' },
   { value: 'standalone', label: 'Standalone' },
-  { value: 'instagram', label: 'Instagram' },
 ]
 
 const frequencyOptions = [
@@ -345,20 +343,11 @@ export function EventsClient({
             {
               key: 'source',
               header: 'Source',
-              render: (event) =>
-                event.source === 'instagram' ? (
-                  <Badge
-                    variant="outline"
-                    className="text-xs flex w-fit items-center gap-1 bg-[#E1306C]/10 text-[#E1306C] border-[#E1306C]/20"
-                  >
-                    <Instagram size={11} />
-                    Instagram
-                  </Badge>
-                ) : (
-                  <Badge variant="outline" className="text-xs">
-                    {event.is_standalone ? 'Standalone' : event.owner_id ? 'Organizer' : 'Unknown'}
-                  </Badge>
-                ),
+              render: (event) => (
+                <Badge variant="outline" className="text-xs">
+                  {event.is_standalone ? 'Standalone' : event.owner_id ? 'Organizer' : 'Unknown'}
+                </Badge>
+              ),
             },
             {
               key: 'status',

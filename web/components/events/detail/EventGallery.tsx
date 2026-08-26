@@ -2,15 +2,15 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
-import { ChevronLeft, ChevronRight, Instagram } from 'lucide-react'
-import { cn, isSafeUrl } from '@/lib/utils'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { filterStyle, aspectClass, sortedImages } from '@/lib/media'
 import type { Event, EventImage } from '@/types'
 
 interface EventGalleryProps {
   event: Event
   className?: string
-  /** `hero` hides chrome that would collide with the EventHero overlay (thumbnails, counter, Instagram badge). */
+  /** `hero` hides chrome that would collide with the EventHero overlay (thumbnails, counter). */
   variant?: 'default' | 'hero'
 }
 
@@ -116,20 +116,6 @@ export function EventGallery({ event, className, variant = 'default' }: EventGal
             </div>
           )}
         </>
-      )}
-
-      {/* Instagram badge — hidden in hero mode to avoid colliding with the
-          hero's top-right report/status/date badges */}
-      {!isHero && event.insta_permalink && isSafeUrl(event.insta_permalink) && (
-        <a
-          href={event.insta_permalink}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="absolute top-sm right-sm flex items-center gap-xs bg-black/50 backdrop-blur-md px-sm py-1 rounded-full font-mono text-label-sm text-white hover:bg-[#E1306C]/80 transition-colors"
-        >
-          <Instagram className="w-3.5 h-3.5" />
-          Instagram
-        </a>
       )}
 
       {/* Thumbnail strip — hidden in hero mode where it collides with the
