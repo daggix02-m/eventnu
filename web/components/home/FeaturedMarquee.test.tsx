@@ -5,21 +5,23 @@ import { createTapGuard, FeaturedMarquee } from './FeaturedMarquee'
 import type { Event } from '@/types'
 
 vi.mock('next/image', () => ({
-  // Mimic next/image's real behaviour: `priority` is consumed by the component
-  // and becomes `fetchpriority="high"` + eager loading on the <img>, while an
-  // explicit fetchPriority string is passed through as-is.
+  // Mimic next/image's real behaviour: `priority`/`preload` is consumed by the
+  // component and becomes `fetchpriority="high"` + eager loading on the <img>,
+  // while an explicit fetchPriority string is passed through as-is.
   default: ({
     priority,
+    preload,
     fetchPriority,
     ...props
   }: {
     priority?: boolean
+    preload?: boolean
     fetchPriority?: string
   } & React.ImgHTMLAttributes<HTMLImageElement>) =>
     React.createElement('img', {
       alt: '',
       ...props,
-      fetchpriority: priority ? 'high' : (fetchPriority ?? 'auto'),
+      fetchpriority: priority || preload ? 'high' : (fetchPriority ?? 'auto'),
     } as React.ImgHTMLAttributes<HTMLImageElement>),
 }))
 
@@ -212,14 +214,16 @@ describe('FeaturedMarquee animation pausing', () => {
     expect(trackTransform()).not.toBe(advancing)
   })
 
-  it('marks only the first cards as high-priority images', () => {
+  it('marks only the first LCP card as high-priority', () => {
     const events = Array.from({ length: 5 }, (_, i) => makeEvent({ id: `ev_${i}` }))
     render(<FeaturedMarquee events={events} />)
     const imgs = screen.getAllByRole('img')
-    // 2 tracks x 5 events = 10 images; only the first 3 of track A are high
-    // priority. Track B (clone) and the rest stay at low priority.
+    // 2 tracks x 5 events = 10 images. Only the first card of track A is
+    // preloaded (the genuine LCP candidate); everything else stays low priority
+    // so no wasted preload links are emitted (which caused the browser's
+    // "preloaded but not used" warning).
     const highPriority = imgs.filter((img) => img.getAttribute('fetchpriority') === 'high')
-    expect(highPriority).toHaveLength(3)
-    expect(imgs.filter((img) => img.getAttribute('fetchpriority') === 'low')).toHaveLength(7)
+    expect(highPriority).toHaveLength(1)
+    expect(imgs.filter((img) => img.getAttribute('fetchpriority') === 'low')).toHaveLength(9)
   })
 })

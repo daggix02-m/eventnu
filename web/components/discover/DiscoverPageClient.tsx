@@ -189,7 +189,6 @@ export function DiscoverPageClient({ events, categories }: DiscoverPageClientPro
                     name: 'Trending & Upcoming',
                   }}
                   events={statusFilteredEvents.slice(0, 8)}
-                  priorityFirst
                 />
               )}
 

@@ -341,12 +341,23 @@ export function FeaturedMarquee({ events }: FeaturedMarqueeProps) {
             // The marquee auto-scrolls, so every card (including the cloned
             // track B) eventually enters the viewport above the fold. Keep the
             // whole strip eager so a lazy clone never paints as the LCP (which
-            // triggers Next's LCP warning), but only mark the first cards as
-            // `priority` so the browser preloads just the initial screen and
-            // the rest fetch at low priority without a wasted preload.
-            priority={index < 3}
-            fetchPriority={index < 3 ? 'high' : 'low'}
-            loading={index < 3 ? undefined : 'eager'}
+            // triggers Next's LCP warning).
+            //
+            // Only the very first card is `preload`ed: it is the only one that
+            // can realistically be the LCP element, and preloading it with a
+            // responsive srcset lets the browser start fetching the needed
+            // width early. The remaining cards use `fetchPriority="low"` +
+            // eager so they load without emitting preload links.
+            //
+            // Use `preload` (Next.js 16) rather than the deprecated `priority`,
+            // and do NOT combine `loading`/`fetchPriority` with `preload` on the
+            // same image — mixing them made Next.js emit a preload link that
+            // Chrome reported as "preloaded but not used". When `preload` is
+            // true, Next sets `loading="eager"` automatically, so we only pass
+            // `loading` for the non-preloaded cards.
+            {...(index === 0
+              ? { preload: true }
+              : { fetchPriority: 'low' as const, loading: 'eager' as const })}
             decoding="async"
             className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
             style={{ filter: filterStyle(imgFilter) }}

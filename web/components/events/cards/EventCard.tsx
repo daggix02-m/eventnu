@@ -73,7 +73,7 @@ export function EventCard({
             src={imageUrl}
             alt={event.title}
             fill
-            priority={priority}
+            preload={priority}
             className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
             style={{ filter: filterStyle(imgFilter) }}
             sizes="(max-width: 768px) 270px, (max-width: 1200px) 300px, 350px"

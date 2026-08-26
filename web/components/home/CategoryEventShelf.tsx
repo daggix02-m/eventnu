@@ -73,7 +73,6 @@ interface CategoryEventShelfProps {
   category: Category | { slug: string; name: string; id?: string }
   events: DiscoverEvent[]
   onSelectCategory?: (slug: string) => void
-  priorityFirst?: boolean
   className?: string
 }
 
@@ -81,7 +80,6 @@ export function CategoryEventShelf({
   category,
   events,
   onSelectCategory,
-  priorityFirst = false,
   className,
 }: CategoryEventShelfProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -207,13 +205,9 @@ export function CategoryEventShelf({
           className="flex gap-3 sm:gap-4 overflow-x-auto overscroll-x-contain scrollbar-none snap-x snap-mandatory py-1 scroll-smooth touch-auto"
         >
           <BulkSocialProvider eventIds={events.map((event) => event.id)}>
-            {events.map((event, index) => (
+            {events.map((event) => (
               <div key={event.id} className="w-52 md:w-64 lg:w-72 shrink-0 snap-start">
-                <EventCard
-                  event={event}
-                  priority={priorityFirst && index === 0}
-                  className="h-full"
-                />
+                <EventCard event={event} className="h-full" />
               </div>
             ))}
           </BulkSocialProvider>
