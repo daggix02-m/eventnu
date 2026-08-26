@@ -65,9 +65,18 @@ export function DateRailScroller({
 }: DateRailScrollerProps) {
   const [modalOpen, setModalOpen] = useState(false)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
-  const [datesList] = useState(() => getUpcomingDates(45))
+  // The 45-day rail and "today" marker are relative to the wall clock. This
+  // route is force-static + ISR, so the baked HTML was generated on the server's
+  // clock; computing these during the first render would mismatch the moment a
+  // user visits on a different day. Render an empty (stable) baseline first and
+  // populate after mount.
+  const [datesList, setDatesList] = useState<ReturnType<typeof getUpcomingDates>>([])
+  const [todayStr, setTodayStr] = useState('')
 
-  const todayStr = toDateString(new Date())
+  useEffect(() => {
+    setDatesList(getUpcomingDates(45))
+    setTodayStr(toDateString(new Date()))
+  }, [])
   // Scroll active item into view smoothly
   useEffect(() => {
     if (!scrollContainerRef.current) return

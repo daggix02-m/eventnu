@@ -3,6 +3,7 @@
 import Image from 'next/image'
 import { Play, Calendar, Clock, MapPin, Sparkles, ShieldCheck, Zap, Info } from 'lucide-react'
 import { formatEventDate, isSafeUrl } from '@/lib/utils'
+import { formatEventTime } from '@/lib/dates'
 import type { Event } from '@/types'
 
 interface EventDetailsProps {
@@ -10,12 +11,7 @@ interface EventDetailsProps {
 }
 
 export function EventDetails({ event }: EventDetailsProps) {
-  const startDate = new Date(event.start_date)
-  const timeFormatted = startDate.toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  })
+  const timeFormatted = formatEventTime(event.start_date, event.timezone)
 
   return (
     <div className="space-y-8">

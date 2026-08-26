@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { ChevronLeft } from 'lucide-react'
 import { shouldShowBackButton } from '@/lib/navigation'
@@ -23,11 +23,17 @@ interface BackButtonProps {
 export function BackButton({ historyLength }: BackButtonProps) {
   const pathname = usePathname()
   const router = useRouter()
-  // Read history length after mount to avoid an SSR/hydration mismatch; on a
-  // cold start the browser history is fresh (length 1) so nothing renders.
-  const [length] = useState(
-    () => historyLength ?? (typeof window === 'undefined' ? 1 : window.history.length),
-  )
+  // Hydration safety: the event detail page is force-static + ISR, so the baked
+  // HTML was rendered with a fresh history (length 1). Reading
+  // `window.history.length` in the initializer would render a button on the
+  // client that the server never emitted (React #418) whenever the browser
+  // history already has entries. Initialize to the stable server value and read
+  // the real length only after mount.
+  const [length, setLength] = useState(() => historyLength ?? 1)
+
+  useEffect(() => {
+    if (historyLength === undefined) setLength(window.history.length)
+  }, [historyLength])
 
   if (!shouldShowBackButton({ pathname, historyLength: length })) return null
 

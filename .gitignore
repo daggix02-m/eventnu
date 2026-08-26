@@ -12,6 +12,11 @@ Thumbs.db
 *.tsbuildinfo
 coverage/
 
+# Playwright
+test-results/
+playwright-report/
+blob-report/
+
 # Local agent tooling artifacts (installed via `npx convex ai-files install`)
 .agents/
 .claude/

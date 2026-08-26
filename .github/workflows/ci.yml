@@ -59,3 +59,26 @@ jobs:
       - run: npm ci
       - run: npm -w admin-app run build
       - run: npm -w web run build
+
+  hydrate:
+    name: Hydration smoke (web · next build && start)
+    runs-on: ubuntu-latest
+    needs: build
+    if: ${{ secrets.NEXT_PUBLIC_CONVEX_URL != '' }}
+    env:
+      NEXT_PUBLIC_CONVEX_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_URL }}
+      NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
+      NEXT_PUBLIC_ADMIN_URL: ${{ secrets.NEXT_PUBLIC_ADMIN_URL }}
+      NEXT_PUBLIC_CONVEX_SITE_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_SITE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+        working-directory: web
+      - name: Run hydration smoke tests
+        run: npm -w web run test:e2e

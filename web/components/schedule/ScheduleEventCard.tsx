@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import {
@@ -76,8 +77,18 @@ export function ScheduleEventCard({
   onTogglePlan,
   isHighlighted = false,
 }: ScheduleEventCardProps) {
-  const status = getEventStatus(event.start_date, event.end_date, event.timezone)
+  // LIVE/ENDED/IN-X-MINS labels depend on the wall clock. This route is
+  // force-static + ISR, so the baked HTML reflects the server's clock; computing
+  // the label during the first render would mismatch users who visit on a
+  // different day. Render a stable (no-label) baseline first, then compute the
+  // real status after mount.
+  const [mounted, setMounted] = useState(false)
+  const status = mounted
+    ? getEventStatus(event.start_date, event.end_date, event.timezone)
+    : { label: '', isLive: false, isSoon: false, isPast: false }
   const timeFormatted = formatTime(event.start_date, event.timezone)
+
+  useEffect(() => setMounted(true), [])
 
   const handleDownloadIcs = () => {
     const icsContent = buildIcs(event)

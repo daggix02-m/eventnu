@@ -6,7 +6,7 @@
     "dev": "next dev",
     "prebuild": "node scripts/optimize-images.mjs",
     "build": "next build",
-    "postbuild": "node scripts/build-sw-manifest.mjs",
+    "postbuild": "node scripts/build-sw-manifest.mjs && node scripts/check-scheduler-patch.mjs",
     "start": "next start",
     "check:images": "node scripts/check-images.mjs",
     "lint": "eslint .",
@@ -15,6 +15,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
     "perf": "npx @lhci/cli autorun --config=lighthouserc.json",
     "build:analyze": "ANALYZE=true npm run build"
   },
@@ -55,6 +56,7 @@
   },
   "devDependencies": {
     "@next/bundle-analyzer": "^16.3.3",
+    "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.2",

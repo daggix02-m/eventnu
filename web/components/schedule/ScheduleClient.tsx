@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useRef, useCallback } from 'react'
+import { useState, useMemo, useRef, useCallback, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useGSAP } from '@gsap/react'
 import { gsap } from '@/lib/gsap'
@@ -18,8 +18,6 @@ import { cn } from '@/lib/utils'
 interface ScheduleClientProps {
   events: DiscoverEvent[]
   categories: Category[]
-  initialCategory?: string
-  initialDate?: string
 }
 
 function toLocalDateString(isoString: string): string {
@@ -30,11 +28,13 @@ export function ScheduleClient({ events, categories }: ScheduleClientProps) {
   const containerRef = useRef<HTMLElement>(null)
   const headerRef = useRef<HTMLDivElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
-  // Initial category/date come from the URL (?date=, ?category=). Filtering is
-  // entirely client-side, so reading them here keeps the route ISR-cacheable.
+  // Hydration safety: this route is force-static + ISR. The baked HTML was
+  // rendered with empty URL params and the server's clock, so reading
+  // useSearchParams()/getTodayString() into initial state would mismatch on the
+  // first client pass (e.g. /schedule?date=X after the /categories redirect or
+  // a visit on a different day than the ISR bake). Keep a stable baseline for
+  // the first render and re-derive from the URL + clock only after mount.
   const searchParams = useSearchParams()
-  const initialDate = searchParams.get('date') ?? undefined
-  const initialCategory = searchParams.get('category') ?? undefined
 
   // Map of date string -> event count
   const eventDatesMap = useMemo(() => {
@@ -51,23 +51,35 @@ export function ScheduleClient({ events, categories }: ScheduleClientProps) {
     return Object.keys(eventDatesMap).sort()
   }, [eventDatesMap])
 
-  // Initial selected date
+  // Initial selected date — deterministic (no clock, no URL params) so the
+  // server bake and the client's first render agree. Post-mount, the effect
+  // below snaps to ?date= / today.
   const [selectedDate, setSelectedDate] = useState<string>(() => {
-    if (initialDate && /^\d{4}-\d{2}-\d{2}$/.test(initialDate)) {
-      return initialDate
-    }
-    const today = getTodayString()
-    if (eventDatesMap[today]) return today
-    // If today has no events, find the nearest upcoming date with events
-    const upcoming = activeDatesList.find((d) => d >= today)
-    return upcoming || today
+    return activeDatesList[0] || '1970-01-01'
   })
 
   const [timeFilter, setTimeFilter] = useState<TimeOfDayFilter>('all')
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(initialCategory || null)
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [plannedEvents, setPlannedEvents] = useState<DiscoverEvent[]>([])
   const [highlightedEventId, setHighlightedEventId] = useState<string | null>(null)
   const [isRollingDice, setIsRollingDice] = useState(false)
+
+  useEffect(() => {
+    const initialDate = searchParams.get('date') ?? undefined
+    const initialCategory = searchParams.get('category') ?? undefined
+    if (initialDate && /^\d{4}-\d{2}-\d{2}$/.test(initialDate)) {
+      setSelectedDate(initialDate)
+    } else {
+      const today = getTodayString()
+      if (eventDatesMap[today]) {
+        setSelectedDate(today)
+      } else {
+        const upcoming = activeDatesList.find((d) => d >= today)
+        setSelectedDate(upcoming || today)
+      }
+    }
+    if (initialCategory) setSelectedCategory(initialCategory)
+  }, [searchParams, eventDatesMap, activeDatesList])
 
   // Filter events for the selected date
   const eventsOnSelectedDate = useMemo(() => {

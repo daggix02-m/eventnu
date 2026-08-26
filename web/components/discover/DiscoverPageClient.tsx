@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Building2, LayoutGrid, Rows3 } from 'lucide-react'
 import { Container } from '@/components/layout/Container'
@@ -32,31 +32,46 @@ function matchesStatus(eventDate: Date, status: EventStatus): boolean {
 
 export function DiscoverPageClient({ events, categories }: DiscoverPageClientProps) {
   const searchParams = useSearchParams()
-  const initialSearch = searchParams.get('q') ?? ''
-  const initialCategory = searchParams.get('category') ?? undefined
-  const initialStatus = searchParams.get('date') ?? 'all'
-  const [search, setSearch] = useState(initialSearch)
-  const [activeCategory, setActiveCategory] = useState<string | undefined>(initialCategory)
-  const [status, setStatus] = useState<EventStatus>(() => toStatus(initialStatus))
+  // Hydration safety: this page is force-static + ISR, so the baked HTML was
+  // rendered with empty URL params. If we read `useSearchParams()` into initial
+  // state, a client landing on `/?category=X` (the /discover redirect target)
+  // would render a different tree than the server on the first client pass and
+  // trigger React #418. Keep the server baseline (empty) for the first render
+  // and apply the real params only after mount.
+  const [hydrated, setHydrated] = useState(false)
+  const [search, setSearch] = useState('')
+  const [activeCategory, setActiveCategory] = useState<string | undefined>(undefined)
+  const [status, setStatus] = useState<EventStatus>('all')
   const [viewMode, setViewMode] = useState<'categorized' | 'organizer' | 'grid'>('categorized')
+
+  useEffect(() => {
+    setSearch(searchParams.get('q') ?? '')
+    setActiveCategory(searchParams.get('category') ?? undefined)
+    setStatus(toStatus(searchParams.get('date') ?? 'all'))
+    setHydrated(true)
+  }, [searchParams])
 
   const searchRef = useScrollReveal({ y: 16, duration: 0.5, delay: 0.1 })
   const gridRef = useScrollReveal({ y: 16, duration: 0.5, delay: 0.15 })
 
   // All events sorted and filtered by status
   const statusFilteredEvents = useMemo(() => {
-    const now = Date.now()
+    // `Date.now()` differs between the ISR bake and the user's hydration pass,
+    // so the upcoming/ended boundary (and thus the sort order) must not drive
+    // the first render. Use a stable start-date sort until hydrated.
+    const now = hydrated ? Date.now() : Number.POSITIVE_INFINITY
     return events
       .filter((event) => matchesStatus(new Date(event.start_date), status))
       .sort((a, b) => {
         const aTime = new Date(a.start_date).getTime()
         const bTime = new Date(b.start_date).getTime()
+        if (!hydrated) return aTime - bTime
         const aUpcoming = aTime >= now
         const bUpcoming = bTime >= now
         if (aUpcoming !== bUpcoming) return aUpcoming ? -1 : 1
         return aUpcoming ? aTime - bTime : bTime - aTime
       })
-  }, [events, status])
+  }, [events, status, hydrated])
 
   // Filtered events when searching or selecting a specific category
   const filteredEvents = useMemo(() => {
