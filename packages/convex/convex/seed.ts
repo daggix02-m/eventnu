@@ -679,6 +679,11 @@ export const insertSeedEvents = internalMutation({
           })
         }
       }
+
+      // Keep the materialized publicEventCards view in sync — the public read
+      // path serves exclusively from it, so a seed without this would silently
+      // produce an empty homepage.
+      await ctx.runMutation(internal.publicEventCards.rebuildCard, { eventId })
       created += 1
     }
 
@@ -698,5 +703,58 @@ export const seedEvents = mutation({
       {},
     )
     return result
+  },
+})
+
+/**
+ * Wipe every event-related table, then reseed with fresh future-dated events.
+ * Useful for dev/demo when the seeded events have drifted into the past (the
+ * homepage would otherwise show an empty discover grid). The materialized
+ * publicEventCards view is deleted here and rebuilt by insertSeedEvents.
+ */
+const EVENT_TABLES = [
+  'events',
+  'eventCategories',
+  'eventImages',
+  'publicEventCards',
+  'likeCountShards',
+  'eventLikes',
+  'eventComments',
+  'eventShares',
+  'reservationRequests',
+  'experiencePosts',
+  'eventBookmarks',
+  'bookmarkFolders',
+] as const
+
+export const resetEventsData = internalMutation({
+  args: {},
+  handler: async (ctx): Promise<Record<string, number>> => {
+    const deleted: Record<string, number> = {}
+    for (const table of EVENT_TABLES) {
+      let count = 0
+      for (;;) {
+        const docs = await ctx.db.query(table).take(1000)
+        if (docs.length === 0) break
+        for (const doc of docs) await ctx.db.delete(table, doc._id)
+        count += docs.length
+      }
+      deleted[table] = count
+    }
+    return deleted
+  },
+})
+
+export const resetEvents = mutation({
+  args: {},
+  handler: async (ctx): Promise<{ deleted: Record<string, number>; created: number }> => {
+    await requireAdmin(ctx)
+    if (process.env.CONVEX_ENV === 'production') {
+      throw new Error('Resetting events is not allowed in production')
+    }
+
+    const deleted = await ctx.runMutation(internal.seed.resetEventsData, {})
+    const { created } = await ctx.runMutation(internal.seed.insertSeedEvents, {})
+    return { deleted, created }
   },
 })

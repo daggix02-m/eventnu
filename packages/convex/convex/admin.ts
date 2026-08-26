@@ -51,6 +51,8 @@ const ALL_TABLES: TableNames[] = [
   'engagementCounters',
   'organizerSettings',
   'cronCheckpoints',
+  'publicEventCards',
+  'likeCountShards',
 ]
 
 function normalizeEmail(email: string): string {
@@ -275,5 +277,25 @@ export const seedBaseData = action({
       sectionsSeeded: base.sectionsSeeded,
       events,
     }
+  },
+})
+
+/**
+ * Wipe all event-related tables and reseed with fresh future-dated seed
+ * events. Guarded exactly like seedBaseData — bootstrap key, rate limited,
+ * no auth session required — so it can be run via `npx convex run`.
+ */
+export const resetSeedData = action({
+  args: { key: v.string() },
+  handler: async (ctx, args): Promise<{ deleted: Record<string, number>; created: number }> => {
+    await rateLimiter.limit(ctx, 'bootstrapAction', { key: 'global', throws: true })
+    validateBootstrapKey(args.key)
+    if (process.env.CONVEX_ENV === 'production') {
+      throw new Error('Resetting events is not allowed in production')
+    }
+
+    const deleted = await ctx.runMutation(internal.seed.resetEventsData, {})
+    const { created } = await ctx.runMutation(internal.seed.insertSeedEvents, {})
+    return { deleted, created }
   },
 })
