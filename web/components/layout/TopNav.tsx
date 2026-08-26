@@ -52,6 +52,7 @@ export function TopNav() {
                 alt="Event Nu"
                 width={794}
                 height={672}
+                loading="eager"
                 style={{ height: '36px', width: 'auto' }}
                 className="transition-transform duration-200 group-hover:scale-105"
               />

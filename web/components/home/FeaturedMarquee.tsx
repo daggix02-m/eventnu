@@ -338,12 +338,15 @@ export function FeaturedMarquee({ events }: FeaturedMarqueeProps) {
             src={imageUrl}
             alt={event.title}
             fill
-            // First cards above the fold load eagerly at high priority so the
-            // strip paints fast; the rest (incl. the whole clone track B, which
-            // reuses the same URLs and is a cache hit) stay at default lazy +
-            // low priority so they never compete with the LCP hero.
+            // The marquee auto-scrolls, so every card (including the cloned
+            // track B) eventually enters the viewport above the fold. Keep the
+            // whole strip eager so a lazy clone never paints as the LCP (which
+            // triggers Next's LCP warning), but only mark the first cards as
+            // `priority` so the browser preloads just the initial screen and
+            // the rest fetch at low priority without a wasted preload.
             priority={index < 3}
-            fetchPriority={index < 3 ? undefined : 'low'}
+            fetchPriority={index < 3 ? 'high' : 'low'}
+            loading={index < 3 ? undefined : 'eager'}
             decoding="async"
             className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
             style={{ filter: filterStyle(imgFilter) }}
