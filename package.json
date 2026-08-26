@@ -17,7 +17,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check:images": "npm -w web run check:images",
-    "prepare": "husky"
+    "prepare": "husky",
+    "postinstall": "patch-package"
   },
   "lint-staged": {
     "*.{js,mjs,cjs,ts,tsx,json,jsonc,css,md}": "prettier --write",
@@ -34,6 +35,7 @@
     "eslint": "^9",
     "husky": "^9.1.7",
     "lint-staged": "^17.3.0",
+    "patch-package": "^8.0.1",
     "prettier": "^3.9.6"
   }
 }

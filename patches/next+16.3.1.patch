@@ -1,0 +1,40 @@
+diff --git a/node_modules/next/dist/compiled/scheduler/cjs/scheduler.development.js b/node_modules/next/dist/compiled/scheduler/cjs/scheduler.development.js
+index 44d756d..3081610 100644
+--- a/node_modules/next/dist/compiled/scheduler/cjs/scheduler.development.js
++++ b/node_modules/next/dist/compiled/scheduler/cjs/scheduler.development.js
+@@ -13,6 +13,15 @@
+   (function () {
+     function performWorkUntilDeadline() {
+       needsPaint = !1;
++      if (
++        "undefined" !== typeof document &&
++        null !== document &&
++        ("loading" === document.readyState ||
++          ("undefined" !== typeof window && null != window.$RB && 0 < window.$RB.length))
++      ) {
++        isMessageLoopRunning && localSetTimeout(performWorkUntilDeadline, 8);
++        return;
++      }
+       if (isMessageLoopRunning) {
+         var currentTime = exports.unstable_now();
+         startTime = currentTime;
+diff --git a/node_modules/next/dist/compiled/scheduler/cjs/scheduler.production.js b/node_modules/next/dist/compiled/scheduler/cjs/scheduler.production.js
+index b6a0584..d2e9ffd 100644
+--- a/node_modules/next/dist/compiled/scheduler/cjs/scheduler.production.js
++++ b/node_modules/next/dist/compiled/scheduler/cjs/scheduler.production.js
+@@ -120,6 +120,15 @@ function shouldYieldToHost() {
+ }
+ function performWorkUntilDeadline() {
+   needsPaint = !1;
++  if (
++    "undefined" !== typeof document &&
++    null !== document &&
++    ("loading" === document.readyState ||
++      ("undefined" !== typeof window && null != window.$RB && 0 < window.$RB.length))
++  ) {
++    isMessageLoopRunning && localSetTimeout(performWorkUntilDeadline, 8);
++    return;
++  }
+   if (isMessageLoopRunning) {
+     var currentTime = exports.unstable_now();
+     startTime = currentTime;
