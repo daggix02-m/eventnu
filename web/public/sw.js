@@ -7,7 +7,6 @@ const CORE_ASSETS = [
   '/offline.html',
   '/logo.png',
   '/app-icon.png',
-  '/icons/apple-touch-icon.png',
   '/manifest.webmanifest',
 ]
 

@@ -57,9 +57,9 @@ export const metadata: Metadata = {
     apple: [
       // NOTE: keep only square PNGs here. iOS reads apple-touch-icon links
       // for the home-screen icon; a non-square image gets letterboxed.
-      { url: '/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
-      { url: '/icons/apple-touch-icon.png', sizes: '152x152', type: 'image/png' },
-      { url: '/icons/apple-touch-icon.png', sizes: '167x167', type: 'image/png' },
+      { url: '/app-icon.png', sizes: '180x180', type: 'image/png' },
+      { url: '/app-icon.png', sizes: '152x152', type: 'image/png' },
+      { url: '/app-icon.png', sizes: '167x167', type: 'image/png' },
     ],
     shortcut: '/logo.png',
   },

@@ -44,7 +44,6 @@ function Resize-Image($source, $targetPath, $width, $height, $bgHex) {
 Resize-Image $img (Join-Path $iconsDir "icon-192x192.png") 192 192 $null
 Resize-Image $img (Join-Path $iconsDir "icon-512x512.png") 512 512 $null
 Resize-Image $img (Join-Path $iconsDir "maskable-icon-512x512.png") 512 512 "#151318"
-Resize-Image $img (Join-Path $iconsDir "apple-touch-icon.png") 180 180 "#151318"
 Resize-Image $img (Join-Path $iconsDir "favicon-32x32.png") 32 32 $null
 Resize-Image $img (Join-Path $iconsDir "favicon-16x16.png") 16 16 $null
 

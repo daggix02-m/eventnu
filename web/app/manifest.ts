@@ -30,7 +30,7 @@ export default function manifest(): MetadataRoute.Manifest {
       },
       {
         src: '/app-icon.png',
-        sizes: '1024x1024',
+        sizes: '640x640',
         type: 'image/png',
         purpose: 'any',
       },
