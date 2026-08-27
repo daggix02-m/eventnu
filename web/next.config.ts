@@ -48,7 +48,7 @@ let config: NextConfig = {
           {
             key: 'Permissions-Policy',
             value:
-              'camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=(), midi=(), autoplay=(), encrypted-media=(), picture-in-picture=(), screen-wake-lock=()',
+              'camera=(self), microphone=(self), geolocation=(self), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=(), midi=(), autoplay=(), encrypted-media=(), picture-in-picture=(), screen-wake-lock=()',
           },
           { key: 'Speculation-Rules', value: '"/speculation-rules.json"' },
           { key: 'Content-Security-Policy', value: buildCsp(isDev) },

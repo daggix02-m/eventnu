@@ -6,26 +6,29 @@ import { api } from '@eventnu/convex/_generated/api'
 import type { FunctionReturnType } from 'convex/server'
 import type { Id } from '@eventnu/convex/_generated/dataModel'
 import { useConvexAuth } from '@convex-dev/auth/react'
-import { Bookmark, Folder, LogIn } from 'lucide-react'
+import { Bookmark, LogIn } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { EventCard } from '@/components/events/cards/EventCard'
 import { Skeleton } from '@/components/ui/skeleton'
+import { SavedEventRow } from '@/components/saved/SavedEventRow'
 import { useAuthRedirect } from '@/components/auth/AuthRedirectContext'
 import { mapEvent } from '@/lib/api/map-event'
 import { BulkSocialProvider } from '@/components/social/EventSocialActions'
+import { cn } from '@/lib/utils'
+
+type Folder = FunctionReturnType<typeof api.bookmarks.listFolders>[number]
 
 export function SavedEventsClient() {
   const { isAuthenticated, isLoading: authLoading } = useConvexAuth()
   const { openAuth } = useAuthRedirect()
-  const [selectedFolder, setSelectedFolder] = useState<string>('all')
+  const [selected, setSelected] = useState<string>('all')
   const bookmarks = useQuery(api.bookmarks.listByUser, isAuthenticated ? {} : 'skip')
   const folders = useQuery(api.bookmarks.listFolders, isAuthenticated ? {} : 'skip')
   const folderBookmarks = useQuery(
     api.bookmarks.listByFolder,
-    isAuthenticated && selectedFolder !== 'all'
-      ? selectedFolder === 'uncategorized'
+    isAuthenticated && selected !== 'all'
+      ? selected === 'uncategorized'
         ? {}
-        : { folderId: selectedFolder as Id<'bookmarkFolders'> }
+        : { folderId: selected as Id<'bookmarkFolders'> }
       : 'skip',
   )
 
@@ -56,7 +59,9 @@ export function SavedEventsClient() {
     )
   }
 
-  const visibleBookmarks = selectedFolder === 'all' ? bookmarks : folderBookmarks
+  const visibleBookmarks = selected === 'all' ? bookmarks : folderBookmarks
+  const folderName = (folderId?: string) =>
+    folderId ? (folders ?? []).find((f) => f._id === folderId)?.name : null
 
   return (
     <div className="mx-auto w-full max-w-[52rem] space-y-lg">
@@ -65,66 +70,86 @@ export function SavedEventsClient() {
           Saved events
         </h1>
         <p className="text-body-lg text-on-surface-variant">
-          Your saved events, organized into folders.
+          Your saved events, organized by category.
         </p>
       </header>
 
+      {/* Category filter rail */}
       {folders && (
-        <div className="flex flex-wrap gap-2" aria-label="Saved event folders">
+        <nav
+          aria-label="Saved event categories"
+          className="-mx-4 flex gap-2 overflow-x-auto scrollbar-none px-4 pb-1 md:mx-0 md:px-0"
+        >
           <button
             type="button"
-            onClick={() => setSelectedFolder('all')}
-            className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors ${selectedFolder === 'all' ? 'border-primary bg-primary/10 text-primary' : 'border-outline-variant text-on-surface-variant hover:border-primary/50'}`}
+            onClick={() => setSelected('all')}
+            aria-pressed={selected === 'all'}
+            className={cn(
+              'inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-2 text-sm transition-colors',
+              selected === 'all'
+                ? 'border-primary bg-primary/10 text-primary'
+                : 'border-outline-variant text-on-surface-variant hover:border-primary/50',
+            )}
           >
             <Bookmark className="h-3.5 w-3.5" /> All saved
           </button>
           <button
             type="button"
-            onClick={() => setSelectedFolder('uncategorized')}
-            className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors ${selectedFolder === 'uncategorized' ? 'border-primary bg-primary/10 text-primary' : 'border-outline-variant text-on-surface-variant hover:border-primary/50'}`}
+            onClick={() => setSelected('uncategorized')}
+            aria-pressed={selected === 'uncategorized'}
+            className={cn(
+              'inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-2 text-sm transition-colors',
+              selected === 'uncategorized'
+                ? 'border-primary bg-primary/10 text-primary'
+                : 'border-outline-variant text-on-surface-variant hover:border-primary/50',
+            )}
           >
             Uncategorized
           </button>
-          {folders.map((folder: FunctionReturnType<typeof api.bookmarks.listFolders>[number]) => (
+          {folders.map((folder: Folder) => (
             <button
               key={folder._id}
               type="button"
-              onClick={() => setSelectedFolder(folder._id)}
-              className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors ${selectedFolder === folder._id ? 'border-primary bg-primary/10 text-primary' : 'border-outline-variant text-on-surface-variant hover:border-primary/50'}`}
+              onClick={() => setSelected(folder._id)}
+              aria-pressed={selected === folder._id}
+              className={cn(
+                'inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-2 text-sm transition-colors',
+                selected === folder._id
+                  ? 'border-primary bg-primary/10 text-primary'
+                  : 'border-outline-variant text-on-surface-variant hover:border-primary/50',
+              )}
             >
-              <Folder className="h-3.5 w-3.5" /> {folder.name}
+              {folder.emoji ?? <Bookmark className="h-3.5 w-3.5" />} {folder.name}
             </button>
           ))}
-        </div>
+        </nav>
       )}
 
       {visibleBookmarks === undefined ? (
-        <div className="grid grid-cols-1 gap-md sm:grid-cols-2 lg:grid-cols-3" aria-hidden="true">
-          <Skeleton className="h-72 w-full rounded-xl" />
-          <Skeleton className="h-72 w-full rounded-xl" />
-          <Skeleton className="h-72 w-full rounded-xl" />
+        <div className="space-y-2" aria-hidden="true">
+          <Skeleton className="h-20 w-full rounded-2xl" />
+          <Skeleton className="h-20 w-full rounded-2xl" />
+          <Skeleton className="h-20 w-full rounded-2xl" />
         </div>
       ) : visibleBookmarks.length === 0 ? (
         <div className="w-full rounded-2xl border border-outline-variant bg-surface-container-low p-6 sm:p-8 md:p-xl text-center">
-          <p className="font-display text-headline-md text-on-surface">No saved events yet</p>
+          <p className="font-display text-headline-md text-on-surface">No saved events here yet</p>
           <p className="mt-xs font-body-md text-on-surface-variant">
-            Tap the bookmark icon on any event to save it here.
+            Tap the bookmark icon on any event to save it to this category.
           </p>
         </div>
       ) : (
-        <BulkSocialProvider
-          eventIds={visibleBookmarks.map(
-            (event: FunctionReturnType<typeof api.bookmarks.listByFolder>[number]) =>
-              event._id as string,
-          )}
-        >
-          <div className="grid grid-cols-1 gap-md sm:grid-cols-2 lg:grid-cols-3">
-            {visibleBookmarks.map(
-              (event: FunctionReturnType<typeof api.bookmarks.listByFolder>[number]) => (
-                <EventCard key={event._id as string} event={mapEvent(event)} />
-              ),
-            )}
-          </div>
+        <BulkSocialProvider eventIds={visibleBookmarks.map((event) => event._id as string)}>
+          <ul className="space-y-2">
+            {visibleBookmarks.map((event) => (
+              <li key={event._id as string}>
+                <SavedEventRow
+                  event={mapEvent(event)}
+                  categoryName={folderName((event as { folderId?: string }).folderId)}
+                />
+              </li>
+            ))}
+          </ul>
         </BulkSocialProvider>
       )}
     </div>

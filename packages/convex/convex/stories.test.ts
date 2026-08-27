@@ -13,7 +13,8 @@ vi.mock('./helpers', async (importOriginal) => {
   }
 })
 
-const { publish, remove, markViewed, countViews, expireStories } = await import('./stories')
+const { publish, remove, markViewed, countViews, expireStories, setCategory } =
+  await import('./stories')
 const { requireUser } = await import('./helpers')
 
 type Handler = (ctx: unknown, args: unknown) => Promise<unknown>
@@ -22,6 +23,7 @@ const removeHandler = (remove as unknown as { _handler: Handler })._handler
 const markViewedHandler = (markViewed as unknown as { _handler: Handler })._handler
 const countViewsHandler = (countViews as unknown as { _handler: Handler })._handler
 const expireHandler = (expireStories as unknown as { _handler: Handler })._handler
+const setCategoryHandler = (setCategory as unknown as { _handler: Handler })._handler
 
 const ME = { _id: 'profiles_me', role: 'user', suspended: false }
 const ADMIN = { _id: 'profiles_admin', role: 'admin', suspended: false }
@@ -30,6 +32,7 @@ function makeDb(opts: {
   storageMeta?: { contentType?: string } | null
   view?: Record<string, unknown> | null
   story?: Record<string, unknown> | null
+  docs?: Record<string, Record<string, unknown> | null>
   expiredRows?: Record<string, unknown>[]
   views?: Record<string, unknown>[]
 }) {
@@ -37,7 +40,7 @@ function makeDb(opts: {
   const patch = vi.fn(async () => undefined)
   const removeFn = vi.fn(async () => undefined)
   const systemGet = vi.fn(async () => opts.storageMeta ?? null)
-  const get = vi.fn(async () => opts.story ?? null)
+  const get = vi.fn(async (table: string) => opts.docs?.[table] ?? opts.story ?? null)
   const query = vi.fn(() => ({
     withIndex: (name: string, pred?: (q: Record<string, unknown>) => unknown) => {
       void pred
@@ -118,10 +121,43 @@ describe('stories.publish', () => {
         moderationStatus: 'approved',
         isDeleted: false,
         caption: 'Vibe was unreal',
+        expired: false,
       }),
     )
-    const inserted = insert.mock.calls[0][1] as { expiresAt: number }
+    const inserted = insert.mock.calls[0][1] as { expiresAt: number; dateKey: string }
     expect(inserted.expiresAt - Date.now()).toBeGreaterThan(23 * 60 * 60 * 1000)
+    expect(inserted.dateKey).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+  })
+
+  it('stores the calendar key, location and thumbnail when provided', async () => {
+    const { ctx, insert } = makeDb({ storageMeta: { contentType: 'image/jpeg' } })
+    await publishHandler(ctx, {
+      kind: 'photo',
+      mediaStorageId: 's',
+      dateKey: '2026-08-27',
+      thumbnailStorageId: 'thumb_s',
+      latitude: 9.03,
+      longitude: 38.74,
+      placeName: 'Bole, Addis Ababa',
+    })
+    expect(insert).toHaveBeenCalledWith(
+      'stories',
+      expect.objectContaining({
+        dateKey: '2026-08-27',
+        thumbnailStorageId: 'thumb_s',
+        thumbnailUrl: 'https://cdn.example/story.jpg',
+        latitude: 9.03,
+        longitude: 38.74,
+        placeName: 'Bole, Addis Ababa',
+      }),
+    )
+  })
+
+  it('rejects a malformed dateKey', async () => {
+    const { ctx } = makeDb({ storageMeta: { contentType: 'image/jpeg' } })
+    await expect(
+      publishHandler(ctx, { kind: 'photo', mediaStorageId: 's', dateKey: 'not-a-date' }),
+    ).rejects.toThrow('dateKey must be YYYY-MM-DD')
   })
 })
 
@@ -185,13 +221,62 @@ describe('stories.countViews', () => {
   })
 })
 
+describe('stories.setCategory', () => {
+  beforeEach(() => {
+    vi.mocked(requireUser).mockResolvedValue(ME as never)
+  })
+
+  it('lets the owner assign their own category to a past story', async () => {
+    const { ctx, patch } = makeDb({
+      story: { _id: 'stories_1', userId: 'profiles_me' },
+      docs: { storyCategories: { _id: 'storyCategories_1', userId: 'profiles_me' } },
+    })
+    await setCategoryHandler(ctx, { storyId: 'stories_1', categoryId: 'storyCategories_1' })
+    expect(patch).toHaveBeenCalledWith('stories', 'stories_1', {
+      categoryId: 'storyCategories_1',
+    })
+  })
+
+  it('blocks assigning a category that belongs to another user', async () => {
+    const { ctx } = makeDb({
+      story: { _id: 'stories_1', userId: 'profiles_me' },
+      docs: { storyCategories: { _id: 'storyCategories_1', userId: 'profiles_other' } },
+    })
+    await expect(
+      setCategoryHandler(ctx, { storyId: 'stories_1', categoryId: 'storyCategories_1' }),
+    ).rejects.toThrow('Category not found')
+  })
+
+  it('blocks a non-owner from categorizing a story', async () => {
+    const { ctx } = makeDb({ story: { _id: 'stories_1', userId: 'profiles_other' } })
+    await expect(
+      setCategoryHandler(ctx, { storyId: 'stories_1', categoryId: 'storyCategories_1' }),
+    ).rejects.toThrow('Not authorized')
+  })
+
+  it('clears the category when no categoryId is given', async () => {
+    const { ctx, patch } = makeDb({ story: { _id: 'stories_1', userId: 'profiles_me' } })
+    await setCategoryHandler(ctx, { storyId: 'stories_1' })
+    expect(patch).toHaveBeenCalledWith('stories', 'stories_1', { categoryId: undefined })
+  })
+})
+
 describe('stories.expireStories', () => {
-  it('deletes expired stories and their media', async () => {
-    const { ctx, removeFn, storageDelete } = makeDb({
+  it('marks expired stories without deleting their media (owner archive)', async () => {
+    const { ctx, patch, removeFn, storageDelete } = makeDb({
       expiredRows: [{ _id: 'stories_old', mediaStorageId: 'storage_old' }],
     })
     await expireHandler(ctx, { now: 1000 })
-    expect(removeFn).toHaveBeenCalledWith('stories', 'stories_old')
-    expect(storageDelete).toHaveBeenCalledWith('storage_old')
+    expect(patch).toHaveBeenCalledWith('stories', 'stories_old', { expired: true })
+    expect(removeFn).not.toHaveBeenCalled()
+    expect(storageDelete).not.toHaveBeenCalled()
+  })
+
+  it('skips stories already marked expired', async () => {
+    const { ctx, patch } = makeDb({
+      expiredRows: [{ _id: 'stories_old', mediaStorageId: 'storage_old', expired: true }],
+    })
+    await expireHandler(ctx, { now: 1000 })
+    expect(patch).not.toHaveBeenCalled()
   })
 })

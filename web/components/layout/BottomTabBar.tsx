@@ -1,12 +1,14 @@
 'use client'
 
-import { Suspense } from 'react'
+import { Suspense, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Home, CalendarDays, Bookmark, User, Camera, type LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useConvexAuth } from '@convex-dev/auth/react'
 import { useAuthRedirect } from '@/components/auth/AuthRedirectContext'
+import { useTabShell } from '@/components/layout/TabShell'
+import { StoryCameraOverlay } from '@/components/stories/camera/StoryCameraOverlay'
 
 interface TabDef {
   key: string
@@ -59,15 +61,21 @@ function TabLink({
 }) {
   const isActive = isTabActive(tab, pathname)
   const Icon = tab.icon
+  const { navigate } = useTabShell()
   return (
     <Link
       key={tab.key}
       href={tab.href}
+      prefetch={false}
       onClick={(e) => {
         if (tab.requiresAuth && !isAuthenticated) {
           e.preventDefault()
           openAuth(tab.href)
+          return
         }
+        // Route tab presses through the instant shell (skeleton + transition).
+        e.preventDefault()
+        navigate(tab.href)
       }}
       aria-label={tab.label}
       aria-current={isActive ? 'page' : undefined}
@@ -99,34 +107,48 @@ function TabLink({
 
 /**
  * Snapchat-style center action: a raised gradient-ring camera that pops out of
- * the pill bar. The gradient ring matches the story-avatar treatment on the
- * home rail so the Stories surface reads as one family.
+ * the pill bar. It launches the in-app story camera overlay immediately
+ * (auth-gated) instead of navigating — browsing stories lives on the profile
+ * hub, the home rail, and /stories. The gradient ring matches the story-avatar
+ * treatment on the home rail so the Stories surface reads as one family.
  */
-function CameraButton({ pathname }: { pathname: string }) {
-  const isActive = pathname === '/stories'
+function CameraButton({
+  pathname,
+  isAuthenticated,
+  openAuth,
+  onLaunch,
+}: {
+  pathname: string
+  isAuthenticated: boolean
+  openAuth: (redirectTo?: string) => void
+  onLaunch: () => void
+}) {
   return (
-    <Link
-      href="/stories"
+    <button
+      type="button"
       aria-label="Create a story"
-      aria-current={isActive ? 'page' : undefined}
+      onClick={() => {
+        if (!isAuthenticated) {
+          openAuth('/stories')
+          return
+        }
+        onLaunch()
+      }}
       className={cn(
-        'group relative -mt-3 flex h-14 w-14 shrink-0 items-center justify-center rounded-full',
+        'group relative -mt-3 flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-full',
         'bg-gradient-to-tr from-primary via-secondary to-tertiary p-[3px]',
         'shadow-[0_6px_20px_rgba(160,120,255,0.45)] ring-1 ring-white/20 transition-all duration-200',
         'active:scale-90',
-        isActive && 'shadow-[0_6px_24px_rgba(160,120,255,0.75)] ring-2 ring-white/60',
       )}
     >
       <span className="flex h-full w-full items-center justify-center rounded-full bg-background">
         <Camera
-          className={cn(
-            'h-6 w-6 transition-all duration-200',
-            isActive ? 'text-primary scale-105' : 'text-primary/80 group-hover:text-primary',
-          )}
+          className="h-6 w-6 text-primary/80 transition-all duration-200 group-hover:text-primary"
           aria-hidden="true"
         />
       </span>
-    </Link>
+      <span className="sr-only">Stories</span>
+    </button>
   )
 }
 
@@ -134,34 +156,44 @@ function TabBarContent() {
   const pathname = usePathname()
   const { isAuthenticated } = useConvexAuth()
   const { openAuth } = useAuthRedirect()
+  const [cameraOpen, setCameraOpen] = useState(false)
 
   return (
-    <nav
-      aria-label="Primary Mobile Navigation"
-      className="pointer-events-auto flex items-center justify-around w-full max-w-[22rem] bg-surface-container-low/70 backdrop-blur-2xl backdrop-saturate-150 border border-white/[0.12] rounded-full shadow-[0_16px_40px_rgba(0,0,0,0.65),inset_0_1px_1px_rgba(255,255,255,0.2)] px-2 pt-2 pb-1.5 transition-all duration-300"
-    >
-      {LEFT_TABS.map((tab) => (
-        <TabLink
-          key={tab.key}
-          tab={tab}
+    <>
+      <nav
+        aria-label="Primary Mobile Navigation"
+        className="pointer-events-auto flex items-center justify-around w-full max-w-[22rem] bg-surface-container-low/70 backdrop-blur-2xl backdrop-saturate-150 border border-white/[0.12] rounded-full shadow-[0_16px_40px_rgba(0,0,0,0.65),inset_0_1px_1px_rgba(255,255,255,0.2)] px-2 pt-2 pb-1.5 transition-all duration-300"
+      >
+        {LEFT_TABS.map((tab) => (
+          <TabLink
+            key={tab.key}
+            tab={tab}
+            pathname={pathname}
+            isAuthenticated={isAuthenticated}
+            openAuth={openAuth}
+          />
+        ))}
+
+        <CameraButton
           pathname={pathname}
           isAuthenticated={isAuthenticated}
           openAuth={openAuth}
+          onLaunch={() => setCameraOpen(true)}
         />
-      ))}
 
-      <CameraButton pathname={pathname} />
+        {RIGHT_TABS.map((tab) => (
+          <TabLink
+            key={tab.key}
+            tab={tab}
+            pathname={pathname}
+            isAuthenticated={isAuthenticated}
+            openAuth={openAuth}
+          />
+        ))}
+      </nav>
 
-      {RIGHT_TABS.map((tab) => (
-        <TabLink
-          key={tab.key}
-          tab={tab}
-          pathname={pathname}
-          isAuthenticated={isAuthenticated}
-          openAuth={openAuth}
-        />
-      ))}
-    </nav>
+      {cameraOpen && <StoryCameraOverlay open onClose={() => setCameraOpen(false)} />}
+    </>
   )
 }
 

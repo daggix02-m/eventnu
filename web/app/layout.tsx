@@ -17,6 +17,8 @@ import { ServiceWorkerRegister } from '@/components/pwa/ServiceWorkerRegister'
 import { OfflineBanner } from '@/components/pwa/OfflineBanner'
 import { InstallPrompt } from '@/components/pwa/InstallPrompt'
 import { SiteBackground } from '@/components/layout/SiteBackground'
+import { SavePromptProvider } from '@/components/saved/SavePromptContext'
+import { TabShellProvider } from '@/components/layout/TabShell'
 
 const inter = Inter({
   variable: '--font-inter',
@@ -119,25 +121,29 @@ export default function RootLayout({
       >
         <ConvexAuthNextjsServerProvider>
           <ConvexAuthClientProvider>
-            <AuthRedirectProvider>
-              <SkipLink />
-              <SiteBackground />
-              <ServiceWorkerRegister />
-              <OfflineBanner />
-              <TopNav />
-              <KeyboardInsetTracker />
-              <MainContent
-                footer={
-                  <ConditionalFooter>
-                    <Footer />
-                  </ConditionalFooter>
-                }
-              >
-                {children}
-              </MainContent>
-              <BottomTabBar />
-              <InstallPrompt />
-            </AuthRedirectProvider>
+            <SavePromptProvider>
+              <AuthRedirectProvider>
+                <TabShellProvider>
+                  <SkipLink />
+                  <SiteBackground />
+                  <ServiceWorkerRegister />
+                  <OfflineBanner />
+                  <TopNav />
+                  <KeyboardInsetTracker />
+                  <MainContent
+                    footer={
+                      <ConditionalFooter>
+                        <Footer />
+                      </ConditionalFooter>
+                    }
+                  >
+                    {children}
+                  </MainContent>
+                  <BottomTabBar />
+                  <InstallPrompt />
+                </TabShellProvider>
+              </AuthRedirectProvider>
+            </SavePromptProvider>
           </ConvexAuthClientProvider>
         </ConvexAuthNextjsServerProvider>
       </body>

@@ -498,3 +498,13 @@ textarea {
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
 }
+
+/* Instant tab-shell skeleton entrance. */
+@keyframes tab-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

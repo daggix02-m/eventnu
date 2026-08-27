@@ -57,10 +57,13 @@ export function StoryViewer({
   stories,
   initialIndex,
   onClose,
+  readOnly = false,
 }: {
   stories: StoryItem[]
   initialIndex: number
   onClose: () => void
+  /** Archive mode: no view tracking, no auto-advance timer, no report. */
+  readOnly?: boolean
 }) {
   const { isAuthenticated } = useConvexAuth()
   const me = useQuery(api.profiles.getMe)
@@ -78,7 +81,9 @@ export function StoryViewer({
   const ownStory = Boolean(story && me && me._id === story.userId)
   const viewCount = useQuery(
     api.stories.countViews,
-    isAuthenticated && ownStory && story ? { storyId: story.id as Id<'stories'> } : 'skip',
+    !readOnly && isAuthenticated && ownStory && story
+      ? { storyId: story.id as Id<'stories'> }
+      : 'skip',
   )
 
   const clearTimer = useCallback(() => {
@@ -102,17 +107,17 @@ export function StoryViewer({
     [index, stories.length, onClose],
   )
 
-  // Mark the story as viewed once it's on screen.
+  // Mark the story as viewed once it's on screen (skipped in readOnly).
   useEffect(() => {
-    if (!story) return
+    if (readOnly || !story) return
     markViewed({ storyId: story.id as Id<'stories'> }).catch(() => {
       /* view tracking is best-effort */
     })
-  }, [story, markViewed])
+  }, [story, markViewed, readOnly])
 
   // Auto-advance photos after a fixed duration; videos play and advance on end.
   useEffect(() => {
-    if (!story || paused) return
+    if (readOnly || !story || paused) return
     if (story.kind === 'photo') {
       const start = Date.now()
       timerRef.current = window.setInterval(() => {
@@ -125,7 +130,7 @@ export function StoryViewer({
       }, 100)
       return clearTimer
     }
-  }, [story, paused, go, clearTimer])
+  }, [story, paused, go, clearTimer, readOnly])
 
   // Keyboard navigation + Escape to close.
   useEffect(() => {
@@ -206,7 +211,7 @@ export function StoryViewer({
               {viewCount} {viewCount === 1 ? 'view' : 'views'}
             </span>
           )}
-          <ReportDialog targetType="story" targetId={story.id} />
+          {!readOnly && <ReportDialog targetType="story" targetId={story.id} />}
         </div>
       </div>
 

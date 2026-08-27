@@ -8,9 +8,9 @@ import { useConvexAuth } from '@convex-dev/auth/react'
 import { useAuthRedirect } from '@/components/auth/AuthRedirectContext'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { CreateStoryForm } from '@/components/stories/CreateStoryForm'
+import { StoryCameraOverlay } from '@/components/stories/camera/StoryCameraOverlay'
 import { StoryViewer, type StoryItem } from '@/components/stories/StoryViewer'
-import { LogIn } from 'lucide-react'
+import { Camera, LogIn } from 'lucide-react'
 
 export function StoriesPageClient() {
   const { isAuthenticated, isLoading } = useConvexAuth()
@@ -22,6 +22,7 @@ export function StoriesPageClient() {
     { initialNumItems: 40 },
   )
   const [openIndex, setOpenIndex] = useState<number | null>(null)
+  const [cameraOpen, setCameraOpen] = useState(false)
 
   const stories = results as StoryItem[]
 
@@ -42,7 +43,12 @@ export function StoriesPageClient() {
           Sign in to create a story
         </Button>
       )}
-      {!isLoading && isAuthenticated && <CreateStoryForm />}
+      {!isLoading && isAuthenticated && (
+        <Button onClick={() => setCameraOpen(true)} className="w-fit">
+          <Camera className="h-4 w-4" aria-hidden="true" />
+          Create a story
+        </Button>
+      )}
 
       <section aria-label="All stories">
         <h2 className="font-display text-headline-md text-on-surface">Browse stories</h2>
@@ -116,6 +122,12 @@ export function StoriesPageClient() {
           onClose={() => setOpenIndex(null)}
         />
       )}
+
+      <StoryCameraOverlay
+        open={cameraOpen}
+        onClose={() => setCameraOpen(false)}
+        onPublished={() => setOpenIndex(null)}
+      />
     </div>
   )
 }

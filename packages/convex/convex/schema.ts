@@ -234,6 +234,11 @@ const schema = defineSchema({
   bookmarkFolders: defineTable({
     userId: v.id('profiles'),
     name: v.string(),
+    // 'system' = seeded template category (e.g. "Events to Go To");
+    // 'custom' = user-created. Absent for legacy folders.
+    kind: v.optional(v.union(v.literal('system'), v.literal('custom'))),
+    isDefault: v.optional(v.boolean()),
+    emoji: v.optional(v.string()),
   })
     .index('by_user', ['userId'])
     .index('by_user_and_name', ['userId', 'name']),
@@ -268,10 +273,43 @@ const schema = defineSchema({
     isDeleted: v.boolean(),
     expiresAt: v.number(),
     moderationStatus: v.union(v.literal('approved'), v.literal('rejected')),
+    // Calendar key "YYYY-MM-DD" of the capture day (local to the publisher).
+    // Legacy rows are absent; queries treat them as `today` best-effort.
+    dateKey: v.optional(v.string()),
+    // Downscaled frame used by the lightweight rail + archived grids.
+    thumbnailStorageId: v.optional(v.string()),
+    thumbnailUrl: v.optional(v.string()),
+    // Location tagging captured at publish time (owner-granted permission).
+    latitude: v.optional(v.number()),
+    longitude: v.optional(v.number()),
+    placeName: v.optional(v.string()),
+    // Set by the expiry cron. Expired stories stay private to the owner and
+    // are never returned by public queries.
+    expired: v.optional(v.boolean()),
+    // Owner-only categorization of past stories.
+    categoryId: v.optional(v.id('storyCategories')),
   })
     .index('by_user', ['userId'])
     .index('by_moderation', ['moderationStatus'])
-    .index('by_expiresAt', ['expiresAt']),
+    .index('by_expiresAt', ['expiresAt'])
+    .index('by_dateKey', ['dateKey'])
+    .index('by_moderationStatus_and_expiresAt', {
+      fields: ['moderationStatus', 'expiresAt'],
+      staged: true,
+    })
+    .index('by_userId_and_dateKey', ['userId', 'dateKey'])
+    .index('by_userId_and_expired', ['userId', 'expired'])
+    .index('by_userId_and_categoryId', ['userId', 'categoryId']),
+
+  storyCategories: defineTable({
+    userId: v.id('profiles'),
+    name: v.string(),
+    color: v.optional(v.string()),
+    icon: v.optional(v.string()),
+    sortOrder: v.number(),
+  })
+    .index('by_user', ['userId'])
+    .index('by_userId_and_name', ['userId', 'name']),
 
   storyViews: defineTable({
     storyId: v.id('stories'),

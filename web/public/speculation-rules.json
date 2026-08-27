@@ -2,7 +2,7 @@
   "prefetch": [
     {
       "source": "list",
-      "urls": ["/schedule", "/organizers", "/about"]
+      "urls": ["/schedule", "/saved", "/profile", "/stories", "/organizers", "/about"]
     }
   ]
 }

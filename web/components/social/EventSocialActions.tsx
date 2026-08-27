@@ -3,22 +3,13 @@
 import { createContext, useCallback, useContext, useMemo, useState } from 'react'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '@eventnu/convex/_generated/api'
-import type { FunctionReturnType } from 'convex/server'
 import type { Id } from '@eventnu/convex/_generated/dataModel'
 import { useConvexAuth } from '@convex-dev/auth/react'
 import { Heart, Bookmark, Share2, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuthRedirect } from '@/components/auth/AuthRedirectContext'
 import { useOptimisticToggle } from '@/lib/hooks/useOptimisticToggle'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
+import { useSavePrompt } from '@/components/saved/SavePromptContext'
 
 function useAuthGate() {
   const { isAuthenticated, isLoading } = useConvexAuth()
@@ -136,23 +127,20 @@ function BookmarkButton({
   className,
   variant = 'outline',
   label = 'Save',
+  title,
 }: {
   eventId: string
   className?: string
   variant?: 'outline' | 'icon'
   label?: string
+  title?: string
 }) {
   const { isAuthenticated, isLoading, openAuth } = useAuthGate()
-  const moveToFolder = useMutation(api.bookmarks.moveToFolder)
-  const createFolder = useMutation(api.bookmarks.createFolder)
+  const { promptForCategory } = useSavePrompt()
   const saved = useQuery(
     api.bookmarks.hasBookmarked,
     isAuthenticated ? { eventId: eventId as Id<'events'> } : 'skip',
   )
-  const folders = useQuery(api.bookmarks.listFolders, isAuthenticated ? {} : 'skip')
-  const [showFolderPicker, setShowFolderPicker] = useState(false)
-  const [newFolderName, setNewFolderName] = useState('')
-  const [folderPending, setFolderPending] = useState(false)
 
   const toggleBookmark = useOptimisticToggle({
     eventId,
@@ -162,16 +150,18 @@ function BookmarkButton({
     mutation: api.bookmarks.toggle,
   })
 
-  const handleClick = () => {
+  const handleClick = async () => {
     if (!isAuthenticated) {
       openAuth()
       return
     }
     haptic()
     const wasSaved = saved ?? false
-    toggleBookmark(wasSaved)
-    // Show folder picker when saving (not when unsaving).
-    if (!wasSaved) setShowFolderPicker(true)
+    const result = await toggleBookmark(wasSaved)
+    // Prompt to categorize only when this tap actually saved the event.
+    if (!wasSaved && result === true) {
+      promptForCategory(eventId, title ?? eventId)
+    }
   }
 
   const buttonClass =
@@ -184,108 +174,23 @@ function BookmarkButton({
             : 'border-outline-variant text-on-surface-variant hover:text-primary hover:border-primary/50',
         )
 
-  const assignFolder = async (folderId?: Id<'bookmarkFolders'>) => {
-    setFolderPending(true)
-    try {
-      await moveToFolder({ eventId: eventId as Id<'events'>, folderId })
-      setShowFolderPicker(false)
-    } catch {
-      /* keep the picker open so the user can retry */
-    } finally {
-      setFolderPending(false)
-    }
-  }
-
-  const handleCreateFolder = async () => {
-    if (!newFolderName.trim()) return
-    setFolderPending(true)
-    try {
-      const folderId = await createFolder({ name: newFolderName })
-      await moveToFolder({ eventId: eventId as Id<'events'>, folderId })
-      setNewFolderName('')
-      setShowFolderPicker(false)
-    } catch {
-      /* keep the picker open so the user can retry */
-    } finally {
-      setFolderPending(false)
-    }
-  }
-
   return (
-    <>
-      <button
-        type="button"
-        onClick={handleClick}
-        disabled={isLoading}
-        aria-pressed={!!saved}
-        aria-label={
-          saved ? 'Remove from saved events' : `Save this event${label ? ` (${label})` : ''}`
-        }
-        className={cn(buttonClass, className)}
-      >
-        <Bookmark
-          className={cn('h-4 w-4', saved && 'fill-primary text-primary')}
-          aria-hidden="true"
-        />
-        {variant !== 'icon' && <span>{label}</span>}
-      </button>
-      <Dialog open={showFolderPicker} onOpenChange={setShowFolderPicker}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Organize your saved event</DialogTitle>
-            <DialogDescription>
-              Choose a folder or leave this event uncategorized.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-2">
-            <button
-              type="button"
-              onClick={() => void assignFolder()}
-              disabled={folderPending}
-              className="w-full rounded-xl border border-outline-variant px-4 py-3 text-left text-on-surface transition-colors hover:border-primary hover:bg-surface-container-high"
-            >
-              Uncategorized
-            </button>
-            {folders?.map(
-              (folder: FunctionReturnType<typeof api.bookmarks.listFolders>[number]) => (
-                <button
-                  key={folder._id}
-                  type="button"
-                  onClick={() => void assignFolder(folder._id)}
-                  disabled={folderPending}
-                  className="w-full rounded-xl border border-outline-variant px-4 py-3 text-left text-on-surface transition-colors hover:border-primary hover:bg-surface-container-high"
-                >
-                  {folder.name}
-                </button>
-              ),
-            )}
-          </div>
-          <div className="flex gap-2">
-            <input
-              value={newFolderName}
-              onChange={(e) => setNewFolderName(e.target.value)}
-              placeholder="New folder name"
-              aria-label="New folder name"
-              className="min-w-0 flex-1 rounded-xl border border-outline-variant bg-surface-container px-3 py-2 text-sm text-on-surface"
-              maxLength={60}
-            />
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => void handleCreateFolder()}
-              disabled={folderPending}
-            >
-              Create
-            </Button>
-          </div>
-          <DialogFooter>
-            <Button type="button" variant="ghost" onClick={() => setShowFolderPicker(false)}>
-              Keep uncategorized
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
+    <button
+      type="button"
+      onClick={handleClick}
+      disabled={isLoading}
+      aria-pressed={!!saved}
+      aria-label={
+        saved ? 'Remove from saved events' : `Save this event${label ? ` (${label})` : ''}`
+      }
+      className={cn(buttonClass, className)}
+    >
+      <Bookmark
+        className={cn('h-4 w-4', saved && 'fill-primary text-primary')}
+        aria-hidden="true"
+      />
+      {variant !== 'icon' && <span>{label}</span>}
+    </button>
   )
 }
 
@@ -365,7 +270,7 @@ export function EventSocialActions({
   return (
     <div className={cn('flex flex-wrap items-center gap-sm', className)} aria-label="Event actions">
       <LikeButton eventId={eventId} />
-      <BookmarkButton eventId={eventId} />
+      <BookmarkButton eventId={eventId} title={title} />
       <ShareButton eventId={eventId} title={title} />
     </div>
   )
@@ -460,19 +365,22 @@ export function CardLikeButton({
   )
 }
 
-/** Card bookmark button — plain optimistic toggle (no folder picker). */
+/** Card bookmark button — optimistic toggle, fires the global categorize prompt on save. */
 export function CardBookmarkButton({
   eventId,
+  title,
   compact = false,
   transparent = false,
   className,
 }: {
   eventId: string
+  title?: string
   compact?: boolean
   transparent?: boolean
   className?: string
 }) {
   const { isAuthenticated, isLoading, openAuth } = useAuthGate()
+  const { promptForCategory } = useSavePrompt()
   const bulk = useContext(BulkSocialContext)
   const coveredByBulk = bulk?.coveredIds.has(eventId) ?? false
   const saved = coveredByBulk ? (bulk?.savedIds.has(eventId) ?? false) : undefined
@@ -491,7 +399,7 @@ export function CardBookmarkButton({
     ],
   })
 
-  const handleClick = (e: React.MouseEvent) => {
+  const handleClick = async (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
     if (!isAuthenticated) {
@@ -499,7 +407,11 @@ export function CardBookmarkButton({
       return
     }
     haptic()
-    toggleBookmark(saved ?? false)
+    const wasSaved = saved ?? false
+    const result = await toggleBookmark(wasSaved)
+    if (!wasSaved && result === true) {
+      promptForCategory(eventId, title ?? eventId)
+    }
   }
 
   return (
@@ -608,7 +520,12 @@ export function CardQuickActions({
         compact={compact}
         transparent={transparent}
       />
-      <CardBookmarkButton eventId={eventId} compact={compact} transparent={transparent} />
+      <CardBookmarkButton
+        eventId={eventId}
+        title={title}
+        compact={compact}
+        transparent={transparent}
+      />
       {title && (
         <CardShareButton
           eventId={eventId}

@@ -1,9 +1,36 @@
 import { v } from 'convex/values'
-import { query, mutation, QueryCtx } from './_generated/server'
-import { Doc } from './_generated/dataModel'
+import { query, mutation, QueryCtx, MutationCtx } from './_generated/server'
+import { Doc, Id } from './_generated/dataModel'
 import { getUserProfile, requireUser, incrementEngagementCounter } from './helpers'
 import { enrichPublicEvents } from './events/enrichment'
 import { rateLimiter } from './rateLimiter'
+
+/**
+ * System-default saved-event categories (the "Events to Go To" template).
+ * Seeded lazily and idempotently per user so existing accounts pick them up
+ * without a migration. `isDefault` marks the template as user-visible system
+ * categories; users can still add their own custom folders.
+ */
+const SYSTEM_DEFAULT_FOLDERS: ReadonlyArray<{ name: string; emoji: string }> = [
+  { name: 'Events to Go To', emoji: '🎯' },
+]
+
+async function ensureDefaultFolders(ctx: MutationCtx, userId: Id<'profiles'>) {
+  for (const template of SYSTEM_DEFAULT_FOLDERS) {
+    const existing = await ctx.db
+      .query('bookmarkFolders')
+      .withIndex('by_user_and_name', (q) => q.eq('userId', userId).eq('name', template.name))
+      .first()
+    if (existing) continue
+    await ctx.db.insert('bookmarkFolders', {
+      userId,
+      name: template.name,
+      kind: 'system',
+      isDefault: true,
+      emoji: template.emoji,
+    })
+  }
+}
 
 export const countByEvent = query({
   args: { eventId: v.id('events') },
@@ -80,7 +107,6 @@ export const listFolders = query({
       .take(100)
   },
 })
-
 export const listByFolder = query({
   args: { folderId: v.optional(v.id('bookmarkFolders')) },
   handler: async (ctx, args) => {
@@ -109,6 +135,7 @@ export const createFolder = mutation({
   args: { name: v.string() },
   handler: async (ctx, args) => {
     const profile = await requireUser(ctx)
+    await ensureDefaultFolders(ctx, profile._id)
     const name = args.name.trim()
     if (!name || name.length > 60) throw new Error('Folder name must be 1 to 60 characters')
     const existing = await ctx.db
@@ -116,7 +143,11 @@ export const createFolder = mutation({
       .withIndex('by_user_and_name', (q) => q.eq('userId', profile._id).eq('name', name))
       .first()
     if (existing) return existing._id
-    return await ctx.db.insert('bookmarkFolders', { userId: profile._id, name })
+    return await ctx.db.insert('bookmarkFolders', {
+      userId: profile._id,
+      name,
+      kind: 'custom',
+    })
   },
 })
 
@@ -184,6 +215,7 @@ export const toggle = mutation({
     const profile = await requireUser(ctx)
     const userId = profile._id
     await rateLimiter.limit(ctx, 'bookmarkToggle', { key: userId, throws: true })
+    await ensureDefaultFolders(ctx, userId)
 
     const event = await ctx.db.get('events', args.eventId)
     if (!event) throw new Error('Event not found')

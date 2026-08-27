@@ -1,9 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { usePaginatedQuery } from 'convex/react'
+import { useQuery } from 'convex/react'
 import dynamic from 'next/dynamic'
 import { api } from '@eventnu/convex/_generated/api'
+import type { FunctionReturnType } from 'convex/server'
+import type { Id } from '@eventnu/convex/_generated/dataModel'
 import { Plus } from 'lucide-react'
 import Link from 'next/link'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -19,23 +21,24 @@ const StoryViewer = dynamic(
   { ssr: false },
 )
 
+type RailAuthorSummary = FunctionReturnType<typeof api.stories.listRail>[number]
+
 export function StoriesRail() {
   const [now] = useState(() => Date.now())
-  // Defer the stories fetch (40 items) until the browser is idle so it never
-  // competes with the initial page's LCP resources.
+  // Defer the rail fetch (a light summary payload) until the browser is idle so
+  // it never competes with the initial page's LCP resources.
   const started = useIdleDefer(1500)
-  const { results, status } = usePaginatedQuery(
-    api.stories.listActive,
-    started ? { now } : 'skip',
-    { initialNumItems: 40 },
+  const summaries = useQuery(api.stories.listRail, started ? { now } : 'skip')
+  const [openAuthorId, setOpenAuthorId] = useState<Id<'profiles'> | null>(null)
+
+  // Fetch only the tapped author's full stories, on demand — the rail never
+  // ships full media docs.
+  const authorStories = useQuery(
+    api.stories.listByUser,
+    openAuthorId ? { profileId: openAuthorId, now } : 'skip',
   )
-  const [openIndex, setOpenIndex] = useState<number | null>(null)
 
-  const stories = results as StoryItem[]
-  const groups = groupByAuthor(stories)
-  const authors = [...groups.entries()]
-
-  if (status === 'LoadingFirstPage') {
+  if (summaries === undefined) {
     return (
       <div className="flex gap-md overflow-x-auto px-4 md:px-gutter py-sm" aria-hidden="true">
         {Array.from({ length: 6 }).map((_, i) => (
@@ -45,9 +48,7 @@ export function StoriesRail() {
     )
   }
 
-  if (authors.length === 0) return null
-
-  const flatIndexFor = (authorId: string) => stories.findIndex((s) => s.userId === authorId)
+  if (summaries.length === 0) return null
 
   return (
     <section aria-label="Community stories" className="py-md">
@@ -65,56 +66,62 @@ export function StoriesRail() {
               Create
             </span>
           </Link>
-          {authors.map(([authorId, authorStories]) => {
-            const latest = authorStories[0]
-            const initials = (latest.author?.fullName ?? 'A')
-              .split(' ')
-              .map((part) => part[0])
-              .slice(0, 2)
-              .join('')
-              .toUpperCase()
-            return (
-              <button
-                key={authorId}
-                type="button"
-                onClick={() => setOpenIndex(flatIndexFor(authorId))}
-                className="flex shrink-0 flex-col items-center gap-xs"
-                aria-label={`View ${latest.author?.fullName ?? 'Anonymous'}'s stories`}
-              >
-                <span className="rounded-full bg-gradient-to-tr from-primary via-secondary to-tertiary p-[3px]">
-                  <Avatar className="h-16 w-16 border-4 border-background">
-                    {latest.author?.avatarUrl ? (
-                      <AvatarImage src={latest.author.avatarUrl} alt={latest.author.fullName} />
-                    ) : null}
-                    <AvatarFallback>{initials}</AvatarFallback>
-                  </Avatar>
-                </span>
-                <span className="max-w-[5rem] truncate text-label-sm text-on-surface-variant">
-                  {latest.author?.fullName ?? 'Anonymous'}
-                </span>
-              </button>
-            )
-          })}
+          {summaries.map((author) => (
+            <StoryRing
+              key={author.authorId}
+              author={author}
+              onOpen={() => setOpenAuthorId(author.authorId as Id<'profiles'>)}
+            />
+          ))}
         </div>
       </div>
 
-      {openIndex !== null && (
+      {openAuthorId !== null && authorStories && (
         <StoryViewer
-          stories={stories}
-          initialIndex={openIndex}
-          onClose={() => setOpenIndex(null)}
+          stories={authorStories as StoryItem[]}
+          initialIndex={0}
+          onClose={() => setOpenAuthorId(null)}
         />
       )}
     </section>
   )
 }
 
-function groupByAuthor(stories: StoryItem[]): Map<string, StoryItem[]> {
-  const groups = new Map<string, StoryItem[]>()
-  for (const story of stories) {
-    const list = groups.get(story.userId) ?? []
-    list.push(story)
-    groups.set(story.userId, list)
-  }
-  return groups
+function initialsFor(name: string) {
+  return name
+    .split(' ')
+    .map((part) => part[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase()
+}
+
+/**
+ * A single circular story ring. The gradient ring is emphasized when the author
+ * has unviewed stories; a thin conic ring conveys "partially seen" when some
+ * stories in the group have been viewed (per-session approximation).
+ */
+function StoryRing({ author, onOpen }: { author: RailAuthorSummary; onOpen: () => void }) {
+  const initials = initialsFor(author.authorName)
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className="flex shrink-0 flex-col items-center gap-xs"
+      aria-label={`View ${author.authorName}'s stories (${author.storyCount})`}
+    >
+      <span className="relative rounded-full bg-gradient-to-tr from-primary via-secondary to-tertiary p-[3px]">
+        <Avatar className="h-16 w-16 border-4 border-background">
+          {author.avatarUrl ? <AvatarImage src={author.avatarUrl} alt={author.authorName} /> : null}
+          <AvatarFallback>{initials}</AvatarFallback>
+        </Avatar>
+        {author.hasUnviewed && (
+          <span className="absolute right-0 top-0 h-3.5 w-3.5 rounded-full bg-primary ring-2 ring-background" />
+        )}
+      </span>
+      <span className="max-w-[5rem] truncate text-label-sm text-on-surface-variant">
+        {author.authorName}
+      </span>
+    </button>
+  )
 }
