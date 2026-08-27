@@ -41,7 +41,17 @@ function AuthCallbackInner() {
         await redeemVerificationCode(signIn, mail, verificationCode)
         try {
           const pending = getPendingOrg()
-          await ensureProfile({})
+          try {
+            await ensureProfile({})
+          } catch {
+            /* Retry once after a short delay (auth token may not propagate yet). */
+            await new Promise((r) => setTimeout(r, 500))
+            try {
+              await ensureProfile({})
+            } catch {
+              /* retried on next visit */
+            }
+          }
           if (pending?.accountType === 'organizer' && pending.orgName.trim()) {
             try {
               await createOrganizer({

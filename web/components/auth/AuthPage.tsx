@@ -269,7 +269,13 @@ export function AuthPage() {
     try {
       await ensureProfile({ fullName })
     } catch {
-      /* retried on next visit */
+      /* Retry once after a short delay (auth token may not propagate yet). */
+      await new Promise((r) => setTimeout(r, 500))
+      try {
+        await ensureProfile({ fullName })
+      } catch {
+        /* retried on next visit */
+      }
     }
     if (accountTypeArg === 'organizer' && orgNameArg?.trim()) {
       try {

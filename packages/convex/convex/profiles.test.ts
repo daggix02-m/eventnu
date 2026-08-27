@@ -76,6 +76,21 @@ describe('profiles.ensureProfile', () => {
     )
   })
 
+  it('does not hijack profile that already has an auth user', async () => {
+    const { ctx, patch } = makeCtx({
+      user: { email: 'org@example.com' },
+      existingByEmail: {
+        _id: 'profiles_existing',
+        role: 'user',
+        authUserId: 'users_other',
+      },
+    })
+    const result = await handler(ctx, {})
+    expect(result).toEqual({ id: 'profiles_existing', created: false })
+    // Should NOT patch — profile already linked to another account
+    expect(patch).not.toHaveBeenCalled()
+  })
+
   it('returns the existing profile when already present by auth user', async () => {
     const { ctx, insert } = makeCtx({
       existingByAuth: { _id: 'profiles_existing', role: 'user' },

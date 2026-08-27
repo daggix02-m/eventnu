@@ -1,4 +1,4 @@
-import { v } from 'convex/values'
+import { v, ConvexError } from 'convex/values'
 import { query, mutation, internalQuery } from './_generated/server'
 import { getAuthUserId } from '@convex-dev/auth/server'
 import { patchDefined, getUserProfile, requireAdmin, requireUser, validateUrl } from './helpers'
@@ -69,7 +69,7 @@ export const ensureProfile = mutation({
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx)
-    if (!userId) throw new Error('Not authenticated')
+    if (!userId) throw new ConvexError('Not authenticated')
 
     const existing = await ctx.db
       .query('profiles')
@@ -79,16 +79,18 @@ export const ensureProfile = mutation({
 
     const user = await ctx.db.get('users', userId)
     const email = user?.email
-    if (!email) throw new Error('Account has no email')
+    if (!email) throw new ConvexError('Account has no email')
 
     const byEmail = await ctx.db
       .query('profiles')
       .filter((q) => q.eq(q.field('email'), email))
       .first()
     if (byEmail) {
-      await ctx.db.patch('profiles', byEmail._id, {
-        authUserId: userId,
-      })
+      if (!byEmail.authUserId) {
+        await ctx.db.patch('profiles', byEmail._id, {
+          authUserId: userId,
+        })
+      }
       return { id: byEmail._id, created: false }
     }
 
@@ -97,7 +99,7 @@ export const ensureProfile = mutation({
       role: 'user',
       verified: false,
       followerCount: 0,
-      fullName: args.fullName ?? user.name ?? undefined,
+      fullName: args.fullName ?? user.name,
       email,
       suspended: false,
     })
