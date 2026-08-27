@@ -39,6 +39,19 @@ type CaptureMode = 'photo' | 'video'
 function describeStoryError(err: unknown): string {
   if (err instanceof Error) {
     const msg = err.message
+
+    // ── ConvexError structured data (e.g. @convex-dev/rate-limiter) ──────
+    // When thrown with an object, ConvexError.message is the JSON-stringified
+    // version, while .data holds the original object.
+    const data = (err as { data?: unknown }).data
+    if (data && typeof data === 'object') {
+      const kind = (data as Record<string, unknown>).kind
+      if (kind === 'RateLimited') {
+        return 'Too many stories posted. Please try again later.'
+      }
+    }
+
+    // ── ConvexError string messages ──────────────────────────────────────
     if (msg.includes('Not authenticated')) return 'Please sign in to share a story.'
     if (msg.includes('Account suspended'))
       return 'Your account has been suspended. Please contact support.'
@@ -49,12 +62,18 @@ function describeStoryError(err: unknown): string {
       return 'Media upload failed. Please try again.'
     if (msg.includes('must be an image') || msg.includes('must be a video'))
       return 'Invalid file type. Please select the correct media format.'
-    if (msg.includes('rate limit') || msg.includes('Too many'))
+
+    // ── Rate limit (fallback for any format) ─────────────────────────────
+    if (msg.includes('rate limit') || msg.includes('RateLimited') || msg.includes('Too many'))
       return 'Too many stories posted. Please try again later.'
+
+    // ── Upload / network errors ──────────────────────────────────────────
+    if (msg.includes('Upload failed')) return 'Media upload failed. Please try again.'
     if (
       msg.includes('Could not connect') ||
       msg.includes('Failed to fetch') ||
-      msg.includes('fetch failed')
+      msg.includes('fetch failed') ||
+      msg.includes('NetworkError')
     )
       return 'Could not reach the server. Check your connection and try again.'
   }
@@ -162,6 +181,12 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // Zoom & gesture state
+  const [zoom, setZoom] = useState(1)
+  const viewfinderRef = useRef<HTMLDivElement | null>(null)
+  const lastTapRef = useRef(0)
+  const pinchStartRef = useRef<{ dist: number; zoom: number } | null>(null)
+
   const stopActiveStream = useCallback(() => {
     activeStreamRef.current?.getTracks().forEach((t) => t.stop())
     activeStreamRef.current = null
@@ -224,14 +249,18 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
   // Acquire/re-acquire the live stream when entering the camera phase or flipping.
   useEffect(() => {
     if (phase !== 'camera') return
+    setZoom(1)
     void startStream(true, true)
   }, [phase, facingUser, startStream])
 
-  // Stop the camera whenever the camera phase is left.
+  // Stop the camera only on unmount or explicit close — not on phase change,
+  // so the blob-URL preview in the edit phase can render without a black screen.
   useEffect(() => {
-    if (phase === 'camera') return
-    stopActiveStream()
-  }, [phase, stopActiveStream])
+    return () => {
+      stopActiveStream()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Apply/clear torch on the active video track.
   useEffect(() => {
@@ -266,6 +295,49 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
   const switchCamera = () => {
     setFacingUser((f) => !f)
     setFlashOn(false)
+    setZoom(1)
+  }
+
+  // ── Gesture handlers ──────────────────────────────────────────────────
+
+  /** Distance between two touch points */
+  const getTouchDist = (touches: React.TouchList) => {
+    const t0 = touches[0]
+    const t1 = touches[1]
+    if (!t0 || !t1) return 0
+    const dx = t0.clientX - t1.clientX
+    const dy = t0.clientY - t1.clientY
+    return Math.hypot(dx, dy)
+  }
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      e.preventDefault()
+      pinchStartRef.current = { dist: getTouchDist(e.touches), zoom }
+    } else if (e.touches.length === 1) {
+      // Double-tap detection
+      const now = Date.now()
+      if (now - lastTapRef.current < 300) {
+        switchCamera()
+        lastTapRef.current = 0
+      } else {
+        lastTapRef.current = now
+      }
+    }
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 2 && pinchStartRef.current) {
+      e.preventDefault()
+      const currentDist = getTouchDist(e.touches)
+      const scale = currentDist / pinchStartRef.current.dist
+      const newZoom = Math.min(5, Math.max(1, pinchStartRef.current.zoom * scale))
+      setZoom(newZoom)
+    }
+  }
+
+  const handleTouchEnd = () => {
+    pinchStartRef.current = null
   }
 
   const openGallery = () => {
@@ -464,6 +536,7 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
   const close = () => {
     stopActiveStream()
     permissions.release()
+    setZoom(1)
     onClose()
   }
 
@@ -547,19 +620,17 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
                   aria-hidden="true"
                 />
               </button>
-              <button
-                type="button"
-                onClick={switchCamera}
-                aria-label="Switch camera"
-                className="flex h-11 w-11 items-center justify-center rounded-full text-white transition-colors hover:bg-white/10"
-              >
-                <SwitchCamera className="h-6 w-6" strokeWidth={1.5} aria-hidden="true" />
-              </button>
             </div>
           </div>
 
           {/* Viewfinder with live filter preview */}
-          <div className="relative z-0 flex min-h-0 flex-1 items-center justify-center overflow-hidden">
+          <div
+            ref={viewfinderRef}
+            className="relative z-0 flex min-h-0 flex-1 items-center justify-center overflow-hidden"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
             <video
               ref={videoRef}
               autoPlay
@@ -568,7 +639,7 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
               className="h-full w-full object-cover"
               style={{
                 filter: previewFilter,
-                transform: facingUser ? 'scaleX(-1)' : 'none',
+                transform: `scale(${zoom}) ${facingUser ? 'scaleX(-1)' : ''}`,
               }}
             />
             {!permissions.requested && permissions.error.camera && (
@@ -631,9 +702,9 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
                 type="button"
                 onClick={capturePhoto}
                 aria-label="Take photo"
-                className="flex h-18 w-18 items-center justify-center rounded-full border-4 border-white bg-white/20 transition-transform active:scale-90"
+                className="flex h-18 w-18 items-center justify-center rounded-full transition-transform active:scale-90"
               >
-                <span className="h-13 w-13 rounded-full bg-white" />
+                <span className="h-16 w-16 rounded-full bg-white" />
               </button>
             ) : recording ? (
               <button
@@ -652,6 +723,16 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
                 className="flex h-18 w-18 items-center justify-center rounded-full border-4 border-white bg-white/20 transition-transform active:scale-90"
               >
                 <span className="h-13 w-13 rounded-full bg-red-500" />
+              </button>
+            )}
+            {mode === 'photo' && (
+              <button
+                type="button"
+                onClick={switchCamera}
+                aria-label="Switch camera"
+                className="flex h-14 w-14 items-center justify-center rounded-full bg-white/10 text-white transition-transform active:scale-90"
+              >
+                <SwitchCamera className="h-7 w-7" strokeWidth={1.5} aria-hidden="true" />
               </button>
             )}
           </div>
