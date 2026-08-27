@@ -144,6 +144,7 @@ function CameraButton({
       <span className="flex h-full w-full items-center justify-center rounded-full bg-background">
         <Camera
           className="h-6 w-6 text-primary/80 transition-all duration-200 group-hover:text-primary"
+          strokeWidth={1.5}
           aria-hidden="true"
         />
       </span>

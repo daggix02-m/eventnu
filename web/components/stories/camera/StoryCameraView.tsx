@@ -10,7 +10,8 @@ import {
   X,
   Image as ImageIcon,
   Camera,
-  Clapperboard,
+  Video,
+  Mic,
   SwitchCamera,
   Zap,
   MapPin,
@@ -488,15 +489,15 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
           {/* Permission chips */}
           <div className="mt-md flex flex-wrap justify-center gap-2">
             <div className="flex items-center gap-2 rounded-full bg-white/5 px-3 py-1.5 text-body-sm text-white/70">
-              <Camera className="h-4 w-4" aria-hidden="true" />
+              <Camera className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
               Camera
             </div>
             <div className="flex items-center gap-2 rounded-full bg-white/5 px-3 py-1.5 text-body-sm text-white/70">
-              <Clapperboard className="h-4 w-4" aria-hidden="true" />
+              <Mic className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
               Microphone
             </div>
             <div className="flex items-center gap-2 rounded-full bg-white/5 px-3 py-1.5 text-body-sm text-white/70">
-              <MapPin className="h-4 w-4" aria-hidden="true" />
+              <MapPin className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
               Location (optional)
             </div>
           </div>
@@ -530,7 +531,7 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
               aria-label="Close camera"
               className="flex h-11 w-11 items-center justify-center rounded-full text-white transition-colors hover:bg-white/10"
             >
-              <X className="h-6 w-6" aria-hidden="true" />
+              <X className="h-6 w-6" strokeWidth={1.5} aria-hidden="true" />
             </button>
             <div className="flex items-center gap-1">
               <button
@@ -542,6 +543,7 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
               >
                 <Zap
                   className={flashOn ? 'h-6 w-6 fill-yellow-300 text-yellow-300' : 'h-6 w-6'}
+                  strokeWidth={1.5}
                   aria-hidden="true"
                 />
               </button>
@@ -551,7 +553,7 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
                 aria-label="Switch camera"
                 className="flex h-11 w-11 items-center justify-center rounded-full text-white transition-colors hover:bg-white/10"
               >
-                <SwitchCamera className="h-6 w-6" aria-hidden="true" />
+                <SwitchCamera className="h-6 w-6" strokeWidth={1.5} aria-hidden="true" />
               </button>
             </div>
           </div>
@@ -564,7 +566,10 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
               muted
               playsInline
               className="h-full w-full object-cover"
-              style={{ filter: previewFilter }}
+              style={{
+                filter: previewFilter,
+                transform: facingUser ? 'scaleX(-1)' : 'none',
+              }}
             />
             {!permissions.requested && permissions.error.camera && (
               <p
@@ -581,15 +586,45 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
             <FilterStrip value={activeFilter} onChange={setActiveFilter} previewRef={videoRef} />
           </div>
 
+          {/* Mode toggle — above capture, no overlap */}
+          <div className="relative z-20 flex justify-center py-2">
+            <div
+              className="flex rounded-full bg-white/10 p-1"
+              role="tablist"
+              aria-label="Capture mode"
+            >
+              <button
+                type="button"
+                role="tab"
+                aria-selected={mode === 'photo'}
+                onClick={() => setMode('photo')}
+                className="flex items-center gap-1 rounded-full px-4 py-1.5 text-label-sm text-white transition-colors data-[selected=true]:bg-white/20"
+                data-selected={mode === 'photo'}
+              >
+                <Camera className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" /> Photo
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={mode === 'video'}
+                onClick={() => setMode('video')}
+                className="flex items-center gap-1 rounded-full px-4 py-1.5 text-label-sm text-white transition-colors data-[selected=true]:bg-white/20"
+                data-selected={mode === 'video'}
+              >
+                <Video className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" /> Video
+              </button>
+            </div>
+          </div>
+
           {/* Bottom controls */}
-          <div className="relative z-20 flex items-center justify-between px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+          <div className="relative z-20 flex items-center justify-center gap-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
             <button
               type="button"
               onClick={openGallery}
               aria-label="Choose from photo gallery"
               className="flex h-14 w-14 items-center justify-center rounded-full bg-white/10 text-white transition-transform active:scale-90"
             >
-              <ImageIcon className="h-7 w-7" aria-hidden="true" />
+              <ImageIcon className="h-7 w-7" strokeWidth={1.5} aria-hidden="true" />
             </button>
             {mode === 'photo' ? (
               <button
@@ -619,37 +654,6 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
                 <span className="h-13 w-13 rounded-full bg-red-500" />
               </button>
             )}
-            <span className="h-14 w-14" /> {/* Spacer for alignment */}
-          </div>
-
-          {/* Mode toggle */}
-          <div className="relative z-20 -mt-12 flex justify-center pb-2">
-            <div
-              className="flex rounded-full bg-white/10 p-1"
-              role="tablist"
-              aria-label="Capture mode"
-            >
-              <button
-                type="button"
-                role="tab"
-                aria-selected={mode === 'photo'}
-                onClick={() => setMode('photo')}
-                className="flex items-center gap-1 rounded-full px-4 py-1.5 text-label-sm text-white transition-colors data-[selected=true]:bg-white/20"
-                data-selected={mode === 'photo'}
-              >
-                <Camera className="h-4 w-4" aria-hidden="true" /> Photo
-              </button>
-              <button
-                type="button"
-                role="tab"
-                aria-selected={mode === 'video'}
-                onClick={() => setMode('video')}
-                className="flex items-center gap-1 rounded-full px-4 py-1.5 text-label-sm text-white transition-colors data-[selected=true]:bg-white/20"
-                data-selected={mode === 'video'}
-              >
-                <Clapperboard className="h-4 w-4" aria-hidden="true" /> Video
-              </button>
-            </div>
           </div>
         </>
       )}
@@ -665,7 +669,7 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
               aria-label="Retake"
               className="flex h-11 w-11 items-center justify-center rounded-full text-white transition-colors hover:bg-white/10"
             >
-              <X className="h-6 w-6" aria-hidden="true" />
+              <X className="h-6 w-6" strokeWidth={1.5} aria-hidden="true" />
             </button>
             <p className="mx-auto text-body-sm font-medium text-white">Edit</p>
             <button
@@ -674,7 +678,7 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
               aria-label="Next: Add details"
               className="flex h-11 items-center gap-1 rounded-full px-3 text-body-sm font-medium text-primary transition-colors hover:bg-white/10"
             >
-              Next <ChevronRight className="h-4 w-4" />
+              Next <ChevronRight className="h-4 w-4" strokeWidth={1.5} />
             </button>
           </div>
 
@@ -698,7 +702,10 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
                 loop
                 playsInline
                 className="h-full w-full object-contain"
-                style={{ filter: previewFilter, transform: previewTransform }}
+                style={{
+                  filter: previewFilter,
+                  transform: facingUser ? `scaleX(-1) ${previewTransform}` : previewTransform,
+                }}
               />
             )}
             {/* Text overlays */}
@@ -715,7 +722,7 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
               aria-label="Rotate 90 degrees"
               className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"
             >
-              <RotateCw className="h-5 w-5" aria-hidden="true" />
+              <RotateCw className="h-5 w-5" strokeWidth={1.5} aria-hidden="true" />
             </button>
             <button
               type="button"
@@ -723,7 +730,7 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
               aria-label="Flip horizontally"
               className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"
             >
-              <FlipHorizontal className="h-5 w-5" aria-hidden="true" />
+              <FlipHorizontal className="h-5 w-5" strokeWidth={1.5} aria-hidden="true" />
             </button>
             <button
               type="button"
@@ -731,7 +738,7 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
               aria-label="Flip vertically"
               className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"
             >
-              <FlipVertical className="h-5 w-5" aria-hidden="true" />
+              <FlipVertical className="h-5 w-5" strokeWidth={1.5} aria-hidden="true" />
             </button>
           </div>
 
@@ -757,7 +764,7 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
               aria-label="Back to editing"
               className="flex h-11 items-center gap-1 rounded-full px-3 text-body-sm font-medium text-white transition-colors hover:bg-white/10"
             >
-              <ChevronLeft className="h-4 w-4" /> Edit
+              <ChevronLeft className="h-4 w-4" strokeWidth={1.5} /> Edit
             </button>
             <p className="mx-auto text-body-sm font-medium text-white">Details</p>
             <span className="w-11" />
@@ -782,7 +789,10 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
                 loop
                 playsInline
                 className="h-full w-full object-cover"
-                style={{ filter: previewFilter, transform: previewTransform }}
+                style={{
+                  filter: previewFilter,
+                  transform: facingUser ? `scaleX(-1) ${previewTransform}` : previewTransform,
+                }}
               />
             )}
             {/* Filter badge */}
@@ -832,7 +842,7 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
               onClick={() => void handleGeolocate()}
               className="flex w-full items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-body-sm font-medium text-white transition-colors hover:bg-white/20"
             >
-              <MapPin className="h-4 w-4" aria-hidden="true" />
+              <MapPin className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
               {location
                 ? `Tagged at ${location.latitude.toFixed(3)}, ${location.longitude.toFixed(3)}`
                 : 'Add location'}
@@ -846,9 +856,9 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
 
             <Button onClick={() => void publishStory()} disabled={submitting} className="w-full">
               {submitting ? (
-                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.5} aria-hidden="true" />
               ) : (
-                <Send className="h-4 w-4" aria-hidden="true" />
+                <Send className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
               )}
               {submitting ? 'Publishing...' : 'Publish story'}
             </Button>

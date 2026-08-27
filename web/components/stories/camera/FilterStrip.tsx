@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
+import { Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 /**
@@ -101,10 +102,10 @@ export function FilterStrip({ value, onChange, previewRef, className }: FilterSt
             {/* Filter preview circle */}
             <div
               className={cn(
-                'relative h-14 w-14 rounded-full border-2 transition-all duration-200 overflow-hidden',
+                'relative h-14 w-14 rounded-2xl border-2 transition-all duration-200 overflow-hidden',
                 isActive
-                  ? 'border-primary scale-105 shadow-[0_0_12px_rgba(208,188,255,0.4)]'
-                  : 'border-white/20 hover:border-white/40',
+                  ? 'border-white scale-105 shadow-[0_0_16px_rgba(255,255,255,0.25)]'
+                  : 'border-white/20 opacity-70 hover:opacity-100 hover:border-white/40',
               )}
             >
               {/* Gradient background representing the filter tone */}
@@ -123,26 +124,16 @@ export function FilterStrip({ value, onChange, previewRef, className }: FilterSt
               </div>
               {/* Active checkmark */}
               {isActive && (
-                <div className="absolute inset-0 flex items-center justify-center bg-primary/20">
-                  <svg
-                    className="h-5 w-5 text-white drop-shadow-md"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
+                <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                  <Check className="h-4 w-4 text-white" strokeWidth={2.5} />
                 </div>
               )}
             </div>
             {/* Label */}
             <span
               className={cn(
-                'text-[10px] font-medium transition-colors',
-                isActive ? 'text-primary' : 'text-white/60 group-hover:text-white/80',
+                'text-[11px] font-medium transition-colors',
+                isActive ? 'text-white' : 'text-white/50 group-hover:text-white/80',
               )}
             >
               {filter.label}
