@@ -1,4 +1,4 @@
-import { v } from 'convex/values'
+import { v, ConvexError } from 'convex/values'
 import { query, mutation, internalMutation, QueryCtx, MutationCtx } from './_generated/server'
 import { Doc, Id } from './_generated/dataModel'
 import { internal } from './_generated/api'
@@ -150,26 +150,26 @@ export const publish = mutation({
 
     const caption = (args.caption ?? '').trim()
     if (caption.length > MAX_CAPTION_LENGTH) {
-      throw new Error('Caption must be 500 characters or fewer')
+      throw new ConvexError('Caption must be 500 characters or fewer')
     }
 
     if (args.eventId) {
       const event = await ctx.db.get('events', args.eventId)
-      if (!event) throw new Error('Event not found')
+      if (!event) throw new ConvexError('Event not found')
     }
 
     if (args.dateKey && !DATE_KEY_RE.test(args.dateKey)) {
-      throw new Error('dateKey must be YYYY-MM-DD')
+      throw new ConvexError('dateKey must be YYYY-MM-DD')
     }
 
     const meta = await ctx.db.system.get('_storage', args.mediaStorageId as Id<'_storage'>)
-    if (!meta) throw new Error('Uploaded file not found')
+    if (!meta) throw new ConvexError('Uploaded file not found')
     const contentType = meta.contentType ?? ''
     if (args.kind === 'photo' && !contentType.startsWith('image/')) {
-      throw new Error('Story photo must be an image file')
+      throw new ConvexError('Story photo must be an image file')
     }
     if (args.kind === 'video' && !contentType.startsWith('video/')) {
-      throw new Error('Story video must be a video file')
+      throw new ConvexError('Story video must be a video file')
     }
 
     let thumbnailUrl: string | undefined
@@ -178,17 +178,17 @@ export const publish = mutation({
         '_storage',
         args.thumbnailStorageId as Id<'_storage'>,
       )
-      if (!thumbMeta) throw new Error('Thumbnail file not found')
+      if (!thumbMeta) throw new ConvexError('Thumbnail file not found')
       if (!(thumbMeta.contentType ?? '').startsWith('image/')) {
-        throw new Error('Story thumbnail must be an image file')
+        throw new ConvexError('Story thumbnail must be an image file')
       }
       const url = await ctx.storage.getUrl(args.thumbnailStorageId as Id<'_storage'>)
-      if (!url) throw new Error('Thumbnail file not found')
+      if (!url) throw new ConvexError('Thumbnail file not found')
       thumbnailUrl = url
     }
 
     const mediaUrl = await ctx.storage.getUrl(args.mediaStorageId as Id<'_storage'>)
-    if (!mediaUrl) throw new Error('Uploaded file not found')
+    if (!mediaUrl) throw new ConvexError('Uploaded file not found')
 
     return await ctx.db.insert('stories', {
       userId: profile._id,

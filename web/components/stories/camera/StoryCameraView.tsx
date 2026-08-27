@@ -34,6 +34,32 @@ import { StickerOverlayEditor, type StickerData } from './StickerOverlay'
 type Phase = 'perm' | 'camera' | 'edit' | 'details'
 type CaptureMode = 'photo' | 'video'
 
+/** Map server error messages to user-friendly strings. */
+function describeStoryError(err: unknown): string {
+  if (err instanceof Error) {
+    const msg = err.message
+    if (msg.includes('Not authenticated')) return 'Please sign in to share a story.'
+    if (msg.includes('Account suspended'))
+      return 'Your account has been suspended. Please contact support.'
+    if (msg.includes('Caption must be'))
+      return 'Caption is too long. Please keep it under 500 characters.'
+    if (msg.includes('Event not found')) return 'The tagged event could not be found.'
+    if (msg.includes('Uploaded file not found') || msg.includes('Thumbnail file not found'))
+      return 'Media upload failed. Please try again.'
+    if (msg.includes('must be an image') || msg.includes('must be a video'))
+      return 'Invalid file type. Please select the correct media format.'
+    if (msg.includes('rate limit') || msg.includes('Too many'))
+      return 'Too many stories posted. Please try again later.'
+    if (
+      msg.includes('Could not connect') ||
+      msg.includes('Failed to fetch') ||
+      msg.includes('fetch failed')
+    )
+      return 'Could not reach the server. Check your connection and try again.'
+  }
+  return 'Failed to publish your story. Please try again.'
+}
+
 type MediaTrackCapabilitiesWithTorch = MediaTrackCapabilities & { torch?: boolean }
 type MediaTrackConstraintSetWithTorch = MediaTrackConstraintSet & { torch?: boolean }
 
@@ -428,7 +454,7 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
       onPublished?.()
       onClose()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to publish your story')
+      setError(describeStoryError(err))
     } finally {
       setSubmitting(false)
     }
