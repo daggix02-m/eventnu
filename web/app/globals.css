@@ -9,6 +9,9 @@
   --primary-rgb: 208, 188, 255;
   --secondary-rgb: 255, 181, 158;
   --tertiary-rgb: 137, 206, 255;
+  /* Safe-area bottom inset with a minimum fallback for Safari browser mode
+     where env() returns 0 even with viewport-fit=cover. */
+  --safe-area-bottom: max(0.25rem, env(safe-area-inset-bottom, 0px));
 }
 
 @theme {
