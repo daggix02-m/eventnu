@@ -1,5 +1,8 @@
 import type { EventImage } from '@/types'
 
+export const FILTER_IDS = ['vivid', 'warm', 'cool', 'mono'] as const
+export type FilterId = (typeof FILTER_IDS)[number] | null
+
 const FILTER_STYLES: Record<string, string> = {
   vivid: 'saturate(1.3) contrast(1.08)',
   warm: 'sepia(0.18) saturate(1.35) hue-rotate(-10deg) brightness(1.05)',

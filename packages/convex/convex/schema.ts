@@ -288,6 +288,41 @@ const schema = defineSchema({
     expired: v.optional(v.boolean()),
     // Owner-only categorization of past stories.
     categoryId: v.optional(v.id('storyCategories')),
+    // ── Editor metadata ──────────────────────────────────────────────────
+    // Filter applied to the media (e.g. 'vivid', 'warm', 'cool', 'mono').
+    filter: v.optional(v.string()),
+    // Transform state at capture time.
+    transforms: v.optional(
+      v.object({
+        rotate: v.number(), // 0, 90, 180, 270
+        flipH: v.boolean(),
+        flipV: v.boolean(),
+      }),
+    ),
+    // Text overlays positioned on the media.
+    textOverlays: v.optional(
+      v.array(
+        v.object({
+          text: v.string(),
+          x: v.number(), // percentage 0-100
+          y: v.number(),
+          fontSize: v.number(), // px
+          color: v.string(),
+          fontFamily: v.string(),
+        }),
+      ),
+    ),
+    // Emoji stickers positioned on the media.
+    stickers: v.optional(
+      v.array(
+        v.object({
+          emoji: v.string(),
+          x: v.number(),
+          y: v.number(),
+          scale: v.number(),
+        }),
+      ),
+    ),
   })
     .index('by_user', ['userId'])
     .index('by_moderation', ['moderationStatus'])

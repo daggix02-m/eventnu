@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ReportDialog } from '@/components/moderation/ReportDialog'
 import { useStoryGestures } from './useStoryGestures'
 import { ViewerListSheet } from './ViewerListSheet'
+import { filterStyle } from '@/lib/media'
 
 export type StoryItem = {
   id: string
@@ -28,9 +29,44 @@ export type StoryItem = {
     avatarUrl: string | null
     username: string | null
   } | null
+  // Editor metadata
+  filter: string | null
+  transforms: {
+    rotate: number
+    flipH: boolean
+    flipV: boolean
+  } | null
+  textOverlays:
+    | {
+        text: string
+        x: number
+        y: number
+        fontSize: number
+        color: string
+        fontFamily: string
+      }[]
+    | null
+  stickers:
+    | {
+        emoji: string
+        x: number
+        y: number
+        scale: number
+      }[]
+    | null
 }
 
 const PHOTO_DURATION_MS = 6000
+
+/** Build a CSS transform string from StoryItem transforms */
+function transformCSS(t: { rotate: number; flipH: boolean; flipV: boolean } | null): string {
+  if (!t) return 'none'
+  const parts: string[] = []
+  if (t.rotate) parts.push(`rotate(${t.rotate}deg)`)
+  if (t.flipH) parts.push('scaleX(-1)')
+  if (t.flipV) parts.push('scaleY(-1)')
+  return parts.length > 0 ? parts.join(' ') : 'none'
+}
 
 function timeAgo(timestamp: number) {
   const seconds = Math.floor((Date.now() - timestamp) / 1000)
@@ -313,7 +349,17 @@ export function StoryViewer({
       {/* Media */}
       <div className="relative z-0 flex min-h-0 flex-1 items-center justify-center overflow-hidden">
         {story.kind === 'photo' ? (
-          <Image src={story.mediaUrl} alt="" fill sizes="100vw" className="object-cover" />
+          <Image
+            src={story.mediaUrl}
+            alt=""
+            fill
+            sizes="100vw"
+            className="object-cover"
+            style={{
+              filter: filterStyle(story.filter),
+              transform: transformCSS(story.transforms),
+            }}
+          />
         ) : (
           <>
             <video
@@ -325,6 +371,10 @@ export function StoryViewer({
               playsInline
               controls={false}
               className="h-full w-full object-cover"
+              style={{
+                filter: filterStyle(story.filter),
+                transform: transformCSS(story.transforms),
+              }}
               onPlay={() => setPaused(false)}
               onPause={() => setPaused(true)}
               onEnded={() => go(1)}
@@ -351,6 +401,39 @@ export function StoryViewer({
             </div>
           </>
         )}
+        {/* Text overlays */}
+        {story.textOverlays?.map((overlay, i) => (
+          <div
+            key={`text-${i}`}
+            className="pointer-events-none absolute z-10 whitespace-pre-wrap break-words text-center drop-shadow-lg"
+            style={{
+              left: `${overlay.x}%`,
+              top: `${overlay.y}%`,
+              transform: 'translate(-50%, -50%)',
+              fontSize: `${overlay.fontSize}px`,
+              color: overlay.color,
+              fontFamily: overlay.fontFamily,
+              textShadow: '0 2px 8px rgba(0,0,0,0.6)',
+            }}
+          >
+            {overlay.text}
+          </div>
+        ))}
+        {/* Sticker overlays */}
+        {story.stickers?.map((sticker, i) => (
+          <div
+            key={`sticker-${i}`}
+            className="pointer-events-none absolute z-10"
+            style={{
+              left: `${sticker.x}%`,
+              top: `${sticker.y}%`,
+              transform: `translate(-50%, -50%) scale(${sticker.scale})`,
+              fontSize: '2rem',
+            }}
+          >
+            {sticker.emoji}
+          </div>
+        ))}
       </div>
 
       {/* Tap zones — tap left/right to navigate, tap center for nothing */}

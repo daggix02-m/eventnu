@@ -42,6 +42,11 @@ async function enrichStory(ctx: QueryCtx, story: StoryDoc) {
     longitude: story.longitude ?? null,
     placeName: story.placeName ?? null,
     categoryId: story.categoryId ?? null,
+    // Editor metadata
+    filter: story.filter ?? null,
+    transforms: story.transforms ?? null,
+    textOverlays: story.textOverlays ?? null,
+    stickers: story.stickers ?? null,
     author: author
       ? {
           id: author._id,
@@ -79,6 +84,11 @@ async function enrichStories(ctx: QueryCtx, stories: StoryDoc[]) {
       longitude: story.longitude ?? null,
       placeName: story.placeName ?? null,
       categoryId: story.categoryId ?? null,
+      // Editor metadata
+      filter: story.filter ?? null,
+      transforms: story.transforms ?? null,
+      textOverlays: story.textOverlays ?? null,
+      stickers: story.stickers ?? null,
       author: author
         ? {
             id: author._id,
@@ -102,6 +112,37 @@ export const publish = mutation({
     latitude: v.optional(v.number()),
     longitude: v.optional(v.number()),
     placeName: v.optional(v.string()),
+    // ── Editor metadata ──────────────────────────────────────────────────
+    filter: v.optional(v.string()),
+    transforms: v.optional(
+      v.object({
+        rotate: v.number(),
+        flipH: v.boolean(),
+        flipV: v.boolean(),
+      }),
+    ),
+    textOverlays: v.optional(
+      v.array(
+        v.object({
+          text: v.string(),
+          x: v.number(),
+          y: v.number(),
+          fontSize: v.number(),
+          color: v.string(),
+          fontFamily: v.string(),
+        }),
+      ),
+    ),
+    stickers: v.optional(
+      v.array(
+        v.object({
+          emoji: v.string(),
+          x: v.number(),
+          y: v.number(),
+          scale: v.number(),
+        }),
+      ),
+    ),
   },
   handler: async (ctx, args) => {
     const profile = await requireUser(ctx)
@@ -167,6 +208,10 @@ export const publish = mutation({
       longitude: args.longitude,
       placeName: args.placeName,
       expired: false,
+      filter: args.filter,
+      transforms: args.transforms,
+      textOverlays: args.textOverlays,
+      stickers: args.stickers,
     })
   },
 })

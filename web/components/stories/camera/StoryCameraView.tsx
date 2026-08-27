@@ -2,9 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
-import { useMutation, useQuery } from 'convex/react'
+import { useMutation } from 'convex/react'
 import { api } from '@eventnu/convex/_generated/api'
-import type { FunctionReturnType } from 'convex/server'
 import type { Id } from '@eventnu/convex/_generated/dataModel'
 import { compressImage } from '@eventnu/image'
 import {
@@ -17,16 +16,32 @@ import {
   MapPin,
   Send,
   Loader2,
+  RotateCw,
+  FlipHorizontal,
+  FlipVertical,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react'
 import { useStoryPermissions, hasSeenCameraExplainer } from '@/lib/hooks/useStoryPermissions'
 import { getTodayString } from '@/lib/dates'
+import { filterStyle, type FilterId } from '@/lib/media'
 import { Button } from '@/components/ui/button'
+import { FilterStrip } from './FilterStrip'
+import { EventSearchSelect } from './EventSearchSelect'
+import { TextOverlayEditor, type TextOverlayData } from './TextOverlay'
+import { StickerOverlayEditor, type StickerData } from './StickerOverlay'
 
-type Phase = 'perm' | 'camera' | 'review'
+type Phase = 'perm' | 'camera' | 'edit' | 'details'
 type CaptureMode = 'photo' | 'video'
 
 type MediaTrackCapabilitiesWithTorch = MediaTrackCapabilities & { torch?: boolean }
 type MediaTrackConstraintSetWithTorch = MediaTrackConstraintSet & { torch?: boolean }
+
+interface TransformState {
+  rotate: 0 | 90 | 180 | 270
+  flipH: boolean
+  flipV: boolean
+}
 
 interface StoryCameraViewProps {
   onClose: () => void
@@ -73,13 +88,22 @@ function makeVideoThumbnailFile(blobUrl: string): Promise<File> {
   })
 }
 
+/** Build a CSS transform string from TransformState */
+function transformCSS(t: TransformState): string {
+  const parts: string[] = []
+  if (t.rotate) parts.push(`rotate(${t.rotate}deg)`)
+  if (t.flipH) parts.push('scaleX(-1)')
+  if (t.flipV) parts.push('scaleY(-1)')
+  return parts.length > 0 ? parts.join(' ') : 'none'
+}
+
 export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) {
   const permissions = useStoryPermissions()
   const publish = useMutation(api.stories.publish)
   const getUploadUrl = useMutation(api.events.write.generateUploadUrl)
-  const events = useQuery(api.events.read.getPublished)
 
   const videoRef = useRef<HTMLVideoElement | null>(null)
+  const previewImageRef = useRef<HTMLImageElement | null>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const chunksRef = useRef<Blob[]>([])
   const activeStreamRef = useRef<MediaStream | null>(null)
@@ -90,6 +114,16 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
   const [facingUser, setFacingUser] = useState(false)
   const [flashOn, setFlashOn] = useState(false)
   const [torchSupported, setTorchSupported] = useState(false)
+
+  // Editor state
+  const [activeFilter, setActiveFilter] = useState<FilterId>(null)
+  const [transforms, setTransforms] = useState<TransformState>({
+    rotate: 0,
+    flipH: false,
+    flipV: false,
+  })
+  const [textOverlays, setTextOverlays] = useState<TextOverlayData[]>([])
+  const [stickers, setStickers] = useState<StickerData[]>([])
 
   // Review / publish state
   const [mediaFile, setMediaFile] = useState<File | null>(null)
@@ -106,8 +140,6 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
     activeStreamRef.current = null
   }, [])
 
-  // Single owner of the live camera stream. Attaching stops any previous
-  // stream so the camera LED is never on twice and turns off on teardown.
   const attachStream = useCallback(
     (stream: MediaStream) => {
       stopActiveStream()
@@ -118,7 +150,6 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
           /* play is best-effort */
         })
       }
-      // Detect torch support for the flash toggle.
       try {
         const track = stream.getVideoTracks()[0]
         const capabilities = track.getCapabilities?.() as
@@ -149,15 +180,11 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
   )
 
   // Start the camera once the explainer has been cleared (or was seen before).
-  // Only advance to the camera phase on success so a failed auto-request falls
-  // back to the explainer, where "Continue" provides the required user gesture.
   useEffect(() => {
     if (phase !== 'perm') return
     if (!hasSeenCameraExplainer()) return
     let cancelled = false
     void permissions.requestCamera().then((stream) => {
-      // The permission probe stream is discarded; the camera phase acquires
-      // the real stream so only one camera track is ever active.
       stream?.getTracks().forEach((t) => t.stop())
       if (!cancelled && stream) setPhase('camera')
     })
@@ -167,14 +194,13 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase])
 
-  // Acquire/re-acquire the live stream when entering the camera phase or
-  // flipping the camera.
+  // Acquire/re-acquire the live stream when entering the camera phase or flipping.
   useEffect(() => {
     if (phase !== 'camera') return
     void startStream(true, true)
   }, [phase, facingUser, startStream])
 
-  // Stop the camera whenever the camera phase is left (review / close).
+  // Stop the camera whenever the camera phase is left.
   useEffect(() => {
     if (phase === 'camera') return
     stopActiveStream()
@@ -189,9 +215,7 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
     try {
       track
         ?.applyConstraints({ advanced: [{ torch: flashOn }] as MediaTrackConstraintSetWithTorch[] })
-        .catch(() => {
-          /* torch unsupported at runtime */
-        })
+        .catch(() => {})
     } catch {
       /* ignore */
     }
@@ -244,7 +268,12 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
     } else {
       setThumbnailFile(null)
     }
-    setPhase('review')
+    // Reset editor state for new media
+    setActiveFilter(null)
+    setTransforms({ rotate: 0, flipH: false, flipV: false })
+    setTextOverlays([])
+    setStickers([])
+    setPhase('edit')
   }
 
   const capturePhoto = () => {
@@ -269,7 +298,12 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
         setMediaFile(file)
         setMediaPreviewUrl(URL.createObjectURL(file))
         setThumbnailFile(null)
-        setPhase('review')
+        // Reset editor state
+        setActiveFilter(null)
+        setTransforms({ rotate: 0, flipH: false, flipV: false })
+        setTextOverlays([])
+        setStickers([])
+        setPhase('edit')
       },
       'image/jpeg',
       0.9,
@@ -298,7 +332,12 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
       setMode('video')
       setMediaFile(file)
       setMediaPreviewUrl(URL.createObjectURL(file))
-      setPhase('review')
+      // Reset editor state
+      setActiveFilter(null)
+      setTransforms({ rotate: 0, flipH: false, flipV: false })
+      setTextOverlays([])
+      setStickers([])
+      setPhase('edit')
     }
     recorder.start()
     mediaRecorderRef.current = recorder
@@ -319,6 +358,21 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
     } else {
       setLocation(null)
     }
+  }
+
+  const rotateTransform = () => {
+    setTransforms((t) => ({
+      ...t,
+      rotate: ((t.rotate + 90) % 360) as 0 | 90 | 180 | 270,
+    }))
+  }
+
+  const flipHTransform = () => {
+    setTransforms((t) => ({ ...t, flipH: !t.flipH }))
+  }
+
+  const flipVTransform = () => {
+    setTransforms((t) => ({ ...t, flipV: !t.flipV }))
   }
 
   const publishStory = async () => {
@@ -354,6 +408,9 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
         }
       }
 
+      // Build editor metadata
+      const hasTransforms = transforms.rotate !== 0 || transforms.flipH || transforms.flipV
+
       await publish({
         kind: mode,
         mediaStorageId: storageId as string,
@@ -363,6 +420,10 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
         thumbnailStorageId,
         latitude: location?.latitude,
         longitude: location?.longitude,
+        filter: activeFilter ?? undefined,
+        transforms: hasTransforms ? transforms : undefined,
+        textOverlays: textOverlays.length > 0 ? textOverlays : undefined,
+        stickers: stickers.length > 0 ? stickers : undefined,
       })
       onPublished?.()
       onClose()
@@ -379,6 +440,10 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
     onClose()
   }
 
+  // Computed transform CSS for preview
+  const previewTransform = transformCSS(transforms)
+  const previewFilter = filterStyle(activeFilter)
+
   return (
     <div
       role="dialog"
@@ -389,14 +454,27 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
       {/* ── Permission explainer ─────────────────────────────────────────── */}
       {phase === 'perm' && (
         <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
-          <span className="flex h-20 w-20 items-center justify-center rounded-full bg-white/10">
+          <span className="flex h-20 w-20 items-center justify-center rounded-full bg-white/10 animate-pulse">
             <Camera className="h-9 w-9 text-white" aria-hidden="true" />
           </span>
           <h2 className="mt-lg font-display text-headline-md text-white">Capture the moment</h2>
-          <p className="mt-sm max-w-[24rem] font-body-md text-white/70">
-            Event Nu uses your camera for photos and your microphone for video stories. Location is
-            optional — it tags where your story happened.
-          </p>
+
+          {/* Permission chips */}
+          <div className="mt-md flex flex-wrap justify-center gap-2">
+            <div className="flex items-center gap-2 rounded-full bg-white/5 px-3 py-1.5 text-body-sm text-white/70">
+              <Camera className="h-4 w-4" aria-hidden="true" />
+              Camera
+            </div>
+            <div className="flex items-center gap-2 rounded-full bg-white/5 px-3 py-1.5 text-body-sm text-white/70">
+              <Clapperboard className="h-4 w-4" aria-hidden="true" />
+              Microphone
+            </div>
+            <div className="flex items-center gap-2 rounded-full bg-white/5 px-3 py-1.5 text-body-sm text-white/70">
+              <MapPin className="h-4 w-4" aria-hidden="true" />
+              Location (optional)
+            </div>
+          </div>
+
           <Button size="lg" onClick={() => void requestExplainerContinue()} className="mt-lg">
             Continue
           </Button>
@@ -418,6 +496,7 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
       {/* ── Live camera ──────────────────────────────────────────────────── */}
       {phase === 'camera' && (
         <>
+          {/* Top bar: close, flash, camera flip */}
           <div className="relative z-20 flex items-center justify-between px-4 pt-[max(0.75rem,env(safe-area-inset-top))]">
             <button
               type="button"
@@ -427,20 +506,31 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
             >
               <X className="h-6 w-6" aria-hidden="true" />
             </button>
-            <button
-              type="button"
-              onClick={toggleFlash}
-              disabled={!torchSupported}
-              aria-label={flashOn ? 'Turn flash off' : 'Turn flash on'}
-              className="flex h-11 w-11 items-center justify-center rounded-full text-white transition-colors hover:bg-white/10 disabled:opacity-30"
-            >
-              <Zap
-                className={flashOn ? 'h-6 w-6 fill-yellow-300 text-yellow-300' : 'h-6 w-6'}
-                aria-hidden="true"
-              />
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={toggleFlash}
+                disabled={!torchSupported}
+                aria-label={flashOn ? 'Turn flash off' : 'Turn flash on'}
+                className="flex h-11 w-11 items-center justify-center rounded-full text-white transition-colors hover:bg-white/10 disabled:opacity-30"
+              >
+                <Zap
+                  className={flashOn ? 'h-6 w-6 fill-yellow-300 text-yellow-300' : 'h-6 w-6'}
+                  aria-hidden="true"
+                />
+              </button>
+              <button
+                type="button"
+                onClick={switchCamera}
+                aria-label="Switch camera"
+                className="flex h-11 w-11 items-center justify-center rounded-full text-white transition-colors hover:bg-white/10"
+              >
+                <SwitchCamera className="h-6 w-6" aria-hidden="true" />
+              </button>
+            </div>
           </div>
 
+          {/* Viewfinder with live filter preview */}
           <div className="relative z-0 flex min-h-0 flex-1 items-center justify-center overflow-hidden">
             <video
               ref={videoRef}
@@ -448,6 +538,7 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
               muted
               playsInline
               className="h-full w-full object-cover"
+              style={{ filter: previewFilter }}
             />
             {!permissions.requested && permissions.error.camera && (
               <p
@@ -459,7 +550,12 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
             )}
           </div>
 
-          {/* Bottom controls — gallery button sits bottom-left */}
+          {/* Filter strip */}
+          <div className="relative z-20 -mb-1">
+            <FilterStrip value={activeFilter} onChange={setActiveFilter} previewRef={videoRef} />
+          </div>
+
+          {/* Bottom controls */}
           <div className="relative z-20 flex items-center justify-between px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
             <button
               type="button"
@@ -469,7 +565,6 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
             >
               <ImageIcon className="h-7 w-7" aria-hidden="true" />
             </button>
-
             {mode === 'photo' ? (
               <button
                 type="button"
@@ -498,18 +593,10 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
                 <span className="h-13 w-13 rounded-full bg-red-500" />
               </button>
             )}
-
-            <button
-              type="button"
-              onClick={switchCamera}
-              aria-label="Switch camera"
-              className="flex h-14 w-14 items-center justify-center rounded-full bg-white/10 text-white transition-transform active:scale-90"
-            >
-              <SwitchCamera className="h-7 w-7" aria-hidden="true" />
-            </button>
+            <span className="h-14 w-14" /> {/* Spacer for alignment */}
           </div>
 
-          {/* Mode toggle above the shutter */}
+          {/* Mode toggle */}
           <div className="relative z-20 -mt-12 flex justify-center pb-2">
             <div
               className="flex rounded-full bg-white/10 p-1"
@@ -541,9 +628,10 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
         </>
       )}
 
-      {/* ── Review & publish ─────────────────────────────────────────────── */}
-      {phase === 'review' && mediaPreviewUrl && (
+      {/* ── Edit phase: filter + transform controls ─────────────────────── */}
+      {phase === 'edit' && mediaPreviewUrl && (
         <div className="flex flex-1 flex-col">
+          {/* Top bar */}
           <div className="relative z-20 flex items-center px-4 pt-[max(0.75rem,env(safe-area-inset-top))]">
             <button
               type="button"
@@ -553,18 +641,28 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
             >
               <X className="h-6 w-6" aria-hidden="true" />
             </button>
-            <p className="mx-auto text-body-sm font-medium text-white">Preview</p>
-            <span className="w-11" />
+            <p className="mx-auto text-body-sm font-medium text-white">Edit</p>
+            <button
+              type="button"
+              onClick={() => setPhase('details')}
+              aria-label="Next: Add details"
+              className="flex h-11 items-center gap-1 rounded-full px-3 text-body-sm font-medium text-primary transition-colors hover:bg-white/10"
+            >
+              Next <ChevronRight className="h-4 w-4" />
+            </button>
           </div>
 
+          {/* Media preview with filter + transform applied */}
           <div className="relative z-0 flex min-h-0 flex-1 items-center justify-center overflow-hidden">
             {mode === 'photo' ? (
               <Image
+                ref={previewImageRef}
                 src={mediaPreviewUrl}
                 alt="Story preview"
                 fill
                 sizes="100vw"
                 className="object-contain"
+                style={{ filter: previewFilter, transform: previewTransform }}
               />
             ) : (
               <video
@@ -574,39 +672,139 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
                 loop
                 playsInline
                 className="h-full w-full object-contain"
+                style={{ filter: previewFilter, transform: previewTransform }}
               />
+            )}
+            {/* Text overlays */}
+            <TextOverlayEditor overlays={textOverlays} onChange={setTextOverlays} />
+            {/* Sticker overlays */}
+            <StickerOverlayEditor stickers={stickers} onChange={setStickers} />
+          </div>
+
+          {/* Transform controls */}
+          <div className="relative z-20 flex items-center justify-center gap-4 py-3">
+            <button
+              type="button"
+              onClick={rotateTransform}
+              aria-label="Rotate 90 degrees"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"
+            >
+              <RotateCw className="h-5 w-5" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              onClick={flipHTransform}
+              aria-label="Flip horizontally"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"
+            >
+              <FlipHorizontal className="h-5 w-5" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              onClick={flipVTransform}
+              aria-label="Flip vertically"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"
+            >
+              <FlipVertical className="h-5 w-5" aria-hidden="true" />
+            </button>
+          </div>
+
+          {/* Filter strip */}
+          <div className="relative z-20 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+            <FilterStrip
+              value={activeFilter}
+              onChange={setActiveFilter}
+              previewRef={mode === 'photo' ? previewImageRef : videoRef}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* ── Details phase: caption, event, location ──────────────────────── */}
+      {phase === 'details' && mediaPreviewUrl && (
+        <div className="flex flex-1 flex-col">
+          {/* Top bar */}
+          <div className="relative z-20 flex items-center px-4 pt-[max(0.75rem,env(safe-area-inset-top))]">
+            <button
+              type="button"
+              onClick={() => setPhase('edit')}
+              aria-label="Back to editing"
+              className="flex h-11 items-center gap-1 rounded-full px-3 text-body-sm font-medium text-white transition-colors hover:bg-white/10"
+            >
+              <ChevronLeft className="h-4 w-4" /> Edit
+            </button>
+            <p className="mx-auto text-body-sm font-medium text-white">Details</p>
+            <span className="w-11" />
+          </div>
+
+          {/* Small media preview */}
+          <div className="relative z-0 mx-4 mt-3 h-40 overflow-hidden rounded-xl">
+            {mode === 'photo' ? (
+              <Image
+                src={mediaPreviewUrl}
+                alt="Story preview"
+                fill
+                sizes="300px"
+                className="object-cover"
+                style={{ filter: previewFilter, transform: previewTransform }}
+              />
+            ) : (
+              <video
+                src={mediaPreviewUrl}
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="h-full w-full object-cover"
+                style={{ filter: previewFilter, transform: previewTransform }}
+              />
+            )}
+            {/* Filter badge */}
+            {activeFilter && (
+              <span className="absolute top-2 left-2 rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm">
+                {activeFilter}
+              </span>
             )}
           </div>
 
-          <div className="relative z-20 space-y-3 px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
-            <textarea
-              value={caption}
-              onChange={(e) => setCaption(e.target.value)}
-              maxLength={500}
-              rows={2}
-              placeholder="Add a caption…"
-              aria-label="Story caption"
-              className="w-full resize-y rounded-xl border border-white/20 bg-white/10 px-md py-3 font-body-md text-white placeholder:text-white/50 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40"
-            />
-            <select
+          {/* Details form */}
+          <div className="relative z-20 flex-1 space-y-3 px-4 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+            {/* Caption */}
+            <div>
+              <textarea
+                value={caption}
+                onChange={(e) => setCaption(e.target.value)}
+                maxLength={500}
+                rows={2}
+                placeholder="Add a caption..."
+                aria-label="Story caption"
+                className="w-full resize-y rounded-xl border border-white/20 bg-white/10 px-4 py-3 font-body-md text-white placeholder:text-white/50 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40"
+              />
+              <p
+                className={`mt-1 text-right text-[11px] ${
+                  caption.length > 450
+                    ? 'text-red-400'
+                    : caption.length > 350
+                      ? 'text-amber-400'
+                      : 'text-white/40'
+                }`}
+              >
+                {caption.length}/500
+              </p>
+            </div>
+
+            {/* Event search */}
+            <EventSearchSelect
               value={eventId}
-              onChange={(e) => setEventId(e.target.value)}
-              aria-label="Associated event"
-              className="w-full rounded-xl border border-white/20 bg-black/40 px-md py-3 font-body-md text-white focus:border-primary focus:outline-none"
-            >
-              <option value="">No specific event</option>
-              {(events ?? []).map(
-                (event: FunctionReturnType<typeof api.events.read.getPublished>[number]) => (
-                  <option key={event._id as string} value={event._id as string}>
-                    {event.title}
-                  </option>
-                ),
-              )}
-            </select>
+              onChange={setEventId}
+              placeholder="Tag an event..."
+            />
+
+            {/* Location */}
             <button
               type="button"
               onClick={() => void handleGeolocate()}
-              className="flex w-full items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-md py-3 text-body-sm font-medium text-white transition-colors hover:bg-white/20"
+              className="flex w-full items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-body-sm font-medium text-white transition-colors hover:bg-white/20"
             >
               <MapPin className="h-4 w-4" aria-hidden="true" />
               {location
@@ -626,7 +824,7 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
               ) : (
                 <Send className="h-4 w-4" aria-hidden="true" />
               )}
-              {submitting ? 'Publishing…' : 'Publish story'}
+              {submitting ? 'Publishing...' : 'Publish story'}
             </Button>
           </div>
         </div>
