@@ -219,9 +219,10 @@ describe('FeaturedMarquee animation pausing', () => {
     render(<FeaturedMarquee events={events} />)
     const imgs = screen.getAllByRole('img')
     // 2 tracks x 5 events = 10 images. Only the first card of track A is
-    // preloaded (the genuine LCP candidate); everything else stays low priority
-    // so no wasted preload links are emitted (which caused the browser's
-    // "preloaded but not used" warning).
+    // high-priority (the genuine LCP candidate); everything else stays low
+    // priority. No `preload`/`priority` is used anywhere — those emit preload
+    // links whose responsive candidate Chrome flags as "preloaded but not
+    // used".
     const highPriority = imgs.filter((img) => img.getAttribute('fetchpriority') === 'high')
     expect(highPriority).toHaveLength(1)
     expect(imgs.filter((img) => img.getAttribute('fetchpriority') === 'low')).toHaveLength(9)

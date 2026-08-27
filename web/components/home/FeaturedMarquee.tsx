@@ -343,20 +343,17 @@ export function FeaturedMarquee({ events }: FeaturedMarqueeProps) {
             // whole strip eager so a lazy clone never paints as the LCP (which
             // triggers Next's LCP warning).
             //
-            // Only the very first card is `preload`ed: it is the only one that
-            // can realistically be the LCP element, and preloading it with a
-            // responsive srcset lets the browser start fetching the needed
-            // width early. The remaining cards use `fetchPriority="low"` +
-            // eager so they load without emitting preload links.
-            //
-            // Use `preload` (Next.js 16) rather than the deprecated `priority`,
-            // and do NOT combine `loading`/`fetchPriority` with `preload` on the
-            // same image — mixing them made Next.js emit a preload link that
-            // Chrome reported as "preloaded but not used". When `preload` is
-            // true, Next sets `loading="eager"` automatically, so we only pass
-            // `loading` for the non-preloaded cards.
+            // The first card is eager with `fetchPriority="high"` so it stays
+            // the LCP candidate — but we deliberately do NOT use `preload` (or
+            // the deprecated `priority`) on it. Those emit a responsive
+            // `<link rel="preload" imagesrcset imagesizes>` whose selected
+            // candidate (e.g. w=640) is never counted as consumed by the small
+            // card's <img>, so Chrome logs "preloaded but not used". The image
+            // loads eagerly either way; only the redundant preload link is
+            // dropped. The remaining cards use `fetchPriority="low"` + eager
+            // so they load without emitting any preload links.
             {...(index === 0
-              ? { preload: true }
+              ? { fetchPriority: 'high' as const, loading: 'eager' as const }
               : { fetchPriority: 'low' as const, loading: 'eager' as const })}
             decoding="async"
             className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
