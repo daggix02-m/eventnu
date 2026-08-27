@@ -12,6 +12,7 @@ import { ReportDialog } from '@/components/moderation/ReportDialog'
 import { useStoryGestures } from './useStoryGestures'
 import { ViewerListSheet } from './ViewerListSheet'
 import { filterStyle } from '@/lib/media'
+import { useTimeAgo } from '@/lib/hooks/useTimeAgo'
 
 export type StoryItem = {
   id: string
@@ -68,19 +69,6 @@ function transformCSS(t: { rotate: number; flipH: boolean; flipV: boolean } | nu
   return parts.length > 0 ? parts.join(' ') : 'none'
 }
 
-function timeAgo(timestamp: number) {
-  const seconds = Math.floor((Date.now() - timestamp) / 1000)
-  if (seconds < 60) return 'just now'
-  const minutes = Math.floor(seconds / 60)
-  if (minutes < 60) return `${minutes}m ago`
-  const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours}h ago`
-  return new Date(timestamp).toLocaleDateString(undefined, {
-    month: 'short',
-    day: 'numeric',
-  })
-}
-
 function groupByAuthor(stories: StoryItem[]): Map<string, StoryItem[]> {
   const groups = new Map<string, StoryItem[]>()
   for (const story of stories) {
@@ -124,6 +112,7 @@ export function StoryViewer({
   const positionInGroup = story ? authorGroup.findIndex((s) => s.id === story.id) : -1
 
   const ownStory = Boolean(story && me && me._id === story.userId)
+  const timeLabel = useTimeAgo(story?.createdAt ?? 0)
   const viewCount = useQuery(
     api.stories.countViews,
     !readOnly && isAuthenticated && ownStory && story
@@ -316,10 +305,10 @@ export function StoryViewer({
             <p className="truncate text-label-lg font-semibold text-white">
               {story.author?.fullName ?? 'Anonymous'}
             </p>
-            <p className="text-label-sm text-white/60">{timeAgo(story.createdAt)}</p>
+            <p className="text-label-sm text-white/60">{timeLabel}</p>
           </div>
         </div>
-        <div className="ml-auto flex items-center gap-xs">
+        <div className="ml-auto flex items-center gap-xs" suppressHydrationWarning>
           {/* Owner: tappable view count → opens viewer list */}
           {ownStory && viewCount !== undefined && (
             <button

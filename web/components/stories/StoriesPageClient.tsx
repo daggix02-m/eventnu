@@ -11,19 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { StoryCameraOverlay } from '@/components/stories/camera/StoryCameraOverlay'
 import { StoryViewer, type StoryItem } from '@/components/stories/StoryViewer'
 import { Camera, LogIn, Play } from 'lucide-react'
-
-function timeAgo(timestamp: number) {
-  const seconds = Math.floor((Date.now() - timestamp) / 1000)
-  if (seconds < 60) return 'just now'
-  const minutes = Math.floor(seconds / 60)
-  if (minutes < 60) return `${minutes}m ago`
-  const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours}h ago`
-  return new Date(timestamp).toLocaleDateString(undefined, {
-    month: 'short',
-    day: 'numeric',
-  })
-}
+import { TimeAgoLabel } from '@/lib/hooks/useTimeAgo'
 
 export function StoriesPageClient() {
   const { isAuthenticated, isLoading } = useConvexAuth()
@@ -114,7 +102,9 @@ export function StoriesPageClient() {
                   <p className="truncate font-label-lg text-white">
                     {story.author?.fullName ?? 'Anonymous'}
                   </p>
-                  <p className="text-label-sm text-white/60">{timeAgo(story.createdAt)}</p>
+                  <p className="text-label-sm text-white/60">
+                    <TimeAgoLabel timestamp={story.createdAt} />
+                  </p>
                   {story.caption && (
                     <p className="mt-xs line-clamp-2 text-label-sm text-white/80">
                       {story.caption}

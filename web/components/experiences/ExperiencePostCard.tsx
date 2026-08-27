@@ -8,6 +8,7 @@ import { api } from '@eventnu/convex/_generated/api'
 import type { Id } from '@eventnu/convex/_generated/dataModel'
 import { CalendarDays, Trash2 } from 'lucide-react'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
+import { TimeAgoLabel } from '@/lib/hooks/useTimeAgo'
 
 type Post = {
   id: string
@@ -18,22 +19,6 @@ type Post = {
   content: string
   imageUrl?: string
   createdAt: number
-}
-
-function timeAgo(timestamp: number) {
-  const seconds = Math.floor((Date.now() - timestamp) / 1000)
-  if (seconds < 60) return 'just now'
-  const minutes = Math.floor(seconds / 60)
-  if (minutes < 60) return `${minutes}m ago`
-  const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours}h ago`
-  const days = Math.floor(hours / 24)
-  if (days < 7) return `${days}d ago`
-  return new Date(timestamp).toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  })
 }
 
 export function ExperiencePostCard({
@@ -78,7 +63,9 @@ export function ExperiencePostCard({
           </Avatar>
           <div>
             <p className="font-label-lg text-on-surface">{post.author?.fullName ?? 'Anonymous'}</p>
-            <p className="font-body-sm text-on-surface-variant">{timeAgo(post.createdAt)}</p>
+            <p className="font-body-sm text-on-surface-variant">
+              <TimeAgoLabel timestamp={post.createdAt} />
+            </p>
           </div>
         </div>
         {canDelete && (

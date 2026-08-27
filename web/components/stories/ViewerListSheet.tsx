@@ -6,19 +6,7 @@ import { api } from '@eventnu/convex/_generated/api'
 import type { Id } from '@eventnu/convex/_generated/dataModel'
 import { X } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-
-function timeAgo(timestamp: number) {
-  const seconds = Math.floor((Date.now() - timestamp) / 1000)
-  if (seconds < 60) return 'just now'
-  const minutes = Math.floor(seconds / 60)
-  if (minutes < 60) return `${minutes}m ago`
-  const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours}h ago`
-  return new Date(timestamp).toLocaleDateString(undefined, {
-    month: 'short',
-    day: 'numeric',
-  })
-}
+import { TimeAgoLabel } from '@/lib/hooks/useTimeAgo'
 
 export function ViewerListSheet({
   storyId,
@@ -104,7 +92,9 @@ export function ViewerListSheet({
                     <p className="truncate text-body-md font-medium text-on-surface">
                       {v.fullName}
                     </p>
-                    <p className="text-label-sm text-on-surface-variant">{timeAgo(v.viewedAt)}</p>
+                    <p className="text-label-sm text-on-surface-variant">
+                      <TimeAgoLabel timestamp={v.viewedAt} />
+                    </p>
                   </div>
                 </div>
               ))}
