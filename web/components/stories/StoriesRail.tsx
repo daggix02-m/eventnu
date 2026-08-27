@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useQuery } from 'convex/react'
+import { useQuery_experimental as useQuery } from 'convex/react'
 import dynamic from 'next/dynamic'
 import { api } from '@eventnu/convex/_generated/api'
 import type { FunctionReturnType } from 'convex/server'
@@ -28,17 +28,24 @@ export function StoriesRail() {
   // Defer the rail fetch (a light summary payload) until the browser is idle so
   // it never competes with the initial page's LCP resources.
   const started = useIdleDefer(1500)
-  const summaries = useQuery(api.stories.listRail, started ? { now } : 'skip')
+  const summariesQuery = useQuery({
+    query: api.stories.listRail,
+    args: started ? { now } : 'skip',
+  })
   const [openAuthorId, setOpenAuthorId] = useState<Id<'profiles'> | null>(null)
 
   // Fetch only the tapped author's full stories, on demand — the rail never
   // ships full media docs.
-  const authorStories = useQuery(
-    api.stories.listByUser,
-    openAuthorId ? { profileId: openAuthorId, now } : 'skip',
-  )
+  const authorStoriesQuery = useQuery({
+    query: api.stories.listByUser,
+    args: openAuthorId ? { profileId: openAuthorId, now } : 'skip',
+  })
 
-  if (summaries === undefined) {
+  // The rail is a non-critical enhancement. A transient query failure (e.g. a
+  // Convex function mid-redeploy) must not take the whole home page down, so
+  // degrade to hidden instead of throwing (useQuery_experimental surfaces the
+  // error as a status rather than throwing during render).
+  if (summariesQuery.status === 'pending') {
     return (
       <div className="flex gap-md overflow-x-auto px-4 md:px-gutter py-sm" aria-hidden="true">
         {Array.from({ length: 6 }).map((_, i) => (
@@ -48,6 +55,9 @@ export function StoriesRail() {
     )
   }
 
+  if (summariesQuery.status === 'error') return null
+
+  const summaries = summariesQuery.data
   if (summaries.length === 0) return null
 
   return (
@@ -76,9 +86,9 @@ export function StoriesRail() {
         </div>
       </div>
 
-      {openAuthorId !== null && authorStories && (
+      {openAuthorId !== null && authorStoriesQuery.status === 'success' && (
         <StoryViewer
-          stories={authorStories as StoryItem[]}
+          stories={authorStoriesQuery.data as StoryItem[]}
           initialIndex={0}
           onClose={() => setOpenAuthorId(null)}
         />

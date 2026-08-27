@@ -10,12 +10,13 @@ vi.mock('./helpers', async (importOriginal) => {
     ...actual,
     requireUser: vi.fn(),
     requireAdmin: vi.fn(),
+    getUserProfile: vi.fn(),
   }
 })
 
-const { publish, remove, markViewed, countViews, expireStories, setCategory } =
+const { publish, remove, markViewed, countViews, expireStories, setCategory, listRail } =
   await import('./stories')
-const { requireUser } = await import('./helpers')
+const { requireUser, getUserProfile } = await import('./helpers')
 
 type Handler = (ctx: unknown, args: unknown) => Promise<unknown>
 const publishHandler = (publish as unknown as { _handler: Handler })._handler
@@ -24,6 +25,7 @@ const markViewedHandler = (markViewed as unknown as { _handler: Handler })._hand
 const countViewsHandler = (countViews as unknown as { _handler: Handler })._handler
 const expireHandler = (expireStories as unknown as { _handler: Handler })._handler
 const setCategoryHandler = (setCategory as unknown as { _handler: Handler })._handler
+const listRailHandler = (listRail as unknown as { _handler: Handler })._handler
 
 const ME = { _id: 'profiles_me', role: 'user', suspended: false }
 const ADMIN = { _id: 'profiles_admin', role: 'admin', suspended: false }
@@ -258,6 +260,179 @@ describe('stories.setCategory', () => {
     const { ctx, patch } = makeDb({ story: { _id: 'stories_1', userId: 'profiles_me' } })
     await setCategoryHandler(ctx, { storyId: 'stories_1' })
     expect(patch).toHaveBeenCalledWith('stories', 'stories_1', { categoryId: undefined })
+  })
+})
+
+describe('stories.listRail', () => {
+  // Rail query chains: stories via by_moderation -> order -> take; storyViews
+  // via by_storyId_and_viewerId -> first; authors via db.get('profiles', id).
+  function makeRailDb(opts: {
+    stories: Array<Record<string, unknown>>
+    profiles?: Array<Record<string, unknown>>
+    viewedStoryIds?: string[]
+  }) {
+    const get = vi.fn(async (table: string, id: string) => {
+      if (table === 'profiles') return opts.profiles?.find((p) => p._id === id) ?? null
+      return null
+    })
+    const query = vi.fn((table: string) => {
+      if (table === 'stories') {
+        return {
+          withIndex: () => ({
+            order: () => ({
+              take: vi.fn(async () => opts.stories),
+            }),
+          }),
+        }
+      }
+      if (table === 'storyViews') {
+        return {
+          withIndex: () => ({
+            first: vi.fn(async () =>
+              opts.viewedStoryIds && opts.viewedStoryIds.length > 0 ? { _id: 'sv1' } : null,
+            ),
+          }),
+        }
+      }
+      throw new Error('unexpected table ' + table)
+    })
+    return {
+      ctx: { db: { get, query } } as unknown as Record<string, unknown>,
+      get,
+      query,
+    }
+  }
+
+  const story = ({ _id = '1', ...rest }: Record<string, unknown> = {}) => ({
+    userId: 'profiles_a',
+    kind: 'photo',
+    moderationStatus: 'approved',
+    isDeleted: false,
+    expiresAt: Date.now() + 100000,
+    thumbnailUrl: 'https://cdn.example/a.jpg',
+    ...rest,
+    _id: `stories_${_id}`,
+  })
+
+  beforeEach(() => {
+    vi.mocked(getUserProfile).mockResolvedValue(null as never)
+  })
+
+  it('returns an empty rail when there are no stories', async () => {
+    const { ctx } = makeRailDb({ stories: [] })
+    const result = (await listRailHandler(ctx, { now: Date.now() })) as unknown[]
+    expect(result).toEqual([])
+  })
+
+  it('groups visible stories per author, newest first, with thumbnail + kind', async () => {
+    const { ctx } = makeRailDb({
+      stories: [
+        story({ _id: '1', kind: 'video', thumbnailUrl: null }),
+        story({ _id: '2', userId: 'profiles_b', thumbnailUrl: 'https://cdn.example/b.jpg' }),
+      ],
+      profiles: [
+        { _id: 'profiles_a', fullName: 'Author A', avatarUrl: null, username: 'authora' },
+        { _id: 'profiles_b', fullName: 'Author B', avatarUrl: 'https://cdn.example/b.png' },
+      ],
+    })
+    const result = (await listRailHandler(ctx, { now: Date.now() })) as Array<{
+      authorId: string
+      authorName: string
+      storyIds: string[]
+      latestThumbnailUrl: string | null
+      latestKind: 'photo' | 'video'
+      hasUnviewed: boolean
+    }>
+    expect(result).toHaveLength(2)
+    expect(result[0]).toMatchObject({
+      authorId: 'profiles_a',
+      authorName: 'Author A',
+      storyIds: ['stories_1'],
+      latestThumbnailUrl: null,
+      latestKind: 'video',
+    })
+    expect(result[1]).toMatchObject({
+      authorId: 'profiles_b',
+      storyIds: ['stories_2'],
+      latestThumbnailUrl: 'https://cdn.example/b.jpg',
+      latestKind: 'photo',
+    })
+  })
+
+  it('excludes deleted and expired stories', async () => {
+    const { ctx } = makeRailDb({
+      stories: [
+        story({ _id: 'deleted', isDeleted: true }),
+        story({ _id: 'expired', expiresAt: Date.now() - 1000 }),
+        story({ _id: 'live' }),
+      ],
+      profiles: [{ _id: 'profiles_a', fullName: 'Author A' }],
+    })
+    const result = (await listRailHandler(ctx, { now: Date.now() })) as Array<{
+      storyIds: string[]
+    }>
+    expect(result).toHaveLength(1)
+    expect(result[0].storyIds).toEqual(['stories_live'])
+  })
+
+  it('caps stories per author and total authors', async () => {
+    const stories: Array<Record<string, unknown>> = []
+    for (let i = 0; i < 20; i++) {
+      stories.push(story({ _id: `a${i}`, userId: 'profiles_a' }))
+    }
+    for (let i = 0; i < 16; i++) {
+      stories.push(story({ _id: `b${i}`, userId: 'profiles_b' }))
+    }
+    const { ctx } = makeRailDb({
+      stories,
+      profiles: [
+        { _id: 'profiles_a', fullName: 'Author A' },
+        { _id: 'profiles_b', fullName: 'Author B' },
+      ],
+    })
+    const result = (await listRailHandler(ctx, { now: Date.now() })) as Array<{
+      authorId: string
+      storyIds: string[]
+    }>
+    expect(result).toHaveLength(2)
+    expect(result[0].storyIds).toHaveLength(6)
+    expect(result[1].storyIds).toHaveLength(6)
+  })
+
+  it('marks an author fully viewed when the viewer has a view row', async () => {
+    vi.mocked(getUserProfile).mockResolvedValue({ _id: 'profiles_me' } as never)
+    const { ctx } = makeRailDb({
+      stories: [story({ _id: '1' })],
+      profiles: [{ _id: 'profiles_a', fullName: 'Author A' }],
+      viewedStoryIds: ['stories_1'],
+    })
+    const result = (await listRailHandler(ctx, { now: Date.now() })) as Array<{
+      hasUnviewed: boolean
+    }>
+    expect(result).toHaveLength(1)
+    expect(result[0].hasUnviewed).toBe(false)
+  })
+
+  it('handles legacy rows missing optional fields without throwing', async () => {
+    const { ctx } = makeRailDb({
+      stories: [
+        {
+          _id: 'stories_legacy',
+          userId: 'profiles_a',
+          moderationStatus: 'approved',
+          isDeleted: false,
+          expiresAt: Date.now() + 100000,
+        },
+      ],
+      profiles: [{ _id: 'profiles_a', fullName: 'Author A' }],
+    })
+    const result = (await listRailHandler(ctx, { now: Date.now() })) as Array<{
+      latestThumbnailUrl: string | null
+      latestKind: 'photo' | 'video'
+    }>
+    expect(result).toHaveLength(1)
+    expect(result[0].latestThumbnailUrl).toBeNull()
+    expect(result[0].latestKind).toBe('photo')
   })
 })
 
