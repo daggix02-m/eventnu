@@ -17,27 +17,25 @@ export default function manifest(): MetadataRoute.Manifest {
     categories: ['entertainment', 'events', 'lifestyle', 'music'],
     icons: [
       {
-        src: '/icons/icon-192x192.png',
+        src: '/app-icon.png',
         sizes: '192x192',
         type: 'image/png',
         purpose: 'any',
       },
       {
-        src: '/icons/icon-512x512.png',
+        src: '/app-icon.png',
         sizes: '512x512',
         type: 'image/png',
         purpose: 'any',
       },
       {
-        // Largest asset also improves iOS's auto-generated launch splash
-        // (iOS 15.4+ zooms the icon onto the background color).
-        src: '/icons/icon-1024x1024.png',
+        src: '/app-icon.png',
         sizes: '1024x1024',
         type: 'image/png',
         purpose: 'any',
       },
       {
-        src: '/icons/maskable-icon-512x512.png',
+        src: '/app-icon.png',
         sizes: '512x512',
         type: 'image/png',
         purpose: 'maskable',
@@ -49,21 +47,21 @@ export default function manifest(): MetadataRoute.Manifest {
         short_name: 'Events',
         description: 'Browse all upcoming events in Addis',
         url: '/',
-        icons: [{ src: '/icons/icon-192x192.png', sizes: '192x192' }],
+        icons: [{ src: '/app-icon.png', sizes: '192x192' }],
       },
       {
         name: 'City Schedule',
         short_name: 'Schedule',
         description: 'Plan and sync upcoming events by date',
         url: '/schedule',
-        icons: [{ src: '/icons/icon-192x192.png', sizes: '192x192' }],
+        icons: [{ src: '/app-icon.png', sizes: '192x192' }],
       },
       {
         name: 'For Organizers',
         short_name: 'Organizers',
         description: 'Host and manage your events with Event Nu',
         url: '/organizers',
-        icons: [{ src: '/icons/icon-192x192.png', sizes: '192x192' }],
+        icons: [{ src: '/app-icon.png', sizes: '192x192' }],
       },
     ],
     prefer_related_applications: false,

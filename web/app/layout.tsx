@@ -47,10 +47,10 @@ export const metadata: Metadata = {
   manifest: '/manifest.webmanifest',
   icons: {
     icon: [
-      { url: '/logo.png', sizes: 'any', type: 'image/png' },
-      { url: '/icons/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
-      { url: '/icons/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
-      { url: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/app-icon.png', sizes: 'any', type: 'image/png' },
+      { url: '/app-icon.png', sizes: '32x32', type: 'image/png' },
+      { url: '/app-icon.png', sizes: '16x16', type: 'image/png' },
+      { url: '/app-icon.png', sizes: '192x192', type: 'image/png' },
     ],
     apple: [
       // NOTE: keep only square PNGs here. iOS reads apple-touch-icon links

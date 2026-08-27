@@ -1,4 +1,4 @@
-const CACHE_NAME = 'eventnu-cache-v3'
+const CACHE_NAME = 'eventnu-cache-v4'
 const OFFLINE_URL = '/offline.html'
 
 // Core shell always precached, independent of the build-generated manifest.
@@ -6,8 +6,7 @@ const CORE_ASSETS = [
   '/',
   '/offline.html',
   '/logo.png',
-  '/icons/icon-192x192.png',
-  '/icons/icon-512x512.png',
+  '/app-icon.png',
   '/icons/apple-touch-icon.png',
   '/manifest.webmanifest',
 ]
