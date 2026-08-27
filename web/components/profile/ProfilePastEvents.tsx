@@ -7,6 +7,7 @@ import { api } from '@eventnu/convex/_generated/api'
 import type { FunctionReturnType } from 'convex/server'
 import type { Id } from '@eventnu/convex/_generated/dataModel'
 import { useConvexAuth } from '@convex-dev/auth/react'
+import Link from 'next/link'
 import { CalendarDays, Folder, Trash2, X } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
@@ -292,7 +293,14 @@ function ArchiveStoryViewer({
         {categories.length === 0 && (
           <p className="inline-flex items-center gap-1.5 text-label-sm text-white/60">
             <Folder className="h-3.5 w-3.5" aria-hidden="true" />
-            Create categories on your settings page to organize your archive.
+            Create categories on your{' '}
+            <Link
+              href="/profile/settings"
+              className="underline underline-offset-2 hover:text-white/80"
+            >
+              settings page
+            </Link>{' '}
+            to organize your archive.
           </p>
         )}
       </div>

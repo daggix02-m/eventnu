@@ -384,7 +384,7 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
       role="dialog"
       aria-modal="true"
       aria-label="Create a story"
-      className="fixed inset-0 z-90 flex flex-col bg-black"
+      className="fixed inset-0 z-90 flex flex-col bg-black pointer-events-auto"
     >
       {/* ── Permission explainer ─────────────────────────────────────────── */}
       {phase === 'perm' && (
@@ -403,7 +403,7 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
           <button
             type="button"
             onClick={close}
-            className="mt-sm text-body-sm font-medium text-white/60 hover:text-white"
+            className="mt-sm min-h-[44px] px-4 text-body-sm font-medium text-white/60 transition-colors hover:text-white active:text-white/80"
           >
             Not now
           </button>
