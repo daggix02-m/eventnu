@@ -452,6 +452,35 @@ export const countViews = query({
   },
 })
 
+export const listViews = query({
+  args: { storyId: v.id('stories') },
+  handler: async (ctx, args) => {
+    const profile = await requireUser(ctx)
+    const story = await ctx.db.get('stories', args.storyId)
+    if (!story) throw new Error('Story not found')
+    // Any authenticated user can see who viewed a story (social proof).
+    const views = await ctx.db
+      .query('storyViews')
+      .withIndex('by_story', (q) => q.eq('storyId', args.storyId))
+      .order('desc')
+      .take(100)
+    const viewerIds = [...new Set(views.map((v) => v.viewerId))]
+    const profiles = await Promise.all(viewerIds.map((id) => ctx.db.get('profiles', id)))
+    const profileMap = new Map(
+      profiles.filter((p): p is Doc<'profiles'> => !!p).map((p) => [p._id, p]),
+    )
+    return views.map((v) => {
+      const p = profileMap.get(v.viewerId)
+      return {
+        viewerId: v.viewerId,
+        viewedAt: v.viewedAt,
+        fullName: p?.fullName ?? 'Anonymous',
+        avatarUrl: p?.avatarUrl ?? null,
+      }
+    })
+  },
+})
+
 export const moderate = mutation({
   args: {
     storyId: v.id('stories'),

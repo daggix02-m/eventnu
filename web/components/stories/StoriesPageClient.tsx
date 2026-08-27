@@ -10,7 +10,20 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { StoryCameraOverlay } from '@/components/stories/camera/StoryCameraOverlay'
 import { StoryViewer, type StoryItem } from '@/components/stories/StoryViewer'
-import { Camera, LogIn } from 'lucide-react'
+import { Camera, LogIn, Play } from 'lucide-react'
+
+function timeAgo(timestamp: number) {
+  const seconds = Math.floor((Date.now() - timestamp) / 1000)
+  if (seconds < 60) return 'just now'
+  const minutes = Math.floor(seconds / 60)
+  if (minutes < 60) return `${minutes}m ago`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}h ago`
+  return new Date(timestamp).toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+  })
+}
 
 export function StoriesPageClient() {
   const { isAuthenticated, isLoading } = useConvexAuth()
@@ -90,11 +103,18 @@ export function StoriesPageClient() {
                     className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                   />
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                {/* Video indicator */}
+                {story.kind === 'video' && (
+                  <div className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black/50 backdrop-blur-sm">
+                    <Play className="h-4 w-4 text-white fill-white" aria-hidden="true" />
+                  </div>
+                )}
                 <div className="absolute bottom-0 inset-x-0 p-md">
                   <p className="truncate font-label-lg text-white">
                     {story.author?.fullName ?? 'Anonymous'}
                   </p>
+                  <p className="text-label-sm text-white/60">{timeAgo(story.createdAt)}</p>
                   {story.caption && (
                     <p className="mt-xs line-clamp-2 text-label-sm text-white/80">
                       {story.caption}

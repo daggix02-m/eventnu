@@ -244,14 +244,9 @@ function ArchiveStoryViewer({
 
       <div className="relative z-0 flex min-h-0 flex-1 items-center justify-center overflow-hidden">
         {story.kind === 'photo' ? (
-          <Image src={story.mediaUrl} alt="" fill sizes="100vw" className="object-contain" />
+          <Image src={story.mediaUrl} alt="" fill sizes="100vw" className="object-cover" />
         ) : (
-          <video
-            src={story.mediaUrl}
-            controls
-            playsInline
-            className="h-full w-full object-contain"
-          />
+          <video src={story.mediaUrl} controls playsInline className="h-full w-full object-cover" />
         )}
       </div>
 
