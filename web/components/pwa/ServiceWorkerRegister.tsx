@@ -47,7 +47,7 @@ export function ServiceWorkerRegister() {
   if (!updateReady) return null
 
   return (
-    <div className="fixed bottom-[calc(9rem_+_env(safe-area-inset-bottom))] md:bottom-6 right-4 left-4 md:left-auto md:max-w-[24rem] z-70 flex justify-center pointer-events-none animate-in fade-in slide-in-from-bottom-5 duration-300">
+    <div className="fixed bottom-[calc(var(--keyboard-inset,0px)_+_9rem_+_env(safe-area-inset-bottom))] md:bottom-6 right-4 left-4 md:left-auto md:max-w-[24rem] z-70 flex justify-center pointer-events-none animate-in fade-in slide-in-from-bottom-5 duration-300">
       <div className="pointer-events-auto flex items-center justify-between gap-3 w-full bg-surface-container-high/95 backdrop-blur-xl border border-outline-variant/80 rounded-2xl p-3.5 shadow-2xl text-on-surface">
         <div className="flex items-center gap-2.5 min-w-0">
           <div className="w-8 h-8 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center shrink-0">

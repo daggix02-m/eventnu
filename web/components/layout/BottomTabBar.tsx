@@ -170,7 +170,7 @@ export function BottomTabBar() {
   if (pathname.startsWith('/auth')) return null
 
   return (
-    <div className="fixed bottom-[max(0.85rem,env(safe-area-inset-bottom))] inset-x-0 z-60 md:hidden flex justify-center px-4 pointer-events-none">
+    <div className="fixed bottom-[calc(var(--keyboard-inset,0px)_+_max(0.85rem,env(safe-area-inset-bottom)))] inset-x-0 z-60 md:hidden flex justify-center px-4 pointer-events-none">
       <Suspense fallback={null}>
         <TabBarContent />
       </Suspense>

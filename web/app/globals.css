@@ -231,6 +231,28 @@ body {
   overscroll-behavior: contain;
 }
 
+/*
+ * App-shell lock: the document never scrolls; `<main id="main-content">` is
+ * the vertical scroll container. This keeps the sticky top header and the
+ * fixed bottom chrome pinned even when the mobile software keyboard opens
+ * (iOS Safari WebKit bug #191204) or the layout viewport is resized, which
+ * would otherwise let them detach and scroll with the page content.
+ */
+html {
+  height: 100%;
+}
+body {
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+/* The scroll container: flexes to the space left by the header above it. */
+main#main-content {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
 :focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;

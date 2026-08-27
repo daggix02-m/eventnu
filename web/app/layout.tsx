@@ -11,6 +11,7 @@ import { ConvexAuthNextjsServerProvider } from '@convex-dev/auth/nextjs/server'
 import { AuthRedirectProvider } from '@/components/auth/AuthRedirectContext'
 
 import { MainContent } from '@/components/layout/MainContent'
+import { KeyboardInsetTracker } from '@/components/layout/KeyboardInsetTracker'
 
 import { ServiceWorkerRegister } from '@/components/pwa/ServiceWorkerRegister'
 import { OfflineBanner } from '@/components/pwa/OfflineBanner'
@@ -34,10 +35,6 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: 'cover',
   themeColor: '#151318',
-  // iOS 16.4+: resize the layout viewport when the keyboard opens so focused
-  // inputs scroll fully above it (previously the centered auth card could be
-  // pushed behind the keyboard). Android ignores the value.
-  interactiveWidget: 'resizes-content',
 }
 
 export const metadata: Metadata = {
@@ -128,10 +125,16 @@ export default function RootLayout({
               <ServiceWorkerRegister />
               <OfflineBanner />
               <TopNav />
-              <MainContent>{children}</MainContent>
-              <ConditionalFooter>
-                <Footer />
-              </ConditionalFooter>
+              <KeyboardInsetTracker />
+              <MainContent
+                footer={
+                  <ConditionalFooter>
+                    <Footer />
+                  </ConditionalFooter>
+                }
+              >
+                {children}
+              </MainContent>
               <BottomTabBar />
               <InstallPrompt />
             </AuthRedirectProvider>

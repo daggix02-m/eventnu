@@ -185,6 +185,13 @@ const passwordProvider: PasswordProvider = {
 
 export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
   providers: [passwordProvider, Email(signInProvider)],
+  session: {
+    totalDurationMs: 1000 * 60 * 60 * 24 * 30, // 30 days
+    inactiveDurationMs: 1000 * 60 * 60 * 24 * 30, // 30 days
+  },
+  jwt: {
+    durationMs: 1000 * 60 * 60, // 1 hour — auto-refreshed by the middleware
+  },
 })
 
 const MIN_PASSWORD_LENGTH = 8

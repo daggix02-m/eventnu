@@ -284,7 +284,7 @@ export function EventHero({ event }: EventHeroProps) {
       {/* Mobile-only sticky action bar — the primary ticket/reserve CTA must
           be reachable on a phone without scrolling through the whole page. */}
       {cta.kind && (
-        <div className="fixed bottom-[calc(5.5rem_+_env(safe-area-inset-bottom))] inset-x-0 z-50 md:hidden px-4 pointer-events-none">
+        <div className="fixed bottom-[calc(var(--keyboard-inset,0px)_+_5.5rem_+_env(safe-area-inset-bottom))] inset-x-0 z-50 md:hidden px-4 pointer-events-none">
           <div className="pointer-events-auto w-full max-w-[32rem] mx-auto">
             <HeroCtaButton cta={cta} className="w-full min-w-0" />
           </div>

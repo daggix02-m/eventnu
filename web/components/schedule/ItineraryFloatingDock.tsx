@@ -28,7 +28,7 @@ export function ItineraryFloatingDock({ plannedEvents, onClearPlan }: ItineraryF
   }
 
   return (
-    <div className="fixed bottom-[calc(9rem_+_env(safe-area-inset-bottom))] md:bottom-8 inset-x-0 z-40 flex justify-center px-4 pointer-events-none animate-in fade-in slide-in-from-bottom-5 duration-300">
+    <div className="fixed bottom-[calc(var(--keyboard-inset,0px)_+_9rem_+_env(safe-area-inset-bottom))] md:bottom-8 inset-x-0 z-40 flex justify-center px-4 pointer-events-none animate-in fade-in slide-in-from-bottom-5 duration-300">
       <div className="pointer-events-auto flex items-center justify-between gap-3 md:gap-6 w-full max-w-[32rem] bg-surface-container-low/95 backdrop-blur-2xl backdrop-saturate-150 border border-primary/40 rounded-full shadow-[0_16px_40px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.2)] px-4 py-2.5">
         {/* Left: Count info */}
         <div className="flex items-center gap-2.5 min-w-0">

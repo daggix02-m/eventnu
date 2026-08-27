@@ -46,7 +46,7 @@ const authMiddleware = convexAuthNextjsMiddleware(
       return nextjsMiddlewareRedirect(request, '/auth/sign-in')
     }
   },
-  { cookieConfig: { maxAge: 60 * 60 * 4 } },
+  { cookieConfig: { maxAge: 60 * 60 * 24 * 30 } },
 )
 
 export default async function proxy(request: NextRequest, event: NextFetchEvent) {

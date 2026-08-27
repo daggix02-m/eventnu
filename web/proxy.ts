@@ -5,7 +5,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import type { NextFetchEvent } from 'next/server'
 
 const AUTH_ROUTE = '/api/auth'
-const cookieConfig = { maxAge: 60 * 60 * 12 }
+// Align the auth cookie lifetime with Convex Auth's 30-day server-side
+// session default so sessions persist across browser restarts. This value is
+// used by both the custom sign-in proxy and the middleware refresh path.
+const cookieConfig = { maxAge: 60 * 60 * 24 * 30 }
 
 const authMiddleware = convexAuthNextjsMiddleware(undefined, { cookieConfig })
 

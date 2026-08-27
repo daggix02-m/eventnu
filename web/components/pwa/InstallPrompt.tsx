@@ -131,7 +131,7 @@ export function InstallPrompt() {
   return (
     <>
       {/* Floating Install App Banner */}
-      <div className="fixed bottom-[calc(9rem_+_env(safe-area-inset-bottom))] md:bottom-6 right-4 left-4 md:left-auto md:max-w-[24rem] z-70 animate-in fade-in slide-in-from-bottom-5 duration-300">
+      <div className="fixed bottom-[calc(var(--keyboard-inset,0px)_+_9rem_+_env(safe-area-inset-bottom))] md:bottom-6 right-4 left-4 md:left-auto md:max-w-[24rem] z-70 animate-in fade-in slide-in-from-bottom-5 duration-300">
         <div className="bg-surface-container-high/95 backdrop-blur-xl border border-outline-variant/80 rounded-2xl p-3.5 shadow-2xl flex items-center justify-between gap-3 text-on-surface">
           <div className="flex items-center gap-3 min-w-0">
             <div className="w-11 h-11 rounded-xl overflow-hidden shrink-0 border border-outline-variant/50 bg-black/40 flex items-center justify-center p-1">

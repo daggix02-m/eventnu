@@ -21,16 +21,23 @@ export function TopNav() {
 
   useEffect(() => {
     let ticking = false
+    // The app shell scrolls inside <main>, not the window.
+    const scroller = document.getElementById('main-content')
     const handleScroll = () => {
       if (ticking) return
       ticking = true
       requestAnimationFrame(() => {
-        setScrolled(window.scrollY > 10)
+        setScrolled((scroller?.scrollTop ?? window.scrollY) > 10)
         ticking = false
       })
     }
+    scroller?.addEventListener('scroll', handleScroll, { passive: true })
     window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
+    handleScroll()
+    return () => {
+      scroller?.removeEventListener('scroll', handleScroll)
+      window.removeEventListener('scroll', handleScroll)
+    }
   }, [])
 
   if (pathname.startsWith('/auth')) return null

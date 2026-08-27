@@ -61,10 +61,13 @@ export function EventPhotoGrid({ images, eventTitle, imageAspectRatio }: EventPh
     const dialog = dialogRef.current
     if (!dialog) return
     dialog.focus()
-    const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
+    // The app shell scrolls inside <main>, so lock its scroll (body is already
+    // pinned). Fixed-position children are unaffected by this overflow change.
+    const main = document.getElementById('main-content')
+    const previousOverflow = main?.style.overflow ?? ''
+    if (main) main.style.overflow = 'hidden'
     return () => {
-      document.body.style.overflow = previousOverflow
+      if (main) main.style.overflow = previousOverflow
     }
   }, [openIndex])
 
