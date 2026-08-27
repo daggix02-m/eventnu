@@ -6,6 +6,7 @@ import { useMutation } from 'convex/react'
 import { api } from '@eventnu/convex/_generated/api'
 import type { Id } from '@eventnu/convex/_generated/dataModel'
 import { compressImage } from '@eventnu/image'
+import { describeStoryError } from '@/lib/story-errors'
 import {
   X,
   Image as ImageIcon,
@@ -34,51 +35,6 @@ import { StickerOverlayEditor, type StickerData } from './StickerOverlay'
 
 type Phase = 'perm' | 'camera' | 'edit' | 'details'
 type CaptureMode = 'photo' | 'video'
-
-/** Map server error messages to user-friendly strings. */
-function describeStoryError(err: unknown): string {
-  if (err instanceof Error) {
-    const msg = err.message
-
-    // ── ConvexError structured data (e.g. @convex-dev/rate-limiter) ──────
-    // When thrown with an object, ConvexError.message is the JSON-stringified
-    // version, while .data holds the original object.
-    const data = (err as { data?: unknown }).data
-    if (data && typeof data === 'object') {
-      const kind = (data as Record<string, unknown>).kind
-      if (kind === 'RateLimited') {
-        return 'Too many stories posted. Please try again later.'
-      }
-    }
-
-    // ── ConvexError string messages ──────────────────────────────────────
-    if (msg.includes('Not authenticated')) return 'Please sign in to share a story.'
-    if (msg.includes('Account suspended'))
-      return 'Your account has been suspended. Please contact support.'
-    if (msg.includes('Caption must be'))
-      return 'Caption is too long. Please keep it under 500 characters.'
-    if (msg.includes('Event not found')) return 'The tagged event could not be found.'
-    if (msg.includes('Uploaded file not found') || msg.includes('Thumbnail file not found'))
-      return 'Media upload failed. Please try again.'
-    if (msg.includes('must be an image') || msg.includes('must be a video'))
-      return 'Invalid file type. Please select the correct media format.'
-
-    // ── Rate limit (fallback for any format) ─────────────────────────────
-    if (msg.includes('rate limit') || msg.includes('RateLimited') || msg.includes('Too many'))
-      return 'Too many stories posted. Please try again later.'
-
-    // ── Upload / network errors ──────────────────────────────────────────
-    if (msg.includes('Upload failed')) return 'Media upload failed. Please try again.'
-    if (
-      msg.includes('Could not connect') ||
-      msg.includes('Failed to fetch') ||
-      msg.includes('fetch failed') ||
-      msg.includes('NetworkError')
-    )
-      return 'Could not reach the server. Check your connection and try again.'
-  }
-  return 'Failed to publish your story. Please try again.'
-}
 
 type MediaTrackCapabilitiesWithTorch = MediaTrackCapabilities & { torch?: boolean }
 type MediaTrackConstraintSetWithTorch = MediaTrackConstraintSet & { torch?: boolean }
@@ -153,6 +109,7 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const chunksRef = useRef<Blob[]>([])
   const activeStreamRef = useRef<MediaStream | null>(null)
+  const initialStreamAttachedRef = useRef(false)
 
   const [phase, setPhase] = useState<Phase>('perm')
   const [mode, setMode] = useState<CaptureMode>('photo')
@@ -232,13 +189,17 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
   )
 
   // Start the camera once the explainer has been cleared (or was seen before).
+  // The stream is retained and attached directly — no probe-and-stop.
   useEffect(() => {
     if (phase !== 'perm') return
     if (!hasSeenCameraExplainer()) return
     let cancelled = false
     void permissions.requestCamera().then((stream) => {
-      stream?.getTracks().forEach((t) => t.stop())
-      if (!cancelled && stream) setPhase('camera')
+      if (!cancelled && stream) {
+        attachStream(stream)
+        initialStreamAttachedRef.current = true
+        setPhase('camera')
+      }
     })
     return () => {
       cancelled = true
@@ -247,9 +208,14 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
   }, [phase])
 
   // Acquire/re-acquire the live stream when entering the camera phase or flipping.
+  // Skip if the stream was already attached from the permission explainer phase.
   useEffect(() => {
     if (phase !== 'camera') return
     setZoom(1)
+    if (initialStreamAttachedRef.current) {
+      initialStreamAttachedRef.current = false
+      return
+    }
     void startStream(true, true)
   }, [phase, facingUser, startStream])
 
@@ -280,12 +246,8 @@ export function StoryCameraView({ onClose, onPublished }: StoryCameraViewProps) 
   const requestExplainerContinue = async () => {
     const stream = await permissions.requestCamera()
     if (stream) {
-      stream.getTracks().forEach((t) => t.stop())
-      try {
-        localStorage.setItem('eventnu_camera_permission_seen', '1')
-      } catch {
-        /* storage unavailable */
-      }
+      attachStream(stream)
+      initialStreamAttachedRef.current = true
       setPhase('camera')
     }
   }

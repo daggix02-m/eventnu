@@ -191,7 +191,7 @@
   padding-bottom: env(safe-area-inset-bottom);
 }
 @utility pb-tabbar-safe {
-  padding-bottom: calc(var(--spacing-tabbar) + env(safe-area-inset-bottom));
+  padding-bottom: calc(var(--spacing-tabbar) + var(--safe-area-bottom));
 }
 @utility mb-safe {
   margin-bottom: env(safe-area-inset-bottom);

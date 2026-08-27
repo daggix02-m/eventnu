@@ -16,7 +16,6 @@ export interface StoryPermissions {
   /** Prompts for camera (+mic in the same call). Returns the granted stream —
    * ownership transfers to the caller, who must stop its tracks on teardown. */
   requestCamera: () => Promise<MediaStream | null>
-  requestMicrophone: () => Promise<boolean>
   requestGeolocation: () => Promise<{ latitude: number; longitude: number } | null>
   release: () => void
 }
@@ -114,22 +113,6 @@ export function useStoryPermissions(): StoryPermissions {
     }
   }, [camera])
 
-  const requestMicrophone = useCallback(async (): Promise<boolean> => {
-    setError((e) => ({ ...e, microphone: null }))
-    if (microphone === 'denied') return false
-    if (!navigator.mediaDevices?.getUserMedia) return false
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      streamsRef.current.push(stream)
-      setMicrophone('granted')
-      return true
-    } catch {
-      setMicrophone('denied')
-      setError((e) => ({ ...e, microphone: 'Microphone access was denied.' }))
-      return false
-    }
-  }, [microphone])
-
   const requestGeolocation = useCallback(
     () =>
       new Promise<{ latitude: number; longitude: number } | null>((resolve) => {
@@ -175,7 +158,6 @@ export function useStoryPermissions(): StoryPermissions {
     requested,
     error,
     requestCamera,
-    requestMicrophone,
     requestGeolocation,
     release,
   }
