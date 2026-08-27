@@ -75,7 +75,7 @@ export function ProfileSettingsClient() {
       <Tabs value={tab} onValueChange={handleTabChange}>
         <TabsList className="grid grid-cols-2 gap-1">
           {TABS.map(({ value, label, icon: Icon }) => (
-            <TabsTrigger key={value} value={value} className="w-full">
+            <TabsTrigger key={value} value={value} className="w-full truncate">
               <Icon className="h-4 w-4" aria-hidden="true" />
               {label}
             </TabsTrigger>
