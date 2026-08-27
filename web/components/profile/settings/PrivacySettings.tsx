@@ -8,24 +8,19 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Loader2 } from 'lucide-react'
 
-type ThemePreference = 'system' | 'light' | 'dark'
-
 export function PrivacySettings({
   privateProfile,
   emailNotifications,
   pushNotifications,
-  themePreference,
 }: {
   privateProfile: boolean
   emailNotifications: boolean
   pushNotifications: boolean
-  themePreference: ThemePreference
 }) {
   const updateMe = useMutation(api.profiles.updateMe)
   const [privateProfileOn, setPrivateProfileOn] = useState(privateProfile)
   const [emailOn, setEmailOn] = useState(emailNotifications)
   const [pushOn, setPushOn] = useState(pushNotifications)
-  const [theme, setTheme] = useState<ThemePreference>(themePreference)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
@@ -40,7 +35,6 @@ export function PrivacySettings({
         privateProfile: privateProfileOn,
         emailNotifications: emailOn,
         pushNotifications: pushOn,
-        themePreference: theme,
       })
       setSaved(true)
     } catch (err) {
@@ -107,20 +101,18 @@ export function PrivacySettings({
       </label>
 
       <div className="space-y-xs">
-        <Label htmlFor="theme-preference">Theme</Label>
-        <select
-          id="theme-preference"
-          value={theme}
-          onChange={(e) => {
-            setTheme(e.target.value as ThemePreference)
-            setSaved(false)
-          }}
-          className="w-full max-w-[18rem] rounded-lg border border-outline bg-surface-container-lowest px-sm py-2 font-body-md text-on-surface focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40"
-        >
-          <option value="system">System default</option>
-          <option value="light">Light</option>
-          <option value="dark">Dark</option>
-        </select>
+        <Label>Theme</Label>
+        <div className="flex items-center gap-sm">
+          <select
+            disabled
+            className="w-full max-w-[18rem] cursor-not-allowed rounded-lg border border-outline bg-surface-container-lowest px-sm py-2 font-body-md text-on-surface opacity-50"
+          >
+            <option>System default</option>
+          </select>
+          <span className="rounded-full bg-surface-container-high px-2.5 py-0.5 text-xs font-medium text-on-surface-variant">
+            Coming soon
+          </span>
+        </div>
       </div>
 
       {error && (

@@ -14,7 +14,7 @@ import { useAuthRedirect } from '@/components/auth/AuthRedirectContext'
 import { VerifiedBadge } from '@/components/verification/VerifiedBadge'
 import { VerificationReveal } from '@/components/verification/VerificationReveal'
 import { ProfileStories } from '@/components/profile/ProfileStories'
-import { ProfilePastEvents } from '@/components/profile/ProfilePastEvents'
+import { ProfilePastEventsContainer as ProfilePastEvents } from '@/components/profile/ProfilePastEvents'
 import { cn } from '@/lib/utils'
 
 const SEEN_VERIFIED_KEY = 'eventnu_seen_verified'
@@ -156,21 +156,6 @@ export function ProfileClient() {
           </a>
         </Button>
       </header>
-
-      <div className="flex flex-wrap gap-sm">
-        <Button asChild variant="outline" size="sm" className="min-h-11">
-          <a href="/saved">
-            <Bookmark className="h-4 w-4" aria-hidden="true" />
-            Saved events
-          </a>
-        </Button>
-        <Button asChild variant="outline" size="sm" className="min-h-11">
-          <a href="/experiences">
-            <MessageSquarePlus className="h-4 w-4" aria-hidden="true" />
-            Share an experience
-          </a>
-        </Button>
-      </div>
 
       {/* Stories / Past Events / Experiences hub */}
       <div

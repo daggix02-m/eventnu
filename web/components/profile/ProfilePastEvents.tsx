@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, Component, type ReactNode } from 'react'
 import Image from 'next/image'
 import { usePaginatedQuery, useQuery, useMutation } from 'convex/react'
 import { api } from '@eventnu/convex/_generated/api'
@@ -30,6 +30,32 @@ function dayLabel(dateKey: string): string {
   })
 }
 
+/** Catches errors thrown by usePaginatedQuery and renders a graceful fallback. */
+class PastEventsErrorBoundary extends Component<
+  { children: ReactNode; fallback: ReactNode },
+  { hasError: boolean }
+> {
+  state = { hasError: false }
+  static getDerivedStateFromError() {
+    return { hasError: true }
+  }
+  render() {
+    if (this.state.hasError) return this.props.fallback
+    return this.props.children
+  }
+}
+
+function ErrorFallback() {
+  return (
+    <div className="w-full rounded-2xl border border-outline-variant bg-surface-container-low p-6 text-center">
+      <p className="font-display text-headline-sm text-on-surface">Something went wrong</p>
+      <p className="mt-xs font-body-md text-on-surface-variant">
+        We couldn&apos;t load your past events. Please try again later.
+      </p>
+    </div>
+  )
+}
+
 /**
  * Owner-only "Past Events" archive. Expired stories are private to the owner
  * and grouped by capture day (calendar style), filterable by the user's custom
@@ -41,7 +67,7 @@ export function ProfilePastEvents() {
   const [openStory, setOpenStory] = useState<PastStory | null>(null)
 
   const categories = useQuery(api.storyCategories.list, isAuthenticated ? {} : 'skip')
-  const { results, loadMore } = usePaginatedQuery(
+  const { results, status, loadMore } = usePaginatedQuery(
     api.stories.listPast,
     isAuthenticated
       ? selected === 'uncategorized'
@@ -117,7 +143,7 @@ export function ProfilePastEvents() {
         ))}
       </div>
 
-      {results === undefined ? (
+      {status === 'LoadingFirstPage' ? (
         <div className="grid grid-cols-3 gap-2" aria-hidden="true">
           {Array.from({ length: 6 }).map((_, i) => (
             <Skeleton key={i} className="aspect-[9/14] w-full rounded-xl" />
@@ -170,7 +196,7 @@ export function ProfilePastEvents() {
               </div>
             </section>
           ))}
-          {results !== undefined && (
+          {status === 'CanLoadMore' && (
             <div className="text-center">
               <Button variant="outline" onClick={() => loadMore(30)}>
                 Load more
@@ -188,6 +214,15 @@ export function ProfilePastEvents() {
         />
       )}
     </div>
+  )
+}
+
+/** Wrapped export that catches usePaginatedQuery errors gracefully. */
+export function ProfilePastEventsContainer() {
+  return (
+    <PastEventsErrorBoundary fallback={<ErrorFallback />}>
+      <ProfilePastEvents />
+    </PastEventsErrorBoundary>
   )
 }
 

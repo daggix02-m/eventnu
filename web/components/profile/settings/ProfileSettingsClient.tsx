@@ -73,9 +73,9 @@ export function ProfileSettingsClient() {
       </header>
 
       <Tabs value={tab} onValueChange={handleTabChange}>
-        <TabsList className="w-full flex-wrap">
+        <TabsList className="grid grid-cols-2 gap-1">
           {TABS.map(({ value, label, icon: Icon }) => (
-            <TabsTrigger key={value} value={value}>
+            <TabsTrigger key={value} value={value} className="w-full">
               <Icon className="h-4 w-4" aria-hidden="true" />
               {label}
             </TabsTrigger>
@@ -104,7 +104,6 @@ export function ProfileSettingsClient() {
             privateProfile={me.privateProfile ?? false}
             emailNotifications={me.emailNotifications ?? true}
             pushNotifications={me.pushNotifications ?? false}
-            themePreference={me.themePreference ?? 'system'}
           />
         </TabsContent>
         <TabsContent value="posts">
